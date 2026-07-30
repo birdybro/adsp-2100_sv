@@ -16,7 +16,8 @@
 | Shifter compute | PASS, PARTIAL | 10 directed/model tests plus 644,368 RTL differential vectors |
 | DAG arithmetic | PASS, PARTIAL | 10 directed/random model tests plus 204,864 RTL differential vectors |
 | Sequencer flow arbitration | PASS, PARTIAL | 9 directed/random model tests plus 636,512 RTL differential vectors |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer depth-one recipes lint; SymbiYosys unavailable |
+| Computational DREG banks | PASS, PARTIAL | 9 directed/model tests plus 58,306 stateful model-versus-RTL sequences |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer/register recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -26,9 +27,10 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 100 distinct Python
+The implemented foundation regression is `make test`: 109 distinct Python
 checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
 regressions, 21,760-vector MAC regression, and 644,368-vector shifter
 regression, plus the 204,864-vector DAG and 636,512-vector sequencer-flow
-regressions. Targets for unavailable or unimplemented areas print `SKIP` and
-do not create false pass evidence.
+regressions and 58,306 stateful register-bank sequences. Targets for
+unavailable or unimplemented areas print `SKIP` and do not create false pass
+evidence.

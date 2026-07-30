@@ -2,9 +2,9 @@
 
 **Updated:** 2026-07-30
 
-- Verilator 5.048 parses and lints the two packages and source-backed
-  combinational condition, ALU, MAC, shifter, DAG, and sequencer-flow RTL with
-  `-Wall` and no warnings.
+- Verilator 5.048 parses and lints the three packages and source-backed
+  condition, ALU, MAC, shifter, DAG, sequencer-flow, and stateful register-file
+  RTL with `-Wall` and no warnings.
 - Yosys is not installed in this environment.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
@@ -42,12 +42,19 @@
   models, worst setup slack is 14.139 ns and worst hold slack is 0.386 ns
   against the 20 ns virtual I/O constraint; setup and hold are fully
   constrained.
+- Quartus full compilation of the register-file smoke project passes with the
+  DE10-Nano 50 MHz input constrained on `PIN_V11` and 125 virtual data/control
+  pins. Analysis identifies exactly 480 design registers; Standard Fit adds 40
+  secondary routing-optimization duplicates. The fit uses 787 ALMs, 1,150
+  combinational ALUTs, no RAM, and no DSPs. Across the four timing models,
+  worst setup slack is 10.733 ns and worst hold slack is 0.102 ns against the
+  20 ns constraint, with zero unconstrained clocks, ports, or paths.
 - The only full-flow warning is Quartus Lite's unavailable LogicLock feature;
   the project does not use LogicLock.
-- SymbiYosys is not installed. `make formal` strictly lints the six available
+- SymbiYosys is not installed. `make formal` strictly lints the seven available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded condition, ALU, MAC, shifter, DAG,
-and sequencer-flow block smoke projects.
+sequencer-flow, and register-file block smoke projects.

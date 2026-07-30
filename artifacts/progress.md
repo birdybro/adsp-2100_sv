@@ -2,10 +2,10 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `0403dec`
+**Latest verified engineering commit:** `a22a60d`
 
 **Current milestone:** architecture extraction, executable model, and
-source-backed compute/address-generation blocks
+source-backed compute/address-generation/register-storage blocks
 
 **Release status:** research/implementation in progress; not instruction-,
 cycle-, or Hard Drivin'-complete
@@ -34,6 +34,8 @@ cycle-, or Hard Drivin'-complete
   alignment, signed post-modification, and DAG1 bit reversal;
 - source-backed sequencer-flow model/RTL for explicit transfer and loop-end
   arbitration;
+- source-backed stateful DREG model/RTL for both computational banks, authentic
+  reset unknowns, exact SE/MR2 widths, and cycle-boundary reads/writes;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -47,26 +49,27 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 100 implemented Python unit checks plus manifest/hash verification;
+- 109 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
-  condition RTL, ALU, MAC, shifter, DAG, and sequencer-flow RTL; all 2,048
-  condition/flag combinations, 51,472 ALU vectors, 21,760 MAC vectors, 644,368
-  shifter vectors, 204,864 DAG vectors, and 636,512 sequencer-flow vectors pass
-  simulation;
-- constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG, and
-  sequencer-flow block compilations pass with no unconstrained paths;
-- condition, ALU, MAC, shifter, DAG, and sequencer-flow formal harnesses pass
-  assertion syntax lint, but no formal proof ran because SymbiYosys/Yosys are
-  unavailable;
+  condition RTL, ALU, MAC, shifter, DAG, sequencer-flow, and register-file RTL;
+  all 2,048 condition/flag combinations, 51,472 ALU vectors, 21,760 MAC
+  vectors, 644,368 shifter vectors, 204,864 DAG vectors, 636,512
+  sequencer-flow vectors, and 58,306 register-bank sequences pass simulation;
+- constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG,
+  sequencer-flow, and register-file block compilations pass with no
+  unconstrained paths;
+- condition, ALU, MAC, shifter, DAG, sequencer-flow, and register-file formal
+  harnesses pass assertion syntax lint, but no formal proof ran because
+  SymbiYosys/Yosys are unavailable;
 - no architectural execution RTL, complete assembler, or whole-core synthesis
   top exists.
 
 ## Next highest-priority work
 
-1. Locate the original Cross-Software/instruction reference and a separately
+1. Complete M16 with banked AF/MF/SB storage and legal compute-result writeback.
+2. Implement M17's primary-backed MSTAT/ASTAT access and reset boundaries.
+3. Locate the original Cross-Software/instruction reference and a separately
    identifiable original data sheet.
-2. Extend the independently cross-checked class masks into field-level and
+4. Extend the independently cross-checked class masks into field-level and
    semantic instruction records.
-3. Close programmer-model reset widths and stack semantics.
-4. Extend the independent model only for source-verified instruction groups.
 5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.

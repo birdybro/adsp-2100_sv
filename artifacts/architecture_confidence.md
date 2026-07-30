@@ -17,6 +17,7 @@
 | Shifter SF functions | CORROBORATED | original compute chapter, Tables 2.4/2.5, and Appendix A; instruction integration incomplete |
 | DAG arithmetic and ownership | CORROBORATED | original DAG chapter plus 1994 explicit original/later placement distinction; function integration incomplete |
 | Sequencer next-PC/loop precedence | CORROBORATED | original program-control chapter and 636,512 model/RTL vectors; stacks, counter, interrupts, and cycles incomplete |
+| Computational DREG banking | CORROBORATED | original compute/register/Appendix A sections and 58,306 model/RTL sequences; AF/MF/SB, MSTAT, interrupts, and compute writeback incomplete |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
 | Stack underflow/overflow effects | UNKNOWN | status reporting known; effects not closed |
 | Full interrupt phase behavior | PROVISIONAL | recognition state known; all interactions incomplete |
