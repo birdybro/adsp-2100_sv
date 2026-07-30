@@ -22,3 +22,5 @@ jobs:
           sudo apt-get install --no-install-recommends -y verilator
       - name: Run repository regression
         run: make test
+      - name: Validate formal harnesses
+        run: make formal

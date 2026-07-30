@@ -8,7 +8,18 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEXT_SUFFIXES = {".md", ".py", ".sv", ".svh", ".yaml", ".yml", ".json", ".tcl", ".sdc"}
+TEXT_SUFFIXES = {
+    ".md",
+    ".py",
+    ".sv",
+    ".svh",
+    ".yaml",
+    ".yml",
+    ".json",
+    ".tcl",
+    ".sdc",
+    ".sby",
+}
 EXCLUDED_PARTS = {".git", "build", "reference_cache", "__pycache__"}
 EXCLUDED_RELATIVE_DIRS = {
     Path("synthesis/quartus/db"),

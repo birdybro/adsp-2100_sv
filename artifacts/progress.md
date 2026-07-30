@@ -47,8 +47,10 @@ outstanding.
   51,472 ALU vectors and 21,760 MAC vectors pass simulation;
 - constrained Quartus Cyclone V condition, ALU, and MAC block compilations
   pass with no unconstrained paths;
-- no architectural execution RTL, complete assembler, formal harness, or
-  synthesis top exists.
+- condition, ALU, and MAC formal harnesses pass assertion syntax lint, but no
+  formal proof ran because SymbiYosys/Yosys are unavailable;
+- no architectural execution RTL, complete assembler, or whole-core synthesis
+  top exists.
 
 ## Next highest-priority work
 

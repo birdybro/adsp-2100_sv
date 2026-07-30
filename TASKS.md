@@ -511,7 +511,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### FORMAL-001 — Bounded and invariant proof suite
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** applicable RTL blocks
 - **Acceptance criteria:** requested control/bus/DAG/stack/interrupt/arithmetic
@@ -519,8 +519,9 @@ advance beyond research until a page-level primary citation is added.
   and uncovered state.
 - **Source references:** architecture specifications for each property
 - **Relevant tests:** `make formal`
-- **Implementation notes:** formal smoke may begin per block; never call a
-  bounded result complete proof.
+- **Implementation notes:** depth-one condition, ALU, and MAC combinational
+  harnesses now exist; never call a bounded result complete proof. Proof
+  execution awaits an installed SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.
 - **Confidence:** UNKNOWN
 

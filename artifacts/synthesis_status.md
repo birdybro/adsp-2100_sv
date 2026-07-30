@@ -25,9 +25,10 @@
   20 ns virtual I/O constraint; setup and hold are fully constrained.
 - The only full-flow warning is Quartus Lite's unavailable LogicLock feature;
   the project does not use LogicLock.
-- SymbiYosys is not installed.
+- SymbiYosys is not installed. `make formal` strictly lints the three available
+  assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
-timing-closure claim. `make synth-yosys` and `make formal` report explicit
-tool-availability skips; `make synth-quartus` runs the bounded condition, ALU,
-and MAC block smoke projects.
+timing-closure claim. `make synth-yosys` reports an explicit tool-availability
+skip; `make synth-quartus` runs the bounded condition, ALU, and MAC block smoke
+projects.

@@ -48,6 +48,8 @@ semantic versioning after its first release.
 - Independent model and portable RTL for all 15 original fractional MAC AMF
   functions, including mixed signedness, 40-bit accumulation, unbiased
   rounding, MF extraction, MV, and one-shot MR saturation.
+- Bounded combinational formal harnesses and SymbiYosys recipes for condition,
+  ALU, and MAC invariants, with assertion lint available without SymbiYosys.
 
 ### Changed
 
@@ -81,6 +83,9 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the constrained MAC block: 229 ALMs, 229
   combinational ALUTs, one inferred DSP block, no registers/RAM, positive
   setup/hold slack, and zero unconstrained ports or paths.
+- `make formal` passes strict assertion syntax lint for the condition, ALU, and
+  MAC harnesses; proof execution remains explicitly skipped without
+  SymbiYosys.
 
 ### Documentation
 

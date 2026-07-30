@@ -113,10 +113,30 @@ fuzz:
 	@echo "SKIP fuzz tests: complete legal-instruction generator does not exist"
 
 formal:
-	@if command -v sby >/dev/null 2>&1; then \
-		echo "SKIP formal: no source-backed RTL property harness exists yet"; \
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_condition_formal \
+			rtl/core/adsp2100_condition_logic.sv \
+			formal/harnesses/adsp2100_condition_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_alu_formal \
+			rtl/core/adsp2100_alu.sv \
+			formal/harnesses/adsp2100_alu_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mac_formal \
+			rtl/core/adsp2100_mac.sv \
+			formal/harnesses/adsp2100_mac_formal.sv; \
 	else \
-		echo "SKIP formal: SymbiYosys is not installed"; \
+		echo "SKIP formal harness lint: Verilator is not installed"; \
+	fi
+	@if command -v sby >/dev/null 2>&1; then \
+		set -e; \
+		sby -f -d build/formal_condition formal/condition.sby; \
+		sby -f -d build/formal_alu formal/alu.sby; \
+		sby -f -d build/formal_mac formal/mac.sby; \
+	else \
+		echo "SKIP formal proofs: SymbiYosys is not installed"; \
 	fi
 
 synth-yosys:
@@ -154,6 +174,9 @@ clean:
 	@if [ -d build/quartus_condition ]; then find build/quartus_condition -depth -delete; fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
+	@for directory in build/formal_condition build/formal_alu build/formal_mac; do \
+		if [ -d "$$directory" ]; then find "$$directory" -depth -delete; fi; \
+	done
 	@if [ -d synthesis/quartus/db ]; then find synthesis/quartus/db -depth -delete; fi
 	@if [ -d synthesis/quartus/incremental_db ]; then \
 		find synthesis/quartus/incremental_db -depth -delete; \
