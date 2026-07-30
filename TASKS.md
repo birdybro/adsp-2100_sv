@@ -264,35 +264,43 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-DAG1-001 — DAG1 addressing
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-002
 - **Acceptance criteria:** all legal I/M/L combinations, linear/circular and
   applicable bit-reversed behavior, signed modifies, zero/non-power-of-two
   lengths, update order, waits, loops, and interrupts pass model/RTL tests.
 - **Source references:** ADI-UM-1989 DAG and data-move chapters
-- **Relevant tests:** `make dag-tests`, `formal/dag1.sby`
-- **Implementation notes:** derive circular base exactly; do not assume
-  power-of-two lengths.
-- **Unresolved questions:** original DAG assignment and bit-reverse ownership.
-- **Confidence:** UNKNOWN
+- **Relevant tests:** `make dag-tests`, `formal/dag.sby`
+- **Implementation notes:** an independent function model and portable
+  combinational RTL implement old-I output, signed post-modify, L=0 linear
+  wrap, circular wrap, original power-of-two alignment, and all-14-bit DAG1
+  reversal. Ten directed/random model tests and 204,864 model-versus-RTL
+  vectors pass, including all reversed addresses. Invalid circular
+  configurations are exposed diagnostically, not assigned invented semantics.
+- **Unresolved questions:** register-file integration, writeback and stall
+  enables, same-cycle register writes, alternate banking, multifunction
+  ordering, loops, interrupts, and externally visible timing.
+- **Confidence:** CORROBORATED
 
 ## M14 — Data-address generator 2
 
 ### RTL-DAG2-001 — DAG2 addressing
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-002
 - **Acceptance criteria:** DAG2's documented PM/DM roles and every legal
   I/M/L/update case pass independently and concurrently with DAG1.
 - **Source references:** ADI-UM-1989 DAG and data-move chapters
-- **Relevant tests:** `make dag-tests`, `formal/dag2.sby`
-- **Implementation notes:** do not generalize DAG1 behavior without explicit
-  commonality evidence.
+- **Relevant tests:** `make dag-tests`, `formal/dag.sby`
+- **Implementation notes:** the common source-backed post-modify/modulus block
+  has a DAG2 configuration in which bit-reverse is structurally ineffective;
+  all vectors compare DAG1/DAG2 arithmetic. PM/DM attachment and register
+  selection do not yet exist.
 - **Unresolved questions:** differing register group restrictions and
   simultaneous PM/DM semantics.
-- **Confidence:** UNKNOWN
+- **Confidence:** CORROBORATED
 
 ## M15 — Program sequencer
 
@@ -525,10 +533,9 @@ advance beyond research until a page-level primary citation is added.
   and uncovered state.
 - **Source references:** architecture specifications for each property
 - **Relevant tests:** `make formal`
-- **Implementation notes:** depth-one condition, ALU, MAC, and shifter
-  combinational
-  harnesses now exist; never call a bounded result complete proof. Proof
-  execution awaits an installed SymbiYosys/Yosys/SMT toolchain.
+- **Implementation notes:** depth-one condition, ALU, MAC, shifter, and DAG
+  combinational harnesses now exist; never call a bounded result complete
+  proof. Proof execution awaits an installed SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.
 - **Confidence:** UNKNOWN
 
@@ -544,9 +551,9 @@ advance beyond research until a page-level primary citation is added.
   paths, optional no-DSP comparison, and passing behavioral equivalence tests.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
-- **Implementation notes:** a constrained Quartus Cyclone V smoke project now
-  targets the source-backed combinational condition block. Whole-core clocks,
-  utilization, and timing remain unavailable; Yosys is not installed.
+- **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
+  the condition, ALU, MAC, shifter, and DAG combinational blocks. Whole-core
+  clocks, utilization, and timing remain unavailable; Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.
 - **Confidence:** UNKNOWN
 

@@ -1,0 +1,18 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_dag
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_dag
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag.sv
+set_global_assignment -name SDC_FILE dag_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_instance_assignment -name VIRTUAL_PIN ON -to i_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to m_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to l_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to bit_reverse_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to next_i_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to base_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to circular_o
+set_instance_assignment -name VIRTUAL_PIN ON -to configuration_valid_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

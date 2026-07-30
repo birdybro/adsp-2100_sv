@@ -37,6 +37,7 @@ device-specific data sheet [ADI-2104-DS-REV0, printed p. 1].
 | HALT/TRAP | dedicated input/output behavior | later IDLE/flag facilities are not equivalent; exact pins per device to audit | audit | audit | audit |
 | Bus arbitration | BR/BG halts after current instruction and tristates both full interfaces | later parts may continue from internal memory; exact GO-mode behavior to audit | audit | audit | audit |
 | DM wait | asynchronous DMACK extends state 7 | programmed per-space waits on later integrated parts | audit | audit | audit |
+| Circular buffer, exact power-of-two L | base clears one more low bit; L=8 requires base multiple 16 | base uses ordinary power-of-two alignment; L=8 may start at a multiple of 8 | same later rule | same later rule | same later rule |
 | Package | 100-pin PGA; contemporary ordering also lists 100-lead PLCC | smaller PLCC/PQFP variants by device | audit | audit | audit |
 
 Original bus, cache, interrupt, reset, and wait behavior:
@@ -45,6 +46,11 @@ off-chip buses are multiplexed and that processors can continue while buses are
 granted if no external access is required [ADI-UM-FAMILY-1995, printed p. 1-3],
 which directly differs from original BR/BG behavior
 [ADI-UM-1989, printed pp. 5-3–5-5].
+
+The exact-power-of-two circular-buffer row is an explicitly documented
+original-device difference [ADI-ASM-1994, section 3.7.2.2, printed
+pp. 3-29–3-32]. It also agrees with the original manual's L=8 example
+[ADI-UM-1989, printed pp. 3-3–3-4]. See SC-010.
 
 ## Instruction, register, and arithmetic evolution
 

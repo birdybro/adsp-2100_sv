@@ -1,6 +1,6 @@
 # Data address generator 1
 
-**Status: source-backed specification baseline**
+**Status: source-backed arithmetic model and RTL function block**
 
 DAG1 owns I0–I3, M0–M3, and L0–L3. Every register is 14 bits. DAG1 generates
 DM addresses only and can bit-reverse them when MSTAT enables the mode
@@ -19,8 +19,27 @@ and the source requires `abs(M) <= L` so a single update wraps at most once
 [ADI-UM-1989, printed pp. 3-3–3-4]. Behavior outside that documented
 restriction is not yet defined.
 
+This rule has an original-device edge that later-family implementations must
+not import. For an exact power-of-two L, the original ADSP-2100 counts the bit
+needed to represent the unsigned length itself. Thus L=8 clears four low base
+bits and requires a multiple-of-16 base. All other ADSP-21xx processors covered
+by the 1994 toolchain manual clear only three bits for this case
+[ADI-UM-1989, printed pp. 3-3–3-4; ADI-ASM-1994, section 3.7.2.2, printed
+pp. 3-29–3-32]. This is recorded against the later-family rule and pinned MAME
+as SC-010.
+
 Bit reverse reverses all 14 output address bits about the 6/7 boundary but
 stores the post-modified I in normal order [ADI-UM-1989, printed p. 3-5].
-Required tests enumerate all legal I/M pairings, I/L association, signed reads,
-both wrap directions, non-power-of-two lengths, source examples, and
-bit-reversed sequences.
+
+The independent function model and portable combinational RTL now cover old-I
+address output, signed post-modification, linear 14-bit wrap, circular
+base/wrap arithmetic, and DAG1 bit reversal. A diagnostic
+`configuration_valid` result identifies inputs outside the documented
+placement and modify restrictions; deterministic outputs for invalid inputs
+are not architectural claims. Directed tests reproduce both original manual
+sequences and the original L=8 placement, while the RTL regression checks all
+16,384 bit-reversed addresses and 204,864 total vectors.
+
+Register selection, I writeback gating, simultaneous data transfers,
+multifunction ordering, alternate-bank interactions, stalls, loops, interrupts,
+and external transaction timing remain outside this function block.

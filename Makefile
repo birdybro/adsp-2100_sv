@@ -8,7 +8,8 @@ VERILATOR ?= verilator
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
-test: lint reference-check repository-check decode-tests assembler-tests model-tests compute-tests
+test: lint reference-check repository-check decode-tests assembler-tests model-tests \
+	compute-tests dag-tests
 	@echo "PASS implemented foundation regression"
 
 lint:
@@ -26,6 +27,8 @@ lint:
 			rtl/core/adsp2100_mac.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_shifter.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_dag.sv; \
 	else \
 		echo "SKIP Verilator lint: executable not available"; \
 	fi
@@ -103,7 +106,21 @@ compute-tests:
 	fi
 
 dag-tests:
-	@echo "SKIP DAG tests: verified DAG implementations do not exist"
+	$(PYTHON) -m unittest -v tests.test_dag_model
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_dag_vectors.py \
+			--output build/dag_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_dag \
+			--top-module tb_adsp2100_dag \
+			rtl/core/adsp2100_dag.sv \
+			sim/unit/tb_adsp2100_dag.sv; \
+		build/obj_dag/Vtb_adsp2100_dag; \
+	else \
+		echo "SKIP DAG RTL test: Verilator executable not available"; \
+	fi
 
 sequencer-tests:
 	@echo "SKIP sequencer tests: verified sequencer implementation does not exist"
@@ -142,6 +159,10 @@ formal:
 			--top-module adsp2100_shifter_formal \
 			rtl/core/adsp2100_shifter.sv \
 			formal/harnesses/adsp2100_shifter_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_dag_formal \
+			rtl/core/adsp2100_dag.sv \
+			formal/harnesses/adsp2100_dag_formal.sv; \
 	else \
 		echo "SKIP formal harness lint: Verilator is not installed"; \
 	fi
@@ -151,6 +172,7 @@ formal:
 		sby -f -d build/formal_alu formal/alu.sby; \
 		sby -f -d build/formal_mac formal/mac.sby; \
 		sby -f -d build/formal_shifter formal/shifter.sby; \
+		sby -f -d build/formal_dag formal/dag.sby; \
 	else \
 		echo "SKIP formal proofs: SymbiYosys is not installed"; \
 	fi
@@ -169,6 +191,7 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mac_smoke; \
 		quartus_sh --flow compile synthesis/quartus/shifter_smoke; \
+		quartus_sh --flow compile synthesis/quartus/dag_smoke; \
 	else \
 		echo "SKIP Quartus synthesis: Quartus is not installed"; \
 	fi
@@ -186,16 +209,19 @@ clean:
 	@find build -maxdepth 1 -type f -name alu_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mac_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@if [ -d build/obj_condition ]; then find build/obj_condition -depth -delete; fi
 	@if [ -d build/obj_alu ]; then find build/obj_alu -depth -delete; fi
 	@if [ -d build/obj_mac ]; then find build/obj_mac -depth -delete; fi
 	@if [ -d build/obj_shifter ]; then find build/obj_shifter -depth -delete; fi
+	@if [ -d build/obj_dag ]; then find build/obj_dag -depth -delete; fi
 	@if [ -d build/quartus_condition ]; then find build/quartus_condition -depth -delete; fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
 	@if [ -d build/quartus_shifter ]; then find build/quartus_shifter -depth -delete; fi
+	@if [ -d build/quartus_dag ]; then find build/quartus_dag -depth -delete; fi
 	@for directory in build/formal_condition build/formal_alu build/formal_mac \
-		build/formal_shifter; do \
+		build/formal_shifter build/formal_dag; do \
 		if [ -d "$$directory" ]; then find "$$directory" -depth -delete; fi; \
 	done
 	@if [ -d synthesis/quartus/db ]; then find synthesis/quartus/db -depth -delete; fi

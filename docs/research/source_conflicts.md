@@ -94,3 +94,33 @@ MF-destination path writes MF and returns without updating MV
 will follow the original ASTAT rule for both destinations and will retain a
 dedicated MF-destination MV regression. Hardware confirmation remains useful,
 but MAME does not override the explicit original table.
+
+## SC-010 — Later-family and MAME circular-base masks differ from ADSP-2100
+
+The original manual defines a circular-buffer base by clearing the number of
+low bits required to represent unsigned L and explicitly says L=8 requires
+four cleared bits and a multiple-of-16 base
+[ADI-UM-1989, printed pp. 3-3–3-4]. The contemporary toolchain manual calls
+this the one circular-placement difference between the ADSP-2100 and every
+other ADSP-21xx: later parts require only a multiple-of-8 base for L=8
+[ADI-ASM-1994, section 3.7.2.2, printed pp. 3-29–3-32].
+
+Pinned MAME's mask table uses the later rule: its L=8 case returns mask
+`0x3ff8`, not the original `0x3ff0`
+[MAME-ADSP2100-CORE, commit
+`030fefcbd14e47c01ec9d67655be90f64a1dc8ab`, lines 1089–1106].
+The default clean-room model and RTL implement the primary-backed original
+rule. Differential tooling must classify power-of-two placements in the
+later-only half-block as a known MAME divergence.
+
+## SC-011 — Original and later manuals differ at modify-equals-length
+
+The original ADSP-2100 manual permits a modify value “less than or equal to”
+the circular-buffer length and explains that this limits one operation to one
+wrap [ADI-UM-1989, printed p. 3-4]. The later family manual states the
+restriction as `|M| < L` [ADI-UM-FAMILY-1995, printed pp. 4-4–4-6].
+
+The original-device model therefore treats `abs(M) == L` as valid; one wrap
+returns the same I. This case has a directed model/RTL vector. Original hardware
+confirmation remains desirable, and no later-family rule is generalized back
+to the ADSP-2100.

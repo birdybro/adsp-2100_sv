@@ -5,7 +5,7 @@
 **Latest verified engineering commit:** `74e9f21`
 
 **Current milestone:** architecture extraction, executable model, and
-source-backed compute blocks
+source-backed compute/address-generation blocks
 
 **Release status:** research/implementation in progress; not instruction-,
 cycle-, or Hard Drivin'-complete
@@ -30,6 +30,8 @@ cycle-, or Hard Drivin'-complete
   unbiased rounding, MV, and MR saturation;
 - source-backed all-function shifter model/RTL with full signed count range,
   normalization, exponent detection, and block exponent adjustment;
+- source-backed DAG arithmetic model/RTL with original circular-base
+  alignment, signed post-modification, and DAG1 bit reversal;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -43,14 +45,14 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 81 implemented Python unit checks plus manifest/hash verification;
+- 91 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
-  condition RTL, ALU, MAC, and shifter RTL; all 2,048 condition/flag
+  condition RTL, ALU, MAC, shifter, and DAG RTL; all 2,048 condition/flag
   combinations, 51,472 ALU vectors, 21,760 MAC vectors, and 644,368 shifter
-  vectors pass simulation;
-- constrained Quartus Cyclone V condition, ALU, MAC, and shifter block
+  vectors, plus 204,864 DAG vectors pass simulation;
+- constrained Quartus Cyclone V condition, ALU, MAC, shifter, and DAG block
   compilations pass with no unconstrained paths;
-- condition, ALU, MAC, and shifter formal harnesses pass assertion syntax
+- condition, ALU, MAC, shifter, and DAG formal harnesses pass assertion syntax
   lint, but no formal proof ran because SymbiYosys/Yosys are unavailable;
 - no architectural execution RTL, complete assembler, or whole-core synthesis
   top exists.

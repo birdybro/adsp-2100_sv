@@ -8,6 +8,7 @@ from .conditions import (
     evaluate_do_termination,
     evaluate_if_condition,
 )
+from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
 from .shifter import ShifterResult, compute_shifter
 from .model import (
@@ -32,6 +33,7 @@ __all__ = [
     "ArchitecturalState",
     "ConditionInputs",
     "DO_TERMINATION_MNEMONICS",
+    "DAGResult",
     "ExactWord",
     "IF_CONDITION_MNEMONICS",
     "MemorySpace",
@@ -47,9 +49,12 @@ __all__ = [
     "evaluate_do_termination",
     "evaluate_if_condition",
     "compute_alu",
+    "compute_dag",
     "compute_mac",
     "compute_shifter",
     "mask_to_width",
+    "original_base_mask",
+    "reverse_address",
     "sign_extend",
     "saturate_mr",
 ]

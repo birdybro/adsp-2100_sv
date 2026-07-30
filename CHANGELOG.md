@@ -52,8 +52,11 @@ semantic versioning after its first release.
   including full-range HI/LO placement, PASS/OR, logical/arithmetic shifts,
   normalization, HI/HIX/LO exponent detection, EXPADJ, and explicit write
   enables.
+- Independent DAG arithmetic model and portable RTL for old-I addressing,
+  signed post-modification, linear and circular wrap, original-device base
+  alignment, DAG1 bit reversal, and DAG2's non-reversed output.
 - Bounded combinational formal harnesses and SymbiYosys recipes for condition,
-  ALU, MAC, and shifter invariants, with assertion lint available without
+  ALU, MAC, shifter, and DAG invariants, with assertion lint available without
   SymbiYosys.
 
 ### Changed
@@ -75,10 +78,10 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 81 Python checks, ISA/register/condition/field validators,
+- `make test` passes 91 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
-  ALU, 21,760 MAC, plus 644,368 shifter model-versus-RTL vectors.
+  ALU, 21,760 MAC, 644,368 shifter, plus 204,864 DAG model-versus-RTL vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -91,9 +94,12 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the constrained shifter block: 374 ALMs,
   580 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold slack,
   and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for the condition, ALU, and
-  MAC, and shifter harnesses; proof execution remains explicitly skipped without
-  SymbiYosys.
+- Quartus full compilation passes for the constrained DAG block: 172 ALMs, 305
+  combinational ALUTs, no registers/RAM/DSPs, positive setup/hold slack, and
+  zero unconstrained ports or paths.
+- `make formal` passes strict assertion syntax lint for the condition, ALU,
+  MAC, shifter, and DAG harnesses; proof execution remains explicitly skipped
+  without SymbiYosys.
 
 ### Documentation
 
@@ -115,6 +121,11 @@ semantic versioning after its first release.
 - Recorded the unresolved NORM `SE=0x80` negation-width edge as OQ-011; the
   provisional behavior agrees with pinned MAME and is outside generated
   exponent values.
+- Recorded and implemented the original ADSP-2100 power-of-two circular-buffer
+  alignment rule, explicitly distinguishing it from all later ADSP-21xx parts
+  and pinned MAME (SC-010).
+- Recorded the original manual's modify-equals-length allowance against the
+  later family's strict inequality (SC-011).
 
 ### Known Issues
 
