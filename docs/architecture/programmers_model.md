@@ -1,6 +1,6 @@
 # Programmer's model
 
-**Status: partial inventory; computational-bank and ASTAT/MSTAT storage
+**Status: partial inventory; computational-bank and status/control storage
 slices implemented**
 
 | Group | Original registers | Width | Initial sourced facts |
@@ -40,13 +40,14 @@ segments. They have no computational-register reset assignment and implement
 the documented MR1-preload sign extension into MR2
 [ADI-UM-1989, printed p. 2-18]. AF, MF, and SB are also stored in both banks;
 unit-specific writes commit ALU results to AR/AF, MAC results to MR/MF, and
-shifter results to SR/SE/SB at cycle end. A separate status block now stores
-exact-width ASTAT/MSTAT state, applies the four original MODE CONTROL fields,
-and commits ALU, divide, MAC, and shifter status at cycle end
-[ADI-UM-1989, printed pp. 4-20–4-23, A-8].
+shifter results to SR/SE/SB at cycle end. A separate status/control block now
+stores exact-width ASTAT/MSTAT/ICNTL/IMASK state, applies the four original
+MODE CONTROL fields, commits ALU, divide, MAC, and shifter status at cycle end,
+and exposes the documented ASTAT/MSTAT/IMASK interrupt snapshot and mask
+transformation [ADI-UM-1989, printed pp. 4-9–4-10, 4-20–4-24, A-8].
 
 Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
-interrupt interactions, SSTAT/ICNTL/IMASK state transitions, status stacking,
-narrow status-register DMD extension, full multifunction legality, and every
-instruction field using these paths still require machine-readable extraction
-and tests.
+interrupt recognition and priority logic, stack-derived SSTAT, physical status
+stack storage, narrow status-register DMD extension, full multifunction
+legality, and every instruction field using these paths still require
+machine-readable extraction and tests.

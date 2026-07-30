@@ -368,17 +368,21 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make status-tests`,
   `tests/test_status_registers.py`, `formal/status_registers.sby`
 - **Implementation notes:** the machine-readable register map, independent
-  model, and portable RTL now implement exact eight-bit ASTAT and four-bit
-  MSTAT storage; per-bit authentic ASTAT reset unknowns; MSTAT reset clear;
-  all four direct mode outputs; both MODE CONTROL no-change codes plus
-  independent clear/set; cycle-end ALU/divide/MAC/shifter status writes; and
-  fail-closed collision suppression. Twelve directed tests and 50,157
-  model-versus-RTL cycles pass. Later memory-mapped peripheral control
-  registers are excluded from the ADSP-2100 default.
-- **Unresolved questions:** SSTAT dynamics, IMASK/ICNTL transitions, status
-  stacking, instruction/decode connectivity, narrow DMD read extension
-  (OQ-016), competing-write behavior (OQ-017), and interrupt-adjacent
-  bank-switch visibility (OQ-015).
+  model, and portable RTL now implement exact eight-bit ASTAT, four-bit MSTAT,
+  five-bit ICNTL, and four-bit IMASK storage; authentic ASTAT/ICNTL reset
+  unknowns; MSTAT/IMASK reset clear; all four direct mode outputs; both MODE
+  CONTROL no-change codes plus independent clear/set; cycle-end
+  ALU/divide/MAC/shifter status writes; interrupt-entry snapshot and nested
+  mask transformation; RTI-style status restore; aborted-instruction status
+  suppression; and fail-closed collision handling. Seventeen directed tests
+  and 50,287 model-versus-RTL cycles pass. The SSTAT field map is extracted,
+  but its dynamics remain coupled to unimplemented stacks. Later
+  memory-mapped peripheral control registers are excluded from the ADSP-2100
+  default.
+- **Unresolved questions:** physical status-stack storage and stack-derived
+  SSTAT dynamics, interrupt recognition/decode connectivity, narrow DMD read
+  extension (OQ-016), competing-write behavior (OQ-017), and
+  interrupt-adjacent bank-switch visibility (OQ-015).
 - **Confidence:** CORROBORATED
 
 ## M18 — Program-memory interface

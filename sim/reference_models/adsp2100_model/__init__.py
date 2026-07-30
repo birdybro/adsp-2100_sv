@@ -25,6 +25,7 @@ from .status import (
     StatusCycleInputs,
     StatusCycleResult,
     StatusRegisters,
+    StatusStackEntry,
     apply_status_cycle,
     status_write_conflict,
 )
@@ -91,6 +92,7 @@ __all__ = [
     "StatusCycleInputs",
     "StatusCycleResult",
     "StatusRegisters",
+    "StatusStackEntry",
     "ReservedOpcode",
     "TransactionKind",
     "TraceFrame",

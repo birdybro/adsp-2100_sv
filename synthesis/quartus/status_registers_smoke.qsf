@@ -14,6 +14,10 @@ set_instance_assignment -name VIRTUAL_PIN ON -to astat_move_write_enable_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_move_write_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mstat_move_write_enable_i
 set_instance_assignment -name VIRTUAL_PIN ON -to mstat_move_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_move_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_move_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_move_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_move_write_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mode_sr_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mode_br_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mode_ol_i[*]
@@ -31,13 +35,25 @@ set_instance_assignment -name VIRTUAL_PIN ON -to mac_status_write_enable_i
 set_instance_assignment -name VIRTUAL_PIN ON -to mac_mv_i
 set_instance_assignment -name VIRTUAL_PIN ON -to shifter_status_write_enable_i
 set_instance_assignment -name VIRTUAL_PIN ON -to shifter_ss_i
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_entry_i
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_level_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to status_restore_i
+set_instance_assignment -name VIRTUAL_PIN ON -to restore_astat_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to restore_mstat_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to restore_imask_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_o[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mstat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_o[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to alternate_bank_o
 set_instance_assignment -name VIRTUAL_PIN ON -to bit_reverse_o
 set_instance_assignment -name VIRTUAL_PIN ON -to overflow_latch_o
 set_instance_assignment -name VIRTUAL_PIN ON -to saturate_ar_o
 set_instance_assignment -name VIRTUAL_PIN ON -to write_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to status_push_o
+set_instance_assignment -name VIRTUAL_PIN ON -to status_push_astat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to status_push_mstat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to status_push_imask_o[*]
 
 set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
 

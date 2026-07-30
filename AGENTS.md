@@ -229,11 +229,12 @@ standard ALU, fractional MAC, all-function shifter, DAG arithmetic, and
 sequencer-flow combinational blocks exist with independent model comparison,
 and a stateful two-bank storage slice exists for the complete computational
 bank, including AF/MF/SB and unit-specific ALU/MAC/shifter writeback. A
-stateful ASTAT/MSTAT slice also implements original fields, reset
-classification, MODE CONTROL, and computational flag writes. MSTAT consumer
-wiring, SSTAT/IMASK/ICNTL dynamics, stateful stacks, complete operand/decode
-connectivity, multifunction legality and ordering, interrupt context, and
-cycle integration do not exist. The executable instruction model establishes
+stateful status/control slice also implements original ASTAT/MSTAT/ICNTL/IMASK
+fields, reset classifications, MODE CONTROL, computational flag writes,
+interrupt-entry snapshot/masking, and status restore. MSTAT/ICNTL consumer
+wiring, stack-derived SSTAT, stateful stacks, interrupt recognition, complete
+operand/decode connectivity, multifunction legality and ordering, and cycle
+integration do not exist. The executable instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP. All other opcodes fail
 closed. Architectural documents marked partial or provisional remain research

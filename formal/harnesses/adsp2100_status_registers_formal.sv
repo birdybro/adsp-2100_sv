@@ -7,6 +7,10 @@ module adsp2100_status_registers_formal (
     input logic [7:0] astat_move_write_data,
     input logic       mstat_move_write_enable,
     input logic [3:0] mstat_move_write_data,
+    input logic       icntl_move_write_enable,
+    input logic [4:0] icntl_move_write_data,
+    input logic       imask_move_write_enable,
+    input logic [3:0] imask_move_write_data,
     input logic [1:0] mode_sr,
     input logic [1:0] mode_br,
     input logic [1:0] mode_ol,
@@ -23,19 +27,32 @@ module adsp2100_status_registers_formal (
     input logic       mac_status_write_enable,
     input logic       mac_mv,
     input logic       shifter_status_write_enable,
-    input logic       shifter_ss
+    input logic       shifter_ss,
+    input logic       interrupt_entry,
+    input logic [1:0] interrupt_level,
+    input logic       status_restore,
+    input logic [7:0] restore_astat,
+    input logic [3:0] restore_mstat,
+    input logic [3:0] restore_imask
 );
     logic [7:0] astat;
     logic [3:0] mstat;
+    logic [4:0] icntl;
+    logic [3:0] imask;
     logic       alternate_bank;
     logic       bit_reverse;
     logic       overflow_latch;
     logic       saturate_ar;
     logic       write_conflict;
+    logic       status_push;
+    logic [7:0] status_push_astat;
+    logic [3:0] status_push_mstat;
+    logic [3:0] status_push_imask;
     logic       expected_conflict;
     logic       automatic_astat_write;
     logic       automatic_astat_conflict;
     logic       active_mode_control;
+    logic       ordinary_state_write;
     logic       past_valid;
 
     function automatic logic next_mode_bit(
@@ -78,10 +95,22 @@ module adsp2100_status_registers_formal (
         || mode_ol[1]
         || mode_as[1]
     );
+    assign ordinary_state_write = (
+        astat_move_write_enable
+        || mstat_move_write_enable
+        || icntl_move_write_enable
+        || imask_move_write_enable
+        || automatic_astat_write
+        || active_mode_control
+    );
     assign expected_conflict = !reset && (
         automatic_astat_conflict
         || (astat_move_write_enable && automatic_astat_write)
         || (mstat_move_write_enable && active_mode_control)
+        || (
+            status_restore
+            && (ordinary_state_write || interrupt_entry)
+        )
     );
 
     adsp2100_status_registers dut (
@@ -91,6 +120,10 @@ module adsp2100_status_registers_formal (
         .astat_move_write_data_i(astat_move_write_data),
         .mstat_move_write_enable_i(mstat_move_write_enable),
         .mstat_move_write_data_i(mstat_move_write_data),
+        .icntl_move_write_enable_i(icntl_move_write_enable),
+        .icntl_move_write_data_i(icntl_move_write_data),
+        .imask_move_write_enable_i(imask_move_write_enable),
+        .imask_move_write_data_i(imask_move_write_data),
         .mode_sr_i(mode_sr),
         .mode_br_i(mode_br),
         .mode_ol_i(mode_ol),
@@ -108,13 +141,25 @@ module adsp2100_status_registers_formal (
         .mac_mv_i(mac_mv),
         .shifter_status_write_enable_i(shifter_status_write_enable),
         .shifter_ss_i(shifter_ss),
+        .interrupt_entry_i(interrupt_entry),
+        .interrupt_level_i(interrupt_level),
+        .status_restore_i(status_restore),
+        .restore_astat_i(restore_astat),
+        .restore_mstat_i(restore_mstat),
+        .restore_imask_i(restore_imask),
         .astat_o(astat),
         .mstat_o(mstat),
+        .icntl_o(icntl),
+        .imask_o(imask),
         .alternate_bank_o(alternate_bank),
         .bit_reverse_o(bit_reverse),
         .overflow_latch_o(overflow_latch),
         .saturate_ar_o(saturate_ar),
-        .write_conflict_o(write_conflict)
+        .write_conflict_o(write_conflict),
+        .status_push_o(status_push),
+        .status_push_astat_o(status_push_astat),
+        .status_push_mstat_o(status_push_mstat),
+        .status_push_imask_o(status_push_imask)
     );
 
     always_comb begin
@@ -128,6 +173,13 @@ module adsp2100_status_registers_formal (
             }
             == mstat
         );
+        assert (
+            status_push
+            == (interrupt_entry && !reset && !write_conflict)
+        );
+        assert (status_push_astat == astat);
+        assert (status_push_mstat == mstat);
+        assert (status_push_imask == imask);
     end
 
     initial past_valid = 1'b0;
@@ -137,9 +189,31 @@ module adsp2100_status_registers_formal (
         if (past_valid) begin
             if ($past(reset)) begin
                 assert (mstat == 4'h0);
+                assert (imask == 4'h0);
             end else if ($past(write_conflict)) begin
                 assert (astat == $past(astat));
                 assert (mstat == $past(mstat));
+                assert (icntl == $past(icntl));
+                assert (imask == $past(imask));
+            end else if ($past(interrupt_entry)) begin
+                assert (astat == $past(astat));
+                assert (mstat == $past(mstat));
+                assert (icntl == $past(icntl));
+                if (!$past(icntl[4])) begin
+                    assert (imask == 4'h0);
+                end else begin
+                    unique case ($past(interrupt_level))
+                        2'd0: assert (imask == 4'he);
+                        2'd1: assert (imask == 4'hc);
+                        2'd2: assert (imask == 4'h8);
+                        default: assert (imask == 4'h0);
+                    endcase
+                end
+            end else if ($past(status_restore)) begin
+                assert (astat == $past(restore_astat));
+                assert (mstat == $past(restore_mstat));
+                assert (imask == $past(restore_imask));
+                assert (icntl == $past(icntl));
             end else begin
                 if ($past(astat_move_write_enable)) begin
                     assert (astat == $past(astat_move_write_data));
@@ -188,6 +262,16 @@ module adsp2100_status_registers_formal (
                         mstat[3]
                         == next_mode_bit($past(mstat[3]), $past(mode_as))
                     );
+                end
+                if ($past(icntl_move_write_enable)) begin
+                    assert (icntl == $past(icntl_move_write_data));
+                end else begin
+                    assert (icntl == $past(icntl));
+                end
+                if ($past(imask_move_write_enable)) begin
+                    assert (imask == $past(imask_move_write_data));
+                end else begin
+                    assert (imask == $past(imask));
                 end
             end
         end

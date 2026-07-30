@@ -70,12 +70,14 @@ semantic versioning after its first release.
 - A stateful register-bank formal harness, 58,307-cycle DREG regression,
   50,120-cycle full-bank/writeback regression, and a constrained Cyclone V
   synthesis project.
-- Machine-readable original ASTAT/MSTAT field and reset metadata, an
-  independent per-bit-known status model, and portable stateful RTL for direct
-  writes, all four MODE CONTROL fields, ALU/divide/MAC/shifter status updates,
-  exact cycle-end visibility, authentic ASTAT reset unknowns, and fail-closed
-  collision suppression.
-- A status-register formal harness, 50,157-cycle model-versus-RTL regression,
+- Machine-readable original ASTAT/MSTAT/ICNTL/IMASK fields, SSTAT field map,
+  reset metadata, and interrupt-entry masks; an independent status/control
+  model; and portable stateful RTL for direct writes, all four MODE CONTROL
+  fields, ALU/divide/MAC/shifter status updates, exact cycle-end visibility,
+  authentic ASTAT/ICNTL reset unknowns, interrupt snapshots, nested masking,
+  RTI-style restoration, aborted-instruction suppression, and fail-closed
+  collision handling.
+- A status/control formal harness, 50,287-cycle model-versus-RTL regression,
   and a constrained Cyclone V synthesis project.
 
 ### Changed
@@ -97,12 +99,12 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 126 Python checks, ISA/register/condition/field validators,
+- `make test` passes 131 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
   ALU, 21,760 MAC, 644,368 shifter, 204,864 DAG, 636,512 sequencer-flow,
   58,307 stateful DREG model-versus-RTL cycles, 50,120 complete-bank
-  writeback cycles, and 50,157 ASTAT/MSTAT state-transition cycles.
+  writeback cycles, and 50,287 status/control state-transition cycles.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -125,10 +127,10 @@ semantic versioning after its first release.
   1,084 ALMs, exactly 554 architectural implementation registers plus 55
   fitter-created routing duplicates, no RAM/DSPs, +9.985 ns worst setup,
   +0.109 ns worst hold slack, and zero unconstrained ports or paths.
-- Quartus full compilation passes for the constrained ASTAT/MSTAT block: 44
-  ALMs, 27 combinational ALUTs, exactly 12 architectural registers plus one
-  fitter-created routing duplicate, no RAM/DSPs, +12.942 ns worst setup,
-  +0.167 ns worst hold slack, and zero unconstrained ports or paths. The
+- Quartus full compilation passes for the constrained status/control block: 84
+  ALMs, 41 combinational ALUTs, exactly 21 architectural registers, no
+  RAM/DSPs, +11.811 ns worst setup, +0.169 ns worst hold slack, and zero
+  unconstrained ports or paths. The
   isolated virtual inputs model same-clock register-launched controls with a
   documented 5 ns arrival assumption.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
@@ -173,6 +175,10 @@ semantic versioning after its first release.
   clear, and ASTAT reset-unknown classification from the 1989 manual. Narrow
   DMD read extension and competing-write behavior are recorded as OQ-016 and
   OQ-017 rather than inferred.
+- Closed the original SSTAT field map and ICNTL/IMASK storage, reset, and
+  interrupt-entry mask rules. Implemented pre-entry ASTAT/MSTAT/IMASK
+  snapshots and restore at a sequencer-facing boundary while leaving physical
+  status-stack/SSTAT behavior and interrupt recognition explicitly incomplete.
 
 ### Known Issues
 
@@ -180,9 +186,9 @@ semantic versioning after its first release.
   and page-level opcode-field and semantic extraction remain incomplete.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
-- Register/status instruction-decode connectivity, MSTAT consumer wiring,
-  SSTAT/IMASK/ICNTL dynamics, status stacking, narrow status reads, and
-  interrupt/context integration are not implemented.
+- Register/status instruction-decode connectivity, MSTAT/ICNTL consumer
+  wiring, physical status stacking, stack-derived SSTAT, narrow status reads,
+  and interrupt recognition/cycle integration are not implemented.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

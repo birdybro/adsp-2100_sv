@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "ASTAT_MSTAT_STORAGE_AND_UPDATE_SLICE",
+  "scope": "ORIGINAL_STATUS_CONTROL_MAP_WITH_SSTAT_DYNAMICS_DEFERRED",
   "confidence": "VERIFIED_PRIMARY",
   "source_citations": [
-    "ADI-UM-1989 printed pp. 4-20-4-23 (status fields, update sources, latency, and modes)",
+    "ADI-UM-1989 printed pp. 4-20-4-24 (status/control fields, update sources, latency, interrupt masking, and modes)",
     "ADI-UM-1989 printed p. 5-13 (reset effects)",
     "ADI-UM-1989 printed p. A-8 (MODE CONTROL targets and codes)"
   ],
@@ -35,6 +35,47 @@
         {"bit": 2, "name": "OVERFLOW_LATCH"},
         {"bit": 3, "name": "AR_SATURATE"}
       ]
+    },
+    "SSTAT": {
+      "width": 8,
+      "move_access": "READ_ONLY_EXACT_STORAGE_WIDTH",
+      "reset": 85,
+      "implementation_status": "DEFERRED_TO_STACK_STATE",
+      "fields": [
+        {"bit": 0, "name": "PC_STACK_EMPTY"},
+        {"bit": 1, "name": "PC_STACK_OVERFLOW"},
+        {"bit": 2, "name": "COUNT_STACK_EMPTY"},
+        {"bit": 3, "name": "COUNT_STACK_OVERFLOW"},
+        {"bit": 4, "name": "STATUS_STACK_EMPTY"},
+        {"bit": 5, "name": "STATUS_STACK_OVERFLOW"},
+        {"bit": 6, "name": "LOOP_STACK_EMPTY"},
+        {"bit": 7, "name": "LOOP_STACK_OVERFLOW"}
+      ]
+    },
+    "ICNTL": {
+      "width": 5,
+      "move_access": "READ_WRITE_EXACT_STORAGE_WIDTH",
+      "reset": "UNKNOWN",
+      "fields": [
+        {"bit": 0, "name": "IRQ0_EDGE_SENSITIVE"},
+        {"bit": 1, "name": "IRQ1_EDGE_SENSITIVE"},
+        {"bit": 2, "name": "IRQ2_EDGE_SENSITIVE"},
+        {"bit": 3, "name": "IRQ3_EDGE_SENSITIVE"},
+        {"bit": 4, "name": "INTERRUPT_NESTING"}
+      ]
+    },
+    "IMASK": {
+      "width": 4,
+      "move_access": "READ_WRITE_EXACT_STORAGE_WIDTH",
+      "reset": 0,
+      "fields": [
+        {"bit": 0, "name": "IRQ0_ENABLE"},
+        {"bit": 1, "name": "IRQ1_ENABLE"},
+        {"bit": 2, "name": "IRQ2_ENABLE"},
+        {"bit": 3, "name": "IRQ3_ENABLE"}
+      ],
+      "nested_entry_masks_by_irq": [14, 12, 8, 0],
+      "non_nested_entry_mask": 0
     }
   },
   "mode_control_targets": [
@@ -53,6 +94,7 @@
     "DMD read extension above the exact ASTAT and MSTAT storage widths",
     "same-cycle bank-switch visibility at interrupt recognition",
     "instruction-level legality and decode connectivity",
-    "status-stack push and restore"
+    "physical status-stack storage, depth, and overflow behavior",
+    "SSTAT dynamics"
   ]
 }

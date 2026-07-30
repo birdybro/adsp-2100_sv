@@ -12,6 +12,7 @@ from sim.reference_models.adsp2100_model import (
     ModeControl,
     StatusCycleInputs,
     StatusRegisters,
+    StatusStackEntry,
     UNKNOWN,
     apply_status_cycle,
     compute_alu,
@@ -44,6 +45,13 @@ class StatusMetadataTests(unittest.TestCase):
         )
         self.assertEqual(data["registers"]["ASTAT"]["reset"], "UNKNOWN")
         self.assertEqual(data["registers"]["MSTAT"]["reset"], 0)
+        self.assertEqual(data["registers"]["SSTAT"]["reset"], 0x55)
+        self.assertEqual(data["registers"]["ICNTL"]["reset"], "UNKNOWN")
+        self.assertEqual(data["registers"]["IMASK"]["reset"], 0)
+        self.assertEqual(
+            data["registers"]["IMASK"]["nested_entry_masks_by_irq"],
+            [0xE, 0xC, 0x8, 0x0],
+        )
         self.assertEqual(
             [entry["action"] for entry in data["mode_control_codes"]],
             ["NO_CHANGE", "NO_CHANGE", "DEACTIVATE", "ACTIVATE"],
@@ -65,6 +73,8 @@ class StatusModelTests(unittest.TestCase):
             ),
         )
         self.assertEqual(result.state.mstat, ExactWord(4, 0))
+        self.assertEqual(result.state.imask, ExactWord(4, 0))
+        self.assertIs(result.state.icntl, UNKNOWN)
         self.assertTrue(all(bit is UNKNOWN for bit in result.state.astat.bits))
         self.assertFalse(result.write_conflict)
 
@@ -73,6 +83,12 @@ class StatusModelTests(unittest.TestCase):
             StatusCycleInputs(astat_move=ExactWord(16, 0))
         with self.assertRaises(ValueError):
             StatusCycleInputs(mstat_move=ExactWord(8, 0))
+        with self.assertRaises(ValueError):
+            StatusCycleInputs(icntl_move=ExactWord(4, 0))
+        with self.assertRaises(ValueError):
+            StatusCycleInputs(imask_move=ExactWord(5, 0))
+        with self.assertRaises(ValueError):
+            StatusCycleInputs(interrupt_entry=4)
 
     def test_direct_moves_replace_exact_storage(self) -> None:
         result = apply_status_cycle(
@@ -80,10 +96,14 @@ class StatusModelTests(unittest.TestCase):
             StatusCycleInputs(
                 astat_move=ExactWord(8, 0x96),
                 mstat_move=ExactWord(4, 0xD),
+                icntl_move=ExactWord(5, 0x15),
+                imask_move=ExactWord(4, 0xB),
             ),
         )
         self.assertEqual(result.state.astat.to_word(), ExactWord(8, 0x96))
         self.assertEqual(result.state.mstat, ExactWord(4, 0xD))
+        self.assertEqual(result.state.icntl, ExactWord(5, 0x15))
+        self.assertEqual(result.state.imask, ExactWord(4, 0xB))
         self.assertTrue(result.state.alternate_bank)
         self.assertFalse(result.state.bit_reverse)
         self.assertTrue(result.state.overflow_latch)
@@ -258,6 +278,116 @@ class StatusModelTests(unittest.TestCase):
         )
         self.assertFalse(legal.write_conflict)
         self.assertEqual(legal.state.mstat, ExactWord(4, 0x5))
+
+    def test_interrupt_entry_pushes_old_state_and_applies_nesting_masks(self) -> None:
+        for nesting, expected_masks in (
+            (False, (0, 0, 0, 0)),
+            (True, (0xE, 0xC, 0x8, 0x0)),
+        ):
+            for level, expected_mask in enumerate(expected_masks):
+                state = StatusRegisters(
+                    astat=ASTATState.from_word(ExactWord(8, 0xA5)),
+                    mstat=ExactWord(4, 0x9),
+                    icntl=ExactWord(5, 0x10 if nesting else 0),
+                    imask=ExactWord(4, 0xF),
+                )
+                result = apply_status_cycle(
+                    state,
+                    StatusCycleInputs(interrupt_entry=level),
+                )
+                self.assertEqual(
+                    result.status_push,
+                    StatusStackEntry(
+                        state.astat,
+                        ExactWord(4, 0x9),
+                        ExactWord(4, 0xF),
+                    ),
+                )
+                self.assertEqual(result.state.imask, ExactWord(4, expected_mask))
+                self.assertEqual(result.state.astat, state.astat)
+                self.assertEqual(result.state.mstat, state.mstat)
+                self.assertEqual(result.state.icntl, state.icntl)
+
+    def test_unknown_icntl_makes_interrupt_entry_mask_unknown(self) -> None:
+        state = StatusRegisters(
+            astat=ASTATState.from_word(ExactWord(8, 0)),
+            imask=ExactWord(4, 0xF),
+        )
+        result = apply_status_cycle(
+            state,
+            StatusCycleInputs(interrupt_entry=2),
+        )
+        self.assertIs(result.state.imask, UNKNOWN)
+        self.assertEqual(result.status_push.imask, ExactWord(4, 0xF))
+
+    def test_status_restore_restores_three_stacked_registers_only(self) -> None:
+        state = StatusRegisters(
+            astat=ASTATState.from_word(ExactWord(8, 0x12)),
+            mstat=ExactWord(4, 0x3),
+            icntl=ExactWord(5, 0x1F),
+            imask=ExactWord(4, 0x4),
+        )
+        entry = StatusStackEntry(
+            ASTATState.from_word(ExactWord(8, 0xA6)),
+            ExactWord(4, 0xC),
+            ExactWord(4, 0xB),
+        )
+        result = apply_status_cycle(
+            state,
+            StatusCycleInputs(status_restore=entry),
+        )
+        self.assertEqual(result.state.astat, entry.astat)
+        self.assertEqual(result.state.mstat, entry.mstat)
+        self.assertEqual(result.state.imask, entry.imask)
+        self.assertEqual(result.state.icntl, state.icntl)
+
+    def test_interrupt_entry_aborts_ordinary_status_writes(self) -> None:
+        state = StatusRegisters(
+            astat=ASTATState.from_word(ExactWord(8, 0x5A)),
+            mstat=ExactWord(4, 0x3),
+            icntl=ExactWord(5, 0x10),
+            imask=ExactWord(4, 0xF),
+        )
+        result = apply_status_cycle(
+            state,
+            StatusCycleInputs(
+                astat_move=ExactWord(8, 0),
+                mstat_move=ExactWord(4, 0xF),
+                icntl_move=ExactWord(5, 0),
+                imask_move=ExactWord(4, 0),
+                interrupt_entry=1,
+            ),
+        )
+        self.assertFalse(result.write_conflict)
+        self.assertEqual(result.status_push.astat, state.astat)
+        self.assertEqual(result.state.astat, state.astat)
+        self.assertEqual(result.state.mstat, state.mstat)
+        self.assertEqual(result.state.icntl, state.icntl)
+        self.assertEqual(result.state.imask, ExactWord(4, 0xC))
+
+    def test_restore_collision_suppresses_all_state_changes(self) -> None:
+        state = StatusRegisters(
+            astat=ASTATState.from_word(ExactWord(8, 0x5A)),
+            mstat=ExactWord(4, 0x3),
+            icntl=ExactWord(5, 0x10),
+            imask=ExactWord(4, 0xF),
+        )
+        entry = StatusStackEntry(
+            ASTATState.from_word(ExactWord(8, 0)),
+            ExactWord(4, 0),
+            ExactWord(4, 0),
+        )
+        for inputs in (
+            StatusCycleInputs(
+                status_restore=entry,
+                imask_move=ExactWord(4, 1),
+            ),
+            StatusCycleInputs(status_restore=entry, interrupt_entry=0),
+        ):
+            result = apply_status_cycle(state, inputs)
+            self.assertTrue(result.write_conflict)
+            self.assertEqual(result.state, state)
+            self.assertIsNone(result.status_push)
 
 
 if __name__ == "__main__":

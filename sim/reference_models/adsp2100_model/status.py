@@ -1,8 +1,8 @@
-"""Original ADSP-2100 ASTAT and MSTAT state-transition model.
+"""Original ADSP-2100 status/control-register state-transition model.
 
-The model preserves ASTAT's undocumented reset contents per bit. MSTAT is
-reset to zero and implements the four independent Appendix A MODE CONTROL
-fields. Instruction decode and DMD narrow-read extension are deliberately
+The model preserves ASTAT's undocumented reset contents per bit and ICNTL's
+whole-register reset unknown. MSTAT and IMASK reset to zero. Instruction
+decode, SSTAT stack dynamics, and DMD narrow-read extension are deliberately
 outside this storage boundary.
 """
 
@@ -40,6 +40,7 @@ class ModeControl(IntEnum):
 
 
 StatusBit = bool | _UnknownValue
+KnownRegister = ExactWord | _UnknownValue
 
 
 @dataclass(frozen=True)
@@ -92,12 +93,31 @@ class ALUStatusUpdate:
 
 
 @dataclass(frozen=True)
+class StatusStackEntry:
+    """ASTAT/MSTAT/IMASK snapshot pushed by interrupt entry."""
+
+    astat: ASTATState
+    mstat: ExactWord
+    imask: KnownRegister
+
+    def __post_init__(self) -> None:
+        if self.mstat.width != 4:
+            raise ValueError("stacked MSTAT must be exactly 4 bits")
+        if self.imask is not UNKNOWN and (
+            not isinstance(self.imask, ExactWord) or self.imask.width != 4
+        ):
+            raise ValueError("stacked IMASK must be exactly 4 bits or UNKNOWN")
+
+
+@dataclass(frozen=True)
 class StatusCycleInputs:
     """Cycle-end writes accepted by the verified status-storage boundary."""
 
     reset: bool = False
     astat_move: ExactWord | None = None
     mstat_move: ExactWord | None = None
+    icntl_move: ExactWord | None = None
+    imask_move: ExactWord | None = None
     mode_controls: tuple[ModeControl, ...] = (
         ModeControl.NO_CHANGE_ZERO,
         ModeControl.NO_CHANGE_ZERO,
@@ -108,12 +128,20 @@ class StatusCycleInputs:
     divide_aq: bool | None = None
     mac_mv: bool | None = None
     shifter_ss: bool | None = None
+    interrupt_entry: int | None = None
+    status_restore: StatusStackEntry | None = None
 
     def __post_init__(self) -> None:
         if self.astat_move is not None and self.astat_move.width != 8:
             raise ValueError("ASTAT move data must be exactly 8 bits")
         if self.mstat_move is not None and self.mstat_move.width != 4:
             raise ValueError("MSTAT move data must be exactly 4 bits")
+        if self.icntl_move is not None and self.icntl_move.width != 5:
+            raise ValueError("ICNTL move data must be exactly 5 bits")
+        if self.imask_move is not None and self.imask_move.width != 4:
+            raise ValueError("IMASK move data must be exactly 4 bits")
+        if self.interrupt_entry is not None and not 0 <= self.interrupt_entry <= 3:
+            raise ValueError("interrupt level must be IRQ0 through IRQ3")
         if len(self.mode_controls) != 4:
             raise ValueError("MSTAT requires exactly four MODE CONTROL fields")
         object.__setattr__(
@@ -125,14 +153,24 @@ class StatusCycleInputs:
 
 @dataclass(frozen=True)
 class StatusRegisters:
-    """Exact original ASTAT/MSTAT state after a documented reset boundary."""
+    """Implemented status/control state after a documented reset boundary."""
 
     astat: ASTATState = field(default_factory=ASTATState)
     mstat: ExactWord = field(default_factory=lambda: ExactWord(4, 0))
+    icntl: KnownRegister = UNKNOWN
+    imask: KnownRegister = field(default_factory=lambda: ExactWord(4, 0))
 
     def __post_init__(self) -> None:
         if self.mstat.width != 4:
             raise ValueError("MSTAT must be exactly 4 bits")
+        if self.icntl is not UNKNOWN and (
+            not isinstance(self.icntl, ExactWord) or self.icntl.width != 5
+        ):
+            raise ValueError("ICNTL must be exactly 5 bits or UNKNOWN")
+        if self.imask is not UNKNOWN and (
+            not isinstance(self.imask, ExactWord) or self.imask.width != 4
+        ):
+            raise ValueError("IMASK must be exactly 4 bits or UNKNOWN")
 
     @classmethod
     def reset(cls) -> "StatusRegisters":
@@ -159,6 +197,7 @@ class StatusRegisters:
 class StatusCycleResult:
     state: StatusRegisters
     write_conflict: bool
+    status_push: StatusStackEntry | None = None
 
 
 def status_write_conflict(inputs: StatusCycleInputs) -> bool:
@@ -179,11 +218,36 @@ def status_write_conflict(inputs: StatusCycleInputs) -> bool:
         control in (ModeControl.DEACTIVATE, ModeControl.ACTIVATE)
         for control in inputs.mode_controls
     )
+    ordinary_state_write = (
+        inputs.astat_move is not None
+        or inputs.mstat_move is not None
+        or inputs.icntl_move is not None
+        or inputs.imask_move is not None
+        or automatic_astat_sources != 0
+        or active_mode_control
+    )
     return (
         automatic_astat_sources > 1
         or (inputs.astat_move is not None and automatic_astat_sources != 0)
         or (inputs.mstat_move is not None and active_mode_control)
+        or (
+            inputs.status_restore is not None
+            and (ordinary_state_write or inputs.interrupt_entry is not None)
+        )
     )
+
+
+def _interrupt_imask(
+    icntl: KnownRegister,
+    interrupt_level: int,
+) -> KnownRegister:
+    if icntl is UNKNOWN:
+        return UNKNOWN
+    if not isinstance(icntl, ExactWord) or icntl.width != 5:
+        raise ValueError("ICNTL must be exactly 5 bits or UNKNOWN")
+    if not (icntl.value & 0x10):
+        return ExactWord(4, 0)
+    return ExactWord(4, (0xF << (interrupt_level + 1)) & 0xF)
 
 
 def apply_status_cycle(
@@ -192,15 +256,38 @@ def apply_status_cycle(
 ) -> StatusCycleResult:
     """Apply documented cycle-end status writes.
 
-    Reset invalidates all knowledge of ASTAT while clearing MSTAT. A detected
-    collision suppresses every status/mode write so unsupported ordering never
-    becomes an accidental implementation contract.
+    Reset invalidates ASTAT and ICNTL while clearing MSTAT and IMASK. A
+    recognized interrupt snapshots ASTAT/MSTAT/IMASK and aborts ordinary
+    writes before applying the documented interrupt mask. A detected collision
+    suppresses every status/control write.
     """
 
     if inputs.reset:
         return StatusCycleResult(StatusRegisters.reset(), False)
     if status_write_conflict(inputs):
         return StatusCycleResult(state, True)
+    if inputs.interrupt_entry is not None:
+        pushed = StatusStackEntry(state.astat, state.mstat, state.imask)
+        return StatusCycleResult(
+            StatusRegisters(
+                astat=state.astat,
+                mstat=state.mstat,
+                icntl=state.icntl,
+                imask=_interrupt_imask(state.icntl, inputs.interrupt_entry),
+            ),
+            False,
+            pushed,
+        )
+    if inputs.status_restore is not None:
+        return StatusCycleResult(
+            StatusRegisters(
+                astat=inputs.status_restore.astat,
+                mstat=inputs.status_restore.mstat,
+                icntl=state.icntl,
+                imask=inputs.status_restore.imask,
+            ),
+            False,
+        )
 
     astat = state.astat
     if inputs.astat_move is not None:
@@ -233,4 +320,15 @@ def apply_status_cycle(
                 mstat_value |= 1 << bit
         mstat = ExactWord(4, mstat_value)
 
-    return StatusCycleResult(StatusRegisters(astat=astat, mstat=mstat), False)
+    icntl = state.icntl if inputs.icntl_move is None else inputs.icntl_move
+    imask = state.imask if inputs.imask_move is None else inputs.imask_move
+
+    return StatusCycleResult(
+        StatusRegisters(
+            astat=astat,
+            mstat=mstat,
+            icntl=icntl,
+            imask=imask,
+        ),
+        False,
+    )
