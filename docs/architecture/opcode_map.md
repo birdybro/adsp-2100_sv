@@ -44,3 +44,11 @@ explicit `RESERVED_UNSHOWN` fallback whose execution behavior is
 The masks are not instruction completeness. Function, register, condition,
 address, legality, and parallel-action tables remain to be independently
 transcribed.
+
+The 19 finite abbreviation tables for AMF, data registers, DAG selectors,
+stack controls, jump/return types, shifter functions, and X/Y/Z operands are
+now fully transcribed in `docs/generated/adsp2100_isa_fields.yaml`
+[ADI-UM-1989, printed pp. A-5–A-11, scan PDF pp. 144–150]. Condition and
+general-register tables remain separately machine-readable because they carry
+additional predicate and register-width/access metadata. Instruction-format
+bit placement and legal cross-field combinations are still incomplete.

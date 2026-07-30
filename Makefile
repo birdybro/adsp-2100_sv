@@ -41,9 +41,11 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_isa.py
 	$(PYTHON) tools/generators/validate_register_codes.py
 	$(PYTHON) tools/generators/validate_condition_codes.py
+	$(PYTHON) tools/generators/validate_isa_fields.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
-	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata
+	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
+		tests.test_isa_fields
 
 assembler-tests:
 	$(PYTHON) -m unittest -v tests.test_assembler_disassembler

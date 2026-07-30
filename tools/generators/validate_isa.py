@@ -82,6 +82,12 @@ def validate_database(data: dict[str, Any]) -> None:
         raise ISAValidationError("program_word_width must be 24")
     if data.get("completeness_claim") is not False:
         raise ISAValidationError("partial seed must not claim completeness")
+    if data.get("field_code_databases") != [
+        "docs/generated/adsp2100_isa_fields.yaml",
+        "docs/generated/adsp2100_condition_codes.yaml",
+        "docs/generated/adsp2100_register_codes.yaml",
+    ]:
+        raise ISAValidationError("ISA field-code database links are incomplete")
     unshown_policy = data.get("unshown_encoding_policy")
     if not isinstance(unshown_policy, dict):
         raise ISAValidationError("unshown_encoding_policy must be an object")

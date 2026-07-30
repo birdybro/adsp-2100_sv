@@ -4,6 +4,11 @@
   "program_word_width": 24,
   "status": "PARTIAL_RESEARCH_SEED",
   "completeness_claim": false,
+  "field_code_databases": [
+    "docs/generated/adsp2100_isa_fields.yaml",
+    "docs/generated/adsp2100_condition_codes.yaml",
+    "docs/generated/adsp2100_register_codes.yaml"
+  ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
     "architectural_behavior": "UNDOCUMENTED",

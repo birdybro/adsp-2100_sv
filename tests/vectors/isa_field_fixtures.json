@@ -1,0 +1,41 @@
+{
+  "source": "ADI-UM-1989 printed pp. A-5-A-11; independently transcribed review fixture",
+  "tables": {
+    "AMF": [
+      "NO_OPERATION", "MUL_RND", "MAC_ADD_RND", "MAC_SUB_RND",
+      "MUL_SS", "MUL_SU", "MUL_US", "MUL_UU",
+      "MAC_ADD_SS", "MAC_ADD_SU", "MAC_ADD_US", "MAC_ADD_UU",
+      "MAC_SUB_SS", "MAC_SUB_SU", "MAC_SUB_US", "MAC_SUB_UU",
+      "PASS_Y", "Y_PLUS_ONE", "X_PLUS_Y_PLUS_C", "X_PLUS_Y",
+      "NOT_Y", "NEGATE_Y", "X_MINUS_Y_PLUS_C_MINUS_ONE", "X_MINUS_Y",
+      "Y_MINUS_ONE", "Y_MINUS_X", "Y_MINUS_X_PLUS_C_MINUS_ONE",
+      "NOT_X", "X_AND_Y", "X_OR_Y", "X_XOR_Y", "ABS_X"
+    ],
+    "CP": ["NO_CHANGE", "POP"],
+    "D": ["READ", "WRITE"],
+    "DD": ["AX0", "AX1", "MX0", "MX1"],
+    "DREG": [
+      "AX0", "AX1", "MX0", "MX1", "AY0", "AY1", "MY0", "MY1",
+      "SI", "SE", "AR", "MR0", "MR1", "MR2", "SR0", "SR1"
+    ],
+    "G": ["DAG1", "DAG2"],
+    "G_I": ["I0", "I1", "I2", "I3", "I4", "I5", "I6", "I7"],
+    "LP": ["NO_CHANGE", "POP"],
+    "G_M": ["M0", "M1", "M2", "M3", "M4", "M5", "M6", "M7"],
+    "MCC": ["NO_CHANGE_0", "NO_CHANGE_1", "DEACTIVATE", "ACTIVATE"],
+    "PD": ["AY0", "AY1", "MY0", "MY1"],
+    "PP": ["NO_CHANGE", "POP"],
+    "S": ["JUMP", "CALL"],
+    "SF": [
+      "LSHIFT_HI_PASS", "LSHIFT_HI_OR", "LSHIFT_LO_PASS", "LSHIFT_LO_OR",
+      "ASHIFT_HI_PASS", "ASHIFT_HI_OR", "ASHIFT_LO_PASS", "ASHIFT_LO_OR",
+      "NORM_HI_PASS", "NORM_HI_OR", "NORM_LO_PASS", "NORM_LO_OR",
+      "EXP_HI", "EXP_HIX", "EXP_LO", "BLOCK_EXPONENT_ADJUST"
+    ],
+    "SPP": ["NO_CHANGE_0", "NO_CHANGE_1", "PUSH", "POP"],
+    "T": ["RTS", "RTI"],
+    "X": ["X0", "X1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1"],
+    "Y": ["Y0", "Y1", "FEEDBACK", "ZERO"],
+    "Z": ["RESULT_REGISTER", "FEEDBACK_REGISTER"]
+  }
+}

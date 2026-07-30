@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `9a41cf8`
+**Latest verified engineering commit:** `aed88f1`
 
 **Current milestone:** documentation acquisition, exact-device audit, and
 executable-model foundation
@@ -22,6 +22,8 @@ cycle-, or Hard Drivin'-complete
   hand-verified NOP semantic fixture;
 - complete source-backed IF/DO condition field with independent model and
   exhaustive combinational RTL verification;
+- complete source-backed inventory of the 19 remaining finite Appendix A
+  abbreviation tables;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -35,7 +37,7 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 47 implemented Python unit checks plus manifest/hash verification;
+- 54 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode, and
   condition RTL; all 2,048 condition/flag combinations pass simulation;
 - constrained Quartus Cyclone V condition-block compilation passes with no

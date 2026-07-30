@@ -129,10 +129,11 @@ advance beyond research until a page-level primary citation is added.
   classes with primary-transcribed, non-overlapping masks, explicitly covers
   1,304,054 unshown words as reserved, and generates synthesizable class
   decode. The complete original 16-code IF and inverse-sense DO UNTIL
-  condition fields are separately machine-readable and exhaustively checked;
-  only the all-zero NOP is a hand-verified full instruction fixture. Generated
-  assembler/disassembler artifacts must derive from these databases as
-  instruction entries are independently verified.
+  condition fields and all 19 finite Appendix A abbreviation tables are
+  separately machine-readable and exhaustively checked; only the all-zero NOP
+  is a hand-verified full instruction fixture. Generated assembler/
+  disassembler artifacts must derive from these databases as instruction
+  entries are independently verified.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN

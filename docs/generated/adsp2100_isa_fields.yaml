@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "status": "COMPLETE_FOR_APPENDIX_A_ABBREVIATION_TABLES_LISTED",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. A-5-A-11 (scan PDF pp. 144-150)"
+  ],
+  "external_tables": {
+    "COND_TERM": "docs/generated/adsp2100_condition_codes.yaml",
+    "RGP_REG": "docs/generated/adsp2100_register_codes.yaml"
+  },
+  "mcc_targets": [
+    {"id": "SR", "name": "SECONDARY_REGISTER_BANK_MODE"},
+    {"id": "BR", "name": "BIT_REVERSE_MODE"},
+    {"id": "OL", "name": "ALU_OVERFLOW_LATCH_MODE"},
+    {"id": "AS", "name": "AR_SATURATE_MODE"}
+  ],
+  "tables": [
+    {
+      "id": "AMF",
+      "description": "ALU/MAC function",
+      "width": 5,
+      "notes": "Codes 0x01-0x0f are MAC functions; codes 0x10-0x1f are ALU functions.",
+      "values": [
+        {"code": 0, "bits": "00000", "name": "NO_OPERATION", "notes": ""},
+        {"code": 1, "bits": "00001", "name": "MUL_RND", "notes": "X*Y, rounded"},
+        {"code": 2, "bits": "00010", "name": "MAC_ADD_RND", "notes": "MR+X*Y, rounded"},
+        {"code": 3, "bits": "00011", "name": "MAC_SUB_RND", "notes": "MR-X*Y, rounded"},
+        {"code": 4, "bits": "00100", "name": "MUL_SS", "notes": "X*Y signed/signed; clear when Y=0"},
+        {"code": 5, "bits": "00101", "name": "MUL_SU", "notes": "X*Y signed/unsigned"},
+        {"code": 6, "bits": "00110", "name": "MUL_US", "notes": "X*Y unsigned/signed"},
+        {"code": 7, "bits": "00111", "name": "MUL_UU", "notes": "X*Y unsigned/unsigned"},
+        {"code": 8, "bits": "01000", "name": "MAC_ADD_SS", "notes": "MR+X*Y signed/signed"},
+        {"code": 9, "bits": "01001", "name": "MAC_ADD_SU", "notes": "MR+X*Y signed/unsigned"},
+        {"code": 10, "bits": "01010", "name": "MAC_ADD_US", "notes": "MR+X*Y unsigned/signed"},
+        {"code": 11, "bits": "01011", "name": "MAC_ADD_UU", "notes": "MR+X*Y unsigned/unsigned"},
+        {"code": 12, "bits": "01100", "name": "MAC_SUB_SS", "notes": "MR-X*Y signed/signed"},
+        {"code": 13, "bits": "01101", "name": "MAC_SUB_SU", "notes": "MR-X*Y signed/unsigned"},
+        {"code": 14, "bits": "01110", "name": "MAC_SUB_US", "notes": "MR-X*Y unsigned/signed"},
+        {"code": 15, "bits": "01111", "name": "MAC_SUB_UU", "notes": "MR-X*Y unsigned/unsigned"},
+        {"code": 16, "bits": "10000", "name": "PASS_Y", "notes": "clear when Y=0"},
+        {"code": 17, "bits": "10001", "name": "Y_PLUS_ONE", "notes": ""},
+        {"code": 18, "bits": "10010", "name": "X_PLUS_Y_PLUS_C", "notes": ""},
+        {"code": 19, "bits": "10011", "name": "X_PLUS_Y", "notes": "pass X when Y=0"},
+        {"code": 20, "bits": "10100", "name": "NOT_Y", "notes": ""},
+        {"code": 21, "bits": "10101", "name": "NEGATE_Y", "notes": ""},
+        {"code": 22, "bits": "10110", "name": "X_MINUS_Y_PLUS_C_MINUS_ONE", "notes": ""},
+        {"code": 23, "bits": "10111", "name": "X_MINUS_Y", "notes": ""},
+        {"code": 24, "bits": "11000", "name": "Y_MINUS_ONE", "notes": ""},
+        {"code": 25, "bits": "11001", "name": "Y_MINUS_X", "notes": "negate X when Y=0"},
+        {"code": 26, "bits": "11010", "name": "Y_MINUS_X_PLUS_C_MINUS_ONE", "notes": ""},
+        {"code": 27, "bits": "11011", "name": "NOT_X", "notes": ""},
+        {"code": 28, "bits": "11100", "name": "X_AND_Y", "notes": ""},
+        {"code": 29, "bits": "11101", "name": "X_OR_Y", "notes": ""},
+        {"code": 30, "bits": "11110", "name": "X_XOR_Y", "notes": ""},
+        {"code": 31, "bits": "11111", "name": "ABS_X", "notes": ""}
+      ]
+    },
+    {
+      "id": "CP",
+      "description": "counter-stack pop",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "NO_CHANGE", "notes": ""},
+        {"code": 1, "bits": "1", "name": "POP", "notes": ""}
+      ]
+    },
+    {
+      "id": "D",
+      "description": "memory access direction",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "READ", "notes": ""},
+        {"code": 1, "bits": "1", "name": "WRITE", "notes": ""}
+      ]
+    },
+    {
+      "id": "DD",
+      "description": "double-data-fetch DM destination",
+      "width": 2,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "00", "name": "AX0", "notes": ""},
+        {"code": 1, "bits": "01", "name": "AX1", "notes": ""},
+        {"code": 2, "bits": "10", "name": "MX0", "notes": ""},
+        {"code": 3, "bits": "11", "name": "MX1", "notes": ""}
+      ]
+    },
+    {
+      "id": "DREG",
+      "description": "data register",
+      "width": 4,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0000", "name": "AX0", "notes": ""},
+        {"code": 1, "bits": "0001", "name": "AX1", "notes": ""},
+        {"code": 2, "bits": "0010", "name": "MX0", "notes": ""},
+        {"code": 3, "bits": "0011", "name": "MX1", "notes": ""},
+        {"code": 4, "bits": "0100", "name": "AY0", "notes": ""},
+        {"code": 5, "bits": "0101", "name": "AY1", "notes": ""},
+        {"code": 6, "bits": "0110", "name": "MY0", "notes": ""},
+        {"code": 7, "bits": "0111", "name": "MY1", "notes": ""},
+        {"code": 8, "bits": "1000", "name": "SI", "notes": ""},
+        {"code": 9, "bits": "1001", "name": "SE", "notes": ""},
+        {"code": 10, "bits": "1010", "name": "AR", "notes": ""},
+        {"code": 11, "bits": "1011", "name": "MR0", "notes": ""},
+        {"code": 12, "bits": "1100", "name": "MR1", "notes": ""},
+        {"code": 13, "bits": "1101", "name": "MR2", "notes": ""},
+        {"code": 14, "bits": "1110", "name": "SR0", "notes": ""},
+        {"code": 15, "bits": "1111", "name": "SR1", "notes": ""}
+      ]
+    },
+    {
+      "id": "G",
+      "description": "data address generator",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "DAG1", "notes": ""},
+        {"code": 1, "bits": "1", "name": "DAG2", "notes": ""}
+      ]
+    },
+    {
+      "id": "G_I",
+      "description": "G plus index-register selector",
+      "width": 3,
+      "notes": "Composite of the one-bit G field and two-bit I field.",
+      "values": [
+        {"code": 0, "bits": "000", "name": "I0", "notes": ""},
+        {"code": 1, "bits": "001", "name": "I1", "notes": ""},
+        {"code": 2, "bits": "010", "name": "I2", "notes": ""},
+        {"code": 3, "bits": "011", "name": "I3", "notes": ""},
+        {"code": 4, "bits": "100", "name": "I4", "notes": ""},
+        {"code": 5, "bits": "101", "name": "I5", "notes": ""},
+        {"code": 6, "bits": "110", "name": "I6", "notes": ""},
+        {"code": 7, "bits": "111", "name": "I7", "notes": ""}
+      ]
+    },
+    {
+      "id": "LP",
+      "description": "loop-stack pop",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "NO_CHANGE", "notes": ""},
+        {"code": 1, "bits": "1", "name": "POP", "notes": ""}
+      ]
+    },
+    {
+      "id": "G_M",
+      "description": "G plus modify-register selector",
+      "width": 3,
+      "notes": "Composite of the one-bit G field and two-bit M field.",
+      "values": [
+        {"code": 0, "bits": "000", "name": "M0", "notes": ""},
+        {"code": 1, "bits": "001", "name": "M1", "notes": ""},
+        {"code": 2, "bits": "010", "name": "M2", "notes": ""},
+        {"code": 3, "bits": "011", "name": "M3", "notes": ""},
+        {"code": 4, "bits": "100", "name": "M4", "notes": ""},
+        {"code": 5, "bits": "101", "name": "M5", "notes": ""},
+        {"code": 6, "bits": "110", "name": "M6", "notes": ""},
+        {"code": 7, "bits": "111", "name": "M7", "notes": ""}
+      ]
+    },
+    {
+      "id": "MCC",
+      "description": "per-mode control",
+      "width": 2,
+      "notes": "Applied independently to SR, BR, OL, and AS mode controls.",
+      "values": [
+        {"code": 0, "bits": "00", "name": "NO_CHANGE_0", "notes": ""},
+        {"code": 1, "bits": "01", "name": "NO_CHANGE_1", "notes": ""},
+        {"code": 2, "bits": "10", "name": "DEACTIVATE", "notes": ""},
+        {"code": 3, "bits": "11", "name": "ACTIVATE", "notes": ""}
+      ]
+    },
+    {
+      "id": "PD",
+      "description": "double-data-fetch PM destination",
+      "width": 2,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "00", "name": "AY0", "notes": ""},
+        {"code": 1, "bits": "01", "name": "AY1", "notes": ""},
+        {"code": 2, "bits": "10", "name": "MY0", "notes": ""},
+        {"code": 3, "bits": "11", "name": "MY1", "notes": ""}
+      ]
+    },
+    {
+      "id": "PP",
+      "description": "PC-stack pop",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "NO_CHANGE", "notes": ""},
+        {"code": 1, "bits": "1", "name": "POP", "notes": ""}
+      ]
+    },
+    {
+      "id": "S",
+      "description": "jump type",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "JUMP", "notes": ""},
+        {"code": 1, "bits": "1", "name": "CALL", "notes": "jump subroutine"}
+      ]
+    },
+    {
+      "id": "SF",
+      "description": "shifter function",
+      "width": 4,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0000", "name": "LSHIFT_HI_PASS", "notes": ""},
+        {"code": 1, "bits": "0001", "name": "LSHIFT_HI_OR", "notes": ""},
+        {"code": 2, "bits": "0010", "name": "LSHIFT_LO_PASS", "notes": ""},
+        {"code": 3, "bits": "0011", "name": "LSHIFT_LO_OR", "notes": ""},
+        {"code": 4, "bits": "0100", "name": "ASHIFT_HI_PASS", "notes": ""},
+        {"code": 5, "bits": "0101", "name": "ASHIFT_HI_OR", "notes": ""},
+        {"code": 6, "bits": "0110", "name": "ASHIFT_LO_PASS", "notes": ""},
+        {"code": 7, "bits": "0111", "name": "ASHIFT_LO_OR", "notes": ""},
+        {"code": 8, "bits": "1000", "name": "NORM_HI_PASS", "notes": ""},
+        {"code": 9, "bits": "1001", "name": "NORM_HI_OR", "notes": ""},
+        {"code": 10, "bits": "1010", "name": "NORM_LO_PASS", "notes": ""},
+        {"code": 11, "bits": "1011", "name": "NORM_LO_OR", "notes": ""},
+        {"code": 12, "bits": "1100", "name": "EXP_HI", "notes": ""},
+        {"code": 13, "bits": "1101", "name": "EXP_HIX", "notes": ""},
+        {"code": 14, "bits": "1110", "name": "EXP_LO", "notes": ""},
+        {"code": 15, "bits": "1111", "name": "BLOCK_EXPONENT_ADJUST", "notes": ""}
+      ]
+    },
+    {
+      "id": "SPP",
+      "description": "status-stack push/pop",
+      "width": 2,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "00", "name": "NO_CHANGE_0", "notes": ""},
+        {"code": 1, "bits": "01", "name": "NO_CHANGE_1", "notes": ""},
+        {"code": 2, "bits": "10", "name": "PUSH", "notes": ""},
+        {"code": 3, "bits": "11", "name": "POP", "notes": ""}
+      ]
+    },
+    {
+      "id": "T",
+      "description": "return type",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "RTS", "notes": "return from subroutine"},
+        {"code": 1, "bits": "1", "name": "RTI", "notes": "return from interrupt"}
+      ]
+    },
+    {
+      "id": "X",
+      "description": "X operand",
+      "width": 3,
+      "notes": "X0/X1 refer to the selected computational unit; shifter code 0 selects SI and code 1 is unavailable.",
+      "values": [
+        {"code": 0, "bits": "000", "name": "X0", "notes": "SI for shifter"},
+        {"code": 1, "bits": "001", "name": "X1", "notes": "not available for shifter"},
+        {"code": 2, "bits": "010", "name": "AR", "notes": ""},
+        {"code": 3, "bits": "011", "name": "MR0", "notes": ""},
+        {"code": 4, "bits": "100", "name": "MR1", "notes": ""},
+        {"code": 5, "bits": "101", "name": "MR2", "notes": ""},
+        {"code": 6, "bits": "110", "name": "SR0", "notes": ""},
+        {"code": 7, "bits": "111", "name": "SR1", "notes": ""}
+      ]
+    },
+    {
+      "id": "Y",
+      "description": "ALU/MAC Y operand",
+      "width": 2,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "00", "name": "Y0", "notes": ""},
+        {"code": 1, "bits": "01", "name": "Y1", "notes": ""},
+        {"code": 2, "bits": "10", "name": "FEEDBACK", "notes": ""},
+        {"code": 3, "bits": "11", "name": "ZERO", "notes": ""}
+      ]
+    },
+    {
+      "id": "Z",
+      "description": "ALU/MAC result destination",
+      "width": 1,
+      "notes": "",
+      "values": [
+        {"code": 0, "bits": "0", "name": "RESULT_REGISTER", "notes": ""},
+        {"code": 1, "bits": "1", "name": "FEEDBACK_REGISTER", "notes": ""}
+      ]
+    }
+  ],
+  "confidence": "VERIFIED_PRIMARY"
+}

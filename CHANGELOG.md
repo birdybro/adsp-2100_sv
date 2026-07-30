@@ -40,6 +40,9 @@ semantic versioning after its first release.
   condition logic, and exhaustive 2,048-vector RTL comparison.
 - A constrained Quartus Cyclone V smoke project for the first architectural
   condition-logic block.
+- Primary-transcribed exhaustive tables for all 19 remaining finite Appendix A
+  abbreviations, including AMF, DREG, DAG selectors, stack controls, SF, and
+  X/Y/Z operands.
 
 ### Changed
 
@@ -58,7 +61,7 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 47 Python checks, ISA/register/condition validators,
+- `make test` passes 54 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, and 2,048 exhaustive condition-logic vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
