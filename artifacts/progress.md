@@ -2,10 +2,10 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `1a20108`
+**Latest verified engineering commit:** `74e9f21`
 
-**Current milestone:** documentation acquisition, exact-device audit, and
-executable-model foundation
+**Current milestone:** architecture extraction, executable model, and
+source-backed compute blocks
 
 **Release status:** research/implementation in progress; not instruction-,
 cycle-, or Hard Drivin'-complete
