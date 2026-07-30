@@ -20,6 +20,8 @@ cycle-, or Hard Drivin'-complete
 - Hard Drivin' board-interface first-pass notes;
 - complete 30-class mask inventory, explicit unshown-reserved fallback, and one
   hand-verified NOP semantic fixture;
+- complete source-backed IF/DO condition field with independent model and
+  exhaustive combinational RTL verification;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -33,9 +35,11 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 40 implemented Python unit checks plus manifest/hash verification;
-- Verilator strict lint passes for shared type and generated class-decode
-  packages;
+- 47 implemented Python unit checks plus manifest/hash verification;
+- Verilator strict lint passes for shared types, generated class decode, and
+  condition RTL; all 2,048 condition/flag combinations pass simulation;
+- constrained Quartus Cyclone V condition-block compilation passes with no
+  unconstrained paths;
 - no architectural execution RTL, complete assembler, formal harness, or
   synthesis top exists.
 

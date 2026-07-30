@@ -9,6 +9,7 @@
 | Cached reference hashes | PASS | 13/13 acquired files verified |
 | Repository policy/layout | PASS | 5 tests in `tests/test_repository.py` |
 | ISA class/schema | PASS, PARTIAL | 8 tests; 30 non-overlapping masks and reserved fallback |
+| IF/DO condition logic | PASS | all 32 field meanings; 2,048 exhaustive RTL truth-table vectors |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -18,5 +19,7 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`. Targets for unavailable
-or unimplemented areas print `SKIP` and do not create false pass evidence.
+The implemented foundation regression is `make test`: 47 distinct Python
+checks plus the 2,048-vector Verilator condition regression. Targets for
+unavailable or unimplemented areas print `SKIP` and do not create false pass
+evidence.

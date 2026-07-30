@@ -8,7 +8,7 @@ VERILATOR ?= verilator
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
-test: lint reference-check repository-check decode-tests assembler-tests model-tests
+test: lint reference-check repository-check decode-tests assembler-tests model-tests compute-tests
 	@echo "PASS implemented foundation regression"
 
 lint:
@@ -16,7 +16,9 @@ lint:
 	$(PYTHON) scripts/lint_text.py
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
-			rtl/packages/adsp2100_pkg.sv rtl/packages/adsp2100_decode_pkg.sv; \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_decode_pkg.sv \
+			rtl/core/adsp2100_condition_logic.sv; \
 	else \
 		echo "SKIP Verilator lint: executable not available"; \
 	fi
@@ -38,6 +40,7 @@ model-tests:
 decode-tests:
 	$(PYTHON) tools/generators/validate_isa.py
 	$(PYTHON) tools/generators/validate_register_codes.py
+	$(PYTHON) tools/generators/validate_condition_codes.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata
@@ -46,7 +49,21 @@ assembler-tests:
 	$(PYTHON) -m unittest -v tests.test_assembler_disassembler
 
 compute-tests:
-	@echo "SKIP compute tests: verified computational-unit implementations do not exist"
+	$(PYTHON) -m unittest -v tests.test_condition_logic
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_condition_vectors.py \
+			--output build/condition_expected.mem; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_condition \
+			--top-module tb_adsp2100_condition_logic \
+			rtl/core/adsp2100_condition_logic.sv \
+			sim/unit/tb_adsp2100_condition_logic.sv; \
+		build/obj_condition/Vtb_adsp2100_condition_logic; \
+	else \
+		echo "SKIP condition RTL test: Verilator executable not available"; \
+	fi
 
 dag-tests:
 	@echo "SKIP DAG tests: verified DAG implementations do not exist"
@@ -85,7 +102,7 @@ synth-yosys:
 
 synth-quartus:
 	@if command -v quartus_sh >/dev/null 2>&1; then \
-		echo "SKIP Quartus synthesis: no architectural RTL top or project exists yet"; \
+		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 	else \
 		echo "SKIP Quartus synthesis: Quartus is not installed"; \
 	fi
@@ -99,4 +116,12 @@ docs:
 clean:
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
-	@echo "PASS removed local Python bytecode products"
+	@find build -maxdepth 1 -type f -name condition_expected.mem -delete
+	@if [ -d build/obj_condition ]; then find build/obj_condition -depth -delete; fi
+	@if [ -d build/quartus_condition ]; then find build/quartus_condition -depth -delete; fi
+	@if [ -d synthesis/quartus/db ]; then find synthesis/quartus/db -depth -delete; fi
+	@if [ -d synthesis/quartus/incremental_db ]; then \
+		find synthesis/quartus/incremental_db -depth -delete; \
+	fi
+	@find synthesis/quartus -maxdepth 1 -type f -name '*_pin_model_dump.txt' -delete
+	@echo "PASS removed local generated test products"

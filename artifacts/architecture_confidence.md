@@ -11,6 +11,7 @@
 | NOP `0x000000` | VERIFIED_PRIMARY | original Appendix A diagram |
 | All 30 top-level opcode masks | CORROBORATED | primary diagrams transcribed, algebraically checked, and compared to pinned MAME layout |
 | Opcode field/function legality | UNKNOWN | only class masks, register codes, and NOP semantics are closed |
+| IF/DO condition field and predicates | VERIFIED_PRIMARY | original Tables 4.1/4.3 and Appendix A; exhaustive model/RTL truth table |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
 | Stack underflow/overflow effects | UNKNOWN | status reporting known; effects not closed |
 | Full interrupt phase behavior | PROVISIONAL | recognition state known; all interactions incomplete |

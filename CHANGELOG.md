@@ -35,6 +35,11 @@ semantic versioning after its first release.
   independent NOP fixture and fails closed for unimplemented/reserved words.
 - Shared SystemVerilog width/phase/type package and GitHub Actions foundation
   regression.
+- Complete primary-backed 4-bit IF and inverse-sense DO UNTIL condition
+  databases, an independent model evaluator, synthesizable combinational
+  condition logic, and exhaustive 2,048-vector RTL comparison.
+- A constrained Quartus Cyclone V smoke project for the first architectural
+  condition-logic block.
 
 ### Changed
 
@@ -53,9 +58,12 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 40 Python checks, ISA/register validators, thirteen cached
-  reference hash checks, generated-file checks, and strict Verilator 5.048
-  package lint.
+- `make test` passes 47 Python checks, ISA/register/condition validators,
+  thirteen cached reference hash checks, generated-file checks, strict
+  Verilator 5.048 lint, and 2,048 exhaustive condition-logic vectors.
+- Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
+  constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
+  setup/hold slack, and zero unconstrained ports or paths.
 
 ### Documentation
 
@@ -64,6 +72,8 @@ semantic versioning after its first release.
 - Added first-pass original-device programmer, compute, DAG, sequencer,
   bus/timing, scope/matrix, and Hard Drivin' host/SIM/SOM/interrupt/PAL notes
   with explicit confidence boundaries.
+- Closed the condition-field encoding and predicate table while leaving
+  counter update, loop-stack, and instruction timing explicitly open.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 

@@ -22,6 +22,9 @@
 *.summary
 obj_dir/
 work/
+/synthesis/quartus/db/
+/synthesis/quartus/incremental_db/
+/synthesis/quartus/*_pin_model_dump.txt
 
 # Python
 __pycache__/

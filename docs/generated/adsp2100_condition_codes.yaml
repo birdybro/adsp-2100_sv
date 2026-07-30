@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "field_width": 4,
+  "status": "COMPLETE_FOR_ORIGINAL_CONDITION_FIELD",
+  "source_citations": [
+    "ADI-UM-1989 printed p. 4-6, Table 4.1",
+    "ADI-UM-1989 printed p. 4-25, Table 4.3",
+    "ADI-UM-1989 printed pp. A-6, A-10-A-11 (scan PDF pp. 145, 149-150)"
+  ],
+  "if_conditions": [
+    {"code": 0, "bits": "0000", "mnemonic": "EQ", "predicate": "az"},
+    {"code": 1, "bits": "0001", "mnemonic": "NE", "predicate": "not az"},
+    {"code": 2, "bits": "0010", "mnemonic": "GT", "predicate": "not ((an xor av) or az)"},
+    {"code": 3, "bits": "0011", "mnemonic": "LE", "predicate": "(an xor av) or az"},
+    {"code": 4, "bits": "0100", "mnemonic": "LT", "predicate": "an xor av"},
+    {"code": 5, "bits": "0101", "mnemonic": "GE", "predicate": "not (an xor av)"},
+    {"code": 6, "bits": "0110", "mnemonic": "AV", "predicate": "av"},
+    {"code": 7, "bits": "0111", "mnemonic": "NOT AV", "predicate": "not av"},
+    {"code": 8, "bits": "1000", "mnemonic": "AC", "predicate": "ac"},
+    {"code": 9, "bits": "1001", "mnemonic": "NOT AC", "predicate": "not ac"},
+    {"code": 10, "bits": "1010", "mnemonic": "NEG", "predicate": "as"},
+    {"code": 11, "bits": "1011", "mnemonic": "POS", "predicate": "not as"},
+    {"code": 12, "bits": "1100", "mnemonic": "MV", "predicate": "mv"},
+    {"code": 13, "bits": "1101", "mnemonic": "NOT MV", "predicate": "not mv"},
+    {"code": 14, "bits": "1110", "mnemonic": "NOT CE", "predicate": "counter_nonzero"},
+    {"code": 15, "bits": "1111", "mnemonic": "TRUE", "predicate": "true"}
+  ],
+  "do_until_termination_conditions": [
+    {"code": 0, "bits": "0000", "mnemonic": "NE", "predicate": "not az", "same_code_if_mnemonic": "EQ"},
+    {"code": 1, "bits": "0001", "mnemonic": "EQ", "predicate": "az", "same_code_if_mnemonic": "NE"},
+    {"code": 2, "bits": "0010", "mnemonic": "LE", "predicate": "(an xor av) or az", "same_code_if_mnemonic": "GT"},
+    {"code": 3, "bits": "0011", "mnemonic": "GT", "predicate": "not ((an xor av) or az)", "same_code_if_mnemonic": "LE"},
+    {"code": 4, "bits": "0100", "mnemonic": "GE", "predicate": "not (an xor av)", "same_code_if_mnemonic": "LT"},
+    {"code": 5, "bits": "0101", "mnemonic": "LT", "predicate": "an xor av", "same_code_if_mnemonic": "GE"},
+    {"code": 6, "bits": "0110", "mnemonic": "NOT AV", "predicate": "not av", "same_code_if_mnemonic": "AV"},
+    {"code": 7, "bits": "0111", "mnemonic": "AV", "predicate": "av", "same_code_if_mnemonic": "NOT AV"},
+    {"code": 8, "bits": "1000", "mnemonic": "NOT AC", "predicate": "not ac", "same_code_if_mnemonic": "AC"},
+    {"code": 9, "bits": "1001", "mnemonic": "AC", "predicate": "ac", "same_code_if_mnemonic": "NOT AC"},
+    {"code": 10, "bits": "1010", "mnemonic": "POS", "predicate": "not as", "same_code_if_mnemonic": "NEG"},
+    {"code": 11, "bits": "1011", "mnemonic": "NEG", "predicate": "as", "same_code_if_mnemonic": "POS"},
+    {"code": 12, "bits": "1100", "mnemonic": "NOT MV", "predicate": "not mv", "same_code_if_mnemonic": "MV"},
+    {"code": 13, "bits": "1101", "mnemonic": "MV", "predicate": "mv", "same_code_if_mnemonic": "NOT MV"},
+    {"code": 14, "bits": "1110", "mnemonic": "CE", "predicate": "not counter_nonzero", "same_code_if_mnemonic": "NOT CE"},
+    {"code": 15, "bits": "1111", "mnemonic": "FOREVER", "predicate": "false", "same_code_if_mnemonic": "TRUE"}
+  ],
+  "encoding_rule": "At a given field value, the DO UNTIL termination predicate is the inverse of the IF predicate. FOREVER therefore never terminates.",
+  "confidence": "VERIFIED_PRIMARY"
+}

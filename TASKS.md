@@ -128,9 +128,11 @@ advance beyond research until a page-level primary citation is added.
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
   1,304,054 unshown words as reserved, and generates synthesizable class
-  decode; only the all-zero NOP is a hand-verified semantic instruction
-  fixture. Generated assembler/disassembler artifacts must derive from this
-  database as instruction entries are independently verified.
+  decode. The complete original 16-code IF and inverse-sense DO UNTIL
+  condition fields are separately machine-readable and exhaustively checked;
+  only the all-zero NOP is a hand-verified full instruction fixture. Generated
+  assembler/disassembler artifacts must derive from these databases as
+  instruction entries are independently verified.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -168,8 +170,9 @@ advance beyond research until a page-level primary citation is added.
   passes directed plus independent differential tests.
 - **Source references:** source set required by each implemented group
 - **Relevant tests:** `make model-tests`, `make differential`
-- **Implementation notes:** initial package may establish only exact-width
-  primitives and must raise on unsupported opcodes.
+- **Implementation notes:** the partial model has exact-width primitives,
+  fail-closed unsupported opcodes, and a source-derived IF/DO condition
+  evaluator; full instruction behavior remains unavailable.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -520,7 +523,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### SYNTH-001 — Portable and Cyclone V synthesis qualification
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** first synthesizable RTL block
 - **Acceptance criteria:** Yosys and Quartus builds have zero latches/accidental
@@ -528,8 +531,9 @@ advance beyond research until a page-level primary citation is added.
   paths, optional no-DSP comparison, and passing behavioral equivalence tests.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
-- **Implementation notes:** Quartus 17.0.2 is locally available but target
-  device/license availability must be tested.
+- **Implementation notes:** a constrained Quartus Cyclone V smoke project now
+  targets the source-backed combinational condition block. Whole-core clocks,
+  utilization, and timing remain unavailable; Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.
 - **Confidence:** UNKNOWN
 
