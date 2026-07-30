@@ -32,6 +32,8 @@ cycle-, or Hard Drivin'-complete
   normalization, exponent detection, and block exponent adjustment;
 - source-backed DAG arithmetic model/RTL with original circular-base
   alignment, signed post-modification, and DAG1 bit reversal;
+- source-backed sequencer-flow model/RTL for explicit transfer and loop-end
+  arbitration;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -45,15 +47,17 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 91 implemented Python unit checks plus manifest/hash verification;
+- 100 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
-  condition RTL, ALU, MAC, shifter, and DAG RTL; all 2,048 condition/flag
-  combinations, 51,472 ALU vectors, 21,760 MAC vectors, and 644,368 shifter
-  vectors, plus 204,864 DAG vectors pass simulation;
-- constrained Quartus Cyclone V condition, ALU, MAC, shifter, and DAG block
-  compilations pass with no unconstrained paths;
-- condition, ALU, MAC, shifter, and DAG formal harnesses pass assertion syntax
-  lint, but no formal proof ran because SymbiYosys/Yosys are unavailable;
+  condition RTL, ALU, MAC, shifter, DAG, and sequencer-flow RTL; all 2,048
+  condition/flag combinations, 51,472 ALU vectors, 21,760 MAC vectors, 644,368
+  shifter vectors, 204,864 DAG vectors, and 636,512 sequencer-flow vectors pass
+  simulation;
+- constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG, and
+  sequencer-flow block compilations pass with no unconstrained paths;
+- condition, ALU, MAC, shifter, DAG, and sequencer-flow formal harnesses pass
+  assertion syntax lint, but no formal proof ran because SymbiYosys/Yosys are
+  unavailable;
 - no architectural execution RTL, complete assembler, or whole-core synthesis
   top exists.
 

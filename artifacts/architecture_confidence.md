@@ -16,6 +16,7 @@
 | Standard MAC AMF results and MV | CORROBORATED | original compute chapter plus common family instruction reference; MAME rounding conflict SC-008 disclosed |
 | Shifter SF functions | CORROBORATED | original compute chapter, Tables 2.4/2.5, and Appendix A; instruction integration incomplete |
 | DAG arithmetic and ownership | CORROBORATED | original DAG chapter plus 1994 explicit original/later placement distinction; function integration incomplete |
+| Sequencer next-PC/loop precedence | CORROBORATED | original program-control chapter and 636,512 model/RTL vectors; stacks, counter, interrupts, and cycles incomplete |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
 | Stack underflow/overflow effects | UNKNOWN | status reporting known; effects not closed |
 | Full interrupt phase behavior | PROVISIONAL | recognition state known; all interactions incomplete |

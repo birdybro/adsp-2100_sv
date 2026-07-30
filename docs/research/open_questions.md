@@ -13,6 +13,8 @@
 | OQ-009 | Does the original assembler/cross-software accept every algebraic form later tools accept? | strict original subset; compatible superset | ADSP-2100 Cross-Software Manual or isolated tool run | ROM/source reconstruction | OPEN |
 | OQ-010 | Are ADSP-2100 TRAP/HALT mechanisms used by Atari host control beyond direct pins? | pin-only host stop; TRAP diagnostic handshake; both | schematic/ROM/MAME trace comparison | high | OPEN |
 | OQ-011 | How does NORM negate manually loaded `SE=0x80`? | mathematical +128 gives left-off-scale zero; 8-bit wrap gives right-off-scale extension | original simulator or physical-chip signature | low; EXP never generates this value | OPEN |
+| OQ-012 | Does a conditional CALL using CE test and post-decrement CNTR? | CALL behaves like JUMP; CALL belongs to the excluded return/trap/arithmetic set; condition is illegal | original instruction reference, tool diagnostics, or hardware signature | low/unknown | OPEN |
+| OQ-013 | What value/state results from popping an already-empty stack? | pointer saturates and stale bottom is exposed; no data change; undefined | original simulator and physical-chip signatures for each stack | low unless corrupt code or diagnostics rely on it | OPEN |
 
 Provisional behavior must cite one of these IDs in code and tests. Resolving an
 item requires updating the relevant architecture document, task confidence, and

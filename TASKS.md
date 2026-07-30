@@ -306,19 +306,24 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-SEQ-001 — Program sequencer
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-001, TIME-001
 - **Acceptance criteria:** sequential PC, every condition, branch/call/return,
   loops, stacks, flushes, and control interactions match model, cycle, and
   formal properties.
 - **Source references:** ADI-UM-1989 sequencer and instruction chapters
-- **Relevant tests:** `make sequencer-tests`, `formal/sequencer.sby`
-- **Implementation notes:** loops are architectural hardware state, not
-  unrolled software behavior.
-- **Unresolved questions:** delayed transfers, stack fault behavior, pipeline
-  visibility.
-- **Confidence:** UNKNOWN
+- **Relevant tests:** `make sequencer-tests`, `formal/sequencer_flow.sby`
+- **Implementation notes:** an independent instruction-boundary model and
+  portable combinational RTL select sequential, jump, call, return, loop-back,
+  and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
+  every 14-bit PC for return-address wrap and explicit-transfer precedence at
+  loop end. This block emits stack/counter action requests; it does not
+  implement their state or timing.
+- **Unresolved questions:** opcode integration, DO setup, actual stacks,
+  CNTR/CE semantics including OQ-012, interrupts, delayed transfers, cache
+  interaction, stack faults, pipeline visibility, and logical bus phases.
+- **Confidence:** CORROBORATED
 
 ## M16 — Register files and alternate register bank
 
@@ -533,9 +538,10 @@ advance beyond research until a page-level primary citation is added.
   and uncovered state.
 - **Source references:** architecture specifications for each property
 - **Relevant tests:** `make formal`
-- **Implementation notes:** depth-one condition, ALU, MAC, shifter, and DAG
-  combinational harnesses now exist; never call a bounded result complete
-  proof. Proof execution awaits an installed SymbiYosys/Yosys/SMT toolchain.
+- **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
+  sequencer-flow combinational harnesses now exist; never call a bounded
+  result complete proof. Proof execution awaits an installed
+  SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.
 - **Confidence:** UNKNOWN
 
@@ -552,8 +558,9 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
-  the condition, ALU, MAC, shifter, and DAG combinational blocks. Whole-core
-  clocks, utilization, and timing remain unavailable; Yosys is not installed.
+  the condition, ALU, MAC, shifter, DAG, and sequencer-flow combinational
+  blocks. Whole-core clocks, utilization, and timing remain unavailable;
+  Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.
 - **Confidence:** UNKNOWN
 

@@ -16,3 +16,10 @@ evidence.
 Nested loops cannot terminate on the same instruction because the comparator
 checks one termination at a time [ADI-UM-1989, printed p. 4-8]. Premature loop
 exit may require explicit stack pops [ADI-UM-1989, printed p. 4-7].
+
+The instruction-boundary flow block implements the sourced precedence rule:
+a taken jump, call, or return on the loop's final instruction performs only its
+explicit flow/PC-stack action and suppresses implicit loop, count-stack, and
+counter-test actions. A false explicit condition allows the normal loop back
+or exit path. Stack arrays, DO UNTIL pushes, nested state, overflow, and empty
+pop effects remain outside this block.

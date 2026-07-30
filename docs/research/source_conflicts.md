@@ -124,3 +124,24 @@ The original-device model therefore treats `abs(M) == L` as valid; one wrap
 returns the same I. This case has a directed model/RTL vector. Original hardware
 confirmation remains desirable, and no later-family rule is generalized back
 to the ADSP-2100.
+
+## SC-012 — MAME resolves loop-end state before explicit control transfers
+
+The original manual requires a taken jump, call, or return on the last loop
+instruction to take precedence over implicit loop sequencing. No loop back,
+fall-through pop, or counter decrement occurs; when the explicit condition is
+false, normal loop sequencing resumes
+[ADI-UM-1989, printed p. 4-7].
+
+Pinned MAME advances or resolves the active loop before parsing the fetched
+instruction [MAME-ADSP2100-CORE, commit
+`030fefcbd14e47c01ec9d67655be90f64a1dc8ab`, lines 1200–1223]. Conditional
+returns and jumps/calls are processed only afterward
+[MAME-ADSP2100-CORE, same commit, lines 1341–1359, 1450–1471]. Code inspection
+therefore indicates that loop pops, back-edges, or CE side effects can precede
+a taken explicit transfer, contrary to the primary rule.
+
+The clean-room flow model and RTL apply explicit-transfer precedence and have
+dedicated loop-end CALL and RETURN regressions. A reduced executable MAME trace
+is still required before classifying exact downstream state differences for
+each condition combination.

@@ -1,0 +1,28 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_sequencer_flow
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_sequencer
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer_flow.sv
+set_global_assignment -name SDC_FILE sequencer_flow_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to explicit_flow_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to explicit_taken_i
+set_instance_assignment -name VIRTUAL_PIN ON -to explicit_target_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_active_i
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_end_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_start_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_termination_true_i
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_uses_counter_i
+set_instance_assignment -name VIRTUAL_PIN ON -to next_pc_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_push_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_push_value_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_counter_test_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_back_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_exit_o
+set_instance_assignment -name VIRTUAL_PIN ON -to explicit_transfer_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

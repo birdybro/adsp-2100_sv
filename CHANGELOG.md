@@ -55,9 +55,12 @@ semantic versioning after its first release.
 - Independent DAG arithmetic model and portable RTL for old-I addressing,
   signed post-modification, linear and circular wrap, original-device base
   alignment, DAG1 bit reversal, and DAG2's non-reversed output.
+- Independent model and portable RTL for instruction-boundary sequential,
+  jump, call, return, loop-back, and loop-exit arbitration, including explicit
+  control-transfer precedence at a loop end.
 - Bounded combinational formal harnesses and SymbiYosys recipes for condition,
-  ALU, MAC, shifter, and DAG invariants, with assertion lint available without
-  SymbiYosys.
+  ALU, MAC, shifter, DAG, and sequencer-flow invariants, with assertion lint
+  available without SymbiYosys.
 
 ### Changed
 
@@ -78,10 +81,11 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 91 Python checks, ISA/register/condition/field validators,
+- `make test` passes 100 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
-  ALU, 21,760 MAC, 644,368 shifter, plus 204,864 DAG model-versus-RTL vectors.
+  ALU, 21,760 MAC, 644,368 shifter, 204,864 DAG, plus 636,512 sequencer-flow
+  model-versus-RTL vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -97,9 +101,12 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the constrained DAG block: 172 ALMs, 305
   combinational ALUTs, no registers/RAM/DSPs, positive setup/hold slack, and
   zero unconstrained ports or paths.
+- Quartus full compilation passes for the constrained sequencer-flow block: 74
+  ALMs, 44 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold
+  slack, and zero unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
-  MAC, shifter, and DAG harnesses; proof execution remains explicitly skipped
-  without SymbiYosys.
+  MAC, shifter, DAG, and sequencer-flow harnesses; proof execution remains
+  explicitly skipped without SymbiYosys.
 
 ### Documentation
 
@@ -126,6 +133,8 @@ semantic versioning after its first release.
   and pinned MAME (SC-010).
 - Recorded the original manual's modify-equals-length allowance against the
   later family's strict inequality (SC-011).
+- Recorded MAME's loop-before-instruction ordering against the original
+  explicit-control-transfer precedence rule (SC-012).
 
 ### Known Issues
 
