@@ -1,0 +1,58 @@
+# Reference provenance and local cache
+
+`manifest.yaml` is JSON-compatible YAML so validation requires only Python's
+standard library. Each record states exact-device applicability, authority,
+redistribution status, confidence, and whether a local copy may be committed.
+
+The words have deliberately narrow meanings:
+
+- `acquired`: the configured local file was fetched, validated, and its SHA-256
+  is recorded;
+- `identified`: a source or target is known, but no checksum-verified local
+  artifact has been acquired;
+- `unavailable`: attempted access failed or is not lawful/possible;
+- `superseded`: retained for provenance but replaced by a better revision.
+
+`authority_level` ranks the nature of the source; it does not assert that every
+statement in a family manual applies to the original device. Applicability
+still has to be established at the cited page or section.
+
+## Safe workflow
+
+```sh
+python3 scripts/fetch_references.py --update-manifest
+python3 scripts/verify_reference_hashes.py
+python3 scripts/report_missing_references.py
+python3 scripts/fetch_mame_source.py
+```
+
+The fetcher:
+
+- only processes records with `download.enabled`;
+- limits response size and requires HTTP 200;
+- checks declared content types;
+- rejects HTML masquerading as PDF;
+- uses a temporary file and verifies SHA-256 before replacement;
+- never executes downloads;
+- skips already valid files unless `--refresh` is given.
+
+All downloads are written beneath gitignored `reference_cache/`. A hash update
+only fills a previously empty digest; it never normalizes an unexpected new
+digest into the manifest.
+
+`fetch_mame_source.py` creates a sparse, detached checkout containing the
+ADSP-21xx CPU and Hard Drivin' machine sources at commit
+`030fefcbd14e47c01ec9d67655be90f64a1dc8ab`. It verifies an existing checkout
+instead of advancing it. The checkout is a license-preserving differential
+reference and is never imported into project-authored model or RTL.
+
+## Citing sources
+
+Architecture documents cite a reference ID plus publication/revision and the
+manual's printed page/section/table/figure. PDF page numbers are added only as
+navigation aids because scans often have front-matter offsets. MAME citations
+use the pinned commit, path, and line range. Atari schematics use drawing
+number, revision, and sheet.
+
+Do not reproduce extended manual prose. Add concise technical paraphrases and
+precise locations.

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "fixtures": [
+    {
+      "id": "HAND-NOP-000000",
+      "source": "NOP;",
+      "opcode": "0x000000",
+      "program_word_bytes_big_endian": "000000",
+      "encoding_class": 30,
+      "source_citation": "ADI-UM-1989 printed p. A-5, Type 30 diagram (scan PDF p. 144)",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    }
+  ]
+}

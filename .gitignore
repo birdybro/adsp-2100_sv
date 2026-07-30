@@ -1,0 +1,45 @@
+# Local references and copyrighted inputs
+/reference_cache/**
+!/reference_cache/.gitkeep
+*.rom
+*.bin
+*.jed
+*.pal
+
+# Generated build and simulation products
+/build/**
+!/build/.gitkeep
+*.vcd
+*.fst
+*.wlf
+*.log
+*.jou
+*.qws
+*.rpt
+*.sof
+*.pof
+*.smsg
+*.summary
+obj_dir/
+work/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+*~
+*.swp
+.idea/
+.vscode/
+
+# Local ROM/hash configuration
+/tests/local_roms/
+/artifacts/local/**

@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "PARTIAL_RESEARCH_SEED",
+  "completeness_claim": false,
+  "unshown_encoding_policy": {
+    "classification": "RESERVED_UNSHOWN",
+    "architectural_behavior": "UNDOCUMENTED",
+    "implementation_rule": "Decode distinctly and fail closed; never execute as NOP without stronger evidence.",
+    "source_citation": "ADI-UM-1989 printed p. A-1 states that instruction codes not shown are reserved for future use.",
+    "confidence": "VERIFIED_PRIMARY"
+  },
+  "required_instruction_fields": [
+    "id",
+    "mnemonic",
+    "algebraic_assembly_syntax",
+    "encoding_pattern",
+    "opcode_mask",
+    "opcode_value",
+    "fields",
+    "condition_field",
+    "computation_field",
+    "source_register_selections",
+    "destination_register_selections",
+    "data_move_fields",
+    "dag_selection",
+    "addressing_mode",
+    "immediate_fields",
+    "branch_fields",
+    "registers_read",
+    "registers_written",
+    "computational_unit_used",
+    "status_flags_read",
+    "status_flags_written",
+    "memory_spaces_accessed",
+    "pm_read_write_behavior",
+    "dm_read_write_behavior",
+    "simultaneous_operations",
+    "legal_multifunction_combinations",
+    "illegal_or_reserved_combinations",
+    "old_value_new_value_semantics",
+    "write_conflict_rules",
+    "condition_false_behavior",
+    "loop_interaction",
+    "interrupt_interaction",
+    "documented_cycles",
+    "external_bus_transactions",
+    "wait_state_sensitivity",
+    "parallel_actions",
+    "source_citations",
+    "confidence",
+    "unresolved_issues"
+  ],
+  "encoding_classes": [
+    {
+      "original_type": 1,
+      "name": "ALU/MAC plus DM read plus PM read",
+      "encoding_pattern": "11xxxxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xc00000",
+      "opcode_value": "0xc00000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+    },
+    {
+      "original_type": 2,
+      "name": "DM write immediate",
+      "encoding_pattern": "101xxxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xe00000",
+      "opcode_value": "0xa00000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+    },
+    {
+      "original_type": 3,
+      "name": "direct DM read/write",
+      "encoding_pattern": "100xxxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xe00000",
+      "opcode_value": "0x800000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+    },
+    {
+      "original_type": 4,
+      "name": "ALU/MAC plus DM read/write",
+      "encoding_pattern": "011xxxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xe00000",
+      "opcode_value": "0x600000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+    },
+    {
+      "original_type": 5,
+      "name": "ALU/MAC plus PM read/write",
+      "encoding_pattern": "0101xxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf00000",
+      "opcode_value": "0x500000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+    },
+    {
+      "original_type": 6,
+      "name": "data-register immediate",
+      "encoding_pattern": "0100xxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf00000",
+      "opcode_value": "0x400000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 7,
+      "name": "non-data-register immediate",
+      "encoding_pattern": "0011xxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf00000",
+      "opcode_value": "0x300000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 8,
+      "name": "ALU/MAC plus internal data-register move",
+      "encoding_pattern": "00101xxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf80000",
+      "opcode_value": "0x280000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 9,
+      "name": "conditional ALU/MAC",
+      "encoding_pattern": "00100xxxxxxxxxxx0000xxxx",
+      "opcode_mask": "0xf800f0",
+      "opcode_value": "0x200000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 10,
+      "name": "conditional direct jump/call",
+      "encoding_pattern": "00011xxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf80000",
+      "opcode_value": "0x180000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 11,
+      "name": "DO UNTIL",
+      "encoding_pattern": "000101xxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xfc0000",
+      "opcode_value": "0x140000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 12,
+      "name": "shifter plus DM read/write",
+      "encoding_pattern": "0001001xxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xfe0000",
+      "opcode_value": "0x120000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+    },
+    {
+      "original_type": 13,
+      "name": "shifter plus PM read/write",
+      "encoding_pattern": "00010001xxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff0000",
+      "opcode_value": "0x110000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 14,
+      "name": "shifter plus internal data-register move",
+      "encoding_pattern": "00010000xxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff0000",
+      "opcode_value": "0x100000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 15,
+      "name": "immediate shift",
+      "encoding_pattern": "000011110xxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff8000",
+      "opcode_value": "0x0f0000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 16,
+      "name": "conditional shift",
+      "encoding_pattern": "000011100xxxxxxx0000xxxx",
+      "opcode_mask": "0xff80f0",
+      "opcode_value": "0x0e0000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 17,
+      "name": "internal data move",
+      "encoding_pattern": "000011010000xxxxxxxxxxxx",
+      "opcode_mask": "0xfff000",
+      "opcode_value": "0x0d0000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 18,
+      "name": "mode control",
+      "encoding_pattern": "000011000000xxxxxxxx0000",
+      "opcode_mask": "0xfff00f",
+      "opcode_value": "0x0c0000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 19,
+      "name": "conditional indirect jump/call",
+      "encoding_pattern": "0000101100000000xx0xxxxx",
+      "opcode_mask": "0xffff20",
+      "opcode_value": "0x0b0000",
+      "status": "PRIMARY_TRANSCRIPTION_CONFLICT_NOTED",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed p. A-3 (scan PDF p. 142)"
+    },
+    {
+      "original_type": 20,
+      "name": "conditional return",
+      "encoding_pattern": "0000101000000000000xxxxx",
+      "opcode_mask": "0xffffe0",
+      "opcode_value": "0x0a0000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 21,
+      "name": "modify address register",
+      "encoding_pattern": "0000100100000000000xxxxx",
+      "opcode_mask": "0xffffe0",
+      "opcode_value": "0x090000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 22,
+      "name": "conditional TRAP",
+      "encoding_pattern": "00001000000000000000xxxx",
+      "opcode_mask": "0xfffff0",
+      "opcode_value": "0x080000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 23,
+      "name": "DIVQ",
+      "encoding_pattern": "0000011100010xxx00000000",
+      "opcode_mask": "0xfff8ff",
+      "opcode_value": "0x071000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 24,
+      "name": "DIVS",
+      "encoding_pattern": "00000110000xxxxx00000000",
+      "opcode_mask": "0xffe0ff",
+      "opcode_value": "0x060000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 25,
+      "name": "saturate MR",
+      "encoding_pattern": "000001010000000000000000",
+      "opcode_mask": "0xffffff",
+      "opcode_value": "0x050000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 26,
+      "name": "stack control",
+      "encoding_pattern": "00000100000000000000xxxx",
+      "opcode_mask": "0xfffff0",
+      "opcode_value": "0x040000",
+      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
+      "confidence": "CORROBORATED",
+      "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
+    },
+    {
+      "original_type": 27,
+      "name": "reserved",
+      "encoding_pattern": "00000011xxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff0000",
+      "opcode_value": "0x030000",
+      "status": "PRIMARY_RESERVED_LATER_REUSED",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed p. A-5 (scan PDF p. 144)"
+    },
+    {
+      "original_type": 28,
+      "name": "reserved",
+      "encoding_pattern": "00000010xxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff0000",
+      "opcode_value": "0x020000",
+      "status": "PRIMARY_RESERVED_LATER_REUSED",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed p. A-5 (scan PDF p. 144)"
+    },
+    {
+      "original_type": 29,
+      "name": "reserved",
+      "encoding_pattern": "00000001xxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff0000",
+      "opcode_value": "0x010000",
+      "status": "PRIMARY_RESERVED_LATER_REUSED",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed p. A-5 (scan PDF p. 144)"
+    },
+    {
+      "original_type": 30,
+      "name": "NOP",
+      "encoding_pattern": "000000000000000000000000",
+      "opcode_mask": "0xffffff",
+      "opcode_value": "0x000000",
+      "status": "HAND_VERIFIED_FIXTURE",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed p. A-5 (scan PDF p. 144)"
+    }
+  ],
+  "instructions": [
+    {
+      "id": "NOP-000000",
+      "mnemonic": "NOP",
+      "algebraic_assembly_syntax": "NOP;",
+      "encoding_pattern": "000000000000000000000000",
+      "opcode_mask": "0xffffff",
+      "opcode_value": "0x000000",
+      "fields": [],
+      "condition_field": null,
+      "computation_field": null,
+      "source_register_selections": [],
+      "destination_register_selections": [],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [],
+      "registers_written": [],
+      "computational_unit_used": null,
+      "status_flags_read": [],
+      "status_flags_written": [],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [],
+      "old_value_new_value_semantics": "No explicit architectural register action.",
+      "write_conflict_rules": "No destinations.",
+      "condition_false_behavior": "Unconditional instruction; not applicable.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet encoded.",
+      "interrupt_interaction": "Normal instruction-boundary recognition; exact phase is specified separately.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "External fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to the external memory acknowledge behavior.",
+      "parallel_actions": [],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. A-4, Type 30 NOP encoding diagram"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 5-1–5-4, instruction fetch and pipeline"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "Encode the exact loop-terminal and interrupt action graph after sequencer transcription."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,337 @@
+"""Exact-width foundation for an independent original ADSP-2100 model.
+
+This module intentionally implements only reset classification and the
+hand-verified all-zero NOP fixture. Unsupported behavior fails closed instead
+of becoming an accidental no-op.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field, replace
+from enum import Enum
+import json
+import random
+from typing import Final
+
+from tools.generators.validate_isa import classify_opcode, load_database
+
+
+PROGRAM_WORD_WIDTH: Final = 24
+DATA_WORD_WIDTH: Final = 16
+ADDRESS_WIDTH: Final = 14
+MR_WIDTH: Final = 40
+
+
+class UnsupportedOpcode(RuntimeError):
+    """The instruction is not yet source-verified and implemented."""
+
+
+class ReservedOpcode(UnsupportedOpcode):
+    """The original manual marks the instruction word as reserved."""
+
+
+class UnsupportedFeature(RuntimeError):
+    """The requested architectural context is outside the verified slice."""
+
+
+@dataclass(frozen=True)
+class _UnknownValue:
+    label: str = "UNKNOWN"
+
+    def __str__(self) -> str:
+        return self.label
+
+
+UNKNOWN: Final = _UnknownValue()
+KnownOrUnknown = "ExactWord | _UnknownValue"
+
+
+@dataclass(frozen=True, order=True)
+class ExactWord:
+    """An unsigned bit vector that rejects, rather than masks, invalid input."""
+
+    width: int
+    value: int
+
+    def __post_init__(self) -> None:
+        if self.width <= 0:
+            raise ValueError("width must be positive")
+        if not 0 <= self.value < (1 << self.width):
+            raise ValueError(f"value {self.value} does not fit unsigned {self.width} bits")
+
+    @property
+    def signed(self) -> int:
+        return sign_extend(self.value, self.width)
+
+    def incremented(self, amount: int = 1) -> "ExactWord":
+        return ExactWord(self.width, mask_to_width(self.value + amount, self.width))
+
+    def hex(self) -> str:
+        digits = (self.width + 3) // 4
+        return f"0x{self.value:0{digits}x}"
+
+
+def mask_to_width(value: int, width: int) -> int:
+    """Explicitly apply hardware truncation at a named width boundary."""
+
+    if width <= 0:
+        raise ValueError("width must be positive")
+    return value & ((1 << width) - 1)
+
+
+def sign_extend(value: int, width: int) -> int:
+    """Interpret an unsigned *width*-bit pattern as two's-complement."""
+
+    word = ExactWord(width, value)
+    sign = 1 << (width - 1)
+    return (word.value ^ sign) - sign
+
+
+def _unknown_words(count: int) -> tuple[_UnknownValue, ...]:
+    return (UNKNOWN,) * count
+
+
+@dataclass(frozen=True)
+class ComputationalBank:
+    """Original computational data registers, with authentic reset unknowns."""
+
+    ax: tuple[KnownOrUnknown, KnownOrUnknown] = field(default_factory=lambda: _unknown_words(2))
+    ay: tuple[KnownOrUnknown, KnownOrUnknown] = field(default_factory=lambda: _unknown_words(2))
+    ar: KnownOrUnknown = UNKNOWN
+    af: KnownOrUnknown = UNKNOWN
+    mx: tuple[KnownOrUnknown, KnownOrUnknown] = field(default_factory=lambda: _unknown_words(2))
+    my: tuple[KnownOrUnknown, KnownOrUnknown] = field(default_factory=lambda: _unknown_words(2))
+    mf: KnownOrUnknown = UNKNOWN
+    mr: KnownOrUnknown = UNKNOWN
+    si: KnownOrUnknown = UNKNOWN
+    se: KnownOrUnknown = UNKNOWN
+    sb: KnownOrUnknown = UNKNOWN
+    sr: KnownOrUnknown = UNKNOWN
+
+    @classmethod
+    def randomized(cls, rng: random.Random) -> "ComputationalBank":
+        w16 = lambda: ExactWord(DATA_WORD_WIDTH, rng.randrange(1 << DATA_WORD_WIDTH))
+        return cls(
+            ax=(w16(), w16()),
+            ay=(w16(), w16()),
+            ar=w16(),
+            af=w16(),
+            mx=(w16(), w16()),
+            my=(w16(), w16()),
+            mf=w16(),
+            mr=ExactWord(MR_WIDTH, rng.randrange(1 << MR_WIDTH)),
+            si=w16(),
+            se=ExactWord(8, rng.randrange(1 << 8)),
+            sb=ExactWord(5, rng.randrange(1 << 5)),
+            sr=ExactWord(32, rng.randrange(1 << 32)),
+        )
+
+
+@dataclass(frozen=True)
+class DAGRegisters:
+    i: tuple[KnownOrUnknown, ...] = field(default_factory=lambda: _unknown_words(8))
+    m: tuple[KnownOrUnknown, ...] = field(default_factory=lambda: _unknown_words(8))
+    l: tuple[KnownOrUnknown, ...] = field(default_factory=lambda: _unknown_words(8))
+
+    @classmethod
+    def randomized(cls, rng: random.Random) -> "DAGRegisters":
+        words = lambda: tuple(ExactWord(ADDRESS_WIDTH, rng.randrange(1 << ADDRESS_WIDTH)) for _ in range(8))
+        return cls(i=words(), m=words(), l=words())
+
+
+@dataclass(frozen=True)
+class ArchitecturalState:
+    """Architectural state visible at a verified instruction boundary."""
+
+    pc: ExactWord = field(default_factory=lambda: ExactWord(ADDRESS_WIDTH, 4))
+    primary: ComputationalBank = field(default_factory=ComputationalBank)
+    alternate: ComputationalBank = field(default_factory=ComputationalBank)
+    dag: DAGRegisters = field(default_factory=DAGRegisters)
+    px: KnownOrUnknown = UNKNOWN
+    astat: KnownOrUnknown = UNKNOWN
+    sstat: ExactWord = field(default_factory=lambda: ExactWord(8, 0x55))
+    mstat: ExactWord = field(default_factory=lambda: ExactWord(4, 0))
+    imask: ExactWord = field(default_factory=lambda: ExactWord(4, 0))
+    icntl: KnownOrUnknown = UNKNOWN
+    cntr: KnownOrUnknown = UNKNOWN
+    pc_stack: tuple[ExactWord, ...] = ()
+    loop_stack: tuple[tuple[ExactWord, ExactWord], ...] = ()
+    count_stack: tuple[ExactWord, ...] = ()
+    status_stack: tuple[tuple[ExactWord, ExactWord, ExactWord], ...] = ()
+    total_instruction_cycles: int = 0
+
+    @classmethod
+    def reset(cls) -> "ArchitecturalState":
+        """State after documented reset release, preserving undefined fields."""
+
+        return cls()
+
+    @classmethod
+    def randomized(cls, seed: int) -> "ArchitecturalState":
+        """Produce deterministic known state for future replayable tests."""
+
+        rng = random.Random(seed)
+        return cls(
+            pc=ExactWord(ADDRESS_WIDTH, rng.randrange(1 << ADDRESS_WIDTH)),
+            primary=ComputationalBank.randomized(rng),
+            alternate=ComputationalBank.randomized(rng),
+            dag=DAGRegisters.randomized(rng),
+            px=ExactWord(8, rng.randrange(1 << 8)),
+            astat=ExactWord(8, rng.randrange(1 << 8)),
+            sstat=ExactWord(8, rng.randrange(1 << 8)),
+            mstat=ExactWord(4, rng.randrange(1 << 4)),
+            imask=ExactWord(4, rng.randrange(1 << 4)),
+            icntl=ExactWord(5, rng.randrange(1 << 5)),
+            cntr=ExactWord(ADDRESS_WIDTH, rng.randrange(1 << ADDRESS_WIDTH)),
+        )
+
+
+class MemorySpace(str, Enum):
+    PROGRAM = "PM"
+    DATA = "DM"
+
+
+class TransactionKind(str, Enum):
+    INSTRUCTION_FETCH = "INSTRUCTION_FETCH"
+    DATA_READ = "DATA_READ"
+    DATA_WRITE = "DATA_WRITE"
+
+
+@dataclass(frozen=True)
+class MemoryTransaction:
+    space: MemorySpace
+    kind: TransactionKind
+    address: ExactWord
+    width: int
+    data: ExactWord | None
+    wait_instruction_cycles: int = 0
+
+
+@dataclass(frozen=True)
+class TraceFrame:
+    retirement_index: int
+    pc_before: ExactWord
+    pc_after: ExactWord
+    opcode: ExactWord
+    instruction_cycles: int
+    transactions: tuple[MemoryTransaction, ...]
+
+    def to_json(self) -> str:
+        transaction_data = [
+            {
+                "space": transaction.space.value,
+                "kind": transaction.kind.value,
+                "address": transaction.address.hex(),
+                "width": transaction.width,
+                "data": None if transaction.data is None else transaction.data.hex(),
+                "wait_instruction_cycles": transaction.wait_instruction_cycles,
+            }
+            for transaction in self.transactions
+        ]
+        return json.dumps(
+            {
+                "retirement_index": self.retirement_index,
+                "pc_before": self.pc_before.hex(),
+                "pc_after": self.pc_after.hex(),
+                "opcode": self.opcode.hex(),
+                "instruction_cycles": self.instruction_cycles,
+                "transactions": transaction_data,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+
+
+@dataclass
+class ADSP2100Model:
+    """Fail-closed partial model, structurally independent from future RTL."""
+
+    state: ArchitecturalState = field(default_factory=ArchitecturalState.reset)
+    trace: list[TraceFrame] = field(default_factory=list)
+    program_memory: dict[int, ExactWord] = field(default_factory=dict)
+    data_memory: dict[int, ExactWord] = field(default_factory=dict)
+
+    def reset(self) -> None:
+        self.state = ArchitecturalState.reset()
+        self.trace.clear()
+
+    def load_program(self, words: list[int] | tuple[int, ...], *, origin: int = 4) -> None:
+        if not 0 <= origin < (1 << ADDRESS_WIDTH):
+            raise ValueError("program origin must fit 14 bits")
+        if origin + len(words) > (1 << ADDRESS_WIDTH):
+            raise ValueError("program image exceeds 14-bit instruction address space")
+        for offset, word in enumerate(words):
+            self.program_memory[origin + offset] = ExactWord(PROGRAM_WORD_WIDTH, word)
+
+    def load_data(self, words: list[int] | tuple[int, ...], *, origin: int = 0) -> None:
+        if not 0 <= origin < (1 << ADDRESS_WIDTH):
+            raise ValueError("data origin must fit 14 bits")
+        if origin + len(words) > (1 << ADDRESS_WIDTH):
+            raise ValueError("data image exceeds 14-bit data address space")
+        for offset, word in enumerate(words):
+            self.data_memory[origin + offset] = ExactWord(DATA_WORD_WIDTH, word)
+
+    def step_program(self, *, fetch_wait_instruction_cycles: int = 0) -> TraceFrame:
+        address = self.state.pc.value
+        try:
+            instruction = self.program_memory[address]
+        except KeyError as exc:
+            raise UnsupportedFeature(
+                f"no 24-bit program word loaded at 0x{address:04x}"
+            ) from exc
+        return self.step(
+            instruction.value,
+            fetch_wait_instruction_cycles=fetch_wait_instruction_cycles,
+        )
+
+    def step(self, opcode: int, *, fetch_wait_instruction_cycles: int = 0) -> TraceFrame:
+        """Retire one verified instruction.
+
+        Only all-zero NOP in empty-loop/no-interrupt baseline state is currently
+        supported. This restriction prevents the seed from implying sequencer
+        behavior that has not yet been encoded.
+        """
+
+        instruction = ExactWord(PROGRAM_WORD_WIDTH, opcode)
+        if fetch_wait_instruction_cycles < 0:
+            raise ValueError("fetch wait cycles cannot be negative")
+        if instruction.value != 0:
+            database = load_database()
+            classes = classify_opcode(database, instruction.value)
+            if not classes or classes[0]["name"] == "reserved":
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} is reserved on the original ADSP-2100"
+                )
+            raise UnsupportedOpcode(
+                f"opcode {instruction.hex()} is source-classified as "
+                f"type {classes[0]['original_type']} but not semantically implemented"
+            )
+        if self.state.loop_stack:
+            raise UnsupportedFeature("NOP loop-terminal handling is not implemented")
+
+        pc_before = self.state.pc
+        pc_after = pc_before.incremented()
+        instruction_cycles = 1 + fetch_wait_instruction_cycles
+        transaction = MemoryTransaction(
+            space=MemorySpace.PROGRAM,
+            kind=TransactionKind.INSTRUCTION_FETCH,
+            address=pc_before,
+            width=PROGRAM_WORD_WIDTH,
+            data=instruction,
+            wait_instruction_cycles=fetch_wait_instruction_cycles,
+        )
+        frame = TraceFrame(
+            retirement_index=len(self.trace),
+            pc_before=pc_before,
+            pc_after=pc_after,
+            opcode=instruction,
+            instruction_cycles=instruction_cycles,
+            transactions=(transaction,),
+        )
+        self.state = replace(
+            self.state,
+            pc=pc_after,
+            total_instruction_cycles=self.state.total_instruction_cycles + instruction_cycles,
+        )
+        self.trace.append(frame)
+        return frame

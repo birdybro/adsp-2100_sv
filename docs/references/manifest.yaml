@@ -1,0 +1,748 @@
+{
+  "schema_version": 1,
+  "updated": "2026-07-30",
+  "references": [
+    {
+      "id": "ADI-UM-1989",
+      "title": "ADSP-2100 User's Manual",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "1989",
+      "revision": "first identified 1989 edition; printing details to extract",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/1989_Analog_Devices_ADSP_2100_Users_Manual.pdf",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "adi/1989_adsp2100_users_manual.pdf",
+      "sha256": "b6b26bd470e3dc18da568989e2fb3f593b8727c9455c9ab377376ca62721376d",
+      "document_type": "user_manual",
+      "exact_device_applicability": "Original ADSP-2100 architecture and system interface.",
+      "family_member_applicability": [
+        "ADSP-2100"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "primary_original_device",
+      "relevance": [
+        "architecture",
+        "programmers_model",
+        "instruction_overview",
+        "system_interface"
+      ],
+      "cited_pages_or_sections": [
+        "To be indexed after local extraction."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 20000000
+      },
+      "notes": "Bitsavers scan of an original Analog Devices publication. The manual itself points to the separate Cross-Software Manual for the complete instruction reference."
+    },
+    {
+      "id": "ADI-UM-FAMILY-1995",
+      "title": "ADSP-2100 Family User's Manual",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "1995-09",
+      "revision": "Third Edition",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/ADSP-2100_Users_Manual_3ed_Sep95.pdf",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "adi/1995_adsp2100_family_users_manual_3ed.pdf",
+      "sha256": "44caea992c8f2ec2738e31ff45e0bba6c1cd4275c6b398d1990929c0dab41fed",
+      "document_type": "family_user_manual",
+      "exact_device_applicability": "Only statements explicitly including ADSP-2100 may support original-device claims.",
+      "family_member_applicability": [
+        "ADSP-2100 family through 1995; exact listed devices to extract"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "primary_explicit_family",
+      "relevance": [
+        "architecture",
+        "instruction_set",
+        "computational_units",
+        "dag",
+        "sequencer",
+        "peripherals"
+      ],
+      "cited_pages_or_sections": [
+        "Chapter 1 applicability statements and device table require extraction."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 30000000
+      },
+      "notes": "Must never be treated as uniformly applicable to the original ADSP-2100."
+    },
+    {
+      "id": "ADI-DATABOOK-1987",
+      "title": "Analog Devices DSP Products Data Book",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "1987",
+      "revision": "identified scan",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/1987_Analog_Devices_DSP_Products_Data_Book.pdf",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "adi/1987_dsp_products_data_book.pdf",
+      "sha256": "a89931bd9ef28d159e1d199c661b2a826f66ea28bcecfd6d08c7a926f9d30f39",
+      "document_type": "data_book",
+      "exact_device_applicability": "Contains the contemporary original ADSP-2100 data sheet at printed pages 2-15 onward, plus product and development-system material.",
+      "family_member_applicability": [
+        "ADSP-2100 and contemporary ADI DSP products"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "primary_original_device",
+      "relevance": [
+        "datasheet",
+        "device_identification",
+        "electrical_timing",
+        "toolchain_catalog"
+      ],
+      "cited_pages_or_sections": [
+        "ADSP-2100 data sheet, printed pp. 2-15 onward (scan PDF pp. 25 onward).",
+        "ADSP-2100 development-system literature, printed pp. 2-3–2-14."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 50000000
+      },
+      "notes": "This acquired contemporary data book supplies the initial original-device data-sheet target; seek a separately published revision for revision comparison."
+    },
+    {
+      "id": "ADI-ASM-1994",
+      "title": "ADSP-2100 Family Assembler Tools & Simulator Manual",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "1994-11",
+      "revision": "Second Edition",
+      "source_url": "https://www.smd.hu/Data/Analog/DSP/21xx/Assembler%20Tools%20and%20Simulator%20Manual%2021xx/ASM.PDF",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "adi/1994_adsp2100_family_assembler_tools_simulator_2ed.pdf",
+      "sha256": "9d4de12172b9db2f53e51213c67fc5f23a2ed046004628caa15672976c2a7455",
+      "document_type": "toolchain_manual",
+      "exact_device_applicability": "Assembler convention includes ADSP-2100/2100A, but each opcode/device restriction requires verification.",
+      "family_member_applicability": [
+        "ADSP-2100 family supported by November 1994 tools"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "contemporary_toolchain",
+      "relevance": [
+        "assembler_syntax",
+        "opcode_appendix",
+        "file_formats",
+        "simulator",
+        "vectors"
+      ],
+      "cited_pages_or_sections": [
+        "Appendix A Instruction Coding",
+        "Appendix B File Formats",
+        "Appendix D Interrupt Vector Addresses"
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 50000000
+      },
+      "notes": "Third-party mirror of an ADI manual; seek an ADI-hosted or archival copy with stronger provenance."
+    },
+    {
+      "id": "ADI-21XX-DS-REVC",
+      "title": "ADSP-2101/ADSP-2103/ADSP-2105/ADSP-2115 Family DSP Microcomputers",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": "ADSP-2101/2103/2105/2115",
+      "publication_date": null,
+      "revision": "Rev. C",
+      "source_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/adsp-2101_2103_2105_2115.pdf",
+      "retrieval_date": null,
+      "local_filename": "adi/adsp21xx_2101_2103_2105_2115_rev_c.pdf",
+      "sha256": null,
+      "document_type": "data_sheet",
+      "exact_device_applicability": "Later-family comparison only unless a statement explicitly names ADSP-2100.",
+      "family_member_applicability": [
+        "ADSP-2101",
+        "ADSP-2103",
+        "ADSP-2105",
+        "ADSP-2111",
+        "ADSP-2115",
+        "ADSP-216x"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "primary_explicit_family",
+      "relevance": [
+        "device_feature_matrix",
+        "later_device_timing",
+        "family_evolution"
+      ],
+      "cited_pages_or_sections": [
+        "Table I feature comparison; exact printed page to extract."
+      ],
+      "may_commit": false,
+      "acquisition_status": "identified",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 10000000
+      },
+      "notes": "Official ADI URL. This is not the original ADSP-2100 data sheet."
+    },
+    {
+      "id": "ADI-MANUAL-INDEX",
+      "title": "ADSP 21xx Processors: Manuals",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": null,
+      "revision": "live legacy-manual listing",
+      "source_url": "https://www.analog.com/en/lp/001/adsp-manuals.html",
+      "retrieval_date": null,
+      "local_filename": "adi/adsp21xx_legacy_manual_index.html",
+      "sha256": null,
+      "document_type": "web_index",
+      "exact_device_applicability": "Discovery source only.",
+      "family_member_applicability": [
+        "ADSP-21xx legacy processor documentation"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Analog Devices website terms apply.",
+      "authority_level": "primary_explicit_family",
+      "relevance": [
+        "current_legacy_document_paths",
+        "reference_discovery"
+      ],
+      "cited_pages_or_sections": [
+        "Processor Manual listings retrieved 2026-07-30."
+      ],
+      "may_commit": false,
+      "acquisition_status": "identified",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/html"
+        ],
+        "max_bytes": 3000000
+      },
+      "notes": "Live index currently exposes Using the ADSP-2100 Family volumes but not all earlier manuals."
+    },
+    {
+      "id": "ATARI-MARGOLIN",
+      "title": "Hard Drivin'/Race Drivin' Schematics",
+      "author_or_organization": "Jed Margolin",
+      "publication_number": null,
+      "publication_date": "2002-03-09",
+      "revision": "web page revised through 2023-10-31",
+      "source_url": "https://www.jmargolin.com/schem/schems.htm",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "atari/jed_margolin_hard_drivin_schematics.html",
+      "sha256": "0fc127b337129c2bef4bec5235117508e30815519b90ed75fd45c3adabbf8502",
+      "document_type": "original_engineer_web_page",
+      "exact_device_applicability": "States that the ADSP board used a PGA ADSP-2100 and ADSP II a PQFP ADSP-2100, electrically and mechanically equivalent.",
+      "family_member_applicability": [
+        "Atari ADSP board",
+        "Atari ADSP II board"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright status not explicitly licensed.",
+      "authority_level": "original_engineer",
+      "relevance": [
+        "board_provenance",
+        "package_identification",
+        "schematic_source"
+      ],
+      "cited_pages_or_sections": [
+        "ADSP Board section, lines represented by live page around heading."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/html"
+        ],
+        "max_bytes": 3000000
+      },
+      "notes": "Original Atari engineer commentary; schematic itself is a stronger board-level source."
+    },
+    {
+      "id": "ATARI-ADSP-SCHEM",
+      "title": "Atari ADSP Board schematic package",
+      "author_or_organization": "Atari Games Corporation; hosted by Jed Margolin",
+      "publication_number": "drawing identifiers to extract",
+      "publication_date": null,
+      "revision": "19-page reconstructed PDF",
+      "source_url": "https://www.jmargolin.com/schem/adsp600.pdf",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "atari/hard_drivin_adsp_board_schematics_adsp600.pdf",
+      "sha256": "411239ef0200e3d514068668690bef8381cd99aafb82add654435fa181fe2cfc",
+      "document_type": "schematic",
+      "exact_device_applicability": "Hard Drivin'/Race Drivin' external board implementation around the original ADSP-2100.",
+      "family_member_applicability": [
+        "Atari ADSP board",
+        "Atari ADSP II board"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Atari/rights holders; redistribution permission not explicit.",
+      "authority_level": "primary_atari",
+      "relevance": [
+        "package",
+        "clock",
+        "memory",
+        "host_interface",
+        "sim",
+        "som",
+        "arbitration",
+        "pal_logic"
+      ],
+      "cited_pages_or_sections": [
+        "All sheets require drawing-number and net-level index."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 10000000
+      },
+      "notes": "Hosted by an original Atari engineer; keep cache-only pending explicit redistribution permission."
+    },
+    {
+      "id": "ATARI-HD-SERVICE",
+      "title": "Hard Drivin' Schematic Package SP-327, First Printing",
+      "author_or_organization": "Atari Games Corporation",
+      "publication_number": "SP-327",
+      "publication_date": "1989",
+      "revision": "First Printing",
+      "source_url": "https://crazykong.com/manuals/HardDrivin.sch.pdf",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "atari/hard_drivin_sp327_schematic_package_1st.pdf",
+      "sha256": "23e1f0760af3bea2bde9785a3d9ccf9349742dc3d6ef4a8f5bdc3f0d5783f9bb",
+      "document_type": "service_schematic_package",
+      "exact_device_applicability": "Hard Drivin' main-board and service context; separate ADSP stack board coverage must be checked.",
+      "family_member_applicability": [
+        "Hard Drivin' cockpit hardware"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Atari/rights holders; redistribution permission not explicit.",
+      "authority_level": "primary_atari",
+      "relevance": [
+        "main_board_host_interface",
+        "service_context",
+        "board_identification"
+      ],
+      "cited_pages_or_sections": [
+        "Table of contents and main PCB sheets; exact ADSP host connections to index."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 10000000
+      },
+      "notes": "Secondary hosting of an original Atari publication."
+    },
+    {
+      "id": "MAME-ADSP2100-CORE",
+      "title": "MAME ADSP-2100 core implementation",
+      "author_or_organization": "MAME project contributors",
+      "publication_number": "src/devices/cpu/adsp2100/adsp2100.cpp",
+      "publication_date": "2026-07-30 commit snapshot",
+      "revision": "030fefcbd14e47c01ec9d67655be90f64a1dc8ab",
+      "source_url": "https://raw.githubusercontent.com/mamedev/mame/030fefcbd14e47c01ec9d67655be90f64a1dc8ab/src/devices/cpu/adsp2100/adsp2100.cpp",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "mame/030fefc_adsp2100.cpp",
+      "sha256": "f484982b04b0e1db566fb10f102c8d0bfd83bdeb022f481b1e4aa4187a946b75",
+      "document_type": "emulator_source",
+      "exact_device_applicability": "Independent behavioral reference; includes a family implementation and is not primary proof.",
+      "family_member_applicability": [
+        "MAME ADSP-21xx device family"
+      ],
+      "redistribution_status": "permitted",
+      "license": "BSD-3-Clause per MAME source header/project license; verify header in cached file.",
+      "authority_level": "maintained_emulator",
+      "relevance": [
+        "differential_testing",
+        "behavioral_conflicts",
+        "timing_limitations"
+      ],
+      "cited_pages_or_sections": [
+        "Pin exact line ranges only when discussed."
+      ],
+      "may_commit": true,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/plain"
+        ],
+        "max_bytes": 1000000
+      },
+      "notes": "Cache for comparison only. Do not copy implementation into project-authored model or RTL."
+    },
+    {
+      "id": "MAME-ADSP2100-OPS",
+      "title": "MAME ADSP-2100 opcode implementation",
+      "author_or_organization": "MAME project contributors",
+      "publication_number": "src/devices/cpu/adsp2100/2100ops.hxx",
+      "publication_date": "2026-07-30 commit snapshot",
+      "revision": "030fefcbd14e47c01ec9d67655be90f64a1dc8ab",
+      "source_url": "https://raw.githubusercontent.com/mamedev/mame/030fefcbd14e47c01ec9d67655be90f64a1dc8ab/src/devices/cpu/adsp2100/2100ops.hxx",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "mame/030fefc_2100ops.hxx",
+      "sha256": "6986d6b1c56598a7f136ddf46604e3d56ad395d42a9471acedfae8c6ee3b8b14",
+      "document_type": "emulator_source",
+      "exact_device_applicability": "Independent behavioral reference only.",
+      "family_member_applicability": [
+        "MAME ADSP-21xx opcode implementation"
+      ],
+      "redistribution_status": "permitted",
+      "license": "BSD-3-Clause per MAME source header/project license; verify header in cached file.",
+      "authority_level": "maintained_emulator",
+      "relevance": [
+        "differential_testing",
+        "opcode_cross_check"
+      ],
+      "cited_pages_or_sections": [
+        "Pin exact line ranges only when discussed."
+      ],
+      "may_commit": true,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/plain"
+        ],
+        "max_bytes": 1000000
+      },
+      "notes": "Never use as the source from which project implementation is translated."
+    },
+    {
+      "id": "MAME-ADSP2100-DASM",
+      "title": "MAME ADSP-2100 disassembler",
+      "author_or_organization": "MAME project contributors",
+      "publication_number": "src/devices/cpu/adsp2100/2100dasm.cpp",
+      "publication_date": "2026-07-30 commit snapshot",
+      "revision": "030fefcbd14e47c01ec9d67655be90f64a1dc8ab",
+      "source_url": "https://raw.githubusercontent.com/mamedev/mame/030fefcbd14e47c01ec9d67655be90f64a1dc8ab/src/devices/cpu/adsp2100/2100dasm.cpp",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "mame/030fefc_2100dasm.cpp",
+      "sha256": "0a89ae5e19236b3af131a929ab20af3baa5705fd58b10621848181d8f8937d60",
+      "document_type": "emulator_source",
+      "exact_device_applicability": "Independent disassembly reference only.",
+      "family_member_applicability": [
+        "MAME ADSP-21xx disassembler"
+      ],
+      "redistribution_status": "permitted",
+      "license": "BSD-3-Clause per MAME source header/project license; verify header in cached file.",
+      "authority_level": "maintained_emulator",
+      "relevance": [
+        "disassembler_cross_check",
+        "opcode_conflict_reduction"
+      ],
+      "cited_pages_or_sections": [
+        "Pin exact line ranges only when discussed."
+      ],
+      "may_commit": true,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/plain"
+        ],
+        "max_bytes": 1000000
+      },
+      "notes": "Use only as an independently versioned comparison."
+    },
+    {
+      "id": "MAME-HARDDRIV",
+      "title": "MAME Hard Drivin' machine implementation",
+      "author_or_organization": "MAME project contributors",
+      "publication_number": "src/mame/atari/harddriv.cpp",
+      "publication_date": "2026-07-30 commit snapshot",
+      "revision": "030fefcbd14e47c01ec9d67655be90f64a1dc8ab",
+      "source_url": "https://raw.githubusercontent.com/mamedev/mame/030fefcbd14e47c01ec9d67655be90f64a1dc8ab/src/mame/atari/harddriv.cpp",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "mame/030fefc_harddriv.cpp",
+      "sha256": "ba35bd93e0d872e79b3e9ba2c1b933878948b0e0371f253d3d6c6c78c1940118",
+      "document_type": "emulator_source",
+      "exact_device_applicability": "Independent board-level behavioral reference, not schematic proof.",
+      "family_member_applicability": [
+        "Hard Drivin'",
+        "Race Drivin'",
+        "related Atari hardware modeled by source"
+      ],
+      "redistribution_status": "permitted",
+      "license": "BSD-3-Clause per MAME source header/project license; verify header in cached file.",
+      "authority_level": "maintained_emulator",
+      "relevance": [
+        "memory_map",
+        "host_interface",
+        "sim",
+        "som",
+        "interrupts",
+        "differential_testing"
+      ],
+      "cited_pages_or_sections": [
+        "Pin exact line ranges only when discussed."
+      ],
+      "may_commit": true,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/plain"
+        ],
+        "max_bytes": 2000000
+      },
+      "notes": "Compare to schematics and ROM behavior; do not transcribe handlers into RTL."
+    },
+    {
+      "id": "MAME-HARDDRIV-HEADER",
+      "title": "MAME Hard Drivin' machine declarations",
+      "author_or_organization": "MAME project contributors",
+      "publication_number": "src/mame/atari/harddriv.h",
+      "publication_date": "2026-07-30 commit snapshot",
+      "revision": "030fefcbd14e47c01ec9d67655be90f64a1dc8ab",
+      "source_url": "https://raw.githubusercontent.com/mamedev/mame/030fefcbd14e47c01ec9d67655be90f64a1dc8ab/src/mame/atari/harddriv.h",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "mame/030fefc_harddriv.h",
+      "sha256": "52d217eaccd37bb631483408649cb55905dad319224b2427efd98902bc48b5d4",
+      "document_type": "emulator_source",
+      "exact_device_applicability": "Independent declaration and state-layout reference only.",
+      "family_member_applicability": [
+        "Hard Drivin'",
+        "Race Drivin'",
+        "related Atari hardware modeled by source"
+      ],
+      "redistribution_status": "permitted",
+      "license": "BSD-3-Clause per MAME source header/project license.",
+      "authority_level": "maintained_emulator",
+      "relevance": [
+        "host_interface",
+        "sim",
+        "som",
+        "interrupts",
+        "differential_testing"
+      ],
+      "cited_pages_or_sections": [
+        "Pin exact line ranges only when discussed."
+      ],
+      "may_commit": true,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/plain"
+        ],
+        "max_bytes": 1000000
+      },
+      "notes": "Pinned companion to MAME-HARDDRIV; never a substitute for schematic evidence."
+    },
+    {
+      "id": "MAME-HARDDRIV-MACHINE",
+      "title": "MAME Hard Drivin' machine and ADSP-board handlers",
+      "author_or_organization": "MAME project contributors",
+      "publication_number": "src/mame/atari/harddriv_m.cpp",
+      "publication_date": "2026-07-30 commit snapshot",
+      "revision": "030fefcbd14e47c01ec9d67655be90f64a1dc8ab",
+      "source_url": "https://raw.githubusercontent.com/mamedev/mame/030fefcbd14e47c01ec9d67655be90f64a1dc8ab/src/mame/atari/harddriv_m.cpp",
+      "retrieval_date": "2026-07-30",
+      "local_filename": "mame/030fefc_harddriv_m.cpp",
+      "sha256": "c931aaf62acf2a0d0584dd921c3f6eb061f5ad1e0d374427f28b0ee8a309492a",
+      "document_type": "emulator_source",
+      "exact_device_applicability": "Independent board-level behavioral reference, not schematic proof.",
+      "family_member_applicability": [
+        "Hard Drivin'",
+        "Race Drivin'",
+        "related Atari hardware modeled by source"
+      ],
+      "redistribution_status": "permitted",
+      "license": "BSD-3-Clause per MAME source header/project license.",
+      "authority_level": "maintained_emulator",
+      "relevance": [
+        "host_interface",
+        "program_word_packing",
+        "sim",
+        "som",
+        "interrupts",
+        "differential_testing"
+      ],
+      "cited_pages_or_sections": [
+        "Pin exact line ranges only when discussed."
+      ],
+      "may_commit": true,
+      "acquisition_status": "acquired",
+      "confidence": "CORROBORATED",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "text/plain"
+        ],
+        "max_bytes": 3000000
+      },
+      "notes": "Compare every handler to Atari schematics before implementing the wrapper."
+    },
+    {
+      "id": "ADI-2104-DS-REV0",
+      "title": "ADSP-2104/ADSP-2109 Low Cost DSP Microcomputers",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": "ADSP-2104/ADSP-2109",
+      "publication_date": "1996",
+      "revision": "Rev. 0",
+      "source_url": "https://www.analog.com/media/en/technical-documentation/data-sheets/adsp-2104_2104l.pdf",
+      "retrieval_date": null,
+      "local_filename": "adi/adsp2104_adsp2109_rev0.pdf",
+      "sha256": null,
+      "document_type": "data_sheet",
+      "exact_device_applicability": "Later-device comparison only; no original ADSP-2100 applicability.",
+      "family_member_applicability": [
+        "ADSP-2104",
+        "ADSP-2104L",
+        "ADSP-2109",
+        "ADSP-2109L"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "primary_explicit_family",
+      "relevance": [
+        "device_feature_matrix",
+        "family_evolution",
+        "later_device_exclusion"
+      ],
+      "cited_pages_or_sections": [
+        "Page 1 summary and general description."
+      ],
+      "may_commit": false,
+      "acquisition_status": "identified",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 10000000
+      },
+      "notes": "Official device-specific data sheet for a 1996 descendant; excluded from default scope."
+    },
+    {
+      "id": "ADI-2100-CROSS-SOFTWARE-TARGET",
+      "title": "ADSP-2100 Cross-Software Manual",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "circa 1987-1989",
+      "revision": "unknown",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/",
+      "retrieval_date": "2026-07-30",
+      "local_filename": null,
+      "sha256": null,
+      "document_type": "target_manual",
+      "exact_device_applicability": "Expected complete original ADSP-2100 instruction reference and cross-tool documentation.",
+      "family_member_applicability": [
+        "ADSP-2100"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; no copy located.",
+      "authority_level": "primary_original_device",
+      "relevance": [
+        "instruction_reference",
+        "opcode_codes",
+        "assembler",
+        "linker",
+        "simulator",
+        "file_formats"
+      ],
+      "cited_pages_or_sections": [
+        "Identified in the 1987 data book and 1989 user's manual."
+      ],
+      "may_commit": false,
+      "acquisition_status": "unavailable",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": false,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 50000000
+      },
+      "notes": "A lawful accessible scan has not yet been located; the listed URL is the searched archival directory, not the manual."
+    },
+    {
+      "id": "ADI-2100-EVAL-TARGET",
+      "title": "ADSP-2100A Evaluation Board Manual",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "circa 1990",
+      "revision": "unknown",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/",
+      "retrieval_date": "2026-07-30",
+      "local_filename": null,
+      "sha256": null,
+      "document_type": "target_manual",
+      "exact_device_applicability": "Original ADSP-2100A evaluation hardware.",
+      "family_member_applicability": [
+        "ADSP-2100A"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; no copy located.",
+      "authority_level": "primary_original_device",
+      "relevance": [
+        "system_interface",
+        "board_schematic",
+        "diagnostics",
+        "physical_validation"
+      ],
+      "cited_pages_or_sections": [
+        "Identified in contemporary ADI literature lists."
+      ],
+      "may_commit": false,
+      "acquisition_status": "unavailable",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": false,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 50000000
+      },
+      "notes": "No lawful accessible copy identified in the first research pass."
+    }
+  ]
+}

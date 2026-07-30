@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "field_widths": {
+    "RGP": 2,
+    "REG": 4
+  },
+  "source_citation": "ADI-UM-1989 printed p. A-9, REG Register codes (scan PDF p. 148)",
+  "semantic_source_citations": [
+    "ADI-UM-1989 printed p. 2-15: MR2 width and sign extension.",
+    "ADI-UM-1989 printed p. 2-21: SE/SB widths, signedness, and sign extension.",
+    "ADI-UM-1989 printed pp. 3-2–3-3: I/L zero extension and M sign extension.",
+    "ADI-UM-1989 printed p. 3-7: PX zero extension on DMD reads.",
+    "ADI-UM-1989 printed p. 4-4: CNTR zero extension on reads.",
+    "ADI-UM-1989 printed p. 4-22: SSTAT is read-only."
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "groups": {
+    "00": {
+      "name": "computational_data",
+      "codes": {
+        "0": {"register": "AX0", "storage_width": 16, "move_access": "read_write"},
+        "1": {"register": "AX1", "storage_width": 16, "move_access": "read_write"},
+        "2": {"register": "MX0", "storage_width": 16, "move_access": "read_write"},
+        "3": {"register": "MX1", "storage_width": 16, "move_access": "read_write"},
+        "4": {"register": "AY0", "storage_width": 16, "move_access": "read_write"},
+        "5": {"register": "AY1", "storage_width": 16, "move_access": "read_write"},
+        "6": {"register": "MY0", "storage_width": 16, "move_access": "read_write"},
+        "7": {"register": "MY1", "storage_width": 16, "move_access": "read_write"},
+        "8": {"register": "SI", "storage_width": 16, "move_access": "read_write"},
+        "9": {"register": "SE", "storage_width": 8, "move_access": "read_write_sign_extended"},
+        "10": {"register": "AR", "storage_width": 16, "move_access": "read_write"},
+        "11": {"register": "MR0", "storage_width": 16, "move_access": "read_write"},
+        "12": {"register": "MR1", "storage_width": 16, "move_access": "read_write"},
+        "13": {"register": "MR2", "storage_width": 8, "move_access": "read_write_sign_extended"},
+        "14": {"register": "SR0", "storage_width": 16, "move_access": "read_write"},
+        "15": {"register": "SR1", "storage_width": 16, "move_access": "read_write"}
+      },
+      "reserved_codes": []
+    },
+    "01": {
+      "name": "dag1",
+      "codes": {
+        "0": {"register": "I0", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "1": {"register": "I1", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "2": {"register": "I2", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "3": {"register": "I3", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "4": {"register": "M0", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "5": {"register": "M1", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "6": {"register": "M2", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "7": {"register": "M3", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "8": {"register": "L0", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "9": {"register": "L1", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "10": {"register": "L2", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "11": {"register": "L3", "storage_width": 14, "move_access": "read_write_zero_extended"}
+      },
+      "reserved_codes": [12, 13, 14, 15]
+    },
+    "10": {
+      "name": "dag2",
+      "codes": {
+        "0": {"register": "I4", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "1": {"register": "I5", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "2": {"register": "I6", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "3": {"register": "I7", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "4": {"register": "M4", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "5": {"register": "M5", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "6": {"register": "M6", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "7": {"register": "M7", "storage_width": 14, "move_access": "read_write_sign_extended"},
+        "8": {"register": "L4", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "9": {"register": "L5", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "10": {"register": "L6", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "11": {"register": "L7", "storage_width": 14, "move_access": "read_write_zero_extended"}
+      },
+      "reserved_codes": [12, 13, 14, 15]
+    },
+    "11": {
+      "name": "status_control",
+      "codes": {
+        "0": {"register": "ASTAT", "storage_width": 8, "move_access": "read_write_narrow_extension_open"},
+        "1": {"register": "MSTAT", "storage_width": 4, "move_access": "read_write_narrow_extension_open"},
+        "2": {"register": "SSTAT", "storage_width": 8, "move_access": "read_only_narrow_extension_open"},
+        "3": {"register": "IMASK", "storage_width": 4, "move_access": "read_write_narrow_extension_open"},
+        "4": {"register": "ICNTL", "storage_width": 5, "move_access": "read_write_narrow_extension_open"},
+        "5": {"register": "CNTR", "storage_width": 14, "move_access": "read_write_zero_extended"},
+        "6": {"register": "SB", "storage_width": 5, "move_access": "read_write_sign_extended"},
+        "7": {"register": "PX", "storage_width": 8, "move_access": "read_write_zero_extended"}
+      },
+      "reserved_codes": [8, 9, 10, 11, 12, 13, 14, 15]
+    }
+  },
+  "not_general_move_encoded": ["AF", "MF", "PC"]
+}
