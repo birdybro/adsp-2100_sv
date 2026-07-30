@@ -17,8 +17,9 @@
 | DAG arithmetic | PASS, PARTIAL | 10 directed/random model tests plus 204,864 RTL differential vectors |
 | Sequencer flow arbitration | PASS, PARTIAL | 9 directed/random model tests plus 636,512 RTL differential vectors |
 | Computational register banks | PASS, PARTIAL | 14 directed/model tests plus 58,307 DREG and 50,120 full-bank/writeback RTL cycles |
-| Status/control storage | PASS, PARTIAL | 17 directed/model tests plus 50,287 stateful RTL cycles; physical status stack, stack-derived SSTAT, interrupt recognition, and decode remain |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer/register/status recipes lint; SymbiYosys unavailable |
+| Status/control storage | PASS, PARTIAL | 17 directed/model tests plus 50,287 stateful RTL cycles; PC/count/loop SSTAT sources, interrupt recognition/connectivity, and decode remain |
+| Status stack | PASS, PARTIAL | 8 directed/model tests plus 50,037 stateful RTL cycles; interrupt/RTI connectivity and empty-pop effects remain |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer/register/status/status-stack recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -28,11 +29,11 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 131 distinct Python
+The implemented foundation regression is `make test`: 139 distinct Python
 checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
 regressions, 21,760-vector MAC regression, and 644,368-vector shifter
 regression, plus the 204,864-vector DAG and 636,512-vector sequencer-flow
 regressions, 58,307 stateful DREG cycles, and 50,120 complete-bank/writeback
-cycles, plus 50,287 status/control state-transition cycles. Targets for
-unavailable or unimplemented areas print `SKIP` and do not create false pass
-evidence.
+cycles, plus 50,287 status/control and 50,037 status-stack state-transition
+cycles. Targets for unavailable or unimplemented areas print `SKIP` and do not
+create false pass evidence.

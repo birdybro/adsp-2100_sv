@@ -18,9 +18,10 @@
 | DAG arithmetic and ownership | CORROBORATED | original DAG chapter plus 1994 explicit original/later placement distinction; function integration incomplete |
 | Sequencer next-PC/loop precedence | CORROBORATED | original program-control chapter and 636,512 model/RTL vectors; stacks, counter, interrupts, and cycles incomplete |
 | Computational register banking | CORROBORATED | original compute/register/Appendix A sections, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles; MSTAT timing, interrupts, and decode connectivity incomplete |
-| Status/control storage and updates | CORROBORATED | original status/reset/interrupt/Appendix A sections plus 50,287 model/RTL cycles; ICNTL/IMASK and entry/restore transitions implemented, while narrow reads, consumer wiring, stack-derived SSTAT, physical stacking, and interrupt recognition remain incomplete |
+| Status/control storage and updates | CORROBORATED | original status/reset/interrupt/Appendix A sections plus 50,287 model/RTL cycles; ICNTL/IMASK and entry/restore transitions implemented, while narrow reads, consumer wiring, remaining SSTAT sources, stack connectivity, and interrupt recognition remain incomplete |
+| Status-stack depth and accepted operations | CORROBORATED | original 1987 four-by-sixteen diagram plus original 1989 saturation/status rules and 50,037 model/RTL cycles; empty-pop effects and interrupt/RTI connectivity remain incomplete |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
-| Stack underflow/overflow effects | UNKNOWN | status reporting known; effects not closed |
+| Empty-stack pop effects | UNKNOWN | pointer saturation is sourced, but popped data/register side effects are not |
 | Full interrupt phase behavior | PROVISIONAL | recognition state known; all interactions incomplete |
 | Atari 32 MHz input / 8 MHz instruction rate | VERIFIED_PRIMARY | Atari schematic plus original clock relation |
 | ADSP vs ADSP II package equivalence | CORROBORATED | original engineer page and schematic sheets |

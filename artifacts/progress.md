@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `bfed463`
+**Latest verified engineering commit:** `2595796`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks
@@ -41,6 +41,9 @@ cycle-, or Hard Drivin'-complete
   authentic ASTAT/ICNTL reset unknowns, MSTAT/IMASK reset clear, all MODE
   CONTROL effects, cycle-boundary computational status writes, interrupt-entry
   status snapshots and nested masks, and RTI-style restore;
+- source-backed four-by-sixteen status-stack model/RTL with exact context
+  packing, saturating depth, oldest-data retention, sticky overflow, and
+  status-stack SSTAT sources;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -54,28 +57,30 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 131 implemented Python unit checks plus manifest/hash verification;
+- 139 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG, sequencer-flow, register-file, and
-  status-register RTL;
+  status-register/status-stack RTL;
   all 2,048 condition/flag combinations, 51,472 ALU vectors, 21,760 MAC
   vectors, 644,368 shifter vectors, 204,864 DAG vectors, 636,512
   sequencer-flow vectors, 58,307 DREG cycles, and 50,120 full-bank/writeback
-  cycles plus 50,287 status/control cycles pass simulation;
+  cycles plus 50,287 status/control and 50,037 status-stack cycles pass
+  simulation;
 - constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG,
-  sequencer-flow, register-file, and status-register block compilations pass
-  with no unconstrained paths;
+  sequencer-flow, register-file, status-register, and status-stack block
+  compilations pass with no unconstrained paths;
 - condition, ALU, MAC, shifter, DAG, sequencer-flow, register-file, and
-  status-register formal harnesses pass assertion syntax lint, but no formal
-  proof ran because SymbiYosys/Yosys are unavailable;
+  status-register and status-stack formal harnesses pass assertion syntax lint,
+  but no formal proof ran because SymbiYosys/Yosys are unavailable;
 - no architectural execution RTL, complete assembler, or whole-core synthesis
   top exists.
 
 ## Next highest-priority work
 
-1. Extend M17 through physical status-stack and stack-derived SSTAT behavior.
-2. Connect MSTAT outputs to bank, DAG1, and ALU consumers and verify
+1. Connect MSTAT outputs to bank, DAG1, and ALU consumers and verify
    next-cycle visibility.
+2. Implement source-backed PC/count/loop stack state and remaining SSTAT
+   sources without inventing empty-pop behavior.
 3. Locate the original Cross-Software/instruction reference and a separately
    identifiable original data sheet.
 4. Extend the independently cross-checked class masks into field-level and

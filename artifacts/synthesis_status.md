@@ -4,7 +4,8 @@
 
 - Verilator 5.048 parses and lints the three packages and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
-  and stateful status/control RTL with `-Wall` and no warnings.
+  stateful status/control, and stateful status-stack RTL with `-Wall` and no
+  warnings.
 - Yosys is not installed in this environment.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
@@ -58,10 +59,17 @@
   controls have an explicit 5 ns same-clock registered-source input-arrival
   assumption. Across four timing models, worst setup is +11.811 ns and worst
   hold is +0.169 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys is not installed. `make formal` strictly lints the eight available
+- Quartus full compilation of the status-stack smoke project passes. It uses 53
+  ALMs, 30 combinational logic ALUTs, exactly 68 design registers plus one
+  fitter-created routing duplicate, no RAM, and no DSPs. Its virtual internal
+  controls use the same documented 5 ns registered-source assumption. Across
+  four timing models, worst setup is +13.077 ns and worst hold is +0.172 ns
+  against 20 ns, with zero unconstrained paths.
+- SymbiYosys is not installed. `make formal` strictly lints the nine available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded condition, ALU, MAC, shifter, DAG,
-sequencer-flow, register-file, and status-register block smoke projects.
+sequencer-flow, register-file, status-register, and status-stack block smoke
+projects.
