@@ -94,6 +94,13 @@ semantic versioning after its first release.
 - Five directed MSTAT-consumer tests, a deterministic 50,112-cycle
   model-versus-RTL regression, a bounded composition formal harness, and a
   constrained Cyclone V integration synthesis project.
+- Primary-backed exact 16-by-14 PC, four-by-14 count, and four-by-18 loop
+  stack metadata, an independent saturating LIFO model, and portable stateful
+  RTL with newest-item overflow loss, sticky overflow, explicit empty-pop
+  invalidation, and SSTAT sources in bits 0–3 and 6–7.
+- Ten directed/model sequencer-stack tests, a deterministic 50,062-cycle
+  model-versus-RTL regression, a bounded state-transition formal harness, and
+  a constrained Cyclone V synthesis project.
 
 ### Changed
 
@@ -121,10 +128,12 @@ semantic versioning after its first release.
   58,307 stateful DREG model-versus-RTL cycles, 50,120 complete-bank
   writeback cycles, 50,287 status/control state-transition cycles, and 50,037
   status-stack state-transition cycles.
-- The expanded `make test` passes 144 Python checks and adds 50,112 stateful
+- The expanded `make test` passes 154 Python checks and adds 50,112 stateful
   MSTAT-consumer cycles. Both banks are initialized distinctly, all 16 MSTAT
   values are observed, and ordinary-cycle old-mode/new-mode ordering is
-  checked across register, DAG1, and ALU consumers.
+  checked across register, DAG1, and ALU consumers. It also adds 50,062
+  PC/count/loop stack-storage cycles covering exact LIFO depths, saturation,
+  independent simultaneous actions, reset, and empty-pop invalidation.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -163,9 +172,14 @@ semantic versioning after its first release.
   +0.168 ns worst hold slack, and zero unconstrained ports or paths. The fit
   retains the 480 DREG storage bits and the observable ASTAT/MSTAT state; the
   bounded top intentionally does not expose all feedback/control registers.
+- Quartus full compilation passes for the constrained PC/count/loop
+  stack-storage block: 245 ALMs, 177 combinational logic ALUTs, exactly 366
+  design implementation registers plus six fitter-created routing duplicates,
+  no RAM/DSPs, +10.383 ns worst setup, +0.162 ns worst hold slack, and zero
+  unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
   MAC, shifter, DAG, sequencer-flow, register-file, status-register, and
-  status-stack and MSTAT-integration harnesses; proof execution remains
+  status-stack, sequencer-stack, and MSTAT-integration harnesses; proof execution remains
   explicitly skipped without SymbiYosys.
 
 ### Documentation
@@ -219,6 +233,11 @@ semantic versioning after its first release.
   cycle-start/cycle-end boundary. Direct MOVE and MODE CONTROL changes are
   visible to bank selection, DAG1, sticky AV, and saturation on the following
   cycle; interrupt-adjacent visibility remains explicitly open as OQ-015.
+- Closed PC/count/loop stack storage dimensions and normal accepted-operation
+  behavior from the original program-sequencer chapter, and applied the
+  original global saturation/newest-loss/sticky-overflow rule to all three.
+  All SSTAT storage sources now exist, while CNTR-valid handling, action
+  connectivity, SSTAT composition, and empty-pop effects remain explicit gaps.
 
 ### Known Issues
 
@@ -227,10 +246,10 @@ semantic versioning after its first release.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,
-  PC/count/loop stacks and their SSTAT sources, narrow status reads,
-  status-stack connectivity, and interrupt recognition/cycle integration are
-  not implemented. MSTAT consumer wiring exists only in a bounded integration
-  slice, not a whole instruction execution core.
+  stack-action connectivity, CNTR validity/decrement, SSTAT-fragment
+  composition, narrow status reads, and interrupt recognition/cycle
+  integration are not implemented. MSTAT consumer wiring exists only in a
+  bounded integration slice, not a whole instruction execution core.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

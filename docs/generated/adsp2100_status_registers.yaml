@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "ORIGINAL_STATUS_CONTROL_MAP_AND_STATUS_STACK",
+  "scope": "ORIGINAL_STATUS_CONTROL_MAP_AND_ARCHITECTURAL_STACKS",
   "confidence": "VERIFIED_PRIMARY",
   "source_citations": [
     "ADI-UM-1989 printed pp. 4-20-4-24 (status/control fields, update sources, latency, interrupt masking, and modes)",
     "ADI-DATABOOK-1987 printed pp. 2-21-2-22 (original four-by-sixteen status stack)",
     "ADI-UM-1989 printed p. 5-13 (reset effects)",
-    "ADI-UM-1989 printed pp. 4-22 and A-10 (stack saturation/status and Spp codes)",
+    "ADI-UM-1989 printed pp. 4-3-4-7 and A-4 (PC, count, and loop stack dimensions, automatic actions, and explicit-pop fields)",
+    "ADI-UM-1989 printed pp. 4-22 and A-10 (all-stack saturation/status and Spp codes)",
     "ADI-UM-1989 printed p. A-8 (MODE CONTROL targets and codes)"
   ],
   "registers": {
@@ -42,7 +43,7 @@
       "width": 8,
       "move_access": "READ_ONLY_EXACT_STORAGE_WIDTH",
       "reset": 85,
-      "implementation_status": "STATUS_STACK_BITS_IMPLEMENTED_OTHER_STACK_BITS_DEFERRED",
+      "implementation_status": "ALL_SOURCE_BITS_HAVE_MODEL_AND_RTL_STORAGE_SLICES",
       "fields": [
         {"bit": 0, "name": "PC_STACK_EMPTY"},
         {"bit": 1, "name": "PC_STACK_OVERFLOW"},
@@ -84,12 +85,24 @@
     "PC": {
       "depth": 16,
       "width": 14,
-      "implementation_status": "DEFERRED"
+      "automatic_push_sources": ["CALL_PC_PLUS_ONE", "INTERRUPT_CURRENT_PC", "DO_UNTIL_PC_PLUS_ONE"],
+      "automatic_pop_sources": ["RETURN", "TERMINATING_DO_UNTIL"],
+      "stack_control_field": {"name": "PP", "bit": 4, "action_when_set": "POP"},
+      "pointer_behavior": "SATURATE_AT_EMPTY_AND_FULL",
+      "overflow_behavior": "DROP_NEWEST_AND_STICK_UNTIL_RESET",
+      "empty_pop_data": "UNVERIFIED_OQ_013",
+      "implementation_status": "MODEL_AND_RTL_STORAGE"
     },
     "COUNT": {
       "depth": 4,
       "width": 14,
-      "implementation_status": "DEFERRED"
+      "automatic_push_sources": ["CNTR_LOAD_WHEN_PREVIOUS_COUNT_VALID"],
+      "automatic_pop_sources": ["TRUE_CE_TEST"],
+      "stack_control_field": {"name": "CP", "bit": 2, "action_when_set": "POP"},
+      "pointer_behavior": "SATURATE_AT_EMPTY_AND_FULL",
+      "overflow_behavior": "DROP_NEWEST_AND_STICK_UNTIL_RESET",
+      "empty_pop_data": "UNVERIFIED_OQ_013",
+      "implementation_status": "MODEL_AND_RTL_STORAGE"
     },
     "STATUS": {
       "depth": 4,
@@ -110,7 +123,14 @@
     "LOOP": {
       "depth": 4,
       "width": 18,
-      "implementation_status": "DEFERRED"
+      "stored_fields": ["END_ADDRESS_13_0", "TERMINATION_CONDITION_3_0"],
+      "automatic_push_sources": ["DO_UNTIL"],
+      "automatic_pop_sources": ["TERMINATING_DO_UNTIL"],
+      "stack_control_field": {"name": "LP", "bit": 3, "action_when_set": "POP"},
+      "pointer_behavior": "SATURATE_AT_EMPTY_AND_FULL",
+      "overflow_behavior": "DROP_NEWEST_AND_STICK_UNTIL_RESET",
+      "empty_pop_data": "UNVERIFIED_OQ_013",
+      "implementation_status": "MODEL_AND_RTL_STORAGE"
     }
   },
   "mode_control_targets": [
@@ -130,6 +150,6 @@
     "same-cycle bank-switch visibility at interrupt recognition",
     "instruction-level legality and decode connectivity",
     "empty-pop data and architectural restore side effects (OQ-013)",
-    "PC, count, and loop stack storage and their SSTAT dynamics"
+    "instruction, interrupt, counter-valid/decrement, and stack-action connectivity"
   ]
 }

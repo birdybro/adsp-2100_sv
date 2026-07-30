@@ -32,6 +32,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_sequencer_flow.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_sequencer_stacks.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_register_file.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
@@ -140,7 +142,8 @@ dag-tests:
 	fi
 
 sequencer-tests:
-	$(PYTHON) -m unittest -v tests.test_sequencer_flow
+	$(PYTHON) -m unittest -v tests.test_sequencer_flow \
+		tests.test_sequencer_stacks
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_sequencer_vectors.py \
@@ -152,8 +155,17 @@ sequencer-tests:
 			rtl/core/adsp2100_sequencer_flow.sv \
 			sim/unit/tb_adsp2100_sequencer_flow.sv; \
 		build/obj_sequencer/Vtb_adsp2100_sequencer_flow; \
+		$(PYTHON) tools/generators/generate_sequencer_stack_vectors.py \
+			--output build/sequencer_stack_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_sequencer_stacks \
+			--top-module tb_adsp2100_sequencer_stacks \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			sim/unit/tb_adsp2100_sequencer_stacks.sv; \
+		build/obj_sequencer_stacks/Vtb_adsp2100_sequencer_stacks; \
 	else \
-		echo "SKIP sequencer-flow RTL test: Verilator is not installed"; \
+		echo "SKIP sequencer RTL tests: Verilator is not installed"; \
 	fi
 
 register-tests:
@@ -275,6 +287,10 @@ formal:
 			rtl/core/adsp2100_sequencer_flow.sv \
 			formal/harnesses/adsp2100_sequencer_flow_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_sequencer_stacks_formal \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			formal/harnesses/adsp2100_sequencer_stacks_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_register_file_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_register_file.sv \
@@ -307,6 +323,7 @@ formal:
 		sby -f -d build/formal_shifter formal/shifter.sby; \
 		sby -f -d build/formal_dag formal/dag.sby; \
 		sby -f -d build/formal_sequencer formal/sequencer_flow.sby; \
+		sby -f -d build/formal_sequencer_stacks formal/sequencer_stacks.sby; \
 		sby -f -d build/formal_registers formal/registers.sby; \
 		sby -f -d build/formal_status formal/status_registers.sby; \
 		sby -f -d build/formal_status_stack formal/status_stack.sby; \
@@ -334,6 +351,7 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/register_file_smoke; \
 		quartus_sh --flow compile synthesis/quartus/status_registers_smoke; \
 		quartus_sh --flow compile synthesis/quartus/status_stack_smoke; \
+		quartus_sh --flow compile synthesis/quartus/sequencer_stacks_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mode_slice_smoke; \
 	else \
 		echo "SKIP Quartus synthesis: Quartus is not installed"; \
@@ -354,6 +372,7 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name sequencer_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_writeback_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name status_vectors.txt -delete
@@ -365,6 +384,9 @@ clean:
 	@if [ -d build/obj_shifter ]; then find build/obj_shifter -depth -delete; fi
 	@if [ -d build/obj_dag ]; then find build/obj_dag -depth -delete; fi
 	@if [ -d build/obj_sequencer ]; then find build/obj_sequencer -depth -delete; fi
+	@if [ -d build/obj_sequencer_stacks ]; then \
+		find build/obj_sequencer_stacks -depth -delete; \
+	fi
 	@if [ -d build/obj_register ]; then find build/obj_register -depth -delete; fi
 	@if [ -d build/obj_register_writeback ]; then \
 		find build/obj_register_writeback -depth -delete; \
@@ -383,11 +405,15 @@ clean:
 	@if [ -d build/quartus_status_stack ]; then \
 		find build/quartus_status_stack -depth -delete; \
 	fi
+	@if [ -d build/quartus_sequencer_stacks ]; then \
+		find build/quartus_sequencer_stacks -depth -delete; \
+	fi
 	@if [ -d build/quartus_mode_slice ]; then \
 		find build/quartus_mode_slice -depth -delete; \
 	fi
 	@for directory in build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
+		build/formal_sequencer_stacks \
 		build/formal_registers build/formal_status build/formal_status_stack \
 		build/formal_mode_slice; do \
 		if [ -d "$$directory" ]; then find "$$directory" -depth -delete; fi; \

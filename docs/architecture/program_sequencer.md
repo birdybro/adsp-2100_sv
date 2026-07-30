@@ -1,6 +1,7 @@
 # Program sequencer
 
-**Status: source-backed next-PC arbitration block; state/timing incomplete**
+**Status: source-backed next-PC arbitration and stack-storage blocks;
+connectivity/timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
 incrementer normally provides the next address [ADI-UM-1989, printed p. 4-3].
@@ -26,12 +27,23 @@ suppresses loop-stack/count-stack actions and counter testing. If its condition
 is false, ordinary loop termination processing remains eligible
 [ADI-UM-1989, printed pp. 4-3–4-7, 4-12–4-19].
 
-The regression checks 636,512 model-versus-RTL vectors, including every PC
-value for sequential wrap, CALL return-address generation, loop back/exit, and
-all taken explicit-transfer kinds at loop end. This closes a combinational
-arbitration rule only. A separate four-entry status-stack block now covers
-status context LIFO storage and its fault flags. Opcode decode, actual
-PC/loop/count stack storage, status-stack connectivity, DO UNTIL setup, counter
-decrement, interrupts, cache/fetch overlap, phase enables, reset integration,
-remaining stack faults, and bus-cycle timing remain unimplemented. The
-discovered MAME ordering difference is recorded as SC-012.
+The flow regression checks 636,512 model-versus-RTL vectors, including every
+PC value for sequential wrap, CALL return-address generation, loop back/exit,
+and all taken explicit-transfer kinds at loop end. A separate independent
+model and `rtl/core/adsp2100_sequencer_stacks.sv` implement the 16-by-14 PC,
+four-by-14 count, and four-by-18 loop stack storage. Their pointers saturate,
+the newest overflowing push is discarded, overflow is sticky until reset, and
+their empty/overflow sources occupy SSTAT bits 0–3 and 6–7
+[ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. A deterministic 50,062-cycle
+model-versus-RTL regression covers exact depths, LIFO order, overflow,
+independent simultaneous actions, reset, and empty-pop invalidation.
+
+This storage block accepts already-resolved push/pop requests; it does not
+claim that arbitrary same-stack push/pop collisions are architectural. Such a
+collision suppresses all storage changes and raises `write_conflict_o` as a
+fail-closed integration safeguard. Opcode decode, connection of flow,
+DO UNTIL, counter-load, interrupt, return, and manual-pop requests to the
+stacks, CNTR validity/decrement, status-stack connectivity, cache/fetch
+overlap, phase enables, reset integration, empty-pop architectural effects,
+and bus-cycle timing remain unimplemented. The discovered MAME ordering
+difference is recorded as SC-012.

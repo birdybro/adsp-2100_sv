@@ -235,10 +235,12 @@ interrupt-entry snapshot/masking, and status restore. MSTAT consumer
 integration now covers its four original outputs at an ordinary
 cycle-start/cycle-end boundary; ICNTL consumer wiring, interrupt recognition,
 and complete operand/decode connectivity do not exist. A separate original
-four-by-sixteen status stack implements LIFO state,
-saturating depth, sticky overflow, and its two SSTAT sources; PC/count/loop
-stack storage and the other SSTAT sources do not exist. Multifunction legality,
-ordering, and whole-core cycle integration remain incomplete. The executable
+four-by-sixteen status stack and exact PC/count/loop stack-storage slice
+implement LIFO state, saturating depth, sticky overflow, and all eight SSTAT
+sources. The stack slices are not connected to instruction, loop, counter,
+interrupt, or return sequencing, and CNTR validity/decrement remains absent.
+Multifunction legality, ordering, and whole-core cycle integration remain
+incomplete. The executable
 instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP. All other opcodes fail

@@ -112,13 +112,15 @@ implementation safeguard, not a claim about an illegal real-device encoding;
 OQ-017 tracks the evidence gap.
 
 This boundary exposes exact eight-bit ASTAT, four-bit MSTAT, five-bit ICNTL,
-and four-bit IMASK storage. A separate four-by-sixteen status stack now
-provides the SSTAT status-empty and status-overflow sources with documented
-pointer saturation and sticky overflow behavior [ADI-DATABOOK-1987, printed
-pp. 2-21–2-22; ADI-UM-1989, printed p. 4-22]. How unused upper DMD bits read
-for the narrow general-MOVE sources remains open as OQ-016. PC/count/loop
-stack-derived SSTAT dynamics, interrupt recognition timing, DIVS/DIVQ
-execution, and instruction decode are not part of this increment.
+and four-bit IMASK storage. A separate four-by-sixteen status stack supplies
+SSTAT bits 4/5, while the exact PC/count/loop stack-storage block supplies bits
+0–3 and 6–7 with the same documented pointer-saturation and sticky-overflow
+rules [ADI-DATABOOK-1987, printed pp. 2-21–2-22; ADI-UM-1989, printed
+pp. 4-3–4-7, 4-22]. These fragments have not yet been composed with the
+instruction-readable SSTAT path. How unused upper DMD bits read for narrow
+general-MOVE sources remains open as OQ-016. Stack action connectivity,
+counter validity/decrement, interrupt recognition timing, DIVS/DIVQ execution,
+and instruction decode are not part of this increment.
 
 ## Accessibility
 

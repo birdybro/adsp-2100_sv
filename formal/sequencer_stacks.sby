@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 18
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
+read -formal -sv formal/harnesses/adsp2100_sequencer_stacks_formal.sv
+prep -top adsp2100_sequencer_stacks_formal
+
+[files]
+rtl/core/adsp2100_sequencer_stacks.sv
+formal/harnesses/adsp2100_sequencer_stacks_formal.sv

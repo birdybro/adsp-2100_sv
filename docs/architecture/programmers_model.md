@@ -45,13 +45,15 @@ stores exact-width ASTAT/MSTAT/ICNTL/IMASK state, applies the four original
 MODE CONTROL fields, commits ALU, divide, MAC, and shifter status at cycle end,
 and exposes the documented ASTAT/MSTAT/IMASK interrupt snapshot and mask
 transformation [ADI-UM-1989, printed pp. 4-9–4-10, 4-20–4-24, A-8].
-A separate exact four-by-sixteen status stack implements LIFO context storage,
-pointer saturation, loss of the newest overflowing push, sticky overflow, and
-SSTAT bits 4/5 [ADI-DATABOOK-1987, printed pp. 2-21–2-22;
-ADI-UM-1989, printed p. 4-22].
+A separate exact four-by-sixteen status stack and a combined exact
+16-by-14 PC/four-by-14 count/four-by-18 loop-stack boundary implement LIFO
+storage, pointer saturation, loss of the newest overflowing push, sticky
+overflow, and all eight SSTAT sources [ADI-DATABOOK-1987, printed
+pp. 2-21–2-22; ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. The two SSTAT
+fragments are not yet composed into an instruction-readable status path.
 
 Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
-interrupt recognition and priority logic, PC/count/loop stack-derived SSTAT,
-empty-pop architectural effects, narrow status-register DMD extension, full
-multifunction legality, and every instruction field using these paths still
-require machine-readable extraction and tests.
+interrupt recognition and priority logic, stack action connectivity, CNTR
+valid/decrement state, empty-pop architectural effects, narrow status-register
+DMD extension, full multifunction legality, and every instruction field using
+these paths still require machine-readable extraction and tests.
