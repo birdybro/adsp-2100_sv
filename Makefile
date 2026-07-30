@@ -159,6 +159,16 @@ register-tests:
 			rtl/core/adsp2100_register_file.sv \
 			sim/unit/tb_adsp2100_register_file.sv; \
 		build/obj_register/Vtb_adsp2100_register_file; \
+		$(PYTHON) tools/generators/generate_writeback_vectors.py \
+			--output build/register_writeback_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_register_writeback \
+			--top-module tb_adsp2100_register_writeback \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_register_file.sv \
+			sim/unit/tb_adsp2100_register_writeback.sv; \
+		build/obj_register_writeback/Vtb_adsp2100_register_writeback; \
 	else \
 		echo "SKIP register-file RTL test: Verilator is not installed"; \
 	fi
@@ -263,6 +273,7 @@ clean:
 	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name register_writeback_vectors.txt -delete
 	@if [ -d build/obj_condition ]; then find build/obj_condition -depth -delete; fi
 	@if [ -d build/obj_alu ]; then find build/obj_alu -depth -delete; fi
 	@if [ -d build/obj_mac ]; then find build/obj_mac -depth -delete; fi
@@ -270,6 +281,9 @@ clean:
 	@if [ -d build/obj_dag ]; then find build/obj_dag -depth -delete; fi
 	@if [ -d build/obj_sequencer ]; then find build/obj_sequencer -depth -delete; fi
 	@if [ -d build/obj_register ]; then find build/obj_register -depth -delete; fi
+	@if [ -d build/obj_register_writeback ]; then \
+		find build/obj_register_writeback -depth -delete; \
+	fi
 	@if [ -d build/quartus_condition ]; then find build/quartus_condition -depth -delete; fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi

@@ -20,6 +20,13 @@ from +1 through -31 according to Table 2.5; EXPADJ produces SB values from
 -15 through zero after software initializes SB to -16. Reset values remain
 unverified.
 
+The implemented storage boundary contains 277 bits per bank: 240 bits for the
+sixteen DREG-coded stores plus AF, MF, and five-bit SB. Unit-specific ALU,
+MAC, and shifter writeback preserves the documented cycle-start read and
+cycle-end write boundary [ADI-UM-1989, printed pp. 2-5–2-7, 2-13–2-18,
+2-21–2-23]. Instruction decode and MSTAT-controlled switching are not yet
+integrated.
+
 ## DAG and exchange registers
 
 Each DAG has four 14-bit I, M, and L registers. I/L read as unsigned with upper

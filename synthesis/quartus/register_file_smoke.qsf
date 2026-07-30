@@ -7,6 +7,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_register_
 set_global_assignment -name SDC_FILE register_file_smoke.sdc
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
 set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SEED 2
 set_location_assignment PIN_V11 -to clk_i
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
 set_instance_assignment -name VIRTUAL_PIN ON -to alternate_bank_i
@@ -25,6 +26,28 @@ set_instance_assignment -name VIRTUAL_PIN ON -to write_data_1_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to write_enable_2_i
 set_instance_assignment -name VIRTUAL_PIN ON -to write_address_2_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to write_data_2_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_move_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_move_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_destination_feedback_i
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_result_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mac_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to mac_destination_feedback_i
+set_instance_assignment -name VIRTUAL_PIN ON -to mac_result_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to shifter_sr_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to shifter_sr_result_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to shifter_se_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to shifter_se_result_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to shifter_sb_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to shifter_sb_result_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to af_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mf_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mr_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to se_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sr_o[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to write_conflict_o
 
 set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+
+set_global_assignment -name SEED 2

@@ -1,6 +1,6 @@
 # Programmer's model
 
-**Status: partial inventory; computational DREG access audit implemented**
+**Status: partial inventory; computational-bank storage slice implemented**
 
 | Group | Original registers | Width | Initial sourced facts |
 |---|---|---:|---|
@@ -32,11 +32,15 @@ pointers reset, IMASK and MSTAT clear, and ICNTL is undefined
 computational or DAG registers reset to zero, so the authentic model keeps them
 unknown until written.
 
-The independent model now retains MR0/MR1/MR2 and SR0/SR1 as separate
+The independent model and RTL retain MR0/MR1/MR2 and SR0/SR1 as separate
 exact-width segments so a partial preload does not initialize untouched
-segments. The DREG RTL has no reset assignment and implements the documented
-MR1-preload sign extension into MR2 [ADI-UM-1989, printed p. 2-18].
+segments. They have no computational-register reset assignment and implement
+the documented MR1-preload sign extension into MR2
+[ADI-UM-1989, printed p. 2-18]. AF, MF, and SB are also stored in both banks;
+unit-specific writes commit ALU results to AR/AF, MAC results to MR/MF, and
+shifter results to SR/SE/SB at cycle end.
 
-Direction-specific restrictions outside DREG, AF/MF/SB writeback, MSTAT and
-interrupt interactions, and every instruction field using these codes still
-require machine-readable extraction and tests.
+Direction-specific restrictions outside DREG, MSTAT update and bank-switch
+timing, interrupt interactions, full multifunction legality, and every
+instruction field using these paths still require machine-readable extraction
+and tests.

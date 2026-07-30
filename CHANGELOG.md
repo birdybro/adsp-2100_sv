@@ -59,14 +59,17 @@ semantic versioning after its first release.
   jump, call, return, loop-back, and loop-exit arbitration, including explicit
   control-transfer precedence at a loop end.
 - Generated SystemVerilog constants for all 16 original computational DREG
-  codes plus independent model and portable stateful RTL for both register
-  banks, exact SE/MR2 storage widths, cycle-start reads, cycle-end writes,
-  MR1-to-MR2 sign extension, and explicit write-collision reporting.
+  codes plus independent model and portable stateful RTL for both complete
+  computational banks. The storage preserves exact SE/MR2/SB widths,
+  cycle-start reads, cycle-end DREG and ALU/MAC/shifter writeback, atomic MR,
+  MF middle-word extraction, MR1-to-MR2 sign extension, and fail-closed
+  write-collision suppression.
 - Bounded combinational formal harnesses and SymbiYosys recipes for condition,
   ALU, MAC, shifter, DAG, and sequencer-flow invariants, with assertion lint
   available without SymbiYosys.
-- A stateful register-bank formal harness, 58,306-sequence differential
-  regression, and a constrained Cyclone V synthesis project.
+- A stateful register-bank formal harness, 58,307-cycle DREG regression,
+  50,120-cycle full-bank/writeback regression, and a constrained Cyclone V
+  synthesis project.
 
 ### Changed
 
@@ -87,11 +90,12 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 109 Python checks, ISA/register/condition/field validators,
+- `make test` passes 114 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
   ALU, 21,760 MAC, 644,368 shifter, 204,864 DAG, plus 636,512 sequencer-flow
-  and 58,306 stateful register-bank model-versus-RTL vectors.
+  58,307 stateful DREG model-versus-RTL cycles, and 50,120 complete-bank
+  writeback cycles.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -110,10 +114,10 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the constrained sequencer-flow block: 74
   ALMs, 44 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold
   slack, and zero unconstrained ports or paths.
-- Quartus full compilation passes for the constrained register-file block: 787
-  ALMs, 480 architectural implementation registers plus 40 fitter-created
-  routing duplicates, no RAM/DSPs, positive setup/hold slack, and zero
-  unconstrained ports or paths.
+- Quartus full compilation passes for the constrained register-file block:
+  1,084 ALMs, exactly 554 architectural implementation registers plus 55
+  fitter-created routing duplicates, no RAM/DSPs, +9.985 ns worst setup,
+  +0.109 ns worst hold slack, and zero unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
   MAC, shifter, DAG, sequencer-flow, and register-file harnesses; proof
   execution remains explicitly skipped without SymbiYosys.
@@ -148,6 +152,9 @@ semantic versioning after its first release.
 - Closed the computational-bank membership and DREG access/storage slice,
   preserving undocumented reset state and recording illegal write collisions
   and interrupt-adjacent bank-switch visibility as OQ-014/OQ-015.
+- Extended that slice through AF/MF/SB and unit-specific ALU/MAC/shifter
+  writeback, while keeping full instruction legality, MSTAT timing, status
+  writeback, and interrupt interaction explicitly incomplete.
 
 ### Known Issues
 
@@ -155,8 +162,8 @@ semantic versioning after its first release.
   and page-level opcode-field and semantic extraction remain incomplete.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
-- Register-bank AF/MF/SB paths, compute writeback, MSTAT storage, and
-  interrupt/context integration are not implemented.
+- Register-bank instruction/decode connectivity, MSTAT storage and timing,
+  status writeback, and interrupt/context integration are not implemented.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

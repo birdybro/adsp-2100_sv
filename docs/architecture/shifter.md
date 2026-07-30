@@ -76,6 +76,8 @@ operand space for every exponent mode, all flag combinations, and
 deterministic random values.
 
 This is not yet a complete shifter-instruction implementation. Operand-field
-decode, conditional-false behavior, register-bank selection, architectural
-writeback, multifunction old-value ordering, and cycle/bus timing remain
-outside this block and must be verified during core integration.
+decode, conditional-false behavior, complete multifunction ordering, and
+cycle/bus timing remain outside this block. The separate register file now
+accepts the explicit result enables for selected-bank SR, SE, or SB
+writeback; instruction connectivity remains to be verified during core
+integration.

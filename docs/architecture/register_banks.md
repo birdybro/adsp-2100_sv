@@ -1,6 +1,6 @@
 # Computational register banks
 
-**Status: bank membership verified; DREG storage slice implemented**
+**Status: bank membership and storage/writeback slice implemented**
 
 MSTAT bit 0 selects primary (`0`) or secondary (`1`) computational registers.
 The banked set is AX0/1, AY0/1, AF, AR, MX0/1, MY0/1, MF, MR2/1/0, SI, SE, SB,
@@ -28,34 +28,49 @@ reset list does not initialize either computational bank
 ## Implemented boundary
 
 `rtl/core/adsp2100_register_file.sv` stores both banks for all sixteen DREG
-codes, with three combinational reads and three cycle-end write inputs. Its
-14 full-width registers plus two exact eight-bit registers per bank total 480
-architectural storage bits. It has deliberately no reset port or initialization
-construct. The independent model retains unknowns separately for MR0/MR1/MR2
-and SR0/SR1, so one segment can become known without silently initializing its
-neighbors.
+codes plus AF, MF, and SB. Each bank contains fourteen 16-bit DREG stores, two
+exact eight-bit DREG stores, two 16-bit feedback stores, and one exact five-bit
+SB store: 277 bits per bank and 554 architectural bits total. It has
+deliberately no reset port or initialization construct. The independent model
+retains unknowns separately for MR0/MR1/MR2 and SR0/SR1, so one segment can
+become known without silently initializing its neighbors.
 
 Three write inputs are an integration interface, not a claim that every
-three-write combination is a legal instruction. `write_conflict_o` detects
-same-destination writes and the implicit MR1/MR2 collision. Behavior after
-clocking a reported conflict is outside the verified contract; the independent
-model rejects it rather than assigning undocumented architectural priority
-(OQ-014).
+three-write combination is a legal instruction. Unit-specific inputs write an
+ALU result atomically to AR or AF, a full 40-bit MAC result to MR or its middle
+word to MF, and one shifter result to SR, SE, or SB. A general MOVE to SB uses
+an explicit exact five-bit storage input; upstream decode remains responsible
+for narrowing the 16-bit bus value. These paths implement the manual's
+start-of-cycle operand/end-of-cycle result rule
+[ADI-UM-1989, printed pp. 2-5–2-7, 2-13–2-18, 2-21–2-23].
 
-AF, MF, and SB are banked but are not DREG-encoded. Their compute/exponent
-write paths, complete multifunction legality, MSTAT storage and update timing,
-interrupt/context interaction, and exact same-cycle bank-switch visibility
-remain unimplemented. M16 therefore remains `IMPLEMENTING`.
+`write_conflict_o` detects same-storage writes, the implicit MR1/MR2
+collision, multiple computational units, and multiple shifter destinations.
+Any reported collision suppresses every write. This fail-closed behavior is
+an implementation safeguard, not a claim about an illegal real-device
+encoding; OQ-014 remains open.
+
+Complete instruction and multifunction legality, operand/result decode
+connectivity, MSTAT storage and update timing, interrupt/context interaction,
+and exact same-cycle bank-switch visibility remain unimplemented. M16
+therefore remains `IMPLEMENTING`.
 
 ## Objective evidence
 
-- `tests/test_register_banks.py` covers unknown preservation, every DREG in
-  both banks, inactive-bank preservation, old-read/new-write visibility,
-  narrow sign extension, MR1's MR2 side effect, legal triple writes, and
+- `tests/test_register_banks.py` has 14 directed tests covering unknown
+  preservation, every DREG in both banks, inactive-bank preservation,
+  old-read/new-write visibility, narrow sign extension, MR1's MR2 side
+  effect, AF/MF/SB, atomic MR/SR writeback, legal parallel writes, and
   fail-closed collisions.
-- `make register-tests` compares 58,306 deterministic stateful sequences
-  against independent Python results. It exhausts all 4,096 three-read address
-  combinations in each bank and adds directed and seeded-random legal writes.
-- `formal/registers.sby` states conflict, narrow-extension, and MR1 side-effect
-  properties. The harness passes assertion lint; proof execution remains
-  unavailable until SymbiYosys is installed.
+- `make register-tests` compares 58,307 deterministic DREG cycles and 50,120
+  full-bank/writeback cycles against independent Python results. It exhausts
+  all 4,096 three-read address combinations in each bank, adds boundary and
+  seeded-random legal writes, clocks collision cases, and verifies that the
+  next cycle sees unchanged state.
+- `formal/registers.sby` states exact collision detection, conflict-state
+  preservation, narrow-extension, MR consistency, and every unit-specific
+  writeback property. The harness passes assertion lint; proof execution
+  remains unavailable until SymbiYosys is installed.
+- Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
+  project. Seed 2 closes the fully constrained 20 ns multicorner check at
+  +9.985 ns worst setup and +0.109 ns worst hold slack.

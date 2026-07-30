@@ -24,6 +24,13 @@ module tb_adsp2100_register_file;
     logic        write_enable_2;
     logic [3:0]  write_address_2;
     logic [15:0] write_data_2;
+    logic [15:0] af_data;
+    logic [15:0] mf_data;
+    logic [39:0] mr_data;
+    logic [7:0]  se_data;
+    logic [4:0]  sb_data;
+    logic [31:0] sr_data;
+    logic [116:0] computational_state;
     logic        write_conflict;
     integer      vector_file;
     integer      scan_count;
@@ -46,6 +53,14 @@ module tb_adsp2100_register_file;
     } = stimulus;
     assign {compare_reads, expected_conflict} = expected[49:48];
     assign actual_reads = {read_data_0, read_data_1, read_data_2};
+    assign computational_state = {
+        af_data,
+        mf_data,
+        mr_data,
+        se_data,
+        sb_data,
+        sr_data
+    };
 
     adsp2100_register_file dut (
         .clk_i(clk),
@@ -65,6 +80,26 @@ module tb_adsp2100_register_file;
         .write_enable_2_i(write_enable_2),
         .write_address_2_i(write_address_2),
         .write_data_2_i(write_data_2),
+        .sb_move_write_enable_i(1'b0),
+        .sb_move_write_data_i(5'h00),
+        .alu_write_enable_i(1'b0),
+        .alu_destination_feedback_i(1'b0),
+        .alu_result_i(16'h0000),
+        .mac_write_enable_i(1'b0),
+        .mac_destination_feedback_i(1'b0),
+        .mac_result_i(40'h0000000000),
+        .shifter_sr_write_enable_i(1'b0),
+        .shifter_sr_result_i(32'h00000000),
+        .shifter_se_write_enable_i(1'b0),
+        .shifter_se_result_i(8'h00),
+        .shifter_sb_write_enable_i(1'b0),
+        .shifter_sb_result_i(5'h00),
+        .af_o(af_data),
+        .mf_o(mf_data),
+        .mr_o(mr_data),
+        .se_o(se_data),
+        .sb_o(sb_data),
+        .sr_o(sr_data),
         .write_conflict_o(write_conflict)
     );
 
@@ -101,23 +136,22 @@ module tb_adsp2100_register_file;
                 ) begin
                     $fatal(
                         1,
-                        "register read mismatch vector=%0d bank=%0b addresses=%0h/%0h/%0h expected=%0h actual=%0h",
+                        "register read mismatch vector=%0d bank=%0b addresses=%0h/%0h/%0h expected=%0h actual=%0h state=%0h",
                         vector_count,
                         alternate_bank,
                         read_address_0,
                         read_address_1,
                         read_address_2,
                         expected[47:0],
-                        actual_reads
+                        actual_reads,
+                        computational_state
                     );
                 end
-                if (!expected_conflict) begin
-                    #4;
-                    clk = 1'b1;
-                    #1;
-                    clk = 1'b0;
-                    #4;
-                end
+                #4;
+                clk = 1'b1;
+                #1;
+                clk = 1'b0;
+                #4;
                 vector_count = vector_count + 1;
             end
         end

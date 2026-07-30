@@ -335,18 +335,23 @@ advance beyond research until a page-level primary citation is added.
 - **Acceptance criteria:** all primary/alternate registers, switching timing,
   interrupt/context interactions, simultaneous reads/writes, and reset
   classifications pass directed and formal tests.
-- **Source references:** ADI-UM-1989 register and secondary-bank sections
+- **Source references:** ADI-UM-1989 printed pp. 2-5–2-7, 2-13–2-18,
+  2-21–2-23, 4-8, 4-22, 5-13, 6-4–6-6, A-9
 - **Relevant tests:** `make register-tests`, `tests/test_register_banks.py`,
   `formal/registers.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
-  independent model and portable RTL implement both banks for all 16
-  general-computational DREG codes, exact SE/MR2 widths, three cycle-start
-  reads, three cycle-end writes, MR1-to-MR2 sign extension, and explicit
-  collision reporting. The RTL has 480 source storage bits and deliberately
-  no reset assignment; 58,306 model-versus-RTL stateful vectors pass.
-- **Unresolved questions:** AF/MF/SB storage/write paths, compute result
-  writeback, full multifunction legality, MSTAT storage, interrupt/context
-  interactions, OQ-014 illegal collisions, and OQ-015 bank-switch visibility.
+  independent model and portable RTL implement both banks for all 16 DREG
+  codes plus AF, MF, and SB; exact SE/MR2/SB widths; three cycle-start reads;
+  cycle-end DREG and unit-specific ALU/MAC/shifter writeback; atomic 40-bit MR
+  writes; MF bits 31–16 extraction; MR1-to-MR2 sign extension; and
+  fail-closed collision suppression. The RTL has exactly 554 architectural
+  storage bits and deliberately no reset assignment. The regression passes
+  58,307 DREG cycles plus 50,120 full-bank/writeback cycles against the
+  independent model.
+- **Unresolved questions:** full instruction/multifunction legality, operand
+  and result decode connectivity, MSTAT storage and update timing,
+  interrupt/context interactions, OQ-014 real-device behavior for illegal
+  collisions, and OQ-015 bank-switch visibility.
 - **Confidence:** CORROBORATED
 
 ## M17 — Status and mode registers

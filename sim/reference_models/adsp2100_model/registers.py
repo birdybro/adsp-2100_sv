@@ -1,8 +1,8 @@
-"""Original ADSP-2100 computational DREG access and bank semantics.
+"""Original ADSP-2100 computational-register access and bank semantics.
 
 This module covers the sixteen general computational data registers encoded by
-the Appendix A DREG field. AF, MF, and SB are banked architectural registers
-but are intentionally outside this field and this verified slice.
+the Appendix A DREG field plus the AF, MF, and SB destinations reached through
+their documented unit-specific write paths.
 """
 
 from __future__ import annotations
@@ -37,6 +37,10 @@ class DREGWriteConflict(ValueError):
     """Two same-cycle writes affect the same architectural storage."""
 
 
+class ComputationalWriteConflict(DREGWriteConflict):
+    """Same-cycle writeback controls violate the verified storage contract."""
+
+
 @dataclass(frozen=True)
 class DREGWrite:
     address: DREG
@@ -55,6 +59,46 @@ class DREGCycleResult:
     reads: tuple[KnownOrUnknown, ...]
     primary: ComputationalBank
     alternate: ComputationalBank
+
+
+@dataclass(frozen=True)
+class ALURegisterWrite:
+    feedback: bool
+    data: ExactWord
+
+    def __post_init__(self) -> None:
+        if self.data.width != 16:
+            raise ValueError("ALU register write must be exactly 16 bits")
+
+
+@dataclass(frozen=True)
+class MACRegisterWrite:
+    feedback: bool
+    data: ExactWord
+
+    def __post_init__(self) -> None:
+        if self.data.width != 40:
+            raise ValueError("MAC register write must be exactly 40 bits")
+
+
+@dataclass(frozen=True)
+class ShifterRegisterWrite:
+    sr: ExactWord | None = None
+    se: ExactWord | None = None
+    sb: ExactWord | None = None
+
+    def __post_init__(self) -> None:
+        populated = tuple(
+            value for value in (self.sr, self.se, self.sb) if value is not None
+        )
+        if len(populated) != 1:
+            raise ValueError("shifter writeback must select exactly one destination")
+        if self.sr is not None and self.sr.width != 32:
+            raise ValueError("SR writeback must be exactly 32 bits")
+        if self.se is not None and self.se.width != 8:
+            raise ValueError("SE writeback must be exactly 8 bits")
+        if self.sb is not None and self.sb.width != 5:
+            raise ValueError("SB writeback must be exactly 5 bits")
 
 
 def _replace_pair(
@@ -197,3 +241,111 @@ def apply_dreg_cycle(
         primary=primary,
         alternate=alternate,
     )
+
+
+def apply_computational_cycle(
+    primary: ComputationalBank,
+    alternate: ComputationalBank,
+    *,
+    alternate_selected: bool,
+    read_addresses: Iterable[DREG | int] = (),
+    dreg_writes: Iterable[DREGWrite] = (),
+    sb_move_data: ExactWord | None = None,
+    alu_write: ALURegisterWrite | None = None,
+    mac_write: MACRegisterWrite | None = None,
+    shifter_write: ShifterRegisterWrite | None = None,
+) -> DREGCycleResult:
+    """Apply one legal computational-bank storage transaction.
+
+    Reads are captured before any write. This function validates storage
+    collisions, not complete instruction-field legality.
+    """
+
+    if sb_move_data is not None and sb_move_data.width != 16:
+        raise ValueError("SB move data must be exactly 16 bits")
+    compute_writes = sum(
+        write is not None for write in (alu_write, mac_write, shifter_write)
+    )
+    if compute_writes > 1:
+        raise ComputationalWriteConflict(
+            "more than one computational unit requested writeback"
+        )
+
+    validated_dreg_writes = validate_dreg_writes(dreg_writes)
+    dreg_destinations = {
+        destination
+        for write in validated_dreg_writes
+        for destination in _effective_destinations(write.address)
+    }
+    if (
+        alu_write is not None
+        and not alu_write.feedback
+        and DREG.AR in dreg_destinations
+    ):
+        raise ComputationalWriteConflict("ALU AR write collides with DREG write")
+    if (
+        mac_write is not None
+        and not mac_write.feedback
+        and dreg_destinations.intersection((DREG.MR0, DREG.MR1, DREG.MR2))
+    ):
+        raise ComputationalWriteConflict("MAC MR write collides with DREG write")
+    if shifter_write is not None:
+        if shifter_write.sr is not None and dreg_destinations.intersection(
+            (DREG.SR0, DREG.SR1)
+        ):
+            raise ComputationalWriteConflict("shifter SR write collides with DREG write")
+        if shifter_write.se is not None and DREG.SE in dreg_destinations:
+            raise ComputationalWriteConflict("shifter SE write collides with DREG write")
+        if shifter_write.sb is not None and sb_move_data is not None:
+            raise ComputationalWriteConflict("shifter SB write collides with SB move")
+
+    dreg_result = apply_dreg_cycle(
+        primary,
+        alternate,
+        alternate_selected=alternate_selected,
+        read_addresses=read_addresses,
+        writes=validated_dreg_writes,
+    )
+    selected = (
+        dreg_result.alternate if alternate_selected else dreg_result.primary
+    )
+
+    if sb_move_data is not None:
+        selected = replace(selected, sb=ExactWord(5, sb_move_data.value & 0x1F))
+    if alu_write is not None:
+        if alu_write.feedback:
+            selected = replace(selected, af=alu_write.data)
+        else:
+            selected = replace(selected, ar=alu_write.data)
+    if mac_write is not None:
+        if mac_write.feedback:
+            selected = replace(
+                selected,
+                mf=ExactWord(16, (mac_write.data.value >> 16) & 0xFFFF),
+            )
+        else:
+            selected = replace(
+                selected,
+                mr=(
+                    ExactWord(16, mac_write.data.value & 0xFFFF),
+                    ExactWord(16, (mac_write.data.value >> 16) & 0xFFFF),
+                    ExactWord(8, (mac_write.data.value >> 32) & 0xFF),
+                ),
+            )
+    if shifter_write is not None:
+        if shifter_write.sr is not None:
+            selected = replace(
+                selected,
+                sr=(
+                    ExactWord(16, shifter_write.sr.value & 0xFFFF),
+                    ExactWord(16, (shifter_write.sr.value >> 16) & 0xFFFF),
+                ),
+            )
+        elif shifter_write.se is not None:
+            selected = replace(selected, se=shifter_write.se)
+        elif shifter_write.sb is not None:
+            selected = replace(selected, sb=shifter_write.sb)
+
+    if alternate_selected:
+        return replace(dreg_result, alternate=selected)
+    return replace(dreg_result, primary=selected)

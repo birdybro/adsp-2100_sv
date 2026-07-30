@@ -20,6 +20,7 @@ from sim.reference_models.adsp2100_model import (  # noqa: E402
     ExactWord,
     UNKNOWN,
     apply_dreg_cycle,
+    read_dreg,
 )
 
 
@@ -167,17 +168,19 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
                         break
         emit(alternate_selected, reads, tuple(writes))
 
-    # Conflict reporting is architectural-claim-free diagnostics. These final
-    # vectors are not clocked, so implementation priority cannot affect state.
-    known_reads = (ExactWord(16, 0),) * 3
+    # Conflict vectors are clocked; the following vector proves that all
+    # architectural writes were suppressed.
+    known_read = read_dreg(primary, DREG.AX0)
+    known_reads = (known_read,) * 3
     for writes in (
         (_write(DREG.AX0, 1), _write(DREG.AX0, 2)),
         (_write(DREG.MR1, 1), _write(DREG.MR2, 2)),
     ):
         lines.append(
             f"{_pack_stimulus(False, (DREG.AX0,) * 3, writes):019x} "
-            f"{_pack_expected(known_reads, compare_reads=False, conflict=True):013x}"
+            f"{_pack_expected(known_reads, compare_reads=True, conflict=True):013x}"
         )
+    emit(False, (DREG.AX0,) * 3)
     return lines
 
 

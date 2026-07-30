@@ -31,9 +31,11 @@ ABS-only AS update, sticky AV, and AR-only saturation. Saturation is driven by
 overflow generated on the current operation, not an already-sticky AV bit
 [ADI-UM-1989, printed pp. 2-8–2-9, Table 2.2].
 
-This block is not yet an instruction implementation: operand selection,
-conditional suppression, AR/AF writeback, ASTAT timing, register banking, and
-multifunction behavior remain outside it. DIVS/DIVQ are also excluded.
+This block is not yet an instruction implementation. The separate register
+file now accepts its result for cycle-end AR/AF writeback in the selected
+bank, but operand selection, decode connectivity, conditional suppression,
+ASTAT timing, and multifunction legality remain outside it. DIVS/DIVQ are
+also excluded.
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover
