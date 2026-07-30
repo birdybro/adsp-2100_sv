@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `a22a60d`
+**Latest verified engineering commit:** `e6978cb`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register-storage blocks
@@ -34,8 +34,9 @@ cycle-, or Hard Drivin'-complete
   alignment, signed post-modification, and DAG1 bit reversal;
 - source-backed sequencer-flow model/RTL for explicit transfer and loop-end
   arbitration;
-- source-backed stateful DREG model/RTL for both computational banks, authentic
-  reset unknowns, exact SE/MR2 widths, and cycle-boundary reads/writes;
+- source-backed stateful model/RTL for both complete computational banks,
+  authentic reset unknowns, exact SE/MR2/SB widths, cycle-boundary DREG
+  accesses, and unit-specific ALU/MAC/shifter writeback;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -49,12 +50,13 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 109 implemented Python unit checks plus manifest/hash verification;
+- 114 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG, sequencer-flow, and register-file RTL;
   all 2,048 condition/flag combinations, 51,472 ALU vectors, 21,760 MAC
   vectors, 644,368 shifter vectors, 204,864 DAG vectors, 636,512
-  sequencer-flow vectors, and 58,306 register-bank sequences pass simulation;
+  sequencer-flow vectors, 58,307 DREG cycles, and 50,120 full-bank/writeback
+  cycles pass simulation;
 - constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG,
   sequencer-flow, and register-file block compilations pass with no
   unconstrained paths;
@@ -66,8 +68,8 @@ outstanding.
 
 ## Next highest-priority work
 
-1. Complete M16 with banked AF/MF/SB storage and legal compute-result writeback.
-2. Implement M17's primary-backed MSTAT/ASTAT access and reset boundaries.
+1. Implement M17's primary-backed MSTAT/ASTAT access and reset boundaries.
+2. Close M16's MSTAT-controlled bank-switch timing and interrupt interaction.
 3. Locate the original Cross-Software/instruction reference and a separately
    identifiable original data sheet.
 4. Extend the independently cross-checked class masks into field-level and

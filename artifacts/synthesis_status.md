@@ -43,12 +43,13 @@
   against the 20 ns virtual I/O constraint; setup and hold are fully
   constrained.
 - Quartus full compilation of the register-file smoke project passes with the
-  DE10-Nano 50 MHz input constrained on `PIN_V11` and 125 virtual data/control
-  pins. Analysis identifies exactly 480 design registers; Standard Fit adds 40
-  secondary routing-optimization duplicates. The fit uses 787 ALMs, 1,150
-  combinational ALUTs, no RAM, and no DSPs. Across the four timing models,
-  worst setup slack is 10.733 ns and worst hold slack is 0.102 ns against the
-  20 ns constraint, with zero unconstrained clocks, ports, or paths.
+  DE10-Nano 50 MHz input constrained on `PIN_V11` and 356 virtual data/control
+  pins. Analysis identifies exactly 554 design registers; deterministic
+  Standard Fit seed 2 adds 55 secondary routing-optimization duplicates. The
+  fit uses 1,084 ALMs, 1,353 combinational ALUTs, no RAM, and no DSPs. Across
+  the four timing models, worst setup slack is 9.985 ns and worst hold slack is
+  0.109 ns against the 20 ns constraint, with zero unconstrained clocks, ports,
+  or paths.
 - The only full-flow warning is Quartus Lite's unavailable LogicLock feature;
   the project does not use LogicLock.
 - SymbiYosys is not installed. `make formal` strictly lints the seven available
