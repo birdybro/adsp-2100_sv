@@ -2,6 +2,8 @@
 
 **Updated:** 2026-07-30
 
+**Latest verified engineering commit:** `9a41cf8`
+
 **Current milestone:** documentation acquisition, exact-device audit, and
 executable-model foundation
 
@@ -34,8 +36,8 @@ outstanding.
 - 40 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared type and generated class-decode
   packages;
-- no architectural execution RTL, assembler, formal harness, or synthesis top
-  exists.
+- no architectural execution RTL, complete assembler, formal harness, or
+  synthesis top exists.
 
 ## Next highest-priority work
 
