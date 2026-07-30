@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `78fbc0c`
+**Latest verified engineering commit:** `bfed463`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks
@@ -37,9 +37,10 @@ cycle-, or Hard Drivin'-complete
 - source-backed stateful model/RTL for both complete computational banks,
   authentic reset unknowns, exact SE/MR2/SB widths, cycle-boundary DREG
   accesses, and unit-specific ALU/MAC/shifter writeback;
-- source-backed stateful model/RTL for exact-width ASTAT/MSTAT, per-bit ASTAT
-  reset unknowns, MSTAT reset clear, all MODE CONTROL effects, and
-  cycle-boundary computational status writes;
+- source-backed stateful model/RTL for exact-width ASTAT/MSTAT/ICNTL/IMASK,
+  authentic ASTAT/ICNTL reset unknowns, MSTAT/IMASK reset clear, all MODE
+  CONTROL effects, cycle-boundary computational status writes, interrupt-entry
+  status snapshots and nested masks, and RTI-style restore;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -53,14 +54,14 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 126 implemented Python unit checks plus manifest/hash verification;
+- 131 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG, sequencer-flow, register-file, and
   status-register RTL;
   all 2,048 condition/flag combinations, 51,472 ALU vectors, 21,760 MAC
   vectors, 644,368 shifter vectors, 204,864 DAG vectors, 636,512
   sequencer-flow vectors, 58,307 DREG cycles, and 50,120 full-bank/writeback
-  cycles plus 50,157 ASTAT/MSTAT cycles pass simulation;
+  cycles plus 50,287 status/control cycles pass simulation;
 - constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG,
   sequencer-flow, register-file, and status-register block compilations pass
   with no unconstrained paths;
@@ -72,7 +73,7 @@ outstanding.
 
 ## Next highest-priority work
 
-1. Extend M17 through primary-backed SSTAT, IMASK, and ICNTL behavior.
+1. Extend M17 through physical status-stack and stack-derived SSTAT behavior.
 2. Connect MSTAT outputs to bank, DAG1, and ALU consumers and verify
    next-cycle visibility.
 3. Locate the original Cross-Software/instruction reference and a separately

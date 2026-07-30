@@ -18,7 +18,7 @@
 | DAG arithmetic and ownership | CORROBORATED | original DAG chapter plus 1994 explicit original/later placement distinction; function integration incomplete |
 | Sequencer next-PC/loop precedence | CORROBORATED | original program-control chapter and 636,512 model/RTL vectors; stacks, counter, interrupts, and cycles incomplete |
 | Computational register banking | CORROBORATED | original compute/register/Appendix A sections, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles; MSTAT timing, interrupts, and decode connectivity incomplete |
-| ASTAT/MSTAT storage and updates | CORROBORATED | original status/reset/Appendix A sections plus 50,157 model/RTL cycles; narrow reads, consumer wiring, remaining status registers, and interrupt context incomplete |
+| Status/control storage and updates | CORROBORATED | original status/reset/interrupt/Appendix A sections plus 50,287 model/RTL cycles; ICNTL/IMASK and entry/restore transitions implemented, while narrow reads, consumer wiring, stack-derived SSTAT, physical stacking, and interrupt recognition remain incomplete |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
 | Stack underflow/overflow effects | UNKNOWN | status reporting known; effects not closed |
 | Full interrupt phase behavior | PROVISIONAL | recognition state known; all interactions incomplete |
