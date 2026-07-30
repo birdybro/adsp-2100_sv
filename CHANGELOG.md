@@ -58,9 +58,15 @@ semantic versioning after its first release.
 - Independent model and portable RTL for instruction-boundary sequential,
   jump, call, return, loop-back, and loop-exit arbitration, including explicit
   control-transfer precedence at a loop end.
+- Generated SystemVerilog constants for all 16 original computational DREG
+  codes plus independent model and portable stateful RTL for both register
+  banks, exact SE/MR2 storage widths, cycle-start reads, cycle-end writes,
+  MR1-to-MR2 sign extension, and explicit write-collision reporting.
 - Bounded combinational formal harnesses and SymbiYosys recipes for condition,
   ALU, MAC, shifter, DAG, and sequencer-flow invariants, with assertion lint
   available without SymbiYosys.
+- A stateful register-bank formal harness, 58,306-sequence differential
+  regression, and a constrained Cyclone V synthesis project.
 
 ### Changed
 
@@ -81,11 +87,11 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 100 Python checks, ISA/register/condition/field validators,
+- `make test` passes 109 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
   ALU, 21,760 MAC, 644,368 shifter, 204,864 DAG, plus 636,512 sequencer-flow
-  model-versus-RTL vectors.
+  and 58,306 stateful register-bank model-versus-RTL vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -104,9 +110,13 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the constrained sequencer-flow block: 74
   ALMs, 44 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold
   slack, and zero unconstrained ports or paths.
+- Quartus full compilation passes for the constrained register-file block: 787
+  ALMs, 480 architectural implementation registers plus 40 fitter-created
+  routing duplicates, no RAM/DSPs, positive setup/hold slack, and zero
+  unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
-  MAC, shifter, DAG, and sequencer-flow harnesses; proof execution remains
-  explicitly skipped without SymbiYosys.
+  MAC, shifter, DAG, sequencer-flow, and register-file harnesses; proof
+  execution remains explicitly skipped without SymbiYosys.
 
 ### Documentation
 
@@ -135,6 +145,9 @@ semantic versioning after its first release.
   later family's strict inequality (SC-011).
 - Recorded MAME's loop-before-instruction ordering against the original
   explicit-control-transfer precedence rule (SC-012).
+- Closed the computational-bank membership and DREG access/storage slice,
+  preserving undocumented reset state and recording illegal write collisions
+  and interrupt-adjacent bank-switch visibility as OQ-014/OQ-015.
 
 ### Known Issues
 
@@ -142,6 +155,8 @@ semantic versioning after its first release.
   and page-level opcode-field and semantic extraction remain incomplete.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
+- Register-bank AF/MF/SB paths, compute writeback, MSTAT storage, and
+  interrupt/context integration are not implemented.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

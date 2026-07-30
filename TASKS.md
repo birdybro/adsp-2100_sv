@@ -329,18 +329,25 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-REG-001 — Computational register files and banking
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-002
 - **Acceptance criteria:** all primary/alternate registers, switching timing,
   interrupt/context interactions, simultaneous reads/writes, and reset
   classifications pass directed and formal tests.
 - **Source references:** ADI-UM-1989 register and secondary-bank sections
-- **Relevant tests:** `tests/test_register_banks.py`, `formal/registers.sby`
-- **Implementation notes:** undefined power-up state remains nondeterministic in
-  authentic model/harnesses.
-- **Unresolved questions:** exact banked set and bank-switch visibility.
-- **Confidence:** UNKNOWN
+- **Relevant tests:** `make register-tests`, `tests/test_register_banks.py`,
+  `formal/registers.sby`
+- **Implementation notes:** the exact banked set is primary-verified. The
+  independent model and portable RTL implement both banks for all 16
+  general-computational DREG codes, exact SE/MR2 widths, three cycle-start
+  reads, three cycle-end writes, MR1-to-MR2 sign extension, and explicit
+  collision reporting. The RTL has 480 source storage bits and deliberately
+  no reset assignment; 58,306 model-versus-RTL stateful vectors pass.
+- **Unresolved questions:** AF/MF/SB storage/write paths, compute result
+  writeback, full multifunction legality, MSTAT storage, interrupt/context
+  interactions, OQ-014 illegal collisions, and OQ-015 bank-switch visibility.
+- **Confidence:** CORROBORATED
 
 ## M17 — Status and mode registers
 

@@ -102,11 +102,18 @@ class ComputationalBank:
     mx: tuple[KnownOrUnknown, KnownOrUnknown] = field(default_factory=lambda: _unknown_words(2))
     my: tuple[KnownOrUnknown, KnownOrUnknown] = field(default_factory=lambda: _unknown_words(2))
     mf: KnownOrUnknown = UNKNOWN
-    mr: KnownOrUnknown = UNKNOWN
+    # Segment order follows the architectural names MR0, MR1, MR2. Keeping
+    # each segment independent preserves partially initialized states.
+    mr: tuple[KnownOrUnknown, KnownOrUnknown, KnownOrUnknown] = field(
+        default_factory=lambda: _unknown_words(3)
+    )
     si: KnownOrUnknown = UNKNOWN
     se: KnownOrUnknown = UNKNOWN
     sb: KnownOrUnknown = UNKNOWN
-    sr: KnownOrUnknown = UNKNOWN
+    # Segment order follows the architectural names SR0, SR1.
+    sr: tuple[KnownOrUnknown, KnownOrUnknown] = field(
+        default_factory=lambda: _unknown_words(2)
+    )
 
     @classmethod
     def randomized(cls, rng: random.Random) -> "ComputationalBank":
@@ -119,11 +126,15 @@ class ComputationalBank:
             mx=(w16(), w16()),
             my=(w16(), w16()),
             mf=w16(),
-            mr=ExactWord(MR_WIDTH, rng.randrange(1 << MR_WIDTH)),
+            mr=(
+                w16(),
+                w16(),
+                ExactWord(8, rng.randrange(1 << 8)),
+            ),
             si=w16(),
             se=ExactWord(8, rng.randrange(1 << 8)),
             sb=ExactWord(5, rng.randrange(1 << 5)),
-            sr=ExactWord(32, rng.randrange(1 << 32)),
+            sr=(w16(), w16()),
         )
 
 

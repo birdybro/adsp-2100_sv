@@ -15,6 +15,8 @@
 | OQ-011 | How does NORM negate manually loaded `SE=0x80`? | mathematical +128 gives left-off-scale zero; 8-bit wrap gives right-off-scale extension | original simulator or physical-chip signature | low; EXP never generates this value | OPEN |
 | OQ-012 | Does a conditional CALL using CE test and post-decrement CNTR? | CALL behaves like JUMP; CALL belongs to the excluded return/trap/arithmetic set; condition is illegal | original instruction reference, tool diagnostics, or hardware signature | low/unknown | OPEN |
 | OQ-013 | What value/state results from popping an already-empty stack? | pointer saturates and stale bottom is exposed; no data change; undefined | original simulator and physical-chip signatures for each stack | low unless corrupt code or diagnostics rely on it | OPEN |
+| OQ-014 | What happens if an illegal multifunction encoding writes one computational destination twice, including an MR1 preload colliding with MR2? | one source wins; both writes combine; undefined result | original assembler rejection, original simulator behavior, or physical-chip signature | low unless diagnostics execute illegal encodings | OPEN |
+| OQ-015 | At which exact boundary does an MSTAT bank-select change become visible relative to interrupt recognition and context stacking? | end-of-instruction before interrupt entry; interrupt entry sees old bank; device-specific ordering | original instruction/timing reference or physical-chip trace around MODE CONTROL plus IRQ | context-switch timing | OPEN |
 
 Provisional behavior must cite one of these IDs in code and tests. Resolving an
 item requires updating the relevant architecture document, task confidence, and

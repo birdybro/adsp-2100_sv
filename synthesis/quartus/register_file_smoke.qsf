@@ -1,0 +1,30 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_register_file
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_register
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_register_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_register_file.sv
+set_global_assignment -name SDC_FILE register_file_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to alternate_bank_i
+set_instance_assignment -name VIRTUAL_PIN ON -to read_address_0_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to read_address_1_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to read_address_2_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to read_data_0_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to read_data_1_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to read_data_2_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_enable_0_i
+set_instance_assignment -name VIRTUAL_PIN ON -to write_address_0_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_data_0_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_enable_1_i
+set_instance_assignment -name VIRTUAL_PIN ON -to write_address_1_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_data_1_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_enable_2_i
+set_instance_assignment -name VIRTUAL_PIN ON -to write_address_2_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_data_2_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to write_conflict_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
