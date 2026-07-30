@@ -1,6 +1,7 @@
 # Computational register banks
 
-**Status: bank membership and storage/writeback slice implemented**
+**Status: bank membership, storage/writeback, and ordinary MSTAT selection
+implemented**
 
 MSTAT bit 0 selects primary (`0`) or secondary (`1`) computational registers.
 The banked set is AX0/1, AY0/1, AF, AR, MX0/1, MY0/1, MF, MR2/1/0, SI, SE, SB,
@@ -50,11 +51,20 @@ Any reported collision suppresses every write. This fail-closed behavior is
 an implementation safeguard, not a claim about an illegal real-device
 encoding; OQ-014 remains open.
 
-A separate verified storage block now emits MSTAT bit 0 after direct MOVE or
-MODE CONTROL updates, but it is not wired to this register file. Complete
-instruction and multifunction legality, operand/result decode connectivity,
-interrupt/context interaction, and exact same-cycle bank-switch visibility
-remain unimplemented. M16 therefore remains `IMPLEMENTING`.
+`rtl/core/adsp2100_mode_slice.sv` now wires stored MSTAT bit 0 directly to the
+register-file bank selector. The corresponding independent model samples the
+selected bank at cycle start and commits MSTAT and register writes at cycle
+end. Consequently, a MOVE/MODE CONTROL change selects the other bank on the
+following cycle. The structural boundary would keep any co-present DREG
+access in the old bank, but this is not a claim that such an instruction
+encoding is legal. This follows the compute chapter's general
+start-read/end-write rule
+[ADI-UM-1989, printed pp. 2-6–2-7] but does not settle the exact
+interrupt-recognition boundary tracked by OQ-015.
+
+Complete instruction and multifunction legality, operand/result decode
+connectivity, and interrupt/context interaction remain unimplemented. M16
+therefore remains `IMPLEMENTING`.
 
 ## Objective evidence
 
@@ -72,6 +82,10 @@ remain unimplemented. M16 therefore remains `IMPLEMENTING`.
   preservation, narrow-extension, MR consistency, and every unit-specific
   writeback property. The harness passes assertion lint; proof execution
   remains unavailable until SymbiYosys is installed.
+- `make mode-tests` adds five directed integration checks and 50,112
+  deterministic model-versus-RTL cycles. It initializes every DREG in both
+  banks, traverses all 16 MSTAT values, and checks that selection changes only
+  after the writing cycle.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

@@ -338,20 +338,23 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989 printed pp. 2-5–2-7, 2-13–2-18,
   2-21–2-23, 4-8, 4-22, 5-13, 6-4–6-6, A-9
 - **Relevant tests:** `make register-tests`, `tests/test_register_banks.py`,
-  `formal/registers.sby`
+  `make mode-tests`, `tests/test_mode_integration.py`,
+  `formal/registers.sby`, `formal/mode_slice.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
   independent model and portable RTL implement both banks for all 16 DREG
   codes plus AF, MF, and SB; exact SE/MR2/SB widths; three cycle-start reads;
   cycle-end DREG and unit-specific ALU/MAC/shifter writeback; atomic 40-bit MR
   writes; MF bits 31–16 extraction; MR1-to-MR2 sign extension; and
   fail-closed collision suppression. The RTL has exactly 554 architectural
-  storage bits and deliberately no reset assignment. The regression passes
+  storage bits and deliberately no reset assignment. An integrated
+  model/RTL slice connects MSTAT bit 0 using old-mode/current-cycle and
+  new-mode/following-cycle visibility. The regression passes
   58,307 DREG cycles plus 50,120 full-bank/writeback cycles against the
-  independent model.
+  independent model, plus 50,112 mixed MSTAT-consumer cycles.
 - **Unresolved questions:** full instruction/multifunction legality, operand
-  and result decode connectivity, MSTAT-to-register-file integration,
-  interrupt/context interactions, OQ-014 real-device behavior for illegal
-  collisions, and OQ-015 bank-switch visibility.
+  and result decode connectivity, interrupt/context interactions, OQ-014
+  real-device behavior for illegal collisions, and OQ-015
+  interrupt-adjacent bank-switch visibility.
 - **Confidence:** CORROBORATED
 
 ## M17 — Status and mode registers
@@ -365,8 +368,9 @@ advance beyond research until a page-level primary citation is added.
   effects, flag latency, masks, and context stacking pass tests tied to cited
   original applicability.
 - **Source references:** ADI-UM-1989 printed pp. 4-20–4-24, 5-13, A-8
-- **Relevant tests:** `make status-tests`,
-  `tests/test_status_registers.py`, `formal/status_registers.sby`
+- **Relevant tests:** `make status-tests`, `make mode-tests`,
+  `tests/test_status_registers.py`, `tests/test_mode_integration.py`,
+  `formal/status_registers.sby`, `formal/mode_slice.sby`
 - **Implementation notes:** the machine-readable register map, independent
   model, and portable RTL now implement exact eight-bit ASTAT, four-bit MSTAT,
   five-bit ICNTL, and four-bit IMASK storage; authentic ASTAT/ICNTL reset
@@ -379,7 +383,10 @@ advance beyond research until a page-level primary citation is added.
   and a separate four-entry status stack now provides verified status-empty
   and sticky-overflow sources. Later
   memory-mapped peripheral control registers are excluded from the ADSP-2100
-  default.
+  default. A bounded integration slice now wires all four MSTAT bits to the
+  computational bank, DAG1 bit reverse, sticky AV, and AR saturation using
+  the documented start-read/end-write cycle boundary. Five directed tests and
+  50,112 model-versus-RTL integration cycles pass.
 - **Unresolved questions:** PC/count/loop-derived SSTAT dynamics, interrupt
   recognition/decode connectivity, empty-pop effects (OQ-013), narrow DMD
   read extension (OQ-016), competing-write behavior (OQ-017), and

@@ -31,13 +31,15 @@ ABS-only AS update, sticky AV, and AR-only saturation. Saturation is driven by
 overflow generated on the current operation, not an already-sticky AV bit
 [ADI-UM-1989, printed pp. 2-8–2-9, Table 2.2].
 
-This block is not yet an instruction implementation. The separate register
-file now accepts its result for cycle-end AR/AF writeback in the selected
-bank, and the separate status block accepts AZ/AN/AV/AC plus the ABS-only AS
-write at the same cycle-end boundary. MSTAT's overflow-latch and AR-saturation
-outputs are available but not yet wired to the ALU. Operand selection, decode
-connectivity, conditional suppression, complete multifunction legality, and
-DIVS/DIVQ remain excluded.
+This block is not yet an instruction implementation. The bounded
+`adsp2100_mode_slice` integration connects current MSTAT bits 2/3 to sticky AV
+and AR saturation, routes a valid result to cycle-end AR/AF writeback in the
+MSTAT-selected bank, and commits AZ/AN/AV/AC plus the ABS-only AS update at the
+same boundary. A mode change becomes effective for ALU behavior on the next
+cycle, consistent with cycle-start operand use and cycle-end register writes
+[ADI-UM-1989, printed pp. 2-6–2-9]. Operand selection, decode connectivity,
+conditional suppression, complete multifunction legality, and DIVS/DIVQ
+remain excluded.
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover

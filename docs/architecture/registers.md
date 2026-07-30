@@ -25,8 +25,9 @@ The implemented computational storage boundary contains 277 bits per bank:
 240 bits for the sixteen DREG-coded stores plus AF, MF, and five-bit SB.
 Unit-specific ALU, MAC, and shifter writeback preserves the documented
 cycle-start read and cycle-end write boundary [ADI-UM-1989, printed
-pp. 2-5–2-7, 2-13–2-18, 2-21–2-23]. Instruction decode and MSTAT-controlled
-switching are not yet integrated.
+pp. 2-5–2-7, 2-13–2-18, 2-21–2-23]. A bounded integration slice now connects
+MSTAT bit 0 to this storage boundary. Instruction decode and complete
+computational-unit connectivity are not yet integrated.
 
 ## DAG and exchange registers
 
@@ -88,16 +89,27 @@ responsibility [ADI-UM-1989, printed p. 5-13].
 
 `sim/reference_models/adsp2100_model/status.py` and
 `rtl/core/adsp2100_status_registers.sv` implement this state transition. The
-four MSTAT mode outputs are ready to drive the register file, DAG1, and ALU,
-but whole-instruction connectivity is not implemented. Interrupt entry has
-priority over ordinary cycle-end writes because the interrupted instruction is
-aborted. The block exposes the status-stack payload but intentionally does not
-own stack storage or instruction sequencing. A same-cycle direct and automatic
-ASTAT write, multiple computational status writers, a direct MSTAT write with
-an active MODE CONTROL field, or a restore colliding with another
-state-changing action raises `write_conflict_o` and suppresses all writes.
-That is a fail-closed implementation safeguard, not a claim about an illegal
-real-device encoding; OQ-017 tracks the evidence gap.
+four MSTAT outputs are connected in
+`sim/reference_models/adsp2100_model/mode_slice.py` and
+`rtl/core/adsp2100_mode_slice.sv`: bit 0 selects the computational bank, bit 1
+controls DAG1 bit reversal, bit 2 controls sticky AV, and bit 3 controls AR
+saturation. Computation/register operands are read at cycle start and results
+are written at cycle end, so the integration boundary uses the current stored
+MSTAT value throughout a cycle and exposes a direct MOVE or MODE CONTROL
+change to consumers on the following cycle [ADI-UM-1989, printed pp. 2-6–2-7,
+2-9, 3-5, 4-22–4-23]. This closes ordinary cycle-to-cycle visibility only;
+interrupt-adjacent selection remains OQ-015 and whole-instruction decode does
+not exist.
+
+Interrupt entry has priority over ordinary cycle-end writes because the
+interrupted instruction is aborted. The status block exposes the status-stack
+payload but intentionally does not own stack storage or instruction
+sequencing. A same-cycle direct and automatic ASTAT write, multiple
+computational status writers, a direct MSTAT write with an active MODE CONTROL
+field, or a restore colliding with another state-changing action raises
+`write_conflict_o` and suppresses all writes. That is a fail-closed
+implementation safeguard, not a claim about an illegal real-device encoding;
+OQ-017 tracks the evidence gap.
 
 This boundary exposes exact eight-bit ASTAT, four-bit MSTAT, five-bit ICNTL,
 and four-bit IMASK storage. A separate four-by-sixteen status stack now

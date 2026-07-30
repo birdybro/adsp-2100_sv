@@ -1,0 +1,4 @@
+QUARTUS_VERSION = "17.0"
+DATE = "17:30:00  July 30, 2026"
+
+PROJECT_REVISION = "mode_slice_smoke"

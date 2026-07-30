@@ -231,9 +231,11 @@ and a stateful two-bank storage slice exists for the complete computational
 bank, including AF/MF/SB and unit-specific ALU/MAC/shifter writeback. A
 stateful status/control slice also implements original ASTAT/MSTAT/ICNTL/IMASK
 fields, reset classifications, MODE CONTROL, computational flag writes,
-interrupt-entry snapshot/masking, and status restore. MSTAT/ICNTL consumer
-wiring, interrupt recognition, and complete operand/decode connectivity do not
-exist. A separate original four-by-sixteen status stack implements LIFO state,
+interrupt-entry snapshot/masking, and status restore. MSTAT consumer
+integration now covers its four original outputs at an ordinary
+cycle-start/cycle-end boundary; ICNTL consumer wiring, interrupt recognition,
+and complete operand/decode connectivity do not exist. A separate original
+four-by-sixteen status stack implements LIFO state,
 saturating depth, sticky overflow, and its two SSTAT sources; PC/count/loop
 stack storage and the other SSTAT sources do not exist. Multifunction legality,
 ordering, and whole-core cycle integration remain incomplete. The executable

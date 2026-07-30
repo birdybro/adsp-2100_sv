@@ -33,12 +33,17 @@ stores the post-modified I in normal order [ADI-UM-1989, printed p. 3-5].
 
 The independent function model and portable combinational RTL now cover old-I
 address output, signed post-modification, linear 14-bit wrap, circular
-base/wrap arithmetic, and DAG1 bit reversal. A diagnostic
+base/wrap arithmetic, and DAG1 bit reversal. A bounded integration slice
+connects current MSTAT bit 1 to the bit-reverse input. MOVE/MODE CONTROL
+updates become visible to DAG1 on the following cycle, so a simultaneous
+address observation uses the pre-instruction MSTAT state
+[ADI-UM-1989, printed pp. 2-6–2-7, 3-5, 4-22–4-23]. A diagnostic
 `configuration_valid` result identifies inputs outside the documented
 placement and modify restrictions; deterministic outputs for invalid inputs
 are not architectural claims. Directed tests reproduce both original manual
 sequences and the original L=8 placement, while the RTL regression checks all
-16,384 bit-reversed addresses and 204,864 total vectors.
+16,384 bit-reversed addresses and 204,864 total unit vectors. The integration
+regression adds all 16 MSTAT values and 50,112 mixed stateful cycles.
 
 Register selection, I writeback gating, simultaneous data transfers,
 multifunction ordering, alternate-bank interactions, stalls, loops, interrupts,

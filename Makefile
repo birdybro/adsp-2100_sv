@@ -4,12 +4,12 @@ VERILATOR ?= verilator
 .DEFAULT_GOAL := test
 
 .PHONY: test lint model-tests assembler-tests decode-tests compute-tests \
-	dag-tests sequencer-tests register-tests status-tests instruction-tests bus-tests interrupt-tests \
+	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
 test: lint reference-check repository-check decode-tests assembler-tests model-tests \
-	compute-tests dag-tests sequencer-tests register-tests status-tests
+	compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
 	@echo "PASS implemented foundation regression"
 
 lint:
@@ -38,6 +38,13 @@ lint:
 			rtl/core/adsp2100_status_registers.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_status_stack.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_mode_slice.sv; \
 	else \
 		echo "SKIP Verilator lint: executable not available"; \
 	fi
@@ -203,6 +210,28 @@ status-tests:
 		echo "SKIP status-register RTL test: Verilator is not installed"; \
 	fi
 
+mode-tests:
+	$(PYTHON) -m unittest -v tests.test_mode_integration
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_mode_slice_vectors.py \
+			--output build/mode_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_mode_slice \
+			--top-module tb_adsp2100_mode_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_mode_slice.sv \
+			sim/unit/tb_adsp2100_mode_slice.sv; \
+		build/obj_mode_slice/Vtb_adsp2100_mode_slice; \
+	else \
+		echo "SKIP MSTAT-consumer RTL test: Verilator is not installed"; \
+	fi
+
 instruction-tests: decode-tests assembler-tests
 	@echo "SKIP RTL instruction tests: no instruction execution RTL exists"
 
@@ -258,6 +287,15 @@ formal:
 			--top-module adsp2100_status_stack_formal \
 			rtl/core/adsp2100_status_stack.sv \
 			formal/harnesses/adsp2100_status_stack_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mode_slice_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_mode_slice.sv \
+			formal/harnesses/adsp2100_mode_slice_formal.sv; \
 	else \
 		echo "SKIP formal harness lint: Verilator is not installed"; \
 	fi
@@ -272,6 +310,7 @@ formal:
 		sby -f -d build/formal_registers formal/registers.sby; \
 		sby -f -d build/formal_status formal/status_registers.sby; \
 		sby -f -d build/formal_status_stack formal/status_stack.sby; \
+		sby -f -d build/formal_mode_slice formal/mode_slice.sby; \
 	else \
 		echo "SKIP formal proofs: SymbiYosys is not installed"; \
 	fi
@@ -295,6 +334,7 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/register_file_smoke; \
 		quartus_sh --flow compile synthesis/quartus/status_registers_smoke; \
 		quartus_sh --flow compile synthesis/quartus/status_stack_smoke; \
+		quartus_sh --flow compile synthesis/quartus/mode_slice_smoke; \
 	else \
 		echo "SKIP Quartus synthesis: Quartus is not installed"; \
 	fi
@@ -318,6 +358,7 @@ clean:
 	@find build -maxdepth 1 -type f -name register_writeback_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name status_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name status_stack_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name mode_slice_vectors.txt -delete
 	@if [ -d build/obj_condition ]; then find build/obj_condition -depth -delete; fi
 	@if [ -d build/obj_alu ]; then find build/obj_alu -depth -delete; fi
 	@if [ -d build/obj_mac ]; then find build/obj_mac -depth -delete; fi
@@ -330,6 +371,7 @@ clean:
 	fi
 	@if [ -d build/obj_status ]; then find build/obj_status -depth -delete; fi
 	@if [ -d build/obj_status_stack ]; then find build/obj_status_stack -depth -delete; fi
+	@if [ -d build/obj_mode_slice ]; then find build/obj_mode_slice -depth -delete; fi
 	@if [ -d build/quartus_condition ]; then find build/quartus_condition -depth -delete; fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
@@ -341,9 +383,13 @@ clean:
 	@if [ -d build/quartus_status_stack ]; then \
 		find build/quartus_status_stack -depth -delete; \
 	fi
+	@if [ -d build/quartus_mode_slice ]; then \
+		find build/quartus_mode_slice -depth -delete; \
+	fi
 	@for directory in build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
-		build/formal_registers build/formal_status build/formal_status_stack; do \
+		build/formal_registers build/formal_status build/formal_status_stack \
+		build/formal_mode_slice; do \
 		if [ -d "$$directory" ]; then find "$$directory" -depth -delete; fi; \
 	done
 	@if [ -d synthesis/quartus/db ]; then find synthesis/quartus/db -depth -delete; fi

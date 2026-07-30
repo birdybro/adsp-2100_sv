@@ -1,0 +1,55 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_mode_slice
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_mode_slice
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_register_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_alu.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_registers.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_register_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mode_slice.sv
+set_global_assignment -name SDC_FILE mode_slice_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SEED 2
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_move_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_move_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_move_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_move_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mode_sr_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mode_br_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mode_ol_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mode_as_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_read_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_read_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_write_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_write_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_execute_i
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_amf_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_x_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_y_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_destination_feedback_i
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_raw_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alu_destination_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag1_i_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag1_m_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag1_l_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag1_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag1_next_i_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alternate_bank_o
+set_instance_assignment -name VIRTUAL_PIN ON -to bit_reverse_o
+set_instance_assignment -name VIRTUAL_PIN ON -to overflow_latch_o
+set_instance_assignment -name VIRTUAL_PIN ON -to saturate_ar_o
+set_instance_assignment -name VIRTUAL_PIN ON -to status_write_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to register_write_conflict_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_global_assignment -name SEED 2

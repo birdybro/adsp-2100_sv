@@ -10,6 +10,13 @@ from .conditions import (
 )
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
+from .mode_slice import (
+    ModeSliceCycleResult,
+    ModeSliceInputs,
+    ModeSliceObservation,
+    ModeSliceState,
+    apply_mode_slice_cycle,
+)
 from .shifter import ShifterResult, compute_shifter
 from .sequencer import (
     ExplicitFlow,
@@ -92,6 +99,10 @@ __all__ = [
     "MemoryTransaction",
     "MSTATBit",
     "ModeControl",
+    "ModeSliceCycleResult",
+    "ModeSliceInputs",
+    "ModeSliceObservation",
+    "ModeSliceState",
     "MACResult",
     "MACRegisterWrite",
     "ShifterResult",
@@ -118,6 +129,7 @@ __all__ = [
     "apply_dreg_cycle",
     "apply_status_cycle",
     "apply_status_stack_cycle",
+    "apply_mode_slice_cycle",
     "compute_alu",
     "compute_dag",
     "compute_mac",
