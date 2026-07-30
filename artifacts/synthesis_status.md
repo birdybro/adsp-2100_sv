@@ -3,8 +3,8 @@
 **Updated:** 2026-07-30
 
 - Verilator 5.048 parses and lints the three packages and source-backed
-  condition, ALU, MAC, shifter, DAG, sequencer-flow, and stateful register-file
-  RTL with `-Wall` and no warnings.
+  condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
+  and stateful ASTAT/MSTAT RTL with `-Wall` and no warnings.
 - Yosys is not installed in this environment.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
@@ -52,10 +52,16 @@
   or paths.
 - The only full-flow warning is Quartus Lite's unavailable LogicLock feature;
   the project does not use LogicLock.
-- SymbiYosys is not installed. `make formal` strictly lints the seven available
+- Quartus full compilation of the ASTAT/MSTAT smoke project passes. It uses 44
+  ALMs, 27 combinational ALUTs, exactly 12 architectural registers plus one
+  fitter-created routing duplicate, no RAM, and no DSPs. Its virtual internal
+  controls have an explicit 5 ns same-clock registered-source input-arrival
+  assumption. Across four timing models, worst setup is +12.942 ns and worst
+  hold is +0.167 ns against 20 ns, with zero unconstrained paths.
+- SymbiYosys is not installed. `make formal` strictly lints the eight available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded condition, ALU, MAC, shifter, DAG,
-sequencer-flow, and register-file block smoke projects.
+sequencer-flow, register-file, and status-register block smoke projects.

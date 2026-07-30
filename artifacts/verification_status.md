@@ -17,7 +17,8 @@
 | DAG arithmetic | PASS, PARTIAL | 10 directed/random model tests plus 204,864 RTL differential vectors |
 | Sequencer flow arbitration | PASS, PARTIAL | 9 directed/random model tests plus 636,512 RTL differential vectors |
 | Computational register banks | PASS, PARTIAL | 14 directed/model tests plus 58,307 DREG and 50,120 full-bank/writeback RTL cycles |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer/register recipes lint; SymbiYosys unavailable |
+| ASTAT/MSTAT storage | PASS, PARTIAL | 12 directed/model tests plus 50,157 stateful RTL cycles; SSTAT/IMASK/ICNTL and decode remain |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer/register/status recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -27,11 +28,11 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 114 distinct Python
+The implemented foundation regression is `make test`: 126 distinct Python
 checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
 regressions, 21,760-vector MAC regression, and 644,368-vector shifter
 regression, plus the 204,864-vector DAG and 636,512-vector sequencer-flow
 regressions, 58,307 stateful DREG cycles, and 50,120 complete-bank/writeback
-cycles. Targets for
+cycles, plus 50,157 ASTAT/MSTAT state-transition cycles. Targets for
 unavailable or unimplemented areas print `SKIP` and do not create false pass
 evidence.
