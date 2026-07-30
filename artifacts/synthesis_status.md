@@ -65,11 +65,18 @@
   controls use the same documented 5 ns registered-source assumption. Across
   four timing models, worst setup is +13.077 ns and worst hold is +0.172 ns
   against 20 ns, with zero unconstrained paths.
-- SymbiYosys is not installed. `make formal` strictly lints the nine available
+- Quartus full compilation of the bounded MSTAT-consumer integration project
+  passes. It uses 543 ALMs, 578 combinational ALUTs, 492 design implementation
+  registers plus two fitter-created routing duplicates, no RAM, and no DSPs.
+  The retained state comprises 480 observable DREG bits plus ASTAT/MSTAT; this
+  top intentionally does not expose the other feedback/control registers.
+  Across four timing models, worst setup is +5.529 ns and worst hold is
+  +0.168 ns against 20 ns, with zero unconstrained paths.
+- SymbiYosys is not installed. `make formal` strictly lints the ten available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded condition, ALU, MAC, shifter, DAG,
 sequencer-flow, register-file, status-register, and status-stack block smoke
-projects.
+projects plus the bounded MSTAT integration project.

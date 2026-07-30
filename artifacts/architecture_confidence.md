@@ -17,8 +17,9 @@
 | Shifter SF functions | CORROBORATED | original compute chapter, Tables 2.4/2.5, and Appendix A; instruction integration incomplete |
 | DAG arithmetic and ownership | CORROBORATED | original DAG chapter plus 1994 explicit original/later placement distinction; function integration incomplete |
 | Sequencer next-PC/loop precedence | CORROBORATED | original program-control chapter and 636,512 model/RTL vectors; stacks, counter, interrupts, and cycles incomplete |
-| Computational register banking | CORROBORATED | original compute/register/Appendix A sections, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles; MSTAT timing, interrupts, and decode connectivity incomplete |
-| Status/control storage and updates | CORROBORATED | original status/reset/interrupt/Appendix A sections plus 50,287 model/RTL cycles; ICNTL/IMASK and entry/restore transitions implemented, while narrow reads, consumer wiring, remaining SSTAT sources, stack connectivity, and interrupt recognition remain incomplete |
+| Computational register banking | CORROBORATED | original compute/register/Appendix A sections, 58,307 DREG cycles, 50,120 full-bank/writeback cycles, and 50,112 MSTAT-consumer cycles; interrupt-adjacent selection and decode connectivity incomplete |
+| MSTAT ordinary-cycle consumers | CORROBORATED | all four original mode bits are wired using primary-backed cycle-start read/cycle-end write ordering and 50,112 model/RTL cycles; OQ-015 retains the interrupt-adjacent boundary |
+| Status/control storage and updates | CORROBORATED | original status/reset/interrupt/Appendix A sections plus 50,287 storage and 50,112 integration cycles; entry/restore transitions and MSTAT consumers implemented, while narrow reads, ICNTL consumers, remaining SSTAT sources, stack connectivity, and interrupt recognition remain incomplete |
 | Status-stack depth and accepted operations | CORROBORATED | original 1987 four-by-sixteen diagram plus original 1989 saturation/status rules and 50,037 model/RTL cycles; empty-pop effects and interrupt/RTI connectivity remain incomplete |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
 | Empty-stack pop effects | UNKNOWN | pointer saturation is sourced, but popped data/register side effects are not |
