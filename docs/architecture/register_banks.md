@@ -50,10 +50,11 @@ Any reported collision suppresses every write. This fail-closed behavior is
 an implementation safeguard, not a claim about an illegal real-device
 encoding; OQ-014 remains open.
 
-Complete instruction and multifunction legality, operand/result decode
-connectivity, MSTAT storage and update timing, interrupt/context interaction,
-and exact same-cycle bank-switch visibility remain unimplemented. M16
-therefore remains `IMPLEMENTING`.
+A separate verified storage block now emits MSTAT bit 0 after direct MOVE or
+MODE CONTROL updates, but it is not wired to this register file. Complete
+instruction and multifunction legality, operand/result decode connectivity,
+interrupt/context interaction, and exact same-cycle bank-switch visibility
+remain unimplemented. M16 therefore remains `IMPLEMENTING`.
 
 ## Objective evidence
 

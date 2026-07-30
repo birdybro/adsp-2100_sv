@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "ASTAT_MSTAT_STORAGE_AND_UPDATE_SLICE",
+  "confidence": "VERIFIED_PRIMARY",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-20-4-23 (status fields, update sources, latency, and modes)",
+    "ADI-UM-1989 printed p. 5-13 (reset effects)",
+    "ADI-UM-1989 printed p. A-8 (MODE CONTROL targets and codes)"
+  ],
+  "registers": {
+    "ASTAT": {
+      "width": 8,
+      "move_access": "READ_WRITE_EXACT_STORAGE_WIDTH",
+      "reset": "UNKNOWN",
+      "update_boundary": "END_OF_INSTRUCTION_CYCLE",
+      "fields": [
+        {"bit": 0, "name": "AZ", "update_source": "STANDARD_ALU"},
+        {"bit": 1, "name": "AN", "update_source": "STANDARD_ALU"},
+        {"bit": 2, "name": "AV", "update_source": "STANDARD_ALU"},
+        {"bit": 3, "name": "AC", "update_source": "STANDARD_ALU"},
+        {"bit": 4, "name": "AS", "update_source": "ALU_ABS"},
+        {"bit": 5, "name": "AQ", "update_source": "ALU_DIVS_DIVQ"},
+        {"bit": 6, "name": "MV", "update_source": "MAC_EXCEPT_SAT_MR"},
+        {"bit": 7, "name": "SS", "update_source": "SHIFTER_EXP"}
+      ]
+    },
+    "MSTAT": {
+      "width": 4,
+      "move_access": "READ_WRITE_EXACT_STORAGE_WIDTH",
+      "reset": 0,
+      "fields": [
+        {"bit": 0, "name": "SECONDARY_REGISTER_BANK"},
+        {"bit": 1, "name": "BIT_REVERSE"},
+        {"bit": 2, "name": "OVERFLOW_LATCH"},
+        {"bit": 3, "name": "AR_SATURATE"}
+      ]
+    }
+  },
+  "mode_control_targets": [
+    {"field_order": 0, "mstat_bit": 0, "name": "SR"},
+    {"field_order": 1, "mstat_bit": 1, "name": "BR"},
+    {"field_order": 2, "mstat_bit": 2, "name": "OL"},
+    {"field_order": 3, "mstat_bit": 3, "name": "AS"}
+  ],
+  "mode_control_codes": [
+    {"code": 0, "bits": "00", "action": "NO_CHANGE"},
+    {"code": 1, "bits": "01", "action": "NO_CHANGE"},
+    {"code": 2, "bits": "10", "action": "DEACTIVATE"},
+    {"code": 3, "bits": "11", "action": "ACTIVATE"}
+  ],
+  "open_boundaries": [
+    "DMD read extension above the exact ASTAT and MSTAT storage widths",
+    "same-cycle bank-switch visibility at interrupt recognition",
+    "instruction-level legality and decode connectivity",
+    "status-stack push and restore"
+  ]
+}

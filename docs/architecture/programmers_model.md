@@ -1,6 +1,7 @@
 # Programmer's model
 
-**Status: partial inventory; computational-bank storage slice implemented**
+**Status: partial inventory; computational-bank and ASTAT/MSTAT storage
+slices implemented**
 
 | Group | Original registers | Width | Initial sourced facts |
 |---|---|---:|---|
@@ -27,7 +28,8 @@ that AF, MF, and PC are not generally movable [ADI-UM-1989, printed p. A-9,
 scan PDF p. 148].
 
 On documented reset, PC-visible PMA is 0x0004 if the bus is not granted, stack
-pointers reset, IMASK and MSTAT clear, and ICNTL is undefined
+pointers reset, IMASK and MSTAT clear, and ICNTL is undefined. ASTAT is not
+listed among the initialized state and remains architecturally unknown
 [ADI-UM-1989, printed p. 5-13]. No source in the current corpus says that
 computational or DAG registers reset to zero, so the authentic model keeps them
 unknown until written.
@@ -38,9 +40,13 @@ segments. They have no computational-register reset assignment and implement
 the documented MR1-preload sign extension into MR2
 [ADI-UM-1989, printed p. 2-18]. AF, MF, and SB are also stored in both banks;
 unit-specific writes commit ALU results to AR/AF, MAC results to MR/MF, and
-shifter results to SR/SE/SB at cycle end.
+shifter results to SR/SE/SB at cycle end. A separate status block now stores
+exact-width ASTAT/MSTAT state, applies the four original MODE CONTROL fields,
+and commits ALU, divide, MAC, and shifter status at cycle end
+[ADI-UM-1989, printed pp. 4-20–4-23, A-8].
 
-Direction-specific restrictions outside DREG, MSTAT update and bank-switch
-timing, interrupt interactions, full multifunction legality, and every
+Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
+interrupt interactions, SSTAT/ICNTL/IMASK state transitions, status stacking,
+narrow status-register DMD extension, full multifunction legality, and every
 instruction field using these paths still require machine-readable extraction
 and tests.

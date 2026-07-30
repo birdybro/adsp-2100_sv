@@ -79,5 +79,5 @@ This is not yet a complete shifter-instruction implementation. Operand-field
 decode, conditional-false behavior, complete multifunction ordering, and
 cycle/bus timing remain outside this block. The separate register file now
 accepts the explicit result enables for selected-bank SR, SE, or SB
-writeback; instruction connectivity remains to be verified during core
-integration.
+writeback, and the separate status block accepts EXP's explicit SS update;
+instruction connectivity remains to be verified during core integration.

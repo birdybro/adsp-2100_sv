@@ -1,6 +1,7 @@
 # Register definitions
 
-**Status: initial original-device map**
+**Status: original-device map; computational-bank and ASTAT/MSTAT storage
+slices implemented**
 
 ## Computational registers
 
@@ -20,12 +21,12 @@ from +1 through -31 according to Table 2.5; EXPADJ produces SB values from
 -15 through zero after software initializes SB to -16. Reset values remain
 unverified.
 
-The implemented storage boundary contains 277 bits per bank: 240 bits for the
-sixteen DREG-coded stores plus AF, MF, and five-bit SB. Unit-specific ALU,
-MAC, and shifter writeback preserves the documented cycle-start read and
-cycle-end write boundary [ADI-UM-1989, printed pp. 2-5–2-7, 2-13–2-18,
-2-21–2-23]. Instruction decode and MSTAT-controlled switching are not yet
-integrated.
+The implemented computational storage boundary contains 277 bits per bank:
+240 bits for the sixteen DREG-coded stores plus AF, MF, and five-bit SB.
+Unit-specific ALU, MAC, and shifter writeback preserves the documented
+cycle-start read and cycle-end write boundary [ADI-UM-1989, printed
+pp. 2-5–2-7, 2-13–2-18, 2-21–2-23]. Instruction decode and MSTAT-controlled
+switching are not yet integrated.
 
 ## DAG and exchange registers
 
@@ -49,6 +50,46 @@ DMD bits zero; M reads sign-extended [ADI-UM-1989, printed pp. 3-1–3-3]. PX is
   bit is undefined after reset [ADI-UM-1989, printed p. 4-23].
 - IMASK[3:0] enables IRQ3–IRQ0 and resets to zero
   [ADI-UM-1989, printed p. 4-24].
+
+### Implemented ASTAT/MSTAT boundary
+
+`docs/generated/adsp2100_status_registers.yaml` records the exact fields,
+reset classifications, update sources, and MODE CONTROL codes. ASTAT's bits
+are numbered AZ=0, AN=1, AV=2, AC=3, AS=4, AQ=5, MV=6, and SS=7. Standard
+non-division ALU operations update AZ/AN/AV/AC; ABS additionally updates AS;
+DIVS/DIVQ update AQ; every MAC operation except SAT MR updates MV; and shifter
+EXP updates SS. Generated status is latched at the end of its instruction
+cycle and is therefore first usable in the next cycle [ADI-UM-1989, printed
+p. 4-21].
+
+MSTAT bit 0 selects the computational register bank, bit 1 enables DAG1 bit
+reversal, bit 2 enables sticky AV, and bit 3 enables AR saturation. A direct
+MOVE replaces all four stored bits. MODE CONTROL has one two-bit field per
+MSTAT bit in that order: `00` and `01` preserve the bit, `10` clears it, and
+`11` sets it [ADI-UM-1989, printed pp. 4-22–4-23, A-8].
+
+The original reset list explicitly clears MSTAT but does not initialize
+ASTAT. The model consequently returns every ASTAT bit to `UNKNOWN` on reset,
+and synthesizable RTL deliberately has no ASTAT reset assignment. MSTAT uses
+a synchronous architectural reset input at this block boundary; exact
+asynchronous pin sampling and eight-phase reset release remain a future
+sequencer/bus-control responsibility [ADI-UM-1989, printed p. 5-13].
+
+`sim/reference_models/adsp2100_model/status.py` and
+`rtl/core/adsp2100_status_registers.sv` implement this state transition. The
+four MSTAT mode outputs are ready to drive the register file, DAG1, and ALU,
+but whole-instruction connectivity is not implemented. A same-cycle direct
+and automatic ASTAT write, multiple computational status writers, or a direct
+MSTAT write with an active MODE CONTROL field raises `write_conflict_o` and
+suppresses all status writes. That is a fail-closed implementation safeguard,
+not a claim about an illegal real-device encoding; OQ-017 tracks the evidence
+gap.
+
+This boundary exposes exact eight-bit ASTAT and four-bit MSTAT storage only.
+How the unused upper DMD bits read for these narrow general-MOVE sources
+remains open as OQ-016. SSTAT dynamics, ICNTL, IMASK, status stacking,
+interrupt timing, DIVS/DIVQ execution, and instruction decode are not part of
+this increment.
 
 ## Accessibility
 

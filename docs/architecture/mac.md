@@ -38,9 +38,10 @@ fractional product alignment, all four input signedness combinations, 40-bit
 multiply/add/subtract, unbiased rounding, MF bits 31–16, MV, and the
 independent one-shot SAT MR transform. The separate register file now accepts
 its full result for atomic MR or MF-middle-word writeback in the selected bank.
+The separate status block accepts MV at the documented cycle-end boundary.
 The compute block still does not select architectural operands, suppress a
-false conditional instruction, write ASTAT, connect instruction decode, or
-implement complete multifunction legality/timing.
+false conditional instruction, connect instruction decode, or implement
+complete multifunction legality/timing.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the

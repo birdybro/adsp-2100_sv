@@ -33,9 +33,11 @@ overflow generated on the current operation, not an already-sticky AV bit
 
 This block is not yet an instruction implementation. The separate register
 file now accepts its result for cycle-end AR/AF writeback in the selected
-bank, but operand selection, decode connectivity, conditional suppression,
-ASTAT timing, and multifunction legality remain outside it. DIVS/DIVQ are
-also excluded.
+bank, and the separate status block accepts AZ/AN/AV/AC plus the ABS-only AS
+write at the same cycle-end boundary. MSTAT's overflow-latch and AR-saturation
+outputs are available but not yet wired to the ALU. Operand selection, decode
+connectivity, conditional suppression, complete multifunction legality, and
+DIVS/DIVQ remain excluded.
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover

@@ -36,9 +36,11 @@ make synth-yosys
 make formal
 ```
 
-`make test` currently validates repository policy, the reference manifest, and
-the initial executable-model primitives. Commands return nonzero on a real
-failure. Optional commands report `SKIP` when their named tool is unavailable.
+`make test` currently validates repository policy, the reference manifest,
+machine-readable architecture tables, independent block models, and the
+implemented compute, DAG, sequencer-flow, computational-register, and
+ASTAT/MSTAT RTL slices. Commands return nonzero on a real failure. Optional
+commands report `SKIP` when their named tool is unavailable.
 
 ## Reference handling
 

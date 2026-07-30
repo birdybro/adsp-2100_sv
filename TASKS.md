@@ -349,7 +349,7 @@ advance beyond research until a page-level primary citation is added.
   58,307 DREG cycles plus 50,120 full-bank/writeback cycles against the
   independent model.
 - **Unresolved questions:** full instruction/multifunction legality, operand
-  and result decode connectivity, MSTAT storage and update timing,
+  and result decode connectivity, MSTAT-to-register-file integration,
   interrupt/context interactions, OQ-014 real-device behavior for illegal
   collisions, and OQ-015 bank-switch visibility.
 - **Confidence:** CORROBORATED
@@ -358,19 +358,28 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-STATUS-001 — Status, mode, interrupt, and system registers
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, RTL-REG-001
 - **Acceptance criteria:** all fields, reserved bits, reset values, read/write
   effects, flag latency, masks, and context stacking pass tests tied to cited
   original applicability.
-- **Source references:** ADI-UM-1989 status/control register sections
-- **Relevant tests:** `tests/test_status_registers.py`,
-  `formal/status_registers.sby`
-- **Implementation notes:** later memory-mapped peripheral control registers
-  are excluded from the ADSP-2100 default.
-- **Unresolved questions:** original ICNTL/SSTAT field set and reserved reads.
-- **Confidence:** UNKNOWN
+- **Source references:** ADI-UM-1989 printed pp. 4-20–4-24, 5-13, A-8
+- **Relevant tests:** `make status-tests`,
+  `tests/test_status_registers.py`, `formal/status_registers.sby`
+- **Implementation notes:** the machine-readable register map, independent
+  model, and portable RTL now implement exact eight-bit ASTAT and four-bit
+  MSTAT storage; per-bit authentic ASTAT reset unknowns; MSTAT reset clear;
+  all four direct mode outputs; both MODE CONTROL no-change codes plus
+  independent clear/set; cycle-end ALU/divide/MAC/shifter status writes; and
+  fail-closed collision suppression. Twelve directed tests and 50,157
+  model-versus-RTL cycles pass. Later memory-mapped peripheral control
+  registers are excluded from the ADSP-2100 default.
+- **Unresolved questions:** SSTAT dynamics, IMASK/ICNTL transitions, status
+  stacking, instruction/decode connectivity, narrow DMD read extension
+  (OQ-016), competing-write behavior (OQ-017), and interrupt-adjacent
+  bank-switch visibility (OQ-015).
+- **Confidence:** CORROBORATED
 
 ## M18 — Program-memory interface
 
