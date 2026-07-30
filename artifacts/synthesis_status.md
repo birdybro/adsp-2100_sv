@@ -18,11 +18,16 @@
   models, worst setup slack is 9.686 ns and worst hold slack is 0.212 ns
   against the 20 ns virtual I/O constraint; setup and hold are fully
   constrained.
+- Quartus full compilation of the separately constrained MAC smoke project
+  passes. Its virtual-pin fit uses 229 ALMs, 229 combinational ALUTs, one DSP
+  block, 0 registers, and 0 RAM blocks. Across the four fitted timing models,
+  worst setup slack is 2.857 ns and worst hold slack is 0.321 ns against the
+  20 ns virtual I/O constraint; setup and hold are fully constrained.
 - The only full-flow warning is Quartus Lite's unavailable LogicLock feature;
   the project does not use LogicLock.
 - SymbiYosys is not installed.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` and `make formal` report explicit
-tool-availability skips; `make synth-quartus` runs the bounded condition and
-ALU block smoke projects.
+tool-availability skips; `make synth-quartus` runs the bounded condition, ALU,
+and MAC block smoke projects.

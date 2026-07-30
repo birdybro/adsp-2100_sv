@@ -7,11 +7,12 @@
 | Text/source hygiene | PASS | `python3 scripts/lint_text.py` |
 | Reference manifest schema | PASS | 5 tests in `tests/test_reference_manifest.py` |
 | Cached reference hashes | PASS | 13/13 acquired files verified |
-| Repository policy/layout | PASS | 5 tests in `tests/test_repository.py` |
+| Repository policy/layout | PASS | 6 tests in `tests/test_repository.py` |
 | ISA class/schema | PASS, PARTIAL | 8 tests; 30 non-overlapping masks and reserved fallback |
 | IF/DO condition logic | PASS | all 32 field meanings; 2,048 exhaustive RTL truth-table vectors |
 | Appendix A ISA subfields | PASS, PARTIAL | 19 finite tables exhaustive; cross-field legality incomplete |
 | Standard ALU compute | PASS, PARTIAL | 8 directed/model tests plus 51,472 RTL differential vectors |
+| Standard MAC compute | PASS, PARTIAL | 8 directed/model tests plus 21,760 RTL differential vectors |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -21,7 +22,7 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 63 distinct Python
+The implemented foundation regression is `make test`: 71 distinct Python
 checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
-regressions. Targets for unavailable or unimplemented areas print `SKIP` and
-do not create false pass evidence.
+regressions and 21,760-vector MAC regression. Targets for unavailable or
+unimplemented areas print `SKIP` and do not create false pass evidence.

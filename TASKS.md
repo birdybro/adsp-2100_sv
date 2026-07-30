@@ -221,7 +221,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-MAC-001 — MAC model and synthesizable RTL
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-001
 - **Acceptance criteria:** sign modes, fractional/integer alignment, guard bits,
@@ -229,11 +229,13 @@ advance beyond research until a page-level primary citation is added.
   source-backed and pass boundary, randomized, differential, and formal tests.
 - **Source references:** ADI-UM-1989 MAC and instruction chapters
 - **Relevant tests:** `make compute-tests`, `formal/mac.sby`
-- **Implementation notes:** provide behaviorally identical inferred-DSP and
-  logic-friendly paths only after baseline correctness.
-- **Unresolved questions:** original-device multiplier pipeline visibility and
-  mixed-sign modes.
-- **Confidence:** UNKNOWN
+- **Implementation notes:** the source-backed fixed-fractional AMF `0x01`–`0x0f`
+  compute block, four signedness modes, unbiased rounding, MF extraction, MV,
+  and SAT MR transform exist in independent model and RTL. Instruction
+  operand selection/writeback, banking, and parallel timing remain.
+- **Unresolved questions:** original-device multiplier visibility within
+  multifunction instructions and the recorded MAME rounding conflict SC-008.
+- **Confidence:** CORROBORATED
 
 ## M12 — Barrel shifter
 

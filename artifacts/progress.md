@@ -26,6 +26,8 @@ cycle-, or Hard Drivin'-complete
   abbreviation tables;
 - source-backed standard ALU model/RTL with flags, sticky overflow, and AR
   saturation;
+- source-backed standard fractional MAC model/RTL with mixed signedness,
+  unbiased rounding, MV, and MR saturation;
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
@@ -39,12 +41,12 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 63 implemented Python unit checks plus manifest/hash verification;
+- 71 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, and ALU RTL; all 2,048 condition/flag combinations and
-  51,472 ALU vectors pass simulation;
-- constrained Quartus Cyclone V condition and ALU block compilations pass with
-  no unconstrained paths;
+  51,472 ALU vectors and 21,760 MAC vectors pass simulation;
+- constrained Quartus Cyclone V condition, ALU, and MAC block compilations
+  pass with no unconstrained paths;
 - no architectural execution RTL, complete assembler, formal harness, or
   synthesis top exists.
 

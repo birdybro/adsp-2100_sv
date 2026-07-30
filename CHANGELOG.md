@@ -45,6 +45,9 @@ semantic versioning after its first release.
   X/Y/Z operands.
 - Independent model and portable RTL for all 16 standard ALU AMF functions,
   including carry/borrow, overflow, sticky AV, ABS sign, and AR saturation.
+- Independent model and portable RTL for all 15 original fractional MAC AMF
+  functions, including mixed signedness, 40-bit accumulation, unbiased
+  rounding, MF extraction, MV, and one-shot MR saturation.
 
 ### Changed
 
@@ -65,16 +68,19 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 63 Python checks, ISA/register/condition/field validators,
+- `make test` passes 71 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
-  ALU model-versus-RTL vectors.
+  ALU plus 21,760 MAC model-versus-RTL vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
 - Quartus full compilation also passes for the constrained ALU block: 161
   ALMs, 196 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold
   slack, and zero unconstrained ports or paths.
+- Quartus full compilation passes for the constrained MAC block: 229 ALMs, 229
+  combinational ALUTs, one inferred DSP block, no registers/RAM, positive
+  setup/hold slack, and zero unconstrained ports or paths.
 
 ### Documentation
 
@@ -87,6 +93,10 @@ semantic versioning after its first release.
   counter update, loop-stack, and instruction timing explicitly open.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
+- Recorded MAME's rounded accumulate/subtract midpoint-test divergence and
+  retained the primary manual's complete-result rounding rule.
+- Recorded MAME's MF-destination MV omission and retained the original
+  manual's rule that every non-saturation MAC operation updates MV.
 
 ### Known Issues
 

@@ -1,6 +1,7 @@
 # Multiplier/accumulator
 
-**Status: specification baseline; RTL not started**
+**Status: standard fractional compute model and RTL implemented; instruction
+integration pending**
 
 The multiplier has two 16-bit inputs and a 32-bit product. A 40-bit
 adder/subtractor accumulates into MR, segmented as 16-bit MR0, 16-bit MR1, and
@@ -24,3 +25,25 @@ Rounding occurs at the MR0/MR1 boundary and uses unbiased round-to-even
 alignment bit, guard segment, MV boundary, both saturation directions, MR1
 preload sign extension into MR2, all midpoint parity cases, and MR/MF
 destinations.
+
+The later family manual explicitly identifies the computational units as
+common core architecture [ADI-UM-FAMILY-1995, printed p. 1-11] and confirms
+the AMF-specific signedness, accumulation, rounding, MF extraction, and MV
+effects [ADI-UM-FAMILY-1995, printed pp. 15-41–15-48]. Its integer multiplier
+mode is a later extension and is excluded from the original-device block.
+
+`sim/reference_models/adsp2100_model/mac.py` and
+`rtl/core/adsp2100_mac.sv` implement AMF `0x01`–`0x0f`, the fixed original
+fractional product alignment, all four input signedness combinations, 40-bit
+multiply/add/subtract, unbiased rounding, MF bits 31–16, MV, and the
+independent one-shot SAT MR transform. They do not yet select architectural
+operands, suppress a false conditional instruction, write MR/MF/ASTAT, apply
+bank selection, or implement multifunction old/new-value timing.
+
+The implementation rounds the complete 40-bit result, including the current
+MR contribution, as the primary manual requires. Pinned MAME instead uses the
+product low word for its midpoint test in rounded accumulate/subtract paths;
+that disagreement is tracked as SC-008 in `docs/research/source_conflicts.md`.
+The same register also tracks MAME's omission of MV updates for MF
+destinations as SC-009; instruction integration will follow the original
+ASTAT table and update MV for every non-saturation MAC operation.

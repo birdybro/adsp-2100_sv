@@ -62,3 +62,35 @@ and the condition from bits 3–0; it does not reject bit 5
 the primary diagram, so a word such as `0x0b0020` is `RESERVED_UNSHOWN`.
 Physical or original-tool behavior remains desirable evidence, but MAME does
 not override the fixed primary-source bit.
+
+## SC-008 — MAME rounded MAC midpoint test omits the MR low word
+
+The original manual says the 40-bit accumulator result R is rounded at the
+MR0/MR1 boundary and illustrates midpoint parity using the complete result
+[ADI-UM-1989, printed pp. 2-19–2-20]. In rounded accumulate and subtract
+paths, pinned MAME forms the full result but tests the product temporary's low
+16 bits when applying the midpoint correction
+[MAME-ADSP2100-OPS, commit
+`030fefcbd14e47c01ec9d67655be90f64a1dc8ab`, lines 1409–1439].
+
+These differ whenever MR0 changes the result's fractional word. The clean-room
+model and RTL follow the primary description and include a zero-product,
+nonzero-MR midpoint test. MAME differential tooling must classify this case as
+a known reference divergence unless original hardware or tools establish an
+erratum.
+
+## SC-009 — MAME leaves MV unchanged for MAC results directed to MF
+
+The original ASTAT table says MV is updated by every MAC operation except SAT
+MR [ADI-UM-1989, printed p. 4-21]. The explicitly common family instruction
+reference likewise lists MV as generated for multiply, accumulate, and
+subtract with either MR or MF destination
+[ADI-UM-FAMILY-1995, printed pp. 15-41–15-46].
+
+Pinned MAME updates MV at the end of its MR-destination path
+[MAME-ADSP2100-OPS, same commit, lines 1530–1534], but its corresponding
+MF-destination path writes MF and returns without updating MV
+[MAME-ADSP2100-OPS, same commit, lines 1690–1842]. Instruction integration
+will follow the original ASTAT rule for both destinations and will retain a
+dedicated MF-destination MV regression. Hardware confirmation remains useful,
+but MAME does not override the explicit original table.

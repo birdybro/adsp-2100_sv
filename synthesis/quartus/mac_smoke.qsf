@@ -1,0 +1,20 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_mac
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_mac
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mac.sv
+set_global_assignment -name SDC_FILE mac_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_instance_assignment -name VIRTUAL_PIN ON -to amf_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to x_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to y_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mr_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to saturation_mv_i
+set_instance_assignment -name VIRTUAL_PIN ON -to valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to unrounded_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mf_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mv_o
+set_instance_assignment -name VIRTUAL_PIN ON -to saturated_mr_o[*]
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

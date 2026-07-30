@@ -8,6 +8,7 @@ from .conditions import (
     evaluate_do_termination,
     evaluate_if_condition,
 )
+from .mac import MACResult, compute_mac, saturate_mr
 from .model import (
     ADSP2100Model,
     ArchitecturalState,
@@ -34,6 +35,7 @@ __all__ = [
     "IF_CONDITION_MNEMONICS",
     "MemorySpace",
     "MemoryTransaction",
+    "MACResult",
     "ReservedOpcode",
     "TransactionKind",
     "TraceFrame",
@@ -43,6 +45,8 @@ __all__ = [
     "evaluate_do_termination",
     "evaluate_if_condition",
     "compute_alu",
+    "compute_mac",
     "mask_to_width",
     "sign_extend",
+    "saturate_mr",
 ]
