@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 8
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_status_stack.sv
+read -formal -sv formal/harnesses/adsp2100_status_stack_formal.sv
+prep -top adsp2100_status_stack_formal
+
+[files]
+rtl/core/adsp2100_status_stack.sv
+formal/harnesses/adsp2100_status_stack_formal.sv

@@ -376,12 +376,13 @@ advance beyond research until a page-level primary citation is added.
   mask transformation; RTI-style status restore; aborted-instruction status
   suppression; and fail-closed collision handling. Seventeen directed tests
   and 50,287 model-versus-RTL cycles pass. The SSTAT field map is extracted,
-  but its dynamics remain coupled to unimplemented stacks. Later
+  and a separate four-entry status stack now provides verified status-empty
+  and sticky-overflow sources. Later
   memory-mapped peripheral control registers are excluded from the ADSP-2100
   default.
-- **Unresolved questions:** physical status-stack storage and stack-derived
-  SSTAT dynamics, interrupt recognition/decode connectivity, narrow DMD read
-  extension (OQ-016), competing-write behavior (OQ-017), and
+- **Unresolved questions:** PC/count/loop-derived SSTAT dynamics, interrupt
+  recognition/decode connectivity, empty-pop effects (OQ-013), narrow DMD
+  read extension (OQ-016), competing-write behavior (OQ-017), and
   interrupt-adjacent bank-switch visibility (OQ-015).
 - **Confidence:** CORROBORATED
 
@@ -442,19 +443,24 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-STACK-001 — Hardware loops and architectural stacks
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** RTL-SEQ-001, ARCH-001
 - **Acceptance criteria:** loop/PC/status stack depths, push/pop timing, nesting,
   terminal instruction behavior, interrupts, and documented overflow/underflow
   pass boundary and formal tests.
-- **Source references:** ADI-UM-1989 sequencer and stack sections
-- **Relevant tests:** `make sequencer-tests`, `formal/stacks.sby`
-- **Implementation notes:** if fault behavior is undocumented, constrain tests
-  to legal depth and record hardware-validation needs.
-- **Unresolved questions:** exact original stack depths and illegal access
-  behavior.
-- **Confidence:** UNKNOWN
+- **Source references:** ADI-DATABOOK-1987 printed pp. 2-21–2-22;
+  ADI-UM-1989 printed pp. 4-3–4-10, 4-22, 5-13, A-10
+- **Relevant tests:** `make sequencer-tests`, `make status-tests`,
+  `tests/test_status_stack.py`, `formal/status_stack.sby`
+- **Implementation notes:** all original depths are now source-backed. The
+  four-by-sixteen status stack has an independent state model, portable RTL,
+  eight directed/model tests, 50,037 model-versus-RTL cycles, a formal
+  harness, and a constrained Cyclone V fit. It drops the newest push when
+  full, saturates the depth, and retains sticky overflow until reset.
+- **Unresolved questions:** PC/count/loop stack storage, instruction and
+  interrupt/RTI connectivity, and empty-pop architectural behavior (OQ-013).
+- **Confidence:** CORROBORATED
 
 ## M22 — Interrupt behavior
 

@@ -5,7 +5,7 @@
 | OQ-001 | What changed between ADSP-2100 and ADSP-2100A? | speed/process only; functional mask fixes; package-only ordering | original combined data-sheet revisions, errata, mask records | potentially timing/reset | OPEN |
 | OQ-002 | What are power-up values of unlisted registers? | retained unknown; device-dependent; implicitly cleared | original reset table, simulator/hardware signatures | low for ROM boot, high for authenticity | OPEN |
 | OQ-003 | What occurs for reserved opcodes? | trap, undefined state, no-op, alias | Cross-Software diagnostics and physical-chip test | unknown | OPEN |
-| OQ-004 | What are status-stack depth and overflow side effects? | four like loop/count; another depth; undefined | original detailed diagram/manual revision or hardware test | interrupt nesting diagnostics | OPEN |
+| OQ-004 | What are status-stack depth and overflow side effects? | Resolved: four 16-bit entries; pointer saturates, newest overflowing pushes are lost, overflow sticks until reset | ADI-DATABOOK-1987 printed pp. 2-21–2-22 and ADI-UM-1989 printed p. 4-22 | interrupt nesting diagnostics | RESOLVED_PRIMARY |
 | OQ-005 | Does DMACK affect all Hard Drivin' DM ranges identically? | tied high globally; PAL-selected waits; asynchronous host region | drawing A044421 net tracing and PAL equations | high | OPEN |
 | OQ-006 | Exact ADSP/ADSP II package and mask markings? | 2100 PGA vs 2100 PQFP; possible 2100A production substitution | board photos/BOMs/repair records | qualification identity | OPEN |
 | OQ-007 | What are PAL/GAL equations for host, SIM, SOM, and banking? | recoverable from archived equations; infer from schematics; only MAME behavior available | Atari archives, JEDEC dumps, physical board | critical wrapper behavior | OPEN |

@@ -79,6 +79,14 @@ semantic versioning after its first release.
   collision handling.
 - A status/control formal harness, 50,287-cycle model-versus-RTL regression,
   and a constrained Cyclone V synthesis project.
+- Primary-backed four-by-sixteen status-stack metadata, an independent
+  saturating LIFO model, and portable RTL with both Spp no-change codes,
+  accepted push/pop state, newest-item overflow loss, sticky overflow,
+  empty/overflow SSTAT sources, explicit empty-pop invalidation, and reset
+  behavior.
+- Eight directed/model status-stack tests, a 50,037-cycle model-versus-RTL
+  regression, a bounded formal harness, and a constrained Cyclone V synthesis
+  project.
 
 ### Changed
 
@@ -99,12 +107,13 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 131 Python checks, ISA/register/condition/field validators,
+- `make test` passes 139 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
   ALU, 21,760 MAC, 644,368 shifter, 204,864 DAG, 636,512 sequencer-flow,
   58,307 stateful DREG model-versus-RTL cycles, 50,120 complete-bank
-  writeback cycles, and 50,287 status/control state-transition cycles.
+  writeback cycles, 50,287 status/control state-transition cycles, and 50,037
+  status-stack state-transition cycles.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -133,9 +142,14 @@ semantic versioning after its first release.
   unconstrained ports or paths. The
   isolated virtual inputs model same-clock register-launched controls with a
   documented 5 ns arrival assumption.
+- Quartus full compilation passes for the constrained status-stack block: 53
+  ALMs, 30 combinational logic ALUTs, exactly 68 design registers plus one
+  fitter-created routing duplicate, no RAM/DSPs, +13.077 ns worst setup,
+  +0.172 ns worst hold slack, and zero unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
-  MAC, shifter, DAG, sequencer-flow, register-file, and status-register
-  harnesses; proof execution remains explicitly skipped without SymbiYosys.
+  MAC, shifter, DAG, sequencer-flow, register-file, status-register, and
+  status-stack harnesses; proof execution remains explicitly skipped without
+  SymbiYosys.
 
 ### Documentation
 
@@ -179,6 +193,11 @@ semantic versioning after its first release.
   interrupt-entry mask rules. Implemented pre-entry ASTAT/MSTAT/IMASK
   snapshots and restore at a sequencer-facing boundary while leaving physical
   status-stack/SSTAT behavior and interrupt recognition explicitly incomplete.
+- Resolved OQ-004 from the original 1987 ADSP-2100 data-book diagram: the
+  status stack has four 16-bit entries. Combined with the original 1989
+  pointer/overflow rules, this closes accepted LIFO, saturation, oldest-data
+  retention, sticky overflow, and SSTAT bits 4/5 while retaining empty-pop
+  effects as OQ-013.
 
 ### Known Issues
 
@@ -187,8 +206,9 @@ semantic versioning after its first release.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
 - Register/status instruction-decode connectivity, MSTAT/ICNTL consumer
-  wiring, physical status stacking, stack-derived SSTAT, narrow status reads,
-  and interrupt recognition/cycle integration are not implemented.
+  wiring, PC/count/loop stacks and their SSTAT sources, narrow status reads,
+  status-stack connectivity, and interrupt recognition/cycle integration are
+  not implemented.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

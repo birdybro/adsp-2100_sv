@@ -24,8 +24,14 @@ disabled, entry clears IMASK. With nesting enabled, entry at IRQ0, IRQ1, IRQ2,
 or IRQ3 masks that level and every lower-priority level, producing IMASK
 `0xE`, `0xC`, `0x8`, or `0x0` [ADI-UM-1989, printed pp. 4-9–4-10, 4-23–4-24].
 The block accepts an already-recognized interrupt level; request sampling,
-priority arbitration, PC/status stack storage, vector timing, and RTI decode
-remain sequencer work.
+priority arbitration, PC-stack storage, status-stack connectivity, vector
+timing, and RTI decode remain sequencer work.
+
+The original status stack is four entries by 16 bits and can therefore retain
+all four possible nested interrupt contexts [ADI-DATABOOK-1987, printed
+pp. 2-21–2-22, Figure 6]. Its independent model and portable RTL now implement
+the storage and fault-status boundary, but are not yet wired to interrupt
+recognition or RTI decode.
 
 Requests latch but are not serviced during HALT, TRAP, bus grant, DMACK waits,
 or between the two cycles of an uncached PM-data access

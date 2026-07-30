@@ -1,0 +1,26 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_status_stack
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_status_stack
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_stack.sv
+set_global_assignment -name SDC_FILE status_stack_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SEED 2
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to operation_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to push_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pop_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pop_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to empty_o
+set_instance_assignment -name VIRTUAL_PIN ON -to overflow_o
+set_instance_assignment -name VIRTUAL_PIN ON -to depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to push_accepted_o
+set_instance_assignment -name VIRTUAL_PIN ON -to overflow_event_o
+set_instance_assignment -name VIRTUAL_PIN ON -to empty_pop_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_global_assignment -name SEED 2

@@ -108,6 +108,29 @@ class StatusStackEntry:
         ):
             raise ValueError("stacked IMASK must be exactly 4 bits or UNKNOWN")
 
+    @classmethod
+    def from_word(cls, word: ExactWord) -> "StatusStackEntry":
+        if word.width != 16:
+            raise ValueError("status-stack word must be exactly 16 bits")
+        return cls(
+            ASTATState.from_word(ExactWord(8, word.value >> 8)),
+            ExactWord(4, (word.value >> 4) & 0xF),
+            ExactWord(4, word.value & 0xF),
+        )
+
+    def to_word(self) -> ExactWord:
+        if not self.astat.is_fully_known or self.imask is UNKNOWN:
+            raise ValueError("unknown status-stack entry has no exact word")
+        assert isinstance(self.imask, ExactWord)
+        return ExactWord(
+            16,
+            (
+                (self.astat.to_word().value << 8)
+                | (self.mstat.value << 4)
+                | self.imask.value
+            ),
+        )
+
 
 @dataclass(frozen=True)
 class StatusCycleInputs:

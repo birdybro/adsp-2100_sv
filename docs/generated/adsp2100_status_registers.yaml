@@ -1,11 +1,13 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "ORIGINAL_STATUS_CONTROL_MAP_WITH_SSTAT_DYNAMICS_DEFERRED",
+  "scope": "ORIGINAL_STATUS_CONTROL_MAP_AND_STATUS_STACK",
   "confidence": "VERIFIED_PRIMARY",
   "source_citations": [
     "ADI-UM-1989 printed pp. 4-20-4-24 (status/control fields, update sources, latency, interrupt masking, and modes)",
+    "ADI-DATABOOK-1987 printed pp. 2-21-2-22 (original four-by-sixteen status stack)",
     "ADI-UM-1989 printed p. 5-13 (reset effects)",
+    "ADI-UM-1989 printed pp. 4-22 and A-10 (stack saturation/status and Spp codes)",
     "ADI-UM-1989 printed p. A-8 (MODE CONTROL targets and codes)"
   ],
   "registers": {
@@ -40,7 +42,7 @@
       "width": 8,
       "move_access": "READ_ONLY_EXACT_STORAGE_WIDTH",
       "reset": 85,
-      "implementation_status": "DEFERRED_TO_STACK_STATE",
+      "implementation_status": "STATUS_STACK_BITS_IMPLEMENTED_OTHER_STACK_BITS_DEFERRED",
       "fields": [
         {"bit": 0, "name": "PC_STACK_EMPTY"},
         {"bit": 1, "name": "PC_STACK_OVERFLOW"},
@@ -78,6 +80,39 @@
       "non_nested_entry_mask": 0
     }
   },
+  "stack_architecture": {
+    "PC": {
+      "depth": 16,
+      "width": 14,
+      "implementation_status": "DEFERRED"
+    },
+    "COUNT": {
+      "depth": 4,
+      "width": 14,
+      "implementation_status": "DEFERRED"
+    },
+    "STATUS": {
+      "depth": 4,
+      "width": 16,
+      "stored_register_order": ["ASTAT", "MSTAT", "IMASK"],
+      "control_codes": [0, 1, 2, 3],
+      "control_actions": [
+        "NO_CHANGE",
+        "NO_CHANGE",
+        "PUSH",
+        "POP"
+      ],
+      "pointer_behavior": "SATURATE_AT_EMPTY_AND_FULL",
+      "overflow_behavior": "DROP_NEWEST_AND_STICK_UNTIL_RESET",
+      "empty_pop_data": "UNVERIFIED_OQ_013",
+      "implementation_status": "MODEL_AND_RTL"
+    },
+    "LOOP": {
+      "depth": 4,
+      "width": 18,
+      "implementation_status": "DEFERRED"
+    }
+  },
   "mode_control_targets": [
     {"field_order": 0, "mstat_bit": 0, "name": "SR"},
     {"field_order": 1, "mstat_bit": 1, "name": "BR"},
@@ -91,10 +126,10 @@
     {"code": 3, "bits": "11", "action": "ACTIVATE"}
   ],
   "open_boundaries": [
-    "DMD read extension above the exact ASTAT and MSTAT storage widths",
+    "DMD read extension above the exact ASTAT, MSTAT, ICNTL, and IMASK storage widths",
     "same-cycle bank-switch visibility at interrupt recognition",
     "instruction-level legality and decode connectivity",
-    "physical status-stack storage, depth, and overflow behavior",
-    "SSTAT dynamics"
+    "empty-pop data and architectural restore side effects (OQ-013)",
+    "PC, count, and loop stack storage and their SSTAT dynamics"
   ]
 }

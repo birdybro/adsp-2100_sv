@@ -39,8 +39,8 @@ make formal
 `make test` currently validates repository policy, the reference manifest,
 machine-readable architecture tables, independent block models, and the
 implemented compute, DAG, sequencer-flow, computational-register, and
-status/control RTL slices. Commands return nonzero on a real failure. Optional
-commands report `SKIP` when their named tool is unavailable.
+status/control/status-stack RTL slices. Commands return nonzero on a real
+failure. Optional commands report `SKIP` when their named tool is unavailable.
 
 ## Reference handling
 

@@ -29,7 +29,9 @@ is false, ordinary loop termination processing remains eligible
 The regression checks 636,512 model-versus-RTL vectors, including every PC
 value for sequential wrap, CALL return-address generation, loop back/exit, and
 all taken explicit-transfer kinds at loop end. This closes a combinational
-arbitration rule only. Opcode decode, actual PC/loop/count/status stack
-storage, DO UNTIL setup, counter decrement, interrupts, cache/fetch overlap,
-phase enables, reset, stack faults, and bus-cycle timing remain unimplemented.
-The discovered MAME ordering difference is recorded as SC-012.
+arbitration rule only. A separate four-entry status-stack block now covers
+status context LIFO storage and its fault flags. Opcode decode, actual
+PC/loop/count stack storage, status-stack connectivity, DO UNTIL setup, counter
+decrement, interrupts, cache/fetch overlap, phase enables, reset integration,
+remaining stack faults, and bus-cycle timing remain unimplemented. The
+discovered MAME ordering difference is recorded as SC-012.

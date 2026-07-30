@@ -11,7 +11,7 @@ slices implemented**
 | DAG1 | I0–I3, M0–M3, L0–L3 | 14 | DM only; optional bit reverse |
 | DAG2 | I4–I7, M4–M7, L4–L7 | 14 | PM or DM; no bit reverse |
 | Exchange | PX | 8 | preserves low PM byte |
-| Sequencer | PC, CNTR, PC/count/loop/status stacks | PC/CNTR 14 | PC stack 16 words; count/loop stacks 4 words |
+| Sequencer | PC, CNTR, PC/count/loop/status stacks | PC/CNTR 14 | PC stack 16 words; count/status/loop stacks 4 words |
 | Status | ASTAT, SSTAT, MSTAT, ICNTL, IMASK | 8, 8, 4, 5, 4 | SSTAT read-only/reset `0x55`; ICNTL undefined at reset |
 
 Computational and exchange registers:
@@ -45,9 +45,13 @@ stores exact-width ASTAT/MSTAT/ICNTL/IMASK state, applies the four original
 MODE CONTROL fields, commits ALU, divide, MAC, and shifter status at cycle end,
 and exposes the documented ASTAT/MSTAT/IMASK interrupt snapshot and mask
 transformation [ADI-UM-1989, printed pp. 4-9–4-10, 4-20–4-24, A-8].
+A separate exact four-by-sixteen status stack implements LIFO context storage,
+pointer saturation, loss of the newest overflowing push, sticky overflow, and
+SSTAT bits 4/5 [ADI-DATABOOK-1987, printed pp. 2-21–2-22;
+ADI-UM-1989, printed p. 4-22].
 
 Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
-interrupt recognition and priority logic, stack-derived SSTAT, physical status
-stack storage, narrow status-register DMD extension, full multifunction
-legality, and every instruction field using these paths still require
-machine-readable extraction and tests.
+interrupt recognition and priority logic, PC/count/loop stack-derived SSTAT,
+empty-pop architectural effects, narrow status-register DMD extension, full
+multifunction legality, and every instruction field using these paths still
+require machine-readable extraction and tests.

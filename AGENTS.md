@@ -232,9 +232,12 @@ bank, including AF/MF/SB and unit-specific ALU/MAC/shifter writeback. A
 stateful status/control slice also implements original ASTAT/MSTAT/ICNTL/IMASK
 fields, reset classifications, MODE CONTROL, computational flag writes,
 interrupt-entry snapshot/masking, and status restore. MSTAT/ICNTL consumer
-wiring, stack-derived SSTAT, stateful stacks, interrupt recognition, complete
-operand/decode connectivity, multifunction legality and ordering, and cycle
-integration do not exist. The executable instruction model establishes
+wiring, interrupt recognition, and complete operand/decode connectivity do not
+exist. A separate original four-by-sixteen status stack implements LIFO state,
+saturating depth, sticky overflow, and its two SSTAT sources; PC/count/loop
+stack storage and the other SSTAT sources do not exist. Multifunction legality,
+ordering, and whole-core cycle integration remain incomplete. The executable
+instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP. All other opcodes fail
 closed. Architectural documents marked partial or provisional remain research

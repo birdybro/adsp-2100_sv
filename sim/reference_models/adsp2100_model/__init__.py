@@ -29,6 +29,14 @@ from .status import (
     apply_status_cycle,
     status_write_conflict,
 )
+from .status_stack import (
+    STATUS_STACK_DEPTH,
+    StatusStackCycleInputs,
+    StatusStackCycleResult,
+    StatusStackOperation,
+    StatusStackState,
+    apply_status_stack_cycle,
+)
 from .registers import (
     ALURegisterWrite,
     ComputationalWriteConflict,
@@ -92,7 +100,12 @@ __all__ = [
     "StatusCycleInputs",
     "StatusCycleResult",
     "StatusRegisters",
+    "StatusStackCycleInputs",
+    "StatusStackCycleResult",
     "StatusStackEntry",
+    "StatusStackOperation",
+    "StatusStackState",
+    "STATUS_STACK_DEPTH",
     "ReservedOpcode",
     "TransactionKind",
     "TraceFrame",
@@ -104,6 +117,7 @@ __all__ = [
     "apply_computational_cycle",
     "apply_dreg_cycle",
     "apply_status_cycle",
+    "apply_status_stack_cycle",
     "compute_alu",
     "compute_dag",
     "compute_mac",
