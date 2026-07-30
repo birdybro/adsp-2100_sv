@@ -14,6 +14,7 @@
 | IF/DO condition field and predicates | VERIFIED_PRIMARY | original Tables 4.1/4.3 and Appendix A; exhaustive model/RTL truth table |
 | Standard ALU AMF results and flags | CORROBORATED | original compute/status chapters plus explicitly common family instruction reference |
 | Standard MAC AMF results and MV | CORROBORATED | original compute chapter plus common family instruction reference; MAME rounding conflict SC-008 disclosed |
+| Shifter SF functions | CORROBORATED | original compute chapter, Tables 2.4/2.5, and Appendix A; instruction integration incomplete |
 | Parallel old/new-value semantics | PROVISIONAL | partial manual extraction only |
 | Stack underflow/overflow effects | UNKNOWN | status reporting known; effects not closed |
 | Full interrupt phase behavior | PROVISIONAL | recognition state known; all interactions incomplete |

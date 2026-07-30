@@ -9,6 +9,7 @@ from .conditions import (
     evaluate_if_condition,
 )
 from .mac import MACResult, compute_mac, saturate_mr
+from .shifter import ShifterResult, compute_shifter
 from .model import (
     ADSP2100Model,
     ArchitecturalState,
@@ -36,6 +37,7 @@ __all__ = [
     "MemorySpace",
     "MemoryTransaction",
     "MACResult",
+    "ShifterResult",
     "ReservedOpcode",
     "TransactionKind",
     "TraceFrame",
@@ -46,6 +48,7 @@ __all__ = [
     "evaluate_if_condition",
     "compute_alu",
     "compute_mac",
+    "compute_shifter",
     "mask_to_width",
     "sign_extend",
     "saturate_mr",

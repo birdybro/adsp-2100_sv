@@ -1,0 +1,25 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_shifter
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_shifter
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter.sv
+set_global_assignment -name SDC_FILE shifter_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_instance_assignment -name VIRTUAL_PIN ON -to sf_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to x_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to shift_or_se_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sr_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to av_i
+set_instance_assignment -name VIRTUAL_PIN ON -to ac_i
+set_instance_assignment -name VIRTUAL_PIN ON -to ss_i
+set_instance_assignment -name VIRTUAL_PIN ON -to sr_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sr_write_o
+set_instance_assignment -name VIRTUAL_PIN ON -to se_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to se_write_o
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_result_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_write_o
+set_instance_assignment -name VIRTUAL_PIN ON -to ss_result_o
+set_instance_assignment -name VIRTUAL_PIN ON -to ss_write_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

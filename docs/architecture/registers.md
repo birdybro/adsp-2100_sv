@@ -12,10 +12,13 @@ The MAC has 16-bit MX0/1 and MY0/1 inputs, MF feedback, and a 40-bit MR
 accumulator exposed as MR0, MR1, and MR2 segments. The register group is
 duplicated by the active bank [ADI-UM-1989, printed pp. 2-13–2-20].
 
-The shifter has SI input, SE exponent, SB block exponent, and a 32-bit SR exposed
-as SR0/SR1; these registers are included in the duplicate bank
-[ADI-UM-1989, printed pp. 2-20–2-30, 4-22]. Exact SE and SB implemented widths
-and sign-extension rules remain to be transcribed from the shifter diagrams.
+The shifter has SI input, SE exponent, SB block exponent, and a 32-bit SR
+exposed as SR0/SR1; these registers are included in the duplicate bank. SE is
+signed 8-bit, SB is signed 5-bit, and both reads sign-extend on DMD
+[ADI-UM-1989, printed pp. 2-20–2-30, 4-22]. EXP HI/HIX/LO produces SE values
+from +1 through -31 according to Table 2.5; EXPADJ produces SB values from
+-15 through zero after software initializes SB to -16. Reset values remain
+unverified.
 
 ## DAG and exchange registers
 

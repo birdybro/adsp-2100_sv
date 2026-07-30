@@ -224,12 +224,15 @@ A commit message must state the engineering change and its verification.
 
 ## Current architectural status and risk
 
-Status at repository foundation: no instruction is yet claimed implemented in
-RTL. The independently tested executable-model seed establishes exact-width
-state, reset unknowns, deterministic traces, PM fetch transactions, and only
-the hand-verified all-zero NOP. All other opcodes fail closed. Architectural
-documents marked partial or provisional remain research inputs until their
-named evidence gates pass.
+No instruction is yet claimed implemented in RTL. Source-backed condition,
+standard ALU, fractional MAC, and all-function shifter combinational blocks
+exist with independent model comparison, but operand decode, banking,
+writeback, multifunction ordering, and cycle integration do not. The
+executable instruction model establishes exact-width state, reset unknowns,
+deterministic traces, PM fetch transactions, and only the hand-verified
+all-zero NOP. All other opcodes fail closed. Architectural documents marked
+partial or provisional remain research inputs until their named evidence gates
+pass.
 
 Highest risks are:
 

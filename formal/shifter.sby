@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 1
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_shifter.sv
+read -formal -sv formal/harnesses/adsp2100_shifter_formal.sv
+prep -top adsp2100_shifter_formal
+
+[files]
+rtl/core/adsp2100_shifter.sv
+formal/harnesses/adsp2100_shifter_formal.sv

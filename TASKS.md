@@ -241,18 +241,24 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-SHIFT-001 — Shifter model and synthesizable RTL
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-001
 - **Acceptance criteria:** immediate/register shifts, logical/arithmetic modes,
-  normalization, exponent/block exponent, saturation, feedback, and status
+  normalization, exponent/block exponent, off-scale fill, feedback, and status
   pass edge, differential, and formal tests.
 - **Source references:** ADI-UM-1989 shifter and instruction chapters
 - **Relevant tests:** `make compute-tests`, `formal/shifter.sby`
-- **Implementation notes:** explicitly define shift counts outside operand
-  width only after sourcing them.
-- **Unresolved questions:** exponent encoding, limiting, and status effects.
-- **Confidence:** UNKNOWN
+- **Implementation notes:** all sixteen source-backed SF functions now exist
+  in the independent model and portable combinational RTL. Exact signed counts,
+  HI/LO placement, PASS/OR, ASHIFT/LSHIFT, NORM AC extension, EXP HI/HIX/LO,
+  EXPADJ, and explicit write enables pass directed and 644,368-vector
+  model-versus-RTL tests. Operand decode, conditional execution, bank selection,
+  architectural writeback, multifunction ordering, and cycles remain.
+- **Unresolved questions:** reset values, same-cycle visibility during
+  multifunction writeback, and OQ-011's manually loaded `SE=0x80` NORM
+  negation; no undocumented shifter saturation operation is assumed.
+- **Confidence:** CORROBORATED
 
 ## M13 — Data-address generator 1
 
@@ -519,7 +525,8 @@ advance beyond research until a page-level primary citation is added.
   and uncovered state.
 - **Source references:** architecture specifications for each property
 - **Relevant tests:** `make formal`
-- **Implementation notes:** depth-one condition, ALU, and MAC combinational
+- **Implementation notes:** depth-one condition, ALU, MAC, and shifter
+  combinational
   harnesses now exist; never call a bounded result complete proof. Proof
   execution awaits an installed SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.

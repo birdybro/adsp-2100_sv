@@ -12,6 +12,7 @@
 | OQ-008 | What is the exact original PM-data cache miss transaction sequence for every control-flow interaction? | two-cycle fixed sequence; branch/interrupt-dependent abort rules | 1989 timing figures, directed original simulator/hardware traces | cycle accuracy | OPEN |
 | OQ-009 | Does the original assembler/cross-software accept every algebraic form later tools accept? | strict original subset; compatible superset | ADSP-2100 Cross-Software Manual or isolated tool run | ROM/source reconstruction | OPEN |
 | OQ-010 | Are ADSP-2100 TRAP/HALT mechanisms used by Atari host control beyond direct pins? | pin-only host stop; TRAP diagnostic handshake; both | schematic/ROM/MAME trace comparison | high | OPEN |
+| OQ-011 | How does NORM negate manually loaded `SE=0x80`? | mathematical +128 gives left-off-scale zero; 8-bit wrap gives right-off-scale extension | original simulator or physical-chip signature | low; EXP never generates this value | OPEN |
 
 Provisional behavior must cite one of these IDs in code and tests. Resolving an
 item requires updating the relevant architecture document, task confidence, and

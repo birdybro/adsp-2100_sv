@@ -48,8 +48,13 @@ semantic versioning after its first release.
 - Independent model and portable RTL for all 15 original fractional MAC AMF
   functions, including mixed signedness, 40-bit accumulation, unbiased
   rounding, MF extraction, MV, and one-shot MR saturation.
+- Independent model and portable RTL for all 16 original shifter SF functions,
+  including full-range HI/LO placement, PASS/OR, logical/arithmetic shifts,
+  normalization, HI/HIX/LO exponent detection, EXPADJ, and explicit write
+  enables.
 - Bounded combinational formal harnesses and SymbiYosys recipes for condition,
-  ALU, and MAC invariants, with assertion lint available without SymbiYosys.
+  ALU, MAC, and shifter invariants, with assertion lint available without
+  SymbiYosys.
 
 ### Changed
 
@@ -70,10 +75,10 @@ semantic versioning after its first release.
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 71 Python checks, ISA/register/condition/field validators,
+- `make test` passes 81 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
   Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
-  ALU plus 21,760 MAC model-versus-RTL vectors.
+  ALU, 21,760 MAC, plus 644,368 shifter model-versus-RTL vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -83,8 +88,11 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the constrained MAC block: 229 ALMs, 229
   combinational ALUTs, one inferred DSP block, no registers/RAM, positive
   setup/hold slack, and zero unconstrained ports or paths.
+- Quartus full compilation passes for the constrained shifter block: 374 ALMs,
+  580 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold slack,
+  and zero unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU, and
-  MAC harnesses; proof execution remains explicitly skipped without
+  MAC, and shifter harnesses; proof execution remains explicitly skipped without
   SymbiYosys.
 
 ### Documentation
@@ -102,6 +110,11 @@ semantic versioning after its first release.
   retained the primary manual's complete-result rounding rule.
 - Recorded MAME's MF-destination MV omission and retained the original
   manual's rule that every non-saturation MAC operation updates MV.
+- Closed original shifter array fill, NORM AC extension, exponent range, and
+  SE/SB/SS update semantics from the original compute chapter and SF table.
+- Recorded the unresolved NORM `SE=0x80` negation-width edge as OQ-011; the
+  provisional behavior agrees with pinned MAME and is outside generated
+  exponent values.
 
 ### Known Issues
 

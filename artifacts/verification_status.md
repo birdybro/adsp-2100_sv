@@ -13,7 +13,8 @@
 | Appendix A ISA subfields | PASS, PARTIAL | 19 finite tables exhaustive; cross-field legality incomplete |
 | Standard ALU compute | PASS, PARTIAL | 8 directed/model tests plus 51,472 RTL differential vectors |
 | Standard MAC compute | PASS, PARTIAL | 8 directed/model tests plus 21,760 RTL differential vectors |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC depth-one recipes lint; SymbiYosys unavailable |
+| Shifter compute | PASS, PARTIAL | 10 directed/model tests plus 644,368 RTL differential vectors |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter depth-one recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -23,7 +24,8 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 71 distinct Python
+The implemented foundation regression is `make test`: 81 distinct Python
 checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
-regressions and 21,760-vector MAC regression. Targets for unavailable or
-unimplemented areas print `SKIP` and do not create false pass evidence.
+regressions, 21,760-vector MAC regression, and 644,368-vector shifter
+regression. Targets for unavailable or unimplemented areas print `SKIP` and
+do not create false pass evidence.
