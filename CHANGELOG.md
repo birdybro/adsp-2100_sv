@@ -43,6 +43,8 @@ semantic versioning after its first release.
 - Primary-transcribed exhaustive tables for all 19 remaining finite Appendix A
   abbreviations, including AMF, DREG, DAG selectors, stack controls, SF, and
   X/Y/Z operands.
+- Independent model and portable RTL for all 16 standard ALU AMF functions,
+  including carry/borrow, overflow, sticky AV, ABS sign, and AR saturation.
 
 ### Changed
 
@@ -55,18 +57,24 @@ semantic versioning after its first release.
 
 - Made clean-checkout CI independent of the intentionally untracked reference
   cache while retaining strict local hash checks whenever the cache is present.
+- Excluded ignored Quartus database products from source-text hygiene checks so
+  synthesis followed by regression is deterministic.
 
 ### Verified
 
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.
-- `make test` passes 54 Python checks, ISA/register/condition/field validators,
+- `make test` passes 63 Python checks, ISA/register/condition/field validators,
   thirteen cached reference hash checks, generated-file checks, strict
-  Verilator 5.048 lint, and 2,048 exhaustive condition-logic vectors.
+  Verilator 5.048 lint, 2,048 exhaustive condition-logic vectors, and 51,472
+  ALU model-versus-RTL vectors.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
+- Quartus full compilation also passes for the constrained ALU block: 161
+  ALMs, 196 combinational ALUTs, no registers/RAM/DSPs, positive setup/hold
+  slack, and zero unconstrained ports or paths.
 
 ### Documentation
 

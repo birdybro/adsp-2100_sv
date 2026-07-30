@@ -1,5 +1,6 @@
 """Independent, deliberately partial ADSP-2100 architectural model."""
 
+from .alu import ALUResult, compute_alu
 from .conditions import (
     ConditionInputs,
     DO_TERMINATION_MNEMONICS,
@@ -25,6 +26,7 @@ from .model import (
 
 __all__ = [
     "ADSP2100Model",
+    "ALUResult",
     "ArchitecturalState",
     "ConditionInputs",
     "DO_TERMINATION_MNEMONICS",
@@ -40,6 +42,7 @@ __all__ = [
     "UnsupportedOpcode",
     "evaluate_do_termination",
     "evaluate_if_condition",
+    "compute_alu",
     "mask_to_width",
     "sign_extend",
 ]

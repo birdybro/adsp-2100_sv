@@ -201,7 +201,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-ALU-001 — ALU model and synthesizable RTL
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** ARCH-001, ISA-001
 - **Acceptance criteria:** all ALU operations, feedback paths, flags, saturation,
@@ -209,11 +209,13 @@ advance beyond research until a page-level primary citation is added.
   directed boundary/differential/formal tests pass; synthesis is warning-clean.
 - **Source references:** ADI-UM-1989 computational-unit and instruction chapters
 - **Relevant tests:** `make compute-tests`, `formal/alu.sby`
-- **Implementation notes:** widths and signedness must be explicit at every
-  operation.
-- **Unresolved questions:** carry/borrow convention, ABS minimum value, and
-  saturation modes.
-- **Confidence:** UNKNOWN
+- **Implementation notes:** the source-backed standard AMF `0x10`–`0x1f`
+  compute block, flags, sticky AV, and AR saturation exist in independent
+  model and RTL. Instruction operand selection/writeback, condition-false,
+  banking, and DIVS/DIVQ remain.
+- **Unresolved questions:** DIVS/DIVQ iteration semantics and instruction-level
+  old/new value visibility remain open.
+- **Confidence:** CORROBORATED
 
 ## M11 — Multiplier/accumulator
 

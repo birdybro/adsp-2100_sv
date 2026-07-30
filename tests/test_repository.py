@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 import subprocess
+import tempfile
 import unittest
+
+from scripts.lint_text import source_files
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -145,6 +148,17 @@ class RepositoryTests(unittest.TestCase):
             or path.suffix.lower() in {".rom", ".bin", ".exe", ".com"}
         ]
         self.assertEqual(forbidden, [])
+
+    def test_text_lint_excludes_quartus_generated_databases(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "rtl" / "source.sv"
+            generated = root / "synthesis" / "quartus" / "db" / "state.json"
+            source.parent.mkdir(parents=True)
+            generated.parent.mkdir(parents=True)
+            source.write_text("module source; endmodule\n", encoding="utf-8")
+            generated.write_text("{}\n", encoding="utf-8")
+            self.assertEqual(source_files(root), [source])
 
 
 if __name__ == "__main__":
