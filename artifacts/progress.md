@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-30
 
-**Latest verified engineering commit:** `aed88f1`
+**Latest verified engineering commit:** `1a461b1`
 
 **Current milestone:** documentation acquisition, exact-device audit, and
 executable-model foundation
