@@ -100,10 +100,10 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                 assembled = assemble_statement(statement)
                 self.assertEqual(assembled.value, opcode)
                 disassembly = disassemble_word(opcode)
-                self.assertFalse(disassembly.implemented)
+                self.assertTrue(disassembly.implemented)
                 self.assertEqual(
                     disassembly.classification,
-                    "TYPE_17_ACTION_DECODE_ONLY",
+                    "TYPE_17_BOUNDED_EXECUTION",
                 )
                 self.assertEqual(disassembly.text, statement)
                 count += 1
@@ -132,6 +132,24 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement("MODIFY (I8, M0);")
 
+    def test_type_6_dreg_immediates_round_trip(self) -> None:
+        names = [
+            "AX0", "AX1", "MX0", "MX1", "AY0", "AY1", "MY0", "MY1",
+            "SI", "SE", "AR", "MR0", "MR1", "MR2", "SR0", "SR1",
+        ]
+        for code, name in enumerate(names):
+            for value in (0, 1, 0x7FFF, 0x8000, 0xFFFF):
+                opcode = 0x400000 | (value << 4) | code
+                assembled = assemble_statement(f"{name} = 0x{value:04x};")
+                self.assertEqual(assembled.value, opcode)
+                disassembly = disassemble_word(opcode)
+                self.assertTrue(disassembly.implemented)
+                self.assertEqual(disassembly.classification, "TYPE_06")
+                self.assertEqual(assemble_statement(disassembly.text), assembled)
+        self.assertEqual(assemble_statement("AX0 = -1;").value, 0x4FFFF0)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AX0 = 0x10000;")
+
     def test_unsupported_assembly_fails_closed(self) -> None:
         with self.assertRaises(AssemblyError):
             assemble_statement("IDLE;")
@@ -150,8 +168,8 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             "RESERVED_UNSHOWN",
         )
         self.assertEqual(
-            disassemble_word(0x400000).classification,
-            "UNIMPLEMENTED_TYPE_06",
+            disassemble_word(0x500001).classification,
+            "UNIMPLEMENTED_TYPE_05",
         )
 
 

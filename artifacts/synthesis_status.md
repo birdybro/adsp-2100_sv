@@ -3,13 +3,20 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 17 action decoder/integration slice, stack-control decoder/integration slice, Type 21
+  Type 6 and Type 17 decoders/integration slices, stack-control
+  decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 6 immediate-load slice
+  passes for Cyclone V `5CSEBA6U23I7`. It uses 302 ALMs and 484 registers with
+  no RAM or DSP blocks. Across four timing models, worst setup slack is +8.167
+  ns and worst hold slack is +0.133 ns against 20 ns, with zero unconstrained
+  clocks, ports, or paths. Constant no-PM/no-DM and conflict outputs are
+  asserted properties of this bounded instruction slice.
 - Quartus 17.0.2 full compilation of the generated class-decoder smoke project
   passes for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 55
   ALMs, 63 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks.
@@ -149,7 +156,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 23
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 25
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -157,6 +164,7 @@ There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded class-decode,
 internal-move-decode, stack-control-decode, stack-control-integration,
+Type-6 integration,
 Type-18 integration,
 Type-21 integration, Type-25 integration,
 condition, ALU, MAC, shifter, DAG, sequencer-flow, CNTR, sequencer-stack,

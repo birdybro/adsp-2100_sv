@@ -21,6 +21,10 @@ from tools.generators.validate_modify_address import (
     validate_database as validate_modify_address_database,
 )
 from tools.generators.validate_isa import classify_opcode, load_database, validate_database
+from tools.generators.validate_isa_fields import (
+    load_database as load_isa_fields_database,
+    validate_database as validate_isa_fields_database,
+)
 
 
 @dataclass(frozen=True)
@@ -57,9 +61,23 @@ def _try_disassemble_internal_move(
             f"{decoded['destination_register']} = "
             f"{decoded['source_register']};"
         ),
-        classification="TYPE_17_ACTION_DECODE_ONLY",
-        implemented=False,
+        classification="TYPE_17_BOUNDED_EXECUTION",
+        implemented=True,
     )
+
+
+@lru_cache(maxsize=1)
+def _dreg_code_to_name() -> dict[int, str]:
+    database = load_isa_fields_database()
+    validate_isa_fields_database(database)
+    table = next(item for item in database["tables"] if item["id"] == "DREG")
+    return {entry["code"]: entry["name"] for entry in table["values"]}
+
+
+def _disassemble_dreg_immediate(opcode: int) -> str:
+    register = _dreg_code_to_name()[opcode & 0xF]
+    data = (opcode >> 4) & 0xFFFF
+    return f"{register} = 0x{data:04x};"
 
 
 def _disassemble_mode_control(opcode: int) -> str:
@@ -117,6 +135,8 @@ def disassemble_word(opcode: int) -> Disassembly:
                 text = _disassemble_mode_control(opcode)
             elif instruction["id"] == "MODIFY-ADDRESS-TYPE-21":
                 text = _disassemble_modify_address(opcode)
+            elif instruction["id"] == "LOAD-DREG-IMMEDIATE-TYPE-6":
+                text = _disassemble_dreg_immediate(opcode)
             return Disassembly(
                 opcode=opcode,
                 text=text,

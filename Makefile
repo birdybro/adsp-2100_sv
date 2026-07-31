@@ -25,6 +25,13 @@ lint:
 			rtl/packages/adsp2100_format_pkg.sv \
 			rtl/core/adsp2100_class_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_load_dreg_immediate_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_load_dreg_immediate_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_mr_saturation_decode.sv; \
@@ -146,7 +153,7 @@ decode-tests:
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
 		tests.test_isa_fields tests.test_instruction_formats \
 		tests.test_stack_control tests.test_mr_saturation \
-		tests.test_internal_move
+		tests.test_internal_move tests.test_load_dreg_immediate
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -157,6 +164,13 @@ decode-tests:
 			rtl/core/adsp2100_class_decode.sv \
 			sim/unit/tb_adsp2100_decode.sv; \
 		build/obj_decode/Vtb_adsp2100_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_load_dreg_immediate_decode \
+			--top-module tb_adsp2100_load_dreg_immediate_decode \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv; \
+		build/obj_load_dreg_immediate_decode/Vtb_adsp2100_load_dreg_immediate_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			--Mdir build/obj_stack_control_decode \
 			--top-module tb_adsp2100_stack_control_decode \
@@ -354,7 +368,7 @@ sequencer-tests:
 
 register-tests:
 	$(PYTHON) -m unittest -v tests.test_register_banks \
-		tests.test_internal_move_slice
+		tests.test_internal_move_slice tests.test_load_dreg_immediate
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_register_vectors.py \
@@ -394,6 +408,19 @@ register-tests:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			sim/unit/tb_adsp2100_internal_move_slice.sv; \
 		build/obj_internal_move_slice/Vtb_adsp2100_internal_move_slice; \
+		$(PYTHON) tools/generators/generate_load_dreg_immediate_vectors.py \
+			--output build/load_dreg_immediate_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_load_dreg_immediate_slice \
+			--top-module tb_adsp2100_load_dreg_immediate_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_load_dreg_immediate_slice.sv \
+			sim/unit/tb_adsp2100_load_dreg_immediate_slice.sv; \
+		build/obj_load_dreg_immediate_slice/Vtb_adsp2100_load_dreg_immediate_slice; \
 	else \
 		echo "SKIP register-file RTL test: Verilator is not installed"; \
 	fi
@@ -486,6 +513,14 @@ formal:
 			--top-module adsp2100_stack_control_decode_formal \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			formal/harnesses/adsp2100_stack_control_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_load_dreg_immediate_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_load_dreg_immediate_slice.sv \
+			formal/harnesses/adsp2100_load_dreg_immediate_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_mr_saturation_decode_formal \
 			rtl/core/adsp2100_mr_saturation_decode.sv \
@@ -614,6 +649,8 @@ formal:
 	@if command -v sby >/dev/null 2>&1; then \
 		set -e; \
 		sby -f -d build/formal_decode formal/class_decode.sby; \
+		sby -f -d build/formal_load_dreg_immediate \
+			formal/load_dreg_immediate.sby; \
 		sby -f -d build/formal_stack_control_decode \
 			formal/stack_control_decode.sby; \
 		sby -f -d build/formal_mr_saturation_decode \
@@ -662,6 +699,8 @@ synth-quartus:
 	@if command -v quartus_sh >/dev/null 2>&1; then \
 		set -e; \
 		quartus_sh --flow compile synthesis/quartus/decode_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/load_dreg_immediate_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile \
@@ -721,6 +760,7 @@ clean:
 	@find build -maxdepth 1 -type f -name status_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mode_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name internal_move_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name load_dreg_immediate_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
 	@if [ -d build/obj_stack_control_decode ]; then \
 		find build/obj_stack_control_decode -depth -delete; \
@@ -759,6 +799,12 @@ clean:
 	@if [ -d build/obj_internal_move_slice ]; then \
 		find build/obj_internal_move_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_load_dreg_immediate_decode ]; then \
+		find build/obj_load_dreg_immediate_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_load_dreg_immediate_slice ]; then \
+		find build/obj_load_dreg_immediate_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -794,6 +840,9 @@ clean:
 	@if [ -d build/quartus_internal_move_slice ]; then \
 		find build/quartus_internal_move_slice -depth -delete; \
 	fi
+	@if [ -d build/quartus_load_dreg_immediate ]; then \
+		find build/quartus_load_dreg_immediate -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -823,6 +872,7 @@ clean:
 		build/formal_mode_control_slice \
 		build/formal_internal_move_decode \
 		build/formal_internal_move_slice \
+		build/formal_load_dreg_immediate \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \

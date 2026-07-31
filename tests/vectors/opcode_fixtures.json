@@ -3,6 +3,24 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-LOAD-AX0-1234-412340",
+      "source": "AX0 = 0x1234;",
+      "opcode": "0x412340",
+      "program_word_bytes_big_endian": "412340",
+      "encoding_class": 6,
+      "source_citation": "ADI-UM-1989 printed pp. 6-1–6-2, 6-12–6-13, A-2, and A-9",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
+      "id": "HAND-LOAD-MR2-FF80-4FF80D",
+      "source": "MR2 = 0xff80;",
+      "opcode": "0x4ff80d",
+      "program_word_bytes_big_endian": "4ff80d",
+      "encoding_class": 6,
+      "source_citation": "ADI-UM-1989 printed pp. 2-15, 6-12–6-13, A-2, and A-9",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
       "id": "HAND-MODIFY-I1-M1-090005",
       "source": "MODIFY (I1, M1);",
       "opcode": "0x090005",

@@ -22,6 +22,9 @@ cycle-, or Hard Drivin'-complete
 - complete 30-class mask inventory, all 106 diagrammed fields across 393
   variable bit positions, explicit unshown-reserved fallback, and one
   hand-verified NOP semantic fixture;
+- exact Type 6 immediate-to-DREG semantics, assembler/disassembler support,
+  exhaustive Python/RTL field decode, both-bank independent state execution,
+  and exact SE/MR2/MR1 storage side effects;
 - exact Type 17 internal-MOVE action decode covering all register selectors,
   reserved holes, SSTAT read-only direction, and all 2,256 legal assembler/
   disassembler pairs;
@@ -92,7 +95,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 248 implemented Python unit checks plus manifest/hash verification;
+- 255 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -102,6 +105,9 @@ outstanding.
   1,840 reserved/read-only-destination subencodings; all other program words
   are action-free in exhaustive RTL simulation; all 4,512 legal pair/bank
   executions and 59,430 stateful model/RTL cycles pass;
+- all 1,048,576 Type 6 words decode to exact immediate/DREG fields in both
+  Python and exhaustive RTL traversal; 50,204 selected-bank model/RTL cycles
+  pass with no PM-data or DM activity;
 - exact Type 25 word `0x050000` is the sole MR-saturation action across an
   exhaustive 16,777,216-word RTL traversal;
 - exactly 256 Type 18 words decode as original MODE CONTROL across an
@@ -122,7 +128,8 @@ outstanding.
   50,112 MSTAT-consumer integration cycles plus 50,015 stateful Type 26
   execution cycles and 50,112 stateful Type 25 cycles pass simulation;
   the Type 18 state slice adds 58,248 passing cycles and the Type 21 slice adds
-  50,124, while the Type 17 state slice adds 59,430;
+  50,124, while the Type 17 state slice adds 59,430 and the Type 6 slice adds
+  50,204;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
@@ -136,13 +143,16 @@ outstanding.
   unconstrained paths; the Type 17 decoder fits in 42 ALMs and 24
   combinational ALUTs with positive multicorner slack and no unconstrained
   paths, while the Type 17 state slice fits in 816 ALMs and 906 registers with
-  +6.401 ns setup, +0.151 ns hold, and no unconstrained paths;
+  +6.401 ns setup, +0.151 ns hold, and no unconstrained paths; the Type 6 slice
+  fits in 302 ALMs and 484 registers with +8.167 ns setup, +0.133 ns hold, and
+  no unconstrained paths;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
-  formal harnesses (24 total) pass assertion syntax lint, but no
+  formal harnesses plus Type 6 decode/execution (25 total) pass assertion
+  syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
   synthesis top exists.

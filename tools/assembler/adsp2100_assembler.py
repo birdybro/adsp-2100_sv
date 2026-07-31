@@ -20,6 +20,10 @@ from tools.generators.validate_modify_address import (
     validate_database as validate_modify_address_database,
 )
 from tools.generators.validate_isa import load_database, validate_database
+from tools.generators.validate_isa_fields import (
+    load_database as load_isa_fields_database,
+    validate_database as validate_isa_fields_database,
+)
 
 
 class AssemblyError(ValueError):
@@ -74,6 +78,31 @@ def _assemble_raw_word(statement: str) -> int | None:
     if not 0 <= value <= 0xFFFFFF:
         raise AssemblyError(".WORD value must fit one 24-bit program word")
     return value
+
+
+@lru_cache(maxsize=1)
+def _dreg_name_to_code() -> dict[str, int]:
+    database = load_isa_fields_database()
+    validate_isa_fields_database(database)
+    table = next(item for item in database["tables"] if item["id"] == "DREG")
+    return {entry["name"]: entry["code"] for entry in table["values"]}
+
+
+def _assemble_dreg_immediate(statement: str) -> int | None:
+    match = re.fullmatch(
+        r"([A-Z][A-Z0-9]*)\s*=\s*(?:(?:0X|H#)([0-9A-F]+)|(-?[0-9]+))",
+        statement,
+    )
+    if match is None:
+        return None
+    destination, hexadecimal, decimal = match.groups()
+    registers = _dreg_name_to_code()
+    if destination not in registers:
+        return None
+    value = int(hexadecimal, 16) if hexadecimal is not None else int(decimal, 10)
+    if not -0x8000 <= value <= 0xFFFF:
+        raise AssemblyError("Type 6 immediate must fit a 16-bit data word")
+    return 0x400000 | ((value & 0xFFFF) << 4) | registers[destination]
 
 
 @lru_cache(maxsize=1)
@@ -173,6 +202,9 @@ def assemble_statement(source: str) -> AssembledWord:
     raw_word = _assemble_raw_word(statement)
     if raw_word is not None:
         return AssembledWord(raw_word)
+    dreg_immediate = _assemble_dreg_immediate(statement)
+    if dreg_immediate is not None:
+        return AssembledWord(dreg_immediate)
     internal_move = _assemble_internal_move(statement)
     if internal_move is not None:
         return AssembledWord(internal_move)

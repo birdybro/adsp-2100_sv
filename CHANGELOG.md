@@ -63,6 +63,11 @@ semantic versioning after its first release.
   provisional flag.
 - A deterministic Type 17 vector generator, stateful Verilator comparison,
   bounded formal harness/recipe, and constrained Cyclone V state-slice project.
+- A primary-backed full Type 6 immediate-to-DREG semantic entry, independent
+  decoder/state model, portable exact decoder and bounded execution RTL,
+  assembler/disassembler support, two hand-transcribed opcode fixtures,
+  exhaustive class decode, deterministic stateful differential vectors,
+  formal harness/recipe, and constrained Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -194,6 +199,8 @@ semantic versioning after its first release.
 - Corrected the stack-control Type 26 mask from `0xfffff0` to `0xffffe0`.
   The original diagram identifies bit 4 as PC-stack pop (`PP`); the prior local
   transcription accidentally excluded sixteen documented class words.
+- Promoted legal Type 17 disassembly from the stale action-decode-only marker
+  to its verified bounded-execution classification.
 
 ### Verified
 
@@ -294,6 +301,19 @@ semantic versioning after its first release.
   ALMs, 906 registers, no RAM/DSPs, +6.401 ns worst setup and +0.151 ns worst
   hold slack across four timing models, with zero unconstrained clocks, ports,
   or paths.
+- Type 6 Python and RTL decoders exhaust all 1,048,576 field-defined words;
+  six directed/model checks cover both banks, every DREG destination, reset
+  unknowns, SE/MR2 truncation and sign-extension, MR1 sign-fill, invalid words,
+  and setup collisions. Stateful RTL agrees with the independent model for
+  50,204 deterministic cycles.
+- The expanded `make test` passes 255 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, seven
+  exhaustive 24-bit decode traversals, and every existing model/RTL vector
+  regression including Type 6 execution.
+- Quartus full compilation passes for the bounded Type 6 execution slice: 302
+  ALMs, 484 registers, no RAM/DSPs, +8.167 ns worst setup and +0.133 ns worst
+  hold slack across four timing models, with zero unconstrained clocks, ports,
+  or paths.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -348,8 +368,8 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 24 harnesses,
-  including exact Type 17/Type 21 decode and bounded Type 17/Type 21 state execution;
+- `make formal` passes strict assertion syntax lint for all 25 harnesses,
+  including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 17/Type 21 state execution;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
@@ -373,6 +393,10 @@ semantic versioning after its first release.
   computational/DAG/status/PX/CNTR/count-stack execution. OQ-016 narrow
   status-source extension remains open and visibly provisional rather than
   being promoted by implementation.
+- Closed original Type 6 `0100 DATA[19:4] DREG[3:0]` placement, full-width
+  immediate semantics, one-cycle selected-bank writeback, no PM/DM data
+  transfer, exact SE/MR2 storage behavior, and MR1-to-MR2 sign-fill side effect
+  from the original manual.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

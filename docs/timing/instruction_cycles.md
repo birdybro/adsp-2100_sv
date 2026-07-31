@@ -12,6 +12,7 @@ Known cases:
 | Case | Current sourced timing |
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
+| Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 17 internal data MOVE | one processor cycle; no PM-data or DM transfer |
 | Type 18 combined MODE CONTROL | one processor cycle for all selected original mode fields |
 | Type 21 `MODIFY (Ix, My);` | one processor cycle; no PM-data or DM transfer |
@@ -33,6 +34,13 @@ bank, and MR determine a single cycle-end MR write, while false MV preserves
 state without changing the one-cycle boundary, across 50,112 stateful cycles.
 This is instruction-boundary evidence, not external fetch-phase evidence
 [ADI-UM-1989, printed pp. 2-18–2-19 and A-4].
+
+The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
+one cycle-end DREG write across all immediate values and destinations, with no
+PM-data or DM transaction. Its 50,204-cycle state comparison establishes this
+instruction boundary but does not model overlapped fetch, waits, interrupts,
+or external bus phases
+[ADI-UM-1989, printed pp. 1-2, 2-6–2-7, 6-12–6-13, A-2, and A-9].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

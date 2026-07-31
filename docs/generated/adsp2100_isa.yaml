@@ -375,6 +375,101 @@
   ],
   "instructions": [
     {
+      "id": "LOAD-DREG-IMMEDIATE-TYPE-6",
+      "mnemonic": "LOAD DREG IMMEDIATE",
+      "algebraic_assembly_syntax": "dreg = <data>;",
+      "encoding_pattern": "0100xxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf00000",
+      "opcode_value": "0x400000",
+      "fields": [
+        "DREG",
+        "DATA"
+      ],
+      "condition_field": null,
+      "computation_field": null,
+      "source_register_selections": [],
+      "destination_register_selections": [
+        "DREG"
+      ],
+      "data_move_fields": [
+        "DREG",
+        "DATA"
+      ],
+      "dag_selection": null,
+      "addressing_mode": "IMMEDIATE",
+      "immediate_fields": [
+        "DATA[15:0]"
+      ],
+      "branch_fields": [],
+      "registers_read": [
+        "MSTAT.BANK_SELECT"
+      ],
+      "registers_written": [
+        "SELECTED_BANK_DREG"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": [],
+      "status_flags_written": [],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "IMMEDIATE_TO_SELECTED_BANK_DREG"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [],
+      "old_value_new_value_semantics": "Sample cycle-start MSTAT bank selection and commit the 16-bit immediate to the selected DREG at cycle end. SE and MR2 retain their exact eight-bit storage widths; writing MR1 sign-fills MR2.",
+      "write_conflict_rules": "Type 6 has one explicit DREG destination. Collision with an external setup or other write is outside this bounded instruction slice and fails closed.",
+      "condition_false_behavior": "Unconditional instruction; not applicable.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Interrupt recognition and precedence are not integrated or claimed by this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "The register load occupies one instruction cycle; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; no PM-data or DM transaction is issued.",
+      "parallel_actions": [
+        {
+          "action": "LOAD_SELECTED_BANK_DREG_IMMEDIATE",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_SELECT",
+            "INSTRUCTION_DATA_FIELD"
+          ],
+          "writes": [
+            "CYCLE_END_SELECTED_BANK_DREG"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 1-2, 2-6–2-7, 2-15, and 2-18: one-cycle start-read/end-write behavior, exact narrow DREG storage, and MR1-to-MR2 sign fill"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-1–6-2 and 6-12–6-13, Tables 6.6–6.7: full-width immediate data and dreg immediate MOVE syntax"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-2 and A-9: Type 6 DREG/DATA field positions and original DREG selector table"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "Fetch, interrupt-abort, PC, and external wait-state phases remain outside the bounded state slice."
+      ]
+    },
+    {
       "id": "MODE-CONTROL-TYPE-18",
       "mnemonic": "ENA/DIS",
       "algebraic_assembly_syntax": "{ENA|DIS} mode [, {ENA|DIS} mode ...];",

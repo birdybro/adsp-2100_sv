@@ -108,7 +108,8 @@ advance beyond research until a page-level primary citation is added.
   ADI-UM-FAMILY-1995 for explicitly applicable comparisons only
 - **Relevant tests:** `tests/test_model_state.py`,
   `tests/test_register_metadata.py`, `tests/test_counter.py`,
-  `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`
+  `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`,
+  `tests/test_load_dreg_immediate.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
   48 codes and every blank code. CNTR now has machine-readable 14-bit,
@@ -116,7 +117,9 @@ advance beyond research until a page-level primary citation is added.
   Type 17 now closes the 48 readable and 47 writable general-MOVE selectors.
   A bounded Type 17 path now composes both computational banks, both DAGs,
   status/control, PX, CNTR/count-stack, and SSTAT. OQ-016 narrow status reads
-  remain visibly provisional, while hidden state and whole-core
+  remain visibly provisional. Exact Type 6 execution now covers all sixteen
+  DREG destinations in both computational banks, including narrow storage and
+  MR1 sign-fill side effects, while hidden state and whole-core
   fetch/interrupt access still require complete extraction. Emulator variable
   names are discovery aids only.
 - **Unresolved questions:** hidden sequencer state, undefined reset fields, and
@@ -139,15 +142,18 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
+  `tests/test_load_dreg_immediate.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
   `sim/unit/tb_adsp2100_mode_control_decode.sv`,
   `sim/unit/tb_adsp2100_modify_address_decode.sv`,
   `sim/unit/tb_adsp2100_internal_move_decode.sv`,
+  `sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
+  `formal/load_dreg_immediate.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -166,8 +172,9 @@ advance beyond research until a page-level primary citation is added.
   Cyclone V fit. A separate machine-readable execution boundary connects
   those actions to all four stack classes, CNTR, ASTAT/MSTAT/IMASK, and SSTAT
   with nine model checks and 50,015 stateful RTL comparison cycles. Only the
-  all-zero NOP, parameterized Type 18 MODE CONTROL, parameterized Type 21
-  MODIFY, and exact Type 25 `IF MV SAT MR;` words are hand-verified full
+  all-zero NOP, parameterized Type 6 immediate DREG load, parameterized Type
+  18 MODE CONTROL, parameterized Type 21 MODIFY, and exact Type 25
+  `IF MV SAT MR;` words are hand-verified full
   semantic instruction entries
   in the main ISA table. Type 25 has primary-
   backed cycle-start MV/bank/MR semantics, an independent state model, exact
@@ -189,7 +196,10 @@ advance beyond research until a page-level primary citation is added.
   pass. Its bounded state model/RTL executes all legal pairs in both banks and
   passes 59,430 cycles across computational, DAG, status, PX, CNTR/count-stack,
   and SSTAT state. OQ-016 extension remains provisional and whole-core
-  fetch/interrupt/bus integration remains incomplete.
+  fetch/interrupt/bus integration remains incomplete. Type 6 covers all
+  1,048,576 field-defined immediate/DREG words, has two independent opcode
+  fixtures, assembler/disassembler round trips, exact SE/MR2 storage and MR1
+  sign-fill behavior, and 50,204 stateful model/RTL cycles across both banks.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -246,7 +256,9 @@ advance beyond research until a page-level primary citation is added.
   composes all original movable state, preserves authentic unknown reset
   values, and exposes OQ-016 provisional reads. Seven directed checks and all
   4,512 legal pair/bank executions pass; fetch/interrupt/bus cycles remain
-  outside the bounded model.
+  outside the bounded model. A separate Type 6 model decodes the complete
+  immediate/DREG class and executes selected-bank cycle-end writes while
+  preserving authentic reset unknowns and exact narrow-register side effects.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -271,7 +283,9 @@ advance beyond research until a page-level primary citation is added.
   preserved exactly. All 32 original `MODIFY (Ix, My);` same-DAG combinations
   also round trip; cross-DAG selections fail closed. All 2,256 legal Type 17
   register pairs round trip while SSTAT destinations and reserved selectors
-  fail closed and retain an action-decode-only classification. First research
+  fail closed and report bounded execution. Type 6 accepts hexadecimal and
+  signed/unsigned decimal 16-bit immediates for every DREG destination and
+  round trips through canonical hexadecimal disassembly. First research
   surviving lawful assemblers; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
@@ -451,7 +465,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make register-tests`, `tests/test_register_banks.py`,
   `make mode-tests`, `tests/test_mode_integration.py`,
   `tests/test_internal_move.py`, `formal/registers.sby`,
-  `formal/mode_slice.sby`, `formal/internal_move_decode.sby`
+  `tests/test_load_dreg_immediate.py`, `formal/registers.sby`,
+  `formal/mode_slice.sby`, `formal/internal_move_decode.sby`,
+  `formal/load_dreg_immediate.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
   independent model and portable RTL implement both banks for all 16 DREG
   codes plus AF, MF, and SB; exact SE/MR2/SB widths; three cycle-start reads;
@@ -465,7 +481,10 @@ advance beyond research until a page-level primary citation is added.
   independent model, plus 50,112 mixed MSTAT-consumer cycles. Exact Type 17
   action decode now identifies every legal computational/DAG/status/PX/CNTR
   source and destination. The bounded Type 17 slice now connects them with
-  old-bank/current-cycle ordering and 59,430 passing model/RTL cycles.
+  old-bank/current-cycle ordering and 59,430 passing model/RTL cycles. The
+  exact Type 6 slice connects full-width immediate decode to the same banked
+  DREG write path and passes exhaustive class decode plus 50,204 stateful
+  model/RTL cycles across all destinations and both banks.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -729,9 +748,10 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Twenty-four harnesses now pass strict assertion
-  syntax lint, including exact Type 17 action decode/state execution, Type 21
-  decode, and bounded Type 21 state execution. Proof execution awaits an installed
+  result complete proof. Twenty-five harnesses now pass strict assertion
+  syntax lint, including exact Type 6 immediate-load and Type 17 action
+  decode/state execution, Type 21 decode, and bounded Type 21 state execution.
+  Proof execution awaits an installed
   SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.
 - **Confidence:** UNKNOWN
@@ -759,7 +779,10 @@ advance beyond research until a page-level primary citation is added.
   registers/RAM/DSPs, positive multicorner setup/hold slack, and zero
   unconstrained paths. The bounded Type 17 state slice fits in 816 ALMs and
   906 registers with no RAM/DSPs, +6.401 ns worst setup, +0.151 ns worst hold,
-  and zero unconstrained clocks, ports, or paths. Whole-core clocks,
+  and zero unconstrained clocks, ports, or paths. The bounded Type 6 slice
+  fits in 302 ALMs and 484 registers with no RAM/DSPs, +8.167 ns worst setup,
+  +0.133 ns worst hold, and zero unconstrained clocks, ports, or paths.
+  Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.

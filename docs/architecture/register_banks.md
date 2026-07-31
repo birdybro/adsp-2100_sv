@@ -76,6 +76,17 @@ slice covers all legal computational-register source/destination pairs and
 retains the MR1-to-MR2 side effect. Its 59,430-cycle comparison initializes
 both banks independently and checks the complete register cross-product.
 
+`adsp2100_load_dreg_immediate_slice` composes exact Type 6 decode with the
+same bank and storage boundary. The decoded word is `DATA[19:4]` and the DREG
+destination is `[3:0]`; all sixteen destinations execute in both banks. SE and
+MR2 retain only their documented low eight bits and read back sign-extended,
+while MR1 writes sign-fill MR2. The instruction performs no PM-data or DM
+transaction. Six directed/model tests exhaustively decode all 1,048,576 class
+words, and 50,204 deterministic model-versus-RTL cycles check reset unknowns,
+both banks, boundary values, invalid words, and atomic setup-conflict
+suppression [ADI-UM-1989, printed pp. 1-2, 2-6–2-7, 2-15, 2-18,
+6-12–6-13, A-2, and A-9].
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -105,6 +116,9 @@ therefore remains `IMPLEMENTING`.
   2,256 legal pairs with each bank selected, and compares 59,430 deterministic
   stateful cycles with RTL. Narrow status reads remain labeled provisional
   under OQ-016.
+- `make register-tests` also adds six Type 6 model tests and 50,204 stateful
+  model-versus-RTL cycles, including every destination in both banks and exact
+  SE/MR2/MR1 storage side effects.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

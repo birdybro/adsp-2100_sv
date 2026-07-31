@@ -59,6 +59,14 @@ The exact Type 25 saturation boundary now uses cycle-start MSTAT bit 0 to
 select primary or alternate MR and writes only that bank at cycle end when
 cycle-start ASTAT.MV is set; it does not alter ASTAT
 [ADI-UM-1989, printed pp. 2-5–2-7, 2-18–2-19, A-4].
+The exact Type 6 boundary similarly samples MSTAT at cycle start and writes
+the selected computational bank at cycle end for every DREG code. Its full
+16-bit immediate is truncated only at the authentic SE/MR2 eight-bit storage
+boundary, whose subsequent DREG read sign-extends; an MR1 write also fills MR2
+with the MR1 sign bit
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 6-12–6-13,
+A-2, and A-9]. The bounded reset path clears MSTAT without assigning either
+bank a fabricated value.
 The exact Type 18 boundary independently applies all AS/OL/BR/SR fields to
 cycle-start MSTAT and commits one four-bit result at cycle end. Both
 documented no-change encodings preserve their raw decode identity, while

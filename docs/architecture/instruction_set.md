@@ -20,8 +20,8 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 `docs/generated/adsp2100_isa.yaml` is the source for generated class decode
 and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
-MR saturation, parameterized Type 18 mode control, and all 32 Type 21
-MODIFY selections. The companion
+MR saturation, all Type 6 immediate DREG loads, parameterized Type 18 mode
+control, and all 32 Type 21 MODIFY selections. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
 fields across the 30 diagrams, including every one of their 393 variable bit
 positions [ADI-UM-1989, printed pp. A-1–A-5, scan PDF pp. 140–144].
@@ -30,6 +30,21 @@ Automated checks compare those field positions with a separate hand-reviewed
 fixture, require them to partition each class mask exactly, and exhaustively
 compare the synthesizable class decoder over all 16,777,216 program words with
 an independent SystemVerilog transcription.
+
+Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded
+computational registers. Its exact format is `0100 DATA[19:4] DREG[3:0]`, so
+all 1,048,576 words in the class are field-defined. The bounded model and RTL
+sample MSTAT bank selection at cycle start and commit one DREG write at cycle
+end without PM-data or DM activity. They preserve the exact eight-bit storage
+and sign-extended read behavior of SE and MR2 and the documented MR1-load
+sign-fill into MR2. Reset selects the primary bank through cleared MSTAT but
+does not invent reset values for either computational bank
+[ADI-UM-1989, printed pp. 1-2, 2-6–2-7, 2-15, 2-18,
+6-1–6-2, 6-12–6-13, A-2, and A-9]. Two hand-transcribed opcode fixtures,
+exhaustive Python and RTL field decode, assembler/disassembler round trips,
+and 50,204 stateful model-versus-RTL cycles provide the bounded execution
+evidence. Fetch, interrupts, stalls, and external bus phases remain outside
+this slice.
 
 Type 17 internal data MOVE now has a bounded action-decode record. Its twelve
 payload bits select independent destination/source RGP and REG fields. The
@@ -103,7 +118,7 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 18, Type 21, and Type 25 are the only full semantic entries in the main
+Type 6, Type 18, Type 21, and Type 25 are the only full semantic entries in the main
 instruction table; most legal combinations, register effects, parallel
 ordering, cycle counts, and bus transactions still require primary-backed
 entries.
