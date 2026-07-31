@@ -39,6 +39,11 @@ semantic versioning after its first release.
   bounded formal harness, exhaustive 24-bit fail-closed simulation, and
   constrained Cyclone V synthesis project. All 32 encodings and both SPP
   no-change aliases are retained without inventing OQ-013 underflow effects.
+- A primary-backed exact Type 25 `IF MV SAT MR;` semantic record and main-ISA
+  entry, hand-reviewed opcode/result fixtures, independent decoder and
+  selected-bank state model, portable bounded execution RTL, exhaustive
+  24-bit decoder test, formal recipes, assembler/disassembler round trip, and
+  constrained Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -143,6 +148,9 @@ semantic versioning after its first release.
 
 - Expanded the initial README to state the exact ADSP-2100 scope and current
   non-complete status.
+- Factored the documented one-shot MR saturation transform into one shared
+  synthesizable primitive used by both the MAC compute block and Type 25
+  execution boundary.
 - Identified the contemporary original ADSP-2100 data sheet within the 1987
   ADI data book at printed pages 2-15 onward.
 
@@ -210,6 +218,19 @@ semantic versioning after its first release.
   351 ALMs, 260 combinational logic ALUTs, 465 design registers plus 12 fitter
   duplicates, no RAM/DSPs, +10.550 ns worst setup, +0.165 ns worst hold slack,
   and zero unconstrained paths against the 20 ns constraint.
+- The Type 25 regression proves that only `0x050000` activates saturation
+  across all 16,777,216 words and passes nine directed/schema/random model
+  tests plus 50,112 stateful model-versus-RTL cycles. Both MR signs and banks,
+  false MV, status preservation, invalid opcodes, reset unknowns, and atomic
+  fail-closed setup collisions are covered.
+- The expanded `make test` passes 211 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, three
+  exhaustive 24-bit decode traversals, and every existing model/RTL vector
+  regression including the new Type 25 stateful comparison.
+- Quartus full compilation passes for the bounded Type 25 integration slice:
+  144 ALMs, 92 registers, no RAM/DSPs, +11.443 ns worst setup and +0.246 ns
+  worst hold slack across four timing models, with zero unconstrained clocks,
+  ports, or paths against the 20 ns constraint.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.

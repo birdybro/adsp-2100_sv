@@ -75,3 +75,10 @@ syntax and one-cycle instruction rule support parallel assertion of these
 actions [ADI-UM-1989, printed pp. 1-2, 6-14–6-15, A-4, A-8–A-10].
 This closes action selection, not stateful underflow behavior or whole-core
 instruction execution.
+
+Type 25 is the exact single word `0x050000`, with no variable fields.
+`docs/generated/adsp2100_mr_saturation.yaml` records its fixed MV condition,
+selected-bank MR source/destination, two saturation limits, status
+preservation, and one-cycle action [ADI-UM-1989, printed pp. 2-18–2-19 and
+A-4]. An independent exhaustive RTL decoder proves that this word alone
+activates the Type 25 execution slice.

@@ -132,9 +132,12 @@ advance beyond research until a page-level primary citation is added.
   ADI-UM-1989 instruction chapters and Appendix A
 - **Relevant tests:** `tests/test_isa_database.py`,
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
+  `tests/test_mr_saturation.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
+  `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
+  `formal/mr_saturation_decode.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -153,8 +156,11 @@ advance beyond research until a page-level primary citation is added.
   Cyclone V fit. A separate machine-readable execution boundary connects
   those actions to all four stack classes, CNTR, ASTAT/MSTAT/IMASK, and SSTAT
   with nine model checks and 50,015 stateful RTL comparison cycles. Only the
-  all-zero NOP remains a hand-verified full semantic instruction entry in the
-  main ISA table. Generated assembler/
+  all-zero NOP and exact Type 25 `IF MV SAT MR;` words are hand-verified full
+  semantic instruction entries in the main ISA table. Type 25 has primary-
+  backed cycle-start MV/bank/MR semantics, an independent state model, exact
+  decoder, bounded execution RTL, exhaustive 24-bit decode, nine model tests,
+  and 50,112 stateful differential cycles. Generated assembler/
   disassembler artifacts must derive from these databases as instruction
   entries are independently verified.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
@@ -200,7 +206,9 @@ advance beyond research until a page-level primary citation is added.
   models that retain both SPP no-change encodings, sample cycle-start
   status/stack values, and atomically update all four stack classes, CNTR, and
   live status at cycle end. Interrupt/RTI arbitration and fetch/bus timing
-  remain outside this bounded execution slice.
+  remain outside this bounded execution slice. A separate Type 25 model reads
+  cycle-start MV, MSTAT bank selection, and MR, conservatively retains unknown
+  reset state, and commits conditional MR saturation at cycle end.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -218,9 +226,10 @@ advance beyond research until a page-level primary citation is added.
   contemporary original-versus-2101 tool selection only
 - **Relevant tests:** `make assembler-tests`, `make decode-tests`
 - **Implementation notes:** a fail-closed database-driven seed round-trips the
-  independent NOP fixture and distinguishes legal-unimplemented, original
-  reserved, and unshown-reserved words. First research surviving lawful
-  assemblers; do not execute legacy tools on the host.
+  independent NOP and exact Type 25 `IF MV SAT MR;` fixtures and distinguishes
+  legal-unimplemented, original reserved, and unshown-reserved words. First
+  research surviving lawful assemblers; do not execute legacy tools on the
+  host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -259,8 +268,12 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make compute-tests`, `formal/mac.sby`
 - **Implementation notes:** the source-backed fixed-fractional AMF `0x01`–`0x0f`
   compute block, four signedness modes, unbiased rounding, MF extraction, MV,
-  and SAT MR transform exist in independent model and RTL. Instruction
-  operand selection/writeback, banking, and parallel timing remain.
+  and SAT MR transform exist in independent model and RTL. The exact Type 25
+  saturation instruction now has a machine-readable semantic entry,
+  assembler/disassembler fixture, exact decoder, independent state model,
+  selected-bank execution RTL, formal recipes, exhaustive decode, nine model
+  tests, and 50,112 model/RTL cycles. General MAC instruction operand
+  selection/writeback and multifunction timing remain.
 - **Unresolved questions:** original-device multiplier visibility within
   multifunction instructions and the recorded MAME rounding conflict SC-008.
 - **Confidence:** CORROBORATED

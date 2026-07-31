@@ -11,10 +11,12 @@
   ],
   "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
   "semantic_databases": [
-    "docs/generated/adsp2100_stack_control.yaml"
+    "docs/generated/adsp2100_stack_control.yaml",
+    "docs/generated/adsp2100_mr_saturation.yaml"
   ],
   "integration_databases": [
-    "docs/generated/adsp2100_stack_control_slice.yaml"
+    "docs/generated/adsp2100_stack_control_slice.yaml",
+    "docs/generated/adsp2100_mr_saturation_slice.yaml"
   ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
@@ -367,6 +369,100 @@
     }
   ],
   "instructions": [
+    {
+      "id": "SAT-MR-050000",
+      "mnemonic": "SAT MR",
+      "algebraic_assembly_syntax": "IF MV SAT MR;",
+      "encoding_pattern": "000001010000000000000000",
+      "opcode_mask": "0xffffff",
+      "opcode_value": "0x050000",
+      "fields": [],
+      "condition_field": "FIXED_MV",
+      "computation_field": null,
+      "source_register_selections": [
+        "CURRENT_SELECTED_MR"
+      ],
+      "destination_register_selections": [
+        "CURRENT_SELECTED_MR"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "ASTAT.MV",
+        "CURRENT_SELECTED_MR"
+      ],
+      "registers_written": [
+        "CURRENT_SELECTED_MR_IF_MV"
+      ],
+      "computational_unit_used": "MAC_SATURATION",
+      "status_flags_read": [
+        "MV"
+      ],
+      "status_flags_written": [],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "CONDITION_TEST_AND_SELECTED_BANK_MR_SATURATION"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [],
+      "old_value_new_value_semantics": "Read cycle-start ASTAT.MV, MSTAT bank select, and selected-bank MR. If MV is zero, preserve MR. If MV is one, write the documented sign-selected saturation value to that same bank at cycle end.",
+      "write_conflict_rules": "This exact Type 25 word has only one possible architectural destination. Collision with external setup or another computation write is outside this bounded instruction slice and fails closed.",
+      "condition_false_behavior": "If cycle-start MV is zero, the instruction has no register or status effect but retains its one-cycle timing.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Normal instruction-boundary recognition; exact interrupt-adjacent ordering remains OQ-015.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "External fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to the external memory acknowledgement behavior; no PM or DM data transfer is issued.",
+      "parallel_actions": [
+        {
+          "action": "CONDITIONAL_MR_SATURATION",
+          "reads": [
+            "CYCLE_START_ASTAT.MV",
+            "CYCLE_START_MSTAT.SR",
+            "CYCLE_START_SELECTED_BANK_MR"
+          ],
+          "writes": [
+            "CYCLE_END_SELECTED_BANK_MR_IF_MV"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-18–2-19, MR saturation operation and result table"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. A-4, exact Type 25 encoding"
+        },
+        {
+          "reference_id": "ADI-ASM-1994",
+          "location": "printed pp. 3-47 and A-4, Type 25 format and example listing encoding IF MV SAT MR as 0x050000"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "OQ-015: interrupt-adjacent boundary ordering is not integrated.",
+        "External fetch phase and wait-state timing are outside this bounded state slice."
+      ]
+    },
     {
       "id": "NOP-000000",
       "mnemonic": "NOP",

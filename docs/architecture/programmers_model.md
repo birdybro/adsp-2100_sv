@@ -45,6 +45,10 @@ stores exact-width ASTAT/MSTAT/ICNTL/IMASK state, applies the four original
 MODE CONTROL fields, commits ALU, divide, MAC, and shifter status at cycle end,
 and exposes the documented ASTAT/MSTAT/IMASK interrupt snapshot and mask
 transformation [ADI-UM-1989, printed pp. 4-9–4-10, 4-20–4-24, A-8].
+The exact Type 25 saturation boundary now uses cycle-start MSTAT bit 0 to
+select primary or alternate MR and writes only that bank at cycle end when
+cycle-start ASTAT.MV is set; it does not alter ASTAT
+[ADI-UM-1989, printed pp. 2-5–2-7, 2-18–2-19, A-4].
 A separate exact four-by-sixteen status stack and a combined exact
 16-by-14 PC/four-by-14 count/four-by-18 loop-stack boundary implement LIFO
 storage, pointer saturation, loss of the newest overflowing push, sticky

@@ -3,6 +3,15 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-SAT-MR-050000",
+      "source": "IF MV SAT MR;",
+      "opcode": "0x050000",
+      "program_word_bytes_big_endian": "050000",
+      "encoding_class": 25,
+      "source_citation": "ADI-UM-1989 printed p. A-4 and ADI-ASM-1994 printed pp. 3-47 and A-4",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
       "id": "HAND-NOP-000000",
       "source": "NOP;",
       "opcode": "0x000000",

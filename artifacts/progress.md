@@ -24,6 +24,9 @@ cycle-, or Hard Drivin'-complete
   hand-verified NOP semantic fixture;
 - bounded Type 26 stack-control semantic database, independent executable
   action model, portable decoder RTL, and exhaustive fail-closed decode;
+- exact Type 25 MR-saturation semantic entry, hand-reviewed assembler fixture,
+  independent action/state model, shared saturation primitive, portable
+  selected-bank execution RTL, and exhaustive fail-closed decode;
 - bounded stateful Type 26 model/RTL execution connecting all four stack
   classes, CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT with cycle-start reads
   and atomic cycle-end commits;
@@ -67,7 +70,7 @@ cycle-, or Hard Drivin'-complete
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
-- partial NOP-only assembler/disassembler round trip;
+- partial NOP and Type 25 assembler/disassembler round trip;
 - dependency-free regression, Verilator package lint, and CI workflow.
 
 No TASKS.md milestone is marked complete yet. The foundation is under
@@ -77,12 +80,14 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 202 implemented Python unit checks plus manifest/hash verification;
+- 211 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
   other 24-bit word produces no stack-control action in exhaustive RTL
   simulation;
+- exact Type 25 word `0x050000` is the sole MR-saturation action across an
+  exhaustive 16,777,216-word RTL traversal;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG,
   sequencer-flow/CNTR/sequencer-stack/integration, register-file,
@@ -93,27 +98,29 @@ outstanding.
   cycles, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles plus
   50,287 status/control, 50,037 status-stack, 50,062 PC/count/loop stack, and
   50,112 MSTAT-consumer integration cycles plus 50,015 stateful Type 26
-  execution cycles pass simulation;
+  execution cycles and 50,112 stateful Type 25 cycles pass simulation;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
   status-register, and status-stack block compilations plus the MSTAT and
   stateful Type 26 integration-slice compilations pass with no unconstrained
-  paths;
+  paths; the Type 25 slice separately fits in 144 ALMs and 92 registers with
+  positive setup/hold slack and no unconstrained paths;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
-  and MSTAT-integration formal harnesses pass assertion syntax lint, but no
+  MSTAT-integration, Type 25 decode, and Type 25 execution formal harnesses
+  pass assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
-- no architectural execution RTL, complete assembler, or whole-core synthesis
-  top exists.
+- no integrated architectural core, complete assembler, or whole-core
+  synthesis top exists.
 
 ## Next highest-priority work
 
 1. Locate the exact original Cross-Software/instruction reference and a
    separately identifiable original data sheet.
-2. Extend the independently cross-checked class and field-position inventory
-   into complete semantic instruction records.
+2. Continue exact/small instruction semantics with original Type 18 MODE
+   CONTROL, preserving both no-change encodings and cycle-start mode effects.
 3. Add stateful PC/reset/enable integration only after the next-PC update and
    stall boundaries are source-closed.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.

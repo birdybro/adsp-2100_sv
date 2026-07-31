@@ -16,14 +16,17 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         fixture_data = json.loads(
             (ROOT / "tests/vectors/opcode_fixtures.json").read_text(encoding="utf-8")
         )
-        fixture = fixture_data["fixtures"][0]
-        assembled = assemble_statement(fixture["source"])
-        self.assertEqual(assembled.value, int(fixture["opcode"], 16))
-        self.assertEqual(assembled.to_bytes().hex(), fixture["program_word_bytes_big_endian"])
-        disassembly = disassemble_word(assembled.value)
-        self.assertTrue(disassembly.implemented)
-        self.assertEqual(disassembly.text, fixture["source"])
-        self.assertEqual(assemble_statement(disassembly.text), assembled)
+        for fixture in fixture_data["fixtures"]:
+            assembled = assemble_statement(fixture["source"])
+            self.assertEqual(assembled.value, int(fixture["opcode"], 16))
+            self.assertEqual(
+                assembled.to_bytes().hex(),
+                fixture["program_word_bytes_big_endian"],
+            )
+            disassembly = disassemble_word(assembled.value)
+            self.assertTrue(disassembly.implemented)
+            self.assertEqual(disassembly.text, fixture["source"])
+            self.assertEqual(assemble_statement(disassembly.text), assembled)
 
     def test_normalization_is_deterministic(self) -> None:
         self.assertEqual(assemble_statement("  nop ; // comment").value, 0)

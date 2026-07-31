@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_TYPE_25_STATEFUL_MR_SATURATION_INTEGRATION",
+  "confidence": "VERIFIED_PRIMARY",
+  "action_database": "docs/generated/adsp2100_mr_saturation.yaml",
+  "cycle_boundary": {
+    "source_reads": "CYCLE_START",
+    "state_commits": "CYCLE_END",
+    "condition_source": "CYCLE_START_ASTAT_MV",
+    "bank_source": "CYCLE_START_MSTAT_SR",
+    "mr_source": "CYCLE_START_SELECTED_BANK_MR",
+    "status_preserved": true
+  },
+  "integrated_state": [
+    "ASTAT",
+    "MSTAT",
+    "PRIMARY_MR",
+    "ALTERNATE_MR"
+  ],
+  "fail_closed_boundaries": {
+    "NON_TYPE_25_OPCODE": "INVALID_AND_ACTION_FREE",
+    "TYPE_25_WITH_SETUP_ACTION": "OQ-018_INTEGRATION_CONFLICT",
+    "UNKNOWN_MV_OR_MR_SIGN_IN_MODEL": "CONSERVATIVE_UNKNOWN_RESULT"
+  },
+  "not_implemented": [
+    "INSTRUCTION_FETCH_OR_PC_REGISTER",
+    "INTERRUPT_ENTRY_OR_RTI_ARBITRATION",
+    "CONCURRENT_NON_TYPE_25_COMPUTATION_WRITEBACK",
+    "PHASE_LEVEL_OR_EXTERNAL_BUS_TIMING"
+  ]
+}

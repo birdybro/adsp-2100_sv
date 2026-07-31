@@ -224,10 +224,13 @@ A commit message must state the engineering change and its verification.
 
 ## Current architectural status and risk
 
-No instruction is yet claimed implemented in RTL. A generated synthesizable
-class decoder recognizes all 30 original Appendix A format classes and fails
-closed for unshown words; it has exhaustive 24-bit membership comparison, but
-does not claim semantic decode or execution. Source-backed condition,
+No integrated fetch/decode/execute instruction core exists. Bounded
+source-backed RTL execution slices now implement exact Type 25 conditional MR
+saturation and all Type 26 stack-control actions, but they do not establish
+whole-core PC, pipeline, bus, interrupt, or wait-state behavior. A generated
+synthesizable class decoder recognizes all 30 original Appendix A format
+classes and fails closed for unshown words; it has exhaustive 24-bit membership
+comparison. Source-backed condition,
 standard ALU, fractional MAC, all-function shifter, DAG arithmetic, and
 sequencer-flow combinational blocks exist with independent model comparison,
 and a stateful two-bank storage slice exists for the complete computational
@@ -246,15 +249,19 @@ generation. A bounded sequencer integration slice connects IF/DO condition
 evaluation, explicit flow, DO setup, CNTR, and PC/count/loop stack storage for
 source-backed cases. It rejects conditional-CALL CE (OQ-012), empty-pop
 effects remain OQ-013, and competing automatic/manual actions are held and
-flagged under OQ-018. No PC register, semantic instruction decode,
-interrupt/status stack connection, or phase-level sequencer timing exists.
+flagged under OQ-018. Type 26 now connects manual status-stack push/restore to
+live ASTAT/MSTAT/IMASK in its bounded slice; interrupt/RTI arbitration remains
+absent. No PC register, integrated semantic instruction decode, interrupt
+recognition, or phase-level sequencer timing exists.
 Multifunction legality, ordering, and whole-core cycle integration remain
 incomplete. The executable
 instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
-transactions, and only the hand-verified all-zero NOP. All other opcodes fail
-closed. Architectural documents marked partial or provisional remain research
-inputs until their named evidence gates pass.
+transactions, and only the hand-verified all-zero NOP in its top-level step
+method. Independent bounded models cover Type 25 and Type 26 outside that
+top-level step path; all other opcodes still fail closed. Architectural
+documents marked partial or provisional remain research inputs until their
+named evidence gates pass.
 
 Highest risks are:
 

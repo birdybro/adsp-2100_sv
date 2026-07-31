@@ -13,10 +13,11 @@
 | All 30 diagrammed field layouts | CORROBORATED | 106 primary-transcribed fields exactly partition 393 variable positions and match an independent visual-review fixture |
 | Type 26 stack-control action decode | VERIFIED_PRIMARY | original combined syntax and Appendix A tables close all 32 action encodings and one-cycle selection; exhaustive model/RTL decode passes |
 | Type 26 bounded stateful execution | CORROBORATED | original stack/status sections plus 50,015 model/RTL cycles verify cycle-start capture/restore and atomic cycle-end action combinations; automatic/interrupt arbitration, OQ-013, and phase/bus timing remain open |
-| Opcode field/function legality | UNKNOWN | class masks, field positions, finite code tables, register codes, NOP semantics, and bounded Type 26 action selection are closed; remaining legal combinations and instruction effects are not |
+| Type 25 conditional MR saturation | VERIFIED_PRIMARY | original pp. 2-18–2-19 and A-4 plus contemporary assembler listing close exact opcode, MV condition, both result limits, one-cycle status-preserving action, and selected-bank execution; exhaustive decode and 50,112 model/RTL cycles pass, while interrupt-adjacent and bus timing remain open |
+| Opcode field/function legality | UNKNOWN | class masks, field positions, finite code tables, register codes, NOP/Type 25 semantics, and bounded Type 26 action selection are closed; remaining legal combinations and instruction effects are not |
 | IF/DO condition field and predicates | VERIFIED_PRIMARY | original Tables 4.1/4.3 and Appendix A; exhaustive model/RTL truth table |
 | Standard ALU AMF results and flags | CORROBORATED | original compute/status chapters plus explicitly common family instruction reference |
-| Standard MAC AMF results and MV | CORROBORATED | original compute chapter plus common family instruction reference; MAME rounding conflict SC-008 disclosed |
+| Standard MAC AMF results and MV | CORROBORATED | original compute chapter plus common family instruction reference; exact Type 25 saturation is independently VERIFIED_PRIMARY, while MAME rounding conflict SC-008 remains disclosed |
 | Shifter SF functions | CORROBORATED | original compute chapter, Tables 2.4/2.5, and Appendix A; instruction integration incomplete |
 | DAG arithmetic and ownership | CORROBORATED | original DAG chapter plus 1994 explicit original/later placement distinction; function integration incomplete |
 | Sequencer next-PC/loop precedence | CORROBORATED | original program-control chapter and 636,512 model/RTL vectors; interrupts and phase/cycle integration incomplete |

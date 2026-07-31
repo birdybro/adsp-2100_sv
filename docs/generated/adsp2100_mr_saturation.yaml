@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "COMPLETE_FOR_TYPE_25_ARCHITECTURAL_ACTION",
+  "confidence": "VERIFIED_PRIMARY",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "instruction": {
+    "original_type": 25,
+    "syntax": "IF MV SAT MR;",
+    "opcode_mask": "0xffffff",
+    "opcode_value": "0x050000",
+    "encoding_pattern": "000001010000000000000000",
+    "field_defined_encoding_count": 1,
+    "base_instruction_cycles": 1,
+    "condition": "CYCLE_START_ASTAT_MV",
+    "selected_bank": "CYCLE_START_MSTAT_SR",
+    "source": "CYCLE_START_SELECTED_BANK_MR",
+    "destination": "CYCLE_END_SAME_SELECTED_BANK_MR",
+    "status_flags_written": [],
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "NONE"
+  },
+  "result_table": [
+    {
+      "mv": 0,
+      "mr2_msb": "DONT_CARE",
+      "result": "UNCHANGED"
+    },
+    {
+      "mv": 1,
+      "mr2_msb": 0,
+      "result": "0x007fffffff"
+    },
+    {
+      "mv": 1,
+      "mr2_msb": 1,
+      "result": "0xff80000000"
+    }
+  ],
+  "execution_semantics": {
+    "source_reads": "CYCLE_START",
+    "state_commit": "CYCLE_END",
+    "mv_false_effect": "NO_ARCHITECTURAL_STATE_CHANGE",
+    "mv_true_effect": "ATOMIC_SELECTED_BANK_MR_WRITE",
+    "astat_effect": "UNCHANGED",
+    "mstat_effect": "UNCHANGED",
+    "imask_effect": "UNCHANGED",
+    "external_data_transactions": "NONE"
+  },
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 2-18–2-19 (scan PDF pp. 37–38)",
+      "supports": "40-bit MR segmentation, MV/sign-dependent saturation table, and instruction-not-mode behavior"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. A-4 (scan PDF p. 143)",
+      "supports": "exact Type 25 opcode 000001010000000000000000"
+    },
+    {
+      "reference_id": "ADI-ASM-1994",
+      "authority": "CONTEMPORARY_ADI_TOOLCHAIN",
+      "location": "printed pp. 3-47 and A-4: example listing word 0x050000 and exact Type 25 format",
+      "supports": "algebraic syntax and emitted program word 0x050000"
+    },
+    {
+      "reference_id": "ADI-2101-CROSS-1990",
+      "authority": "LATER_DEVICE_CORROBORATION_ONLY",
+      "location": "printed pp. 9-26–9-27",
+      "supports": "one-cycle conditional action, no status effects, and identical result table; not used to add later-device behavior"
+    }
+  ],
+  "unresolved_issues": [
+    "OQ-015: exact ordering against an interrupt recognized at the same architectural boundary.",
+    "True arithmetic sign may already be lost after overflow beyond MR2; no repair behavior is invented.",
+    "Phase-level instruction-fetch and external wait-state behavior remain outside this semantic action record."
+  ]
+}

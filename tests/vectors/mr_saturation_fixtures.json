@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "source": "ADI-UM-1989 printed pp. 2-18–2-19 and A-4; ADI-ASM-1994 printed pp. 3-47 and A-4",
+  "instruction": {
+    "source": "IF MV SAT MR;",
+    "opcode": "0x050000",
+    "program_word_bytes_big_endian": "050000"
+  },
+  "hand_checked_cases": [
+    {
+      "id": "MV_CLEAR_PRESERVE",
+      "mv": false,
+      "mr": "0x123456789a",
+      "result": "0x123456789a"
+    },
+    {
+      "id": "MV_SET_POSITIVE",
+      "mv": true,
+      "mr": "0x0012345678",
+      "result": "0x007fffffff"
+    },
+    {
+      "id": "MV_SET_NEGATIVE",
+      "mv": true,
+      "mr": "0xff12345678",
+      "result": "0xff80000000"
+    }
+  ],
+  "invalid_neighbors": [
+    "0x04ffff",
+    "0x050001",
+    "0x050100",
+    "0x060000",
+    "0xffffff"
+  ],
+  "review_status": "HAND_TRANSCRIBED_PRIMARY"
+}

@@ -13,6 +13,7 @@
 | Exhaustive RTL class decode | PASS | all 16,777,216 words match independent Appendix A classifier |
 | Type 26 stack-control action decode | PASS, PARTIAL | 6 model/schema tests; all 32 field-defined words checked and all other 24-bit words proven action-free by exhaustive RTL simulation |
 | Type 26 stateful execution | PASS, PARTIAL | 9 directed/schema/random model tests plus 50,015 stateful RTL cycles connect all four stacks, CNTR, live status, and SSTAT; fetch/PC, automatic-flow, interrupt/RTI arbitration, OQ-013, and bus phases remain |
+| Type 25 MR saturation | PASS, PARTIAL | exact opcode fixture and exhaustive 24-bit RTL decode; 9 directed/schema/random model tests plus 50,112 stateful RTL cycles verify MV false/true, both signs/banks, status preservation, reset unknowns, invalid words, and conflict suppression; fetch/PC, interrupt adjacency, and bus phases remain |
 | IF/DO condition logic | PASS | all 32 field meanings; 2,048 exhaustive RTL truth-table vectors |
 | Appendix A ISA subfields | PASS, PARTIAL | 19 finite tables exhaustive; cross-field legality incomplete |
 | Standard ALU compute | PASS, PARTIAL | 8 directed/model tests plus 51,472 RTL differential vectors |
@@ -27,19 +28,20 @@
 | Status/control storage | PASS, PARTIAL | 17 directed/model tests plus 50,287 stateful RTL cycles; all SSTAT storage sources exist, but fragment composition, interrupt recognition/connectivity, and decode remain |
 | Status stack | PASS, PARTIAL | 8 directed/model tests plus 50,037 stateful RTL cycles; interrupt/RTI connectivity and empty-pop effects remain |
 | MSTAT consumer integration | PASS, PARTIAL | 5 directed/model tests plus 50,112 stateful RTL cycles across bank, DAG1, sticky AV, and saturation consumers; decode and interrupt-adjacent timing remain |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | 16 class-decode/stack-control-decode/stack-control-integration/condition/ALU/MAC/shifter/DAG/sequencer-flow/CNTR/sequencer-stack/sequencer-integration/register/status/status-stack/MSTAT-integration recipes lint; SymbiYosys unavailable |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | 18 class-decode/stack-control-decode/stack-control-integration/Type-25-decode/Type-25-integration/condition/ALU/MAC/shifter/DAG/sequencer-flow/CNTR/sequencer-stack/sequencer-integration/register/status/status-stack/MSTAT-integration recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
-| Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
+| Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP and exact Type 25 round trip from independent fixtures, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
 | SystemVerilog lint | PASS, PARTIAL | Verilator 5.048, generated packages and class-decoder RTL plus implemented architectural slices |
-| Semantic decode completeness | IMPLEMENTING | NOP has full semantics; Type 26 action selection and bounded stateful execution are implemented, while whole-core fetch/flow/interrupt/bus integration and all other classes remain incomplete |
-| Instruction execution RTL | NOT STARTED | no execution core exists |
-| Differential testing | NOT STARTED | no comparable RTL implementation |
+| Semantic decode completeness | IMPLEMENTING | NOP and exact Type 25 have full semantic entries; Type 26 action selection and bounded stateful execution are implemented, while whole-core fetch/flow/interrupt/bus integration and all other classes remain incomplete |
+| Instruction execution RTL | IMPLEMENTING, BOUNDED | Type 25 and Type 26 state slices execute sourced actions, but no integrated fetch/decode/PC/bus core exists |
+| Differential testing | PASS, PARTIAL | independent-model comparison covers 50,112 Type 25 and 50,015 Type 26 stateful cycles; no whole-core or MAME differential harness exists |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 202 distinct Python
+The implemented foundation regression is `make test`: 211 distinct Python
 checks plus exhaustive 16,777,216-word class decode, the 2,048-vector
-Type 26 action-decode pass, the 2,048-vector condition and 51,472-vector ALU
+Type 26 action-decode pass, the exhaustive exact Type 25 decode, the
+2,048-vector condition and 51,472-vector ALU
 Verilator
 regressions, 21,760-vector MAC regression, and 644,368-vector shifter
 regression, plus the 204,864-vector DAG and 636,512-vector sequencer-flow
@@ -47,6 +49,7 @@ regressions, 50,022 CNTR cycles, 50,011 bounded sequencer-integration cycles,
 58,307 stateful DREG cycles, and 50,120 complete-bank/writeback cycles, plus
 50,287 status/control and 50,037 status-stack state-transition cycles, plus
 50,062 PC/count/loop stack-storage cycles, 50,112 MSTAT-consumer integration
-cycles, and 50,015 stateful Type 26 execution cycles. Targets for unavailable
+cycles, 50,015 stateful Type 26 execution cycles, and 50,112 Type 25
+stateful cycles. Targets for unavailable
 or unimplemented areas print
 `SKIP` and do not create false pass evidence.

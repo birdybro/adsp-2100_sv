@@ -1,7 +1,7 @@
 # Multiplier/accumulator
 
-**Status: standard fractional compute model and RTL implemented; instruction
-integration pending**
+**Status: standard fractional compute model and RTL implemented; exact Type 25
+saturation integrated; general MAC instruction integration pending**
 
 The multiplier has two 16-bit inputs and a 32-bit product. A 40-bit
 adder/subtractor accumulates into MR, segmented as 16-bit MR0, 16-bit MR1, and
@@ -36,12 +36,26 @@ mode is a later extension and is excluded from the original-device block.
 `rtl/core/adsp2100_mac.sv` implement AMF `0x01`–`0x0f`, the fixed original
 fractional product alignment, all four input signedness combinations, 40-bit
 multiply/add/subtract, unbiased rounding, MF bits 31–16, MV, and the
-independent one-shot SAT MR transform. The separate register file now accepts
-its full result for atomic MR or MF-middle-word writeback in the selected bank.
+independent one-shot SAT MR transform. `rtl/core/adsp2100_mr_saturate.sv` is
+the single shared RTL primitive for that transform.
+
+The exact original Type 25 word `0x050000`, algebraically
+`IF MV SAT MR;`, now has a separate source-backed semantic record, independent
+state model, exact decoder, and synthesizable bounded execution slice. It reads
+cycle-start ASTAT.MV, MSTAT.SR, and selected-bank MR; `MV=0` preserves all
+state, while `MV=1` writes the sign-selected saturation value to the same bank
+at cycle end without changing ASTAT [ADI-UM-1989, printed pp. 2-18–2-19 and
+A-4; ADI-ASM-1994, printed pp. 3-47 and A-4]. Nine directed/schema/
+random tests and 50,112 model-versus-RTL cycles cover both signs, both banks,
+false condition, reset unknowns, invalid words, and fail-closed setup
+collisions. Exact interrupt-adjacent ordering remains OQ-015.
+
+The separate register file accepts a full MAC result for atomic MR or
+MF-middle-word writeback in the selected bank.
 The separate status block accepts MV at the documented cycle-end boundary.
 The compute block still does not select architectural operands, suppress a
-false conditional instruction, connect instruction decode, or implement
-complete multifunction legality/timing.
+false condition for general Type 1/4/5/8/9 computations, or implement complete
+multifunction legality/timing.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the

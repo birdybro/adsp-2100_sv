@@ -28,6 +28,13 @@
   stack, CNTR, and live ASTAT/MSTAT/IMASK state. Across four timing models,
   worst setup is +10.550 ns and worst hold is +0.165 ns against 20 ns, with
   zero unconstrained clocks, ports, or paths.
+- Quartus 17.0.2 full compilation of the bounded Type 25 MR-saturation slice
+  passes. It uses 144 ALMs, exactly 92 design registers, no RAM, and no DSPs.
+  Across four timing models, worst setup slack is +11.443 ns and worst hold
+  slack is +0.246 ns against the 20 ns virtual I/O constraint, with zero
+  unconstrained clocks, ports, or paths. Quartus reports
+  `internal_conflict_o` as constant low; the bounded exclusive execution mux
+  makes that signal an asserted invariant rather than an untested output.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
   6 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks.
@@ -42,9 +49,9 @@
   against the 20 ns virtual I/O constraint; setup and hold are fully
   constrained.
 - Quartus full compilation of the separately constrained MAC smoke project
-  passes. Its virtual-pin fit uses 229 ALMs, 229 combinational ALUTs, one DSP
+  passes. Its virtual-pin fit uses 228 ALMs, 228 combinational ALUTs, one DSP
   block, 0 registers, and 0 RAM blocks. Across the four fitted timing models,
-  worst setup slack is 2.857 ns and worst hold slack is 0.321 ns against the
+  worst setup slack is 3.209 ns and worst hold slack is 0.418 ns against the
   20 ns virtual I/O constraint; setup and hold are fully constrained.
 - Quartus full compilation of the separately constrained shifter smoke project
   passes. Its virtual-pin fit uses 374 ALMs, 580 combinational ALUTs, 0
@@ -116,13 +123,13 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys is not installed. `make formal` strictly lints the sixteen available
+- SymbiYosys is not installed. `make formal` strictly lints the eighteen available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded class-decode,
-stack-control-decode, stack-control-integration, condition, ALU, MAC, shifter, DAG,
-sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
-status-register, and status-stack block smoke projects plus the bounded MSTAT
-integration project.
+stack-control-decode, stack-control-integration, Type-25 integration,
+condition, ALU, MAC, shifter, DAG, sequencer-flow, CNTR, sequencer-stack,
+sequencer-integration, register-file, status-register, and status-stack block
+smoke projects plus the bounded MSTAT integration project.

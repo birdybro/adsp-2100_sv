@@ -25,6 +25,12 @@ module adsp2100_mac (
     logic [23:0]        rounded_upper;
     logic               round_increment;
 
+    adsp2100_mr_saturate mr_saturate (
+        .mr_i(mr_i),
+        .mv_i(saturation_mv_i),
+        .result_o(saturated_mr_o)
+    );
+
     always_comb begin
         valid_o = (amf_i >= 5'h01) && (amf_i <= 5'h0f);
         rounded = amf_i <= 5'h03;
@@ -90,13 +96,6 @@ module adsp2100_mac (
                 && (result_o[39:31] != 9'h1ff);
         end
 
-        if (!saturation_mv_i) begin
-            saturated_mr_o = mr_i;
-        end else if (mr_i[39]) begin
-            saturated_mr_o = 40'hff80000000;
-        end else begin
-            saturated_mr_o = 40'h007fffffff;
-        end
     end
 endmodule
 

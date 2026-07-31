@@ -17,6 +17,13 @@ from .counter import (
 )
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
+from .mr_saturation import MR_SATURATION_OPCODE, decode_mr_saturation
+from .mr_saturation_slice import (
+    MRSaturationSliceInputs,
+    MRSaturationSliceResult,
+    MRSaturationSliceState,
+    apply_mr_saturation_slice_cycle,
+)
 from .mode_slice import (
     ModeSliceCycleResult,
     ModeSliceInputs,
@@ -153,6 +160,10 @@ __all__ = [
     "PC_STACK_WIDTH",
     "MACResult",
     "MACRegisterWrite",
+    "MR_SATURATION_OPCODE",
+    "MRSaturationSliceInputs",
+    "MRSaturationSliceResult",
+    "MRSaturationSliceState",
     "ShifterResult",
     "ShifterRegisterWrite",
     "SequencerFlowResult",
@@ -192,8 +203,10 @@ __all__ = [
     "apply_status_cycle",
     "apply_status_stack_cycle",
     "decode_stack_control",
+    "decode_mr_saturation",
     "apply_stack_control_slice_cycle",
     "apply_mode_slice_cycle",
+    "apply_mr_saturation_slice_cycle",
     "apply_sequencer_stacks_cycle",
     "apply_sequencer_slice_cycle",
     "compute_alu",

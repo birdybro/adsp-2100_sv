@@ -195,7 +195,8 @@
       ],
       "cited_pages_or_sections": [
         "Chapter 3, section 3.7.2.2, printed pp. 3-29–3-32",
-        "Appendix A Instruction Coding",
+        "Printed p. 3-47, list-file example encoding IF MV SAT MR as 0x050000",
+        "Appendix A Instruction Coding, printed p. A-4, exact Type 25 format",
         "Appendix B File Formats",
         "Appendix D Interrupt Vector Addresses"
       ],

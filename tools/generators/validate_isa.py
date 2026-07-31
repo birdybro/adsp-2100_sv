@@ -96,13 +96,15 @@ def validate_database(data: dict[str, Any]) -> None:
             "ISA instruction-format database link is incomplete"
         )
     if data.get("semantic_databases") != [
-        "docs/generated/adsp2100_stack_control.yaml"
+        "docs/generated/adsp2100_stack_control.yaml",
+        "docs/generated/adsp2100_mr_saturation.yaml",
     ]:
         raise ISAValidationError(
             "ISA semantic database links are incomplete"
         )
     if data.get("integration_databases") != [
-        "docs/generated/adsp2100_stack_control_slice.yaml"
+        "docs/generated/adsp2100_stack_control_slice.yaml",
+        "docs/generated/adsp2100_mr_saturation_slice.yaml",
     ]:
         raise ISAValidationError(
             "ISA integration database links are incomplete"

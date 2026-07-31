@@ -27,6 +27,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_mr_saturation_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			rtl/core/adsp2100_counter.sv \
@@ -39,7 +41,16 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_alu.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_mr_saturate.sv \
 			rtl/core/adsp2100_mac.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mr_saturation_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_mr_saturation_decode.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_mr_saturation_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_shifter.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
@@ -96,13 +107,14 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_isa_fields.py
 	$(PYTHON) tools/generators/validate_instruction_formats.py
 	$(PYTHON) tools/generators/validate_stack_control.py
+	$(PYTHON) tools/generators/validate_mr_saturation.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
 	$(PYTHON) tools/generators/generate_register_package.py --check
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
 		tests.test_isa_fields tests.test_instruction_formats \
-		tests.test_stack_control
+		tests.test_stack_control tests.test_mr_saturation
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -119,6 +131,13 @@ decode-tests:
 			rtl/core/adsp2100_stack_control_decode.sv \
 			sim/unit/tb_adsp2100_stack_control_decode.sv; \
 		build/obj_stack_control_decode/Vtb_adsp2100_stack_control_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_mr_saturation_decode \
+			--top-module tb_adsp2100_mr_saturation_decode \
+			rtl/core/adsp2100_mr_saturation_decode.sv \
+			sim/unit/tb_adsp2100_mr_saturation_decode.sv; \
+		build/obj_mr_saturation_decode/Vtb_adsp2100_mr_saturation_decode; \
 	else \
 		echo "SKIP exhaustive RTL decode: Verilator is not installed"; \
 	fi
@@ -128,7 +147,7 @@ assembler-tests:
 
 compute-tests:
 	$(PYTHON) -m unittest -v tests.test_condition_logic tests.test_alu_model \
-		tests.test_mac_model tests.test_shifter_model
+		tests.test_mac_model tests.test_shifter_model tests.test_mr_saturation
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_condition_vectors.py \
@@ -155,9 +174,24 @@ compute-tests:
 			-Wno-TIMESCALEMOD \
 			--Mdir build/obj_mac \
 			--top-module tb_adsp2100_mac \
+			rtl/core/adsp2100_mr_saturate.sv \
 			rtl/core/adsp2100_mac.sv \
 			sim/unit/tb_adsp2100_mac.sv; \
 		build/obj_mac/Vtb_adsp2100_mac; \
+		$(PYTHON) tools/generators/generate_mr_saturation_vectors.py \
+			--output build/mr_saturation_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_mr_saturation_slice \
+			--top-module tb_adsp2100_mr_saturation_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_mr_saturation_decode.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_mr_saturation_slice.sv \
+			sim/unit/tb_adsp2100_mr_saturation_slice.sv; \
+		build/obj_mr_saturation_slice/Vtb_adsp2100_mr_saturation_slice; \
 		$(PYTHON) tools/generators/generate_shifter_vectors.py \
 			--output build/shifter_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -357,6 +391,10 @@ formal:
 			rtl/core/adsp2100_stack_control_decode.sv \
 			formal/harnesses/adsp2100_stack_control_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mr_saturation_decode_formal \
+			rtl/core/adsp2100_mr_saturation_decode.sv \
+			formal/harnesses/adsp2100_mr_saturation_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice_formal \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			rtl/core/adsp2100_counter.sv \
@@ -375,8 +413,18 @@ formal:
 			formal/harnesses/adsp2100_alu_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_mac_formal \
+			rtl/core/adsp2100_mr_saturate.sv \
 			rtl/core/adsp2100_mac.sv \
 			formal/harnesses/adsp2100_mac_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mr_saturation_slice_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_mr_saturation_decode.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_mr_saturation_slice.sv \
+			formal/harnesses/adsp2100_mr_saturation_slice_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_formal \
 			rtl/core/adsp2100_shifter.sv \
@@ -435,11 +483,15 @@ formal:
 		sby -f -d build/formal_decode formal/class_decode.sby; \
 		sby -f -d build/formal_stack_control_decode \
 			formal/stack_control_decode.sby; \
+		sby -f -d build/formal_mr_saturation_decode \
+			formal/mr_saturation_decode.sby; \
 		sby -f -d build/formal_stack_control_slice \
 			formal/stack_control_slice.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
 		sby -f -d build/formal_alu formal/alu.sby; \
 		sby -f -d build/formal_mac formal/mac.sby; \
+		sby -f -d build/formal_mr_saturation_slice \
+			formal/mr_saturation_slice.sby; \
 		sby -f -d build/formal_shifter formal/shifter.sby; \
 		sby -f -d build/formal_dag formal/dag.sby; \
 		sby -f -d build/formal_sequencer formal/sequencer_flow.sby; \
@@ -469,6 +521,8 @@ synth-quartus:
 			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_slice_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/mr_saturation_slice_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mac_smoke; \
@@ -498,6 +552,7 @@ clean:
 	@find build -maxdepth 1 -type f -name condition_expected.mem -delete
 	@find build -maxdepth 1 -type f -name alu_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mac_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name mr_saturation_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_vectors.txt -delete
@@ -530,6 +585,12 @@ clean:
 	@if [ -d build/obj_stack_control_slice ]; then \
 		find build/obj_stack_control_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_mr_saturation_decode ]; then \
+		find build/obj_mr_saturation_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_mr_saturation_slice ]; then \
+		find build/obj_mr_saturation_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_register ]; then find build/obj_register -depth -delete; fi
 	@if [ -d build/obj_register_writeback ]; then \
 		find build/obj_register_writeback -depth -delete; \
@@ -547,6 +608,9 @@ clean:
 	fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
+	@if [ -d build/quartus_mr_saturation_slice ]; then \
+		find build/quartus_mr_saturation_slice -depth -delete; \
+	fi
 	@if [ -d build/quartus_shifter ]; then find build/quartus_shifter -depth -delete; fi
 	@if [ -d build/quartus_dag ]; then find build/quartus_dag -depth -delete; fi
 	@if [ -d build/quartus_sequencer ]; then find build/quartus_sequencer -depth -delete; fi
@@ -567,6 +631,8 @@ clean:
 	fi
 	@for directory in build/formal_decode build/formal_stack_control_decode \
 		build/formal_stack_control_slice \
+		build/formal_mr_saturation_decode \
+		build/formal_mr_saturation_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
 		build/formal_counter build/formal_sequencer_stacks \

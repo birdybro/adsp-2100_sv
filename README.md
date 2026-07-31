@@ -41,7 +41,8 @@ machine-readable architecture tables, exhaustive 24-bit instruction-class
 decode, independent block models, and the
 implemented compute, DAG, sequencer-flow, CNTR, PC/count/loop/status-stack,
 computational-register, and status/control RTL slices, including bounded
-sequencer and MSTAT-consumer integration. Commands return nonzero on a real
+sequencer, MSTAT-consumer, Type 25 MR-saturation, and Type 26 stack-control
+integration. Commands return nonzero on a real
 failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 
