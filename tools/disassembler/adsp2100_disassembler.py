@@ -341,6 +341,19 @@ def _try_disassemble_divide_sign(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_divide_quotient(opcode: int) -> Disassembly | None:
+    if opcode & 0xFFF8FF != 0x071000:
+        return None
+    xop = (opcode >> 8) & 0x7
+    divisor = ("AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1")[xop]
+    return Disassembly(
+        opcode=opcode,
+        text=f"DIVQ {divisor};",
+        classification="TYPE_23_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_do_until(opcode: int) -> Disassembly | None:
     if opcode & 0xFC0000 != 0x140000:
         return None
@@ -466,6 +479,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     conditional_trap = _try_disassemble_conditional_trap(opcode)
     if conditional_trap is not None:
         return conditional_trap
+    divide_quotient = _try_disassemble_divide_quotient(opcode)
+    if divide_quotient is not None:
+        return divide_quotient
     divide_sign = _try_disassemble_divide_sign(opcode)
     if divide_sign is not None:
         return divide_sign

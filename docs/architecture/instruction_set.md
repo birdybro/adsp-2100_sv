@@ -27,7 +27,7 @@ ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
 DO UNTIL setup words, 124 source-closed Type 19 DAG2-indirect JUMP/CALL words,
 all 32 Type 20 conditional RTS/RTI words,
-all 16 Type 22 conditional TRAP words,
+all 16 Type 22 conditional TRAP words, all eight Type 23 DIVQ words,
 16 source-closed Type 24 DIVS words,
 parameterized Type 18
 mode control, and all 32 Type 21
@@ -167,6 +167,20 @@ A-4, A-6]. General HALT synchronization, BR/BG, interrupt arbitration, and
 complete PM bus controls remain open. SC-013 records MAME's lower-authority
 reserved classification.
 
+Type 23 encodes fixed `DIVQ` with XOP `[10:8]`. All eight ALU-X source codes
+are legal divisors, so every field-defined word is a source-closed action. Old
+AQ selects old AF plus divisor when one and old AF minus divisor when zero;
+the low 16-bit result determines new AQ and the quotient bit, then AF and AY0
+shift atomically from cycle-start values. Every other ASTAT bit, the inactive
+bank, and PM/DM data state are preserved. Two hand-derived fixtures, all eight
+algebraic forms, exhaustive 24-bit RTL decode, ten directed model tests, and
+50,081 model/RTL cycles provide bounded evidence. A composed test executes
+one DIVS plus fifteen DIVQ operations for positive and negative signed cases
+[ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4, B-1–B-8]. Appendix B's
+documented quotient-correction exceptions remain software responsibilities;
+fetch, PC, loop, interrupt, wait-state, and external bus integration remain
+outside this slice.
+
 Type 24 encodes fixed `DIVS` with YOP `[12:11]` and XOP `[10:8]`. Original
 prose permits AY1 or AF as the upper dividend and all eight ALU-X sources as
 the divisor, defining sixteen source-closed actions inside the 32 field words.
@@ -178,8 +192,7 @@ exhaustive 24-bit RTL decode, eleven directed model tests, and 50,109 stateful
 model/RTL cycles provide bounded evidence [ADI-UM-1989, printed pp. 2-9–2-13,
 4-21, 6-6–6-9, A-4, B-1–B-8; ADI-2101-CROSS-1990, printed pp. 9-17–9-18,
 later-device operand corroboration only]. Fetch, PC, active-loop, interrupt,
-wait-state, and external bus phases remain outside this slice; Type 23 DIVQ
-sequence completion remains next.
+wait-state, and external bus phases remain outside this slice.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight

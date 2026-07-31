@@ -19,6 +19,7 @@ Known cases:
 | Type 19 indirect JUMP/CALL | one processor cycle for true or false supported conditions; a taken transfer makes DAG2 supply PMA/PC from I4-I7 without modifying I; no PM-data or DM data transfer |
 | Type 20 conditional RTS/RTI | one processor cycle whether true or false; a taken RTS pops PC, a taken RTI pops PC/status and restores status atomically; return NOT CE never post-decrements CNTR; no PM-data or DM data transfer |
 | Type 22 conditional TRAP | one processor cycle whether true or false; accepted condition is retained through phase holds, PC+1 commits at the state-7/state-8 boundary, and a taken form asserts TRAP and holds state 8 until the HALT handshake; TRAP NOT CE never post-decrements CNTR |
+| Type 23 `DIVQ divisor;` | one processor cycle; old selected-bank AF/AY0/divisor/AQ values produce simultaneous cycle-end AF, AY0, and AQ writes; no PM-data or DM transfer |
 | Type 24 `DIVS upper, divisor;` | one processor cycle; old selected-bank upper/AY0/divisor values produce simultaneous cycle-end AF, AY0, and AQ writes; no PM-data or DM transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
@@ -52,6 +53,14 @@ bit, and does not emit PM-data or DM activity. This establishes sourced
 instruction-boundary timing only; the ordinary PM fetch and any acknowledged
 wait extension remain outside the slice [ADI-UM-1989, printed pp. 2-9–2-13,
 4-21, 6-9, A-4].
+
+The bounded Type 23 model/RTL slice verifies 50,081 one-clock transactions.
+It applies the old-AQ-selected 16-bit add/subtract and commits AF/AY0/AQ as a
+single action while preserving all non-AQ ASTAT bits and emitting no PM-data
+or DM access. One DIVS plus fifteen DIVQ model steps are additionally checked
+as a signed division sequence. This is instruction-boundary evidence, not an
+integrated sixteen-instruction fetch or bus trace
+[ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4, B-1–B-8].
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no

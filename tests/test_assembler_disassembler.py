@@ -341,6 +341,19 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                 count += 1
         self.assertEqual(count, 16)
 
+    def test_all_source_closed_divide_quotient_forms_round_trip(self) -> None:
+        x_names = ("AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1")
+        for xop, divisor in enumerate(x_names):
+            statement = f"DIVQ {divisor};"
+            opcode = 0x071000 | (xop << 8)
+            assembled = assemble_statement(statement)
+            self.assertEqual(assembled.value, opcode)
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, "TYPE_23_BOUNDED_EXECUTION")
+            self.assertEqual(decoded.text, statement)
+            self.assertEqual(assemble_statement(decoded.text), assembled)
+
     def test_unsupported_divide_sign_y_operands_fail_closed(self) -> None:
         for yop in (0, 3):
             for xop in range(8):

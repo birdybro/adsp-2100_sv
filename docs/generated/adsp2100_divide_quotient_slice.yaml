@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_TYPE_23_DIVQ_STATE_EXECUTION",
+  "decode": {
+    "opcode_mask": "0xfff8ff",
+    "opcode_value": "0x071000",
+    "xop_bits": [10, 8],
+    "field_words": 8,
+    "source_closed_words": 8,
+    "xop_divisors": ["AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1"]
+  },
+  "cycle_contract": {
+    "reads": [
+      "CYCLE_START_SELECTED_BANK_XOP_DIVISOR",
+      "CYCLE_START_SELECTED_BANK_AF_PARTIAL_REMAINDER",
+      "CYCLE_START_SELECTED_BANK_AY0",
+      "CYCLE_START_ASTAT_AQ"
+    ],
+    "conditional_alu": {
+      "AQ_1": "R = OLD_AF + DIVISOR",
+      "AQ_0": "R = OLD_AF - DIVISOR",
+      "result_width": 16,
+      "overflow_handling": "TRUNCATE_TO_16_BITS"
+    },
+    "new_aq": "DIVISOR[15] XOR R[15]",
+    "quotient_bit": "NOT NEW_AQ",
+    "af_result": "{R[14:0], OLD_AY0[15]}",
+    "ay0_result": "{OLD_AY0[14:0], QUOTIENT_BIT}",
+    "writes": [
+      "CYCLE_END_SELECTED_BANK_AF",
+      "CYCLE_END_SELECTED_BANK_AY0",
+      "CYCLE_END_ASTAT_AQ"
+    ],
+    "non_aq_astat_bits": "PRESERVED",
+    "inactive_bank": "PRESERVED",
+    "pm_data_access": false,
+    "dm_access": false,
+    "base_instruction_cycles": 1
+  },
+  "unknown_policy": {
+    "unknown_sources": ["DIVISOR", "AF", "AY0", "ASTAT_AQ"],
+    "invalidated_destinations": ["SELECTED_AF", "SELECTED_AY0", "ASTAT_AQ"],
+    "preserved_state": "ALL_OTHER_ARCHITECTURAL_STATE"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 2-9–2-13",
+    "ADI-UM-1989 printed p. 4-21",
+    "ADI-UM-1989 printed pp. 6-6–6-9 and Table 6.3",
+    "ADI-UM-1989 printed p. A-4 and pp. B-1–B-8"
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "tests": {
+    "python": "tests/test_divide_quotient.py",
+    "rtl_decode": "sim/unit/tb_adsp2100_divide_quotient_decode.sv",
+    "rtl_state": "sim/unit/tb_adsp2100_divide_quotient_slice.sv",
+    "formal": "formal/divide_quotient.sby"
+  },
+  "unresolved": [
+    "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_WAIT_AND_BUS_PHASE_INTEGRATION",
+    "APPENDIX_B_OFF_BY_ONE_EXCEPTION_CORRECTION_IS_SOFTWARE_NOT_DIVQ_STATE",
+    "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
+  ]
+}

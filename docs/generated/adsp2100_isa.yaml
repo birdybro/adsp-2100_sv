@@ -26,6 +26,7 @@
     "docs/generated/adsp2100_indirect_jump_slice.yaml",
     "docs/generated/adsp2100_conditional_return_slice.yaml",
     "docs/generated/adsp2100_conditional_trap_slice.yaml",
+    "docs/generated/adsp2100_divide_quotient_slice.yaml",
     "docs/generated/adsp2100_divide_sign_slice.yaml"
   ],
   "unshown_encoding_policy": {
@@ -303,8 +304,8 @@
       "encoding_pattern": "0000011100010xxx00000000",
       "opcode_mask": "0xfff8ff",
       "opcode_value": "0x071000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
+      "status": "PRIMARY_SEMANTICS_AND_ENCODING_VERIFIED",
+      "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
     },
     {
@@ -1836,6 +1837,104 @@
         "Same-cycle direct DAG-register write ordering is not integrated.",
         "Behavior outside documented circular-buffer restrictions is conservatively invalidated, not claimed.",
         "Interrupt, fetch-phase, and wait-state timing are outside this bounded state slice."
+      ]
+    },
+    {
+      "id": "DIVIDE-QUOTIENT-TYPE-23",
+      "mnemonic": "DIVQ",
+      "algebraic_assembly_syntax": "DIVQ divisor;",
+      "encoding_pattern": "0000011100010xxx00000000",
+      "opcode_mask": "0xfff8ff",
+      "opcode_value": "0x071000",
+      "fields": ["XOP"],
+      "condition_field": null,
+      "computation_field": "FIXED_DIVQ",
+      "source_register_selections": [
+        "XOP: AX0_AX1_AR_MR0_MR1_MR2_SR0_SR1_DIVISOR",
+        "SELECTED_BANK_AF_PARTIAL_REMAINDER",
+        "SELECTED_BANK_AY0_PARTIAL_QUOTIENT",
+        "ASTAT.AQ_PREVIOUS_QUOTIENT_STATE"
+      ],
+      "destination_register_selections": ["AF", "AY0", "ASTAT.AQ"],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_SELECTED_BANK_XOP_DIVISOR",
+        "CYCLE_START_SELECTED_BANK_AF",
+        "CYCLE_START_SELECTED_BANK_AY0",
+        "CYCLE_START_ASTAT.AQ"
+      ],
+      "registers_written": [
+        "CYCLE_END_SELECTED_BANK_AF",
+        "CYCLE_END_SELECTED_BANK_AY0",
+        "CYCLE_END_ASTAT.AQ"
+      ],
+      "computational_unit_used": "ALU_DIVIDE_PRIMITIVE",
+      "status_flags_read": ["AQ"],
+      "status_flags_written": ["AQ"],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "AQ_SELECTED_ADD_OR_SUBTRACT_DIVISOR_FROM_AF",
+        "SHIFT_PARTIAL_REMAINDER_AND_AY0_LEFT",
+        "APPEND_INVERTED_NEW_AQ_AS_QUOTIENT_BIT"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [
+        "DIVQ is unconditional and is not a multifunction instruction."
+      ],
+      "old_value_new_value_semantics": "Read divisor, AF, AY0, and AQ at cycle start. If old AQ is one, R is old AF plus divisor; if old AQ is zero, R is old AF minus divisor, with the ALU result truncated to 16 bits. Let new AQ be divisor[15] XOR R[15] and quotient_bit be NOT new AQ. At cycle end AF receives {R[14:0], old AY0[15]}, AY0 receives {old AY0[14:0], quotient_bit}, and ASTAT.AQ receives new AQ. The inactive bank is preserved.",
+      "write_conflict_rules": "AF, AY0, and AQ are one atomic DIVQ action. Concurrent setup writes fail closed. Unknown divisor, AF, AY0, or AQ validity invalidates exactly these three destinations in the bounded model/RTL boundary.",
+      "condition_false_behavior": "Not applicable; DIVQ is unconditional.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not integrated in this bounded computational slice.",
+      "interrupt_interaction": "Normal instruction-boundary recognition; exact interrupt-adjacent ordering remains OQ-015.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "DIVQ generates one quotient bit per cycle. Unsigned 32-by-16 division uses sixteen DIVQ instructions; signed division uses fifteen following one DIVS. Instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Only the normal instruction fetch is wait-state sensitive; DIVQ issues no PM-data or DM transaction.",
+      "parallel_actions": [
+        {
+          "action": "DIVIDE_QUOTIENT_ITERATION",
+          "reads": ["OLD_SELECTED_DIVISOR", "OLD_SELECTED_AF", "OLD_SELECTED_AY0", "OLD_ASTAT.AQ"],
+          "writes": ["NEW_SELECTED_AF", "NEW_SELECTED_AY0", "NEW_ASTAT.AQ"]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-9–2-13: non-restoring divide sequence and exact AQ-selected DIVQ transformation"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. 4-21: DIVS/DIVQ preserve AZ, AN, AV, and AC while updating AQ"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-6–6-9 and Table 6.3: unconditional non-multifunction syntax and operand role"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. A-4 and pp. B-1–B-8: Type 23 field, iteration counts, input formats, exceptions, and examples"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "Electrical fetch/wait phases and interrupt-adjacent arbitration remain outside this bounded slice.",
+        "Appendix B documents input-dependent off-by-one quotient cases in the primitive algorithm; software correction is not silently added to DIVQ.",
+        "Later-family tool documentation describes non-AQ flags as meaningless after divide primitives; the original-device manual explicitly exempts DIVS/DIVQ from updating AZ/AN/AV/AC, so the original-device implementation preserves them."
       ]
     },
     {

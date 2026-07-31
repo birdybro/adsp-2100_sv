@@ -114,6 +114,7 @@ def validate_database(data: dict[str, Any]) -> None:
         "docs/generated/adsp2100_indirect_jump_slice.yaml",
         "docs/generated/adsp2100_conditional_return_slice.yaml",
         "docs/generated/adsp2100_conditional_trap_slice.yaml",
+        "docs/generated/adsp2100_divide_quotient_slice.yaml",
         "docs/generated/adsp2100_divide_sign_slice.yaml",
     ]:
         raise ISAValidationError(

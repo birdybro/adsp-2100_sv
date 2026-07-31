@@ -255,6 +255,24 @@
       "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
     },
     {
+      "id": "HAND-DIVQ-AX0-071000",
+      "source": "DIVQ AX0;",
+      "opcode": "0x071000",
+      "program_word_bytes_big_endian": "071000",
+      "encoding_class": 23,
+      "source_citation": "ADI-UM-1989 printed pp. 2-9–2-13, 6-9, A-4, and B-1–B-8",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-DIVQ-SR1-071700",
+      "source": "DIVQ SR1;",
+      "opcode": "0x071700",
+      "program_word_bytes_big_endian": "071700",
+      "encoding_class": 23,
+      "source_citation": "ADI-UM-1989 printed pp. 2-9–2-13, 6-9, A-4, and B-1–B-8",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-DIVS-AF-MR2-061500",
       "source": "DIVS AF, MR2;",
       "opcode": "0x061500",

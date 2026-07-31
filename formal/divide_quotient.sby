@@ -1,0 +1,23 @@
+[options]
+mode prove
+depth 12
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal rtl/packages/adsp2100_register_pkg.sv
+read -formal rtl/core/adsp2100_divide_quotient_decode.sv
+read -formal rtl/core/adsp2100_register_file.sv
+read -formal rtl/core/adsp2100_status_registers.sv
+read -formal rtl/core/adsp2100_divide_quotient_slice.sv
+read -formal formal/harnesses/adsp2100_divide_quotient_formal.sv
+prep -top adsp2100_divide_quotient_formal
+
+[files]
+rtl/packages/adsp2100_register_pkg.sv
+rtl/core/adsp2100_divide_quotient_decode.sv
+rtl/core/adsp2100_register_file.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_divide_quotient_slice.sv
+formal/harnesses/adsp2100_divide_quotient_formal.sv

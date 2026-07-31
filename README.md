@@ -55,7 +55,8 @@ NOT CE counter transitions, all 262,144 Type 11 DO UNTIL setup words with
 simultaneous PC/loop-stack state, 124 source-closed Type 19 DAG2-indirect
 JUMP/CALL words with PMA target observation, all 32 Type 20 conditional RTS/RTI
 words with valid-stack PC/status restoration, all 16 Type 22 conditional TRAP
-words with phase-aware state-7/state-8 assertion and HALT restart, all sixteen
+words with phase-aware state-7/state-8 assertion and HALT restart, all eight
+source-closed Type 23 DIVQ forms with iterative AF/AY0/AQ update, all sixteen
 source-closed Type 24 DIVS operand combinations with atomic AF/AY0/AQ
 writeback and reset-unknown validity tracking, all 1,792 source-backed Type 16 conditional
 LSHIFT/ASHIFT/NORM/EXP/EXPADJ words with selected-bank and status writeback,
@@ -69,8 +70,9 @@ Type 10 and four Type 19 CALL NOT CE words remain fail-closed under OQ-012.
 General HALT synchronization, BR/BG, interrupt arbitration, and complete PM
 strobes remain outside the bounded Type 22 controller. Pinned MAME's
 conflicting reserved classification is recorded as SC-013.
-The Type 24 AY0/zero YOP field words remain fail-closed, Type 23 DIVQ remains
-unimplemented, and the later-device DIVS flag conflict is recorded as SC-014.
+The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
+division-flag conflict is recorded as SC-014. Division exists as bounded
+instruction slices, not yet in the top-level fetch/decode/execute model.
 Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 

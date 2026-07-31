@@ -129,6 +129,12 @@ semantic versioning after its first release.
   model, exact decoder, portable stateful RTL, complete assembler/disassembler
   support, two hand-derived fixtures, deterministic phase-level differential
   vectors, a bounded formal recipe, and a constrained Cyclone V project.
+- A class-complete original Type 23 DIVQ semantic entry covering all eight
+  ALU-X divisor selections; an independent unknown-preserving state model,
+  exact decoder, portable selected-bank RTL with atomic AF/AY0/AQ writeback,
+  complete assembler/disassembler support, two hand-derived fixtures,
+  deterministic differential vectors, a formal harness/recipe, a composed
+  signed DIVS-plus-DIVQ sequence test, and a constrained Cyclone V project.
 - A source-closed original Type 24 DIVS semantic entry covering sixteen legal
   AY1/AF-by-ALU-X operand combinations; an independent unknown-preserving
   model, exact 32-word partition decoder, portable selected-bank RTL with
@@ -280,6 +286,15 @@ semantic versioning after its first release.
 
 ### Verified
 
+- Type 23 exhaustive RTL decode traverses all 16,777,216 program words and
+  identifies exactly eight source-closed actions; 50,081 deterministic
+  stateful model/RTL cycles cover both banks, reset unknowns, all divisors,
+  both old-AQ branches, invalid words, and integration conflicts.
+- Quartus full compilation passes for the bounded Type 23 DIVQ slice at its
+  20 ns standalone constraint: 316 ALMs, 338 design registers plus three
+  routing duplicates, no RAM/DSP blocks, +7.009 ns worst setup and +0.164 ns
+  worst multicorner hold slack, 77.71 MHz worst slow-100C Fmax, and zero
+  unconstrained clocks, ports, or paths.
 - Type 24 exhaustive RTL decode traverses all 16,777,216 program words and
   identifies exactly 32 field words, partitioned into sixteen source-closed
   actions and sixteen unsupported YOP words; 50,109 deterministic stateful
@@ -290,10 +305,10 @@ semantic versioning after its first release.
   routing duplicates, no RAM/DSP blocks, +8.448 ns worst setup and +0.168 ns
   worst multicorner hold slack, 86.81 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 394 distinct Python checks, 14 local
+- The expanded `make test` passes 405 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
-  eighteen exhaustive 24-bit decode traversals, and every existing model/RTL
-  vector regression including all 50,109 bounded Type 24 DIVS cycles.
+  nineteen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all Type 23 and Type 24 division cycles.
 
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
@@ -611,6 +626,10 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Closed the original Type 23 DIVQ add/subtract selection, quotient-bit
+  recurrence, operand set, one-cycle boundary, and non-AQ status preservation;
+  retained Appendix B quotient correction as software-visible sequence
+  behavior rather than inventing a primitive-instruction correction.
 - Closed the original Type 24 DIVS state transformation, operand set, one-cycle
   boundary, and non-AQ status preservation with exact-device citations; added
   SC-014 for the conflicting later-device flag description.

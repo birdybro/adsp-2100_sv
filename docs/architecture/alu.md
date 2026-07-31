@@ -1,7 +1,7 @@
 # Arithmetic/logic unit
 
-**Status: standard function and DIVS initialization model/RTL implemented;
-bounded Type 8, Type 9, and Type 24 integrations complete**
+**Status: standard function and both division primitives implemented in
+bounded model/RTL; Type 8, Type 9, Type 23, and Type 24 integrations complete**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
 from ASTAT.AC. It generates AZ, AN, AV, AC, AS, and AQ
@@ -39,14 +39,13 @@ same boundary. A mode change becomes effective for ALU behavior on the next
 cycle, consistent with cycle-start operand use and cycle-end register writes
 [ADI-UM-1989, printed pp. 2-6–2-9]. Outside the bounded Type 8 and Type 9
 slices, memory multifunction operand selection and complete multifunction
-legality remain excluded. Type 24 DIVS is implemented separately; Type 23
-DIVQ remains excluded.
+legality remain excluded. Type 23 DIVQ and Type 24 DIVS are implemented in
+separate bounded execution slices.
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover
 `0`, `1`, `-1`, `0x7fff`, `0x8000`, carry/borrow, both overflow directions,
-ABS minimum, saturation, sticky AV, and every condition. DIVQ sequence
-completion remains unimplemented.
+ABS minimum, saturation, sticky AV, and every condition.
 
 ## Division initialization
 
@@ -66,6 +65,28 @@ operands [ADI-2101-CROSS-1990, printed pp. 9-17–9-18]. The AY0 and zero YOP
 codes therefore remain explicit unsupported Type 24 subencodings, not guessed
 aliases. The model and RTL preserve authentic reset unknowns with validity
 sideband metadata: an unknown operand invalidates AF, AY0, and AQ only.
+
+## Division quotient iteration
+
+Original Type 23 `DIVQ divisor;` performs one non-restoring quotient
+iteration. It accepts all eight ALU-X sources. All values are sampled from the
+cycle-start selected bank. When old AQ is one, the 16-bit ALU result `R` is
+old AF plus divisor; otherwise `R` is old AF minus divisor. Carry or borrow
+beyond bit 15 is discarded. New AQ is `divisor[15] XOR R[15]`; the quotient
+bit is its complement. Cycle end atomically writes
+`AF={R[14:0],old AY0[15]}`, `AY0={old AY0[14:0],quotient_bit}`, and new AQ
+while preserving all other ASTAT bits and the inactive bank
+[ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4, B-1–B-8].
+
+The signed sequence is one DIVS followed by fifteen DIVQ instructions; the
+unsigned sequence starts with software clearing AQ and performs sixteen DIVQ
+instructions. A composed model regression covers positive and negative signed
+examples. Appendix B documents exceptional inputs for which the primitive
+sequence can be off by one; those software correction rules are deliberately
+not folded into a single DIVQ instruction. The separate slices establish the
+two atomic instruction transformations, not integrated consecutive fetch,
+loop, interrupt, wait-state, or bus behavior. Unknown divisor, AF, AY0, or AQ
+invalidates only AF, AY0, and AQ.
 
 The separate `adsp2100_compute_move_slice` connects every standard ALU AMF
 to original Type 8 X/Y/Z selection, selected-bank AR/AF writeback, ASTAT

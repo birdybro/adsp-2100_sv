@@ -234,7 +234,8 @@ words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
 conditional ALU/MAC words, 507,904 source-closed Type 10 direct JUMP/CALL
 words, all 262,144 Type 11 DO UNTIL setup words, 124 source-closed Type 19
 DAG2-indirect JUMP/CALL words, all 32 Type 20 conditional RTS/RTI words, all
-16 Type 22 conditional TRAP words, sixteen source-closed Type 24 DIVS words,
+16 Type 22 conditional TRAP words, all eight Type 23 DIVQ words, sixteen
+source-closed Type 24 DIVS words,
 and all Type 26 stack-control actions,
 but they do not establish
 whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
@@ -317,11 +318,12 @@ state-7/state-8 transition, holds state 8, and implements the recognized-HALT
 clear/release handshake. General HALT synchronization, BR/BG, interrupt/loop
 arbitration, and PM strobes remain unconnected. SC-013 records that pinned
 MAME incorrectly classifies these original-device words reserved.
-The bounded Type 24 DIVS boundary implements AY1/AF upper-dividend selection,
-all eight ALU-X divisor sources, old-value AF/AY0 shifting, AQ sign seeding,
-selected-bank behavior, and authentic unknown validity. AY0/zero YOP field
-words fail closed, Type 23 DIVQ remains open, and SC-014 preserves the
-original-device non-AQ flag rule over conflicting later-device prose. No
+The bounded Type 23/24 division boundaries implement all eight ALU-X divisor
+sources, DIVS AY1/AF upper-dividend selection and sign seeding, DIVQ old-AQ
+add/subtract iteration, atomic old-value AF/AY0/AQ writes, selected-bank
+behavior, and authentic unknown validity. Type 24 AY0/zero YOP field words
+fail closed, and SC-014 preserves the original-device non-AQ flag rule over
+conflicting later-device prose. No
 whole-core PC/fetch path,
 integrated multi-class semantic
 decode, interrupt recognition, or phase-level sequencer timing exists.
@@ -332,7 +334,7 @@ exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP in its top-level step
 method. Independent bounded models cover Type 17 action/state selection and
 Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 18,
-Type 19, Type 20, Type 21, Type 22, Type 24,
+Type 19, Type 20, Type 21, Type 22, Type 23, Type 24,
 Type 25, and
 Type 26 state/action behavior outside that
 top-level step path; all other opcodes still fail closed. Architectural

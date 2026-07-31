@@ -72,12 +72,12 @@ MR updates MV; and shifter EXP updates SS. Generated status is latched at the
 end of its instruction cycle and is therefore first usable in the next cycle
 [ADI-UM-1989, printed p. 4-21].
 
-The bounded Type 24 DIVS boundary now exercises that division-specific write
-path. It samples the selected bank from cycle-start MSTAT, atomically writes
-selected-bank AF and AY0 plus AQ at cycle end, and proves that every other
-ASTAT bit and the inactive bank are preserved. Reset-cleared validity metadata
-distinguishes unknown original register/ASTAT contents from deterministic FPGA
-values; the metadata is not architectural state
+The bounded Type 23 DIVQ and Type 24 DIVS boundaries exercise that
+division-specific write path. Each samples the selected bank from cycle-start
+MSTAT, atomically writes selected-bank AF and AY0 plus AQ at cycle end, and
+proves that every other ASTAT bit and the inactive bank are preserved.
+Reset-cleared validity metadata distinguishes unknown original register/ASTAT
+contents from deterministic FPGA values; the metadata is not architectural state
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21].
 
 MSTAT bit 0 selects the computational register bank, bit 1 enables DAG1 bit
@@ -152,8 +152,8 @@ general-MOVE sources remains open as OQ-016; Type 17 exposes its provisional
 zero-extension choice explicitly. A bounded sequencer slice connects
 CNTR, IF/DO conditions, and PC/count/loop storage without adding decode or
 PC-register claims. Interrupt/status-stack action connectivity, interrupt
-recognition timing, DIVQ execution, and whole-core instruction decode are not
-part of this increment; DIVS exists only in its bounded Type 24 slice.
+recognition timing, and whole-core instruction decode are not part of this
+increment; DIVS and DIVQ exist only in bounded Type 24/23 slices.
 
 ## Accessibility
 

@@ -433,6 +433,19 @@ def _assemble_divide_sign(statement: str) -> int | None:
     return 0x060000 | (yop << 11) | (xop << 8)
 
 
+def _assemble_divide_quotient(statement: str) -> int | None:
+    """Assemble a source-closed original Type 23 DIVQ primitive."""
+
+    match = re.fullmatch(
+        r"DIVQ\s+(AX0|AX1|AR|MR0|MR1|MR2|SR0|SR1)",
+        statement,
+    )
+    if match is None:
+        return None
+    xop = _ALU_XOP_NAMES.index(match.group(1))
+    return 0x071000 | (xop << 8)
+
+
 def _assemble_do_until(statement: str) -> int | None:
     """Assemble an original Type 11 hardware-loop setup instruction."""
 
@@ -644,6 +657,9 @@ def assemble_statement(source: str) -> AssembledWord:
     conditional_trap = _assemble_conditional_trap(statement)
     if conditional_trap is not None:
         return AssembledWord(conditional_trap)
+    divide_quotient = _assemble_divide_quotient(statement)
+    if divide_quotient is not None:
+        return AssembledWord(divide_quotient)
     divide_sign = _assemble_divide_sign(statement)
     if divide_sign is not None:
         return AssembledWord(divide_sign)

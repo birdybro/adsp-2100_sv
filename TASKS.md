@@ -286,13 +286,21 @@ advance beyond research until a page-level primary citation is added.
   General HALT synchronization, BR/BG, interrupt and loop arbitration, and PM
   strobes remain outside the bounded slice; SC-013 records MAME's conflicting
   reserved classification.
+  Type 23 is class-complete: all eight ALU-X divisor selections decode and
+  execute one old-AQ-selected non-restoring quotient iteration. Two
+  hand-derived fixtures, all eight assembler/disassembler forms, exhaustive
+  24-bit RTL decode, ten directed tests, and 50,081 unknown-aware model/RTL
+  cycles pass. A composed model test executes DIVS plus fifteen DIVQ steps for
+  signed positive and negative examples. Appendix B correction exceptions and
+  integrated fetch/PC/loop/interrupt/wait timing remain explicitly outside the
+  primitive slice.
   Type 24 now partitions all 32 field words into sixteen source-closed DIVS
   actions (AY1/AF times eight ALU-X divisors) and sixteen unsupported AY0/zero
   YOP words. Two hand-derived fixtures, all sixteen assembler/disassembler
   forms, exhaustive 24-bit RTL decode, eleven directed tests, and 50,109
   unknown-aware model/RTL cycles pass. SC-014 records and resolves the
   later-device flag-description conflict in favor of the original-device
-  ASTAT table. Fetch/PC/interrupt/loop/wait integration and Type 23 DIVQ remain.
+  ASTAT table. Fetch/PC/interrupt/loop/wait integration remains.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -405,6 +413,11 @@ advance beyond research until a page-level primary citation is added.
   TRAP at the state-7/state-8 boundary, and resumes only after the documented
   external HALT acknowledgment/release handshake. Twelve directed tests and
   50,168 model/RTL clocks pass.
+  A separate Type 23 model reads old selected-bank divisor, AF, AY0, and AQ;
+  performs the sourced 16-bit add/subtract; and atomically writes shifted
+  AF/AY0 plus new AQ while preserving every other ASTAT bit and the inactive
+  bank. Ten directed tests and 50,081 model/RTL cycles pass, including a
+  composed signed DIVS-plus-fifteen-DIVQ sequence.
   A separate Type 24 model reads old selected-bank upper-dividend, divisor,
   and AY0 values; atomically writes shifted AF/AY0 plus sign-XOR AQ; preserves
   every other ASTAT bit and the inactive bank; and propagates unknown reset
@@ -464,6 +477,8 @@ advance beyond research until a page-level primary citation is added.
   Type 22 round trips all sixteen `[IF condition] TRAP;` forms and includes
   two independent hand-derived fixtures. Pinned MAME is not used as its oracle
   because SC-013 records that MAME labels this exact original class reserved.
+  Type 23 round trips all eight `DIVQ XOP;` forms and two independent
+  hand-derived fixtures.
   Type 24 round trips all sixteen `DIVS AY1/AF, XOP;` forms and two independent
   hand-derived fixtures. The other sixteen field words disassemble as explicit
   unsupported YOP encodings and cannot be silently assembled.
@@ -485,6 +500,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make compute-tests`, `tests/test_compute_move.py`,
   `tests/test_conditional_compute.py`, `formal/alu.sby`,
   `formal/compute_move.sby`, `formal/conditional_compute.sby`,
+  `tests/test_divide_quotient.py`, `formal/divide_quotient.sby`,
   `tests/test_divide_sign.py`, `formal/divide_sign.sby`
 - **Implementation notes:** the source-backed standard AMF `0x10`–`0x1f`
   compute block, flags, sticky AV, and AR saturation exist in independent
@@ -492,12 +508,15 @@ advance beyond research until a page-level primary citation is added.
   selected-bank operand/feedback selection, atomic AR/AF/ASTAT and parallel
   DREG writeback, and 983,386 ALU/MAC model/RTL packet cycles. Type 9 connects
   all standard conditional ALU fields with true-only AR/AF/ASTAT writeback and
-  passes 283,996 cycles over every class word. The bounded Type 24 slice now
+  passes 283,996 cycles over every class word. The bounded Type 23 slice
+  executes all eight source-closed DIVQ divisor selections with the old-AQ
+  add/subtract decision and atomic AF/AY0/AQ write across 50,081 cycles. The
+  bounded Type 24 slice
   executes all sixteen source-closed DIVS operand combinations with atomic
   old-value AF/AY0/AQ semantics and authentic unknown tracking across 50,109
-  cycles. Memory multifunction classes and Type 23 DIVQ remain.
-- **Unresolved questions:** DIVQ iterative add/subtract completion and
-  whole-core instruction/fetch timing remain open.
+  cycles. Memory multifunction classes remain.
+- **Unresolved questions:** Appendix B quotient correction belongs to software;
+  whole-core instruction/fetch timing remains open.
 - **Confidence:** CORROBORATED
 
 ## M11 — Multiplier/accumulator
@@ -1020,7 +1039,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Thirty-six harnesses now pass strict assertion
+  result a complete proof. Thirty-seven harnesses now pass strict assertion
   syntax lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
@@ -1030,6 +1049,7 @@ advance beyond research until a page-level primary citation is added.
   bounded Type 19 indirect JUMP/CALL decode and state execution,
   class-complete bounded Type 20 conditional RTS/RTI state execution,
   phase-aware Type 22 conditional TRAP and HALT-handoff execution,
+  class-complete Type 23 DIVQ decode and atomic AF/AY0/AQ state execution,
   bounded Type 24 DIVS decode and atomic AF/AY0/AQ state execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
@@ -1107,6 +1127,11 @@ advance beyond research until a page-level primary citation is added.
   RAM or DSP blocks against a 20 ns standalone constraint. Worst setup is
   +7.592 ns, worst multicorner hold is +0.069 ns, worst slow-corner Fmax is
   80.59 MHz, and no clocks, ports, or paths are unconstrained.
+  The bounded Type 23 DIVQ slice fits in 316 ALMs and 341 fitted registers
+  (338 design registers plus three routing duplicates), with no RAM or DSP
+  blocks against a 20 ns standalone constraint. Worst setup is +7.009 ns,
+  worst multicorner hold is +0.164 ns, worst slow-100C Fmax is 77.71 MHz,
+  and no clocks, ports, or paths are unconstrained.
   The bounded Type 24 DIVS slice fits in 351 ALMs and 381 fitted registers
   (372 design registers plus nine routing duplicates), with no RAM or DSP
   blocks against a 20 ns standalone constraint. Worst setup is +8.448 ns,
