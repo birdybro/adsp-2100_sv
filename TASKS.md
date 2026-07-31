@@ -266,6 +266,11 @@ advance beyond research until a page-level primary citation is added.
   fixtures, every assembler/disassembler form, exhaustive RTL decode, and
   554,309 stateful cycles pass. Same-terminal nesting is rejected per the
   original restriction; DO on an active terminal remains OQ-018.
+  Type 19 partitions all 128 original fixed-bit words into 124 source-closed
+  DAG2-indirect JUMP/CALL actions and four CALL NOT CE words held under
+  OQ-012. Two hand-derived fixtures, every supported syntax form, exhaustive
+  24-bit RTL decode, and 50,259 stateful cycles pass. Bit-5-one words remain
+  reserved under SC-007; active-loop/fetch/interrupt/bus phases remain open.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -364,6 +369,9 @@ advance beyond research until a page-level primary citation is added.
   A separate Type 11 model stores exact-width PC/CNTR/PC-stack/loop-stack
   state, executes all loop-setup words, and makes same-terminal and OQ-018
   rejection explicit.
+  A separate Type 19 model adds exact I4-I7 reset-validity state, reads a
+  selected target only for taken flow, preserves I without modification,
+  exposes PMA drive intent, and composes PC/CNTR/PC-stack/count-stack updates.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -410,6 +418,9 @@ advance beyond research until a page-level primary citation is added.
   Type 11 round trips all 262,144 address/termination forms and includes two
   independent hand-derived fixtures. Research surviving lawful assemblers
   first; do not execute legacy tools on the host.
+  Type 19 round trips all 124 supported I4-I7 indirect JUMP/CALL forms and
+  includes two independent hand-derived fixtures; bit-5-one and four CALL NOT
+  CE words remain visibly fail-closed.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -518,7 +529,8 @@ advance beyond research until a page-level primary citation is added.
   lengths, update order, waits, loops, and interrupts pass model/RTL tests.
 - **Source references:** ADI-UM-1989 DAG and data-move chapters
 - **Relevant tests:** `make dag-tests`, `formal/dag.sby`,
-  `formal/modify_address_slice.sby`
+  `formal/modify_address_slice.sby`, `tests/test_indirect_jump.py`,
+  `formal/indirect_jump.sby`
 - **Implementation notes:** an independent function model and portable
   combinational RTL implement old-I output, signed post-modify, L=0 linear
   wrap, circular wrap, original power-of-two alignment, and all-14-bit DAG1
@@ -548,7 +560,9 @@ advance beyond research until a page-level primary citation is added.
   has a DAG2 configuration in which bit-reverse is structurally ineffective;
   all vectors compare DAG1/DAG2 arithmetic. The bounded Type 21 slice adds all
   DAG2 register selections, exact I/M/L storage, selected-I writeback, and
-  stateful comparison. PM/DM and indirect-control attachment do not yet exist.
+  stateful comparison. The bounded Type 19 slice now reads exact I4-I7 storage
+  without modification, drives a testable PMA-target observation when taken,
+  and passes 50,259 model/RTL cycles. PM/DM data-bus attachment does not exist.
 - **Unresolved questions:** differing register group restrictions and
   simultaneous PM/DM semantics.
 - **Confidence:** CORROBORATED
@@ -568,10 +582,11 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
   `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
   `tests/test_direct_jump.py`, `tests/test_do_until.py`,
+  `tests/test_indirect_jump.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
   `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`,
-  `formal/direct_jump.sby`, `formal/do_until.sby`
+  `formal/direct_jump.sby`, `formal/do_until.sby`, `formal/indirect_jump.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -603,6 +618,12 @@ advance beyond research until a page-level primary citation is added.
   PC/loop stacks. Twelve model tests, exhaustive 24-bit RTL decode, and
   554,309 stateful cycles cover every word, sourced nesting legality, CE
   context, OQ-018, reset, overflow, invalid opcodes, and conflicts.
+  A bounded Type 19 instruction slice connects exact fixed-bit decode to I4-I7
+  target storage, conditional PC selection, PMA-drive intent, taken CALL
+  stacking, and JUMP NOT CE transitions. Twelve model tests, exhaustive
+  24-bit RTL decode, and 50,259 stateful cycles cover all 124 supported words;
+  four CALL NOT CE words fail closed under OQ-012 and bit-5-one remains
+  reserved under SC-007.
 - **Unresolved questions:** whole-core PC/fetch integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
   (OQ-018), interrupts, delayed transfers, cache interaction, empty-pop
@@ -926,13 +947,14 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Thirty-two harnesses now pass strict assertion syntax
-  lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
+  result a complete proof. Thirty-three harnesses now pass strict assertion
+  syntax lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
   bounded Type 11 DO UNTIL decode and state execution,
+  bounded Type 19 indirect JUMP/CALL decode and state execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -953,8 +975,8 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
-  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 10/11,
-  Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
+  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type
+  10/11/19, Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
   46 ALMs and four registers with positive multicorner setup/hold slack and
   zero unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly
   360 architectural DAG data/valid registers, no RAM/DSPs, positive
@@ -995,6 +1017,11 @@ advance beyond research until a page-level primary citation is added.
   with no RAM or DSP blocks against a 20 ns standalone constraint. Worst
   setup is +7.263 ns, worst multicorner hold is +0.074 ns, worst slow-corner
   Fmax is 78.51 MHz, and no clocks, ports, or paths are unconstrained.
+  The bounded Type 19 indirect-transfer slice fits in 353 ALMs and 400 fitted
+  registers with no RAM or DSP blocks against a 20 ns standalone constraint.
+  Worst setup is +7.520 ns, worst multicorner hold is +0.045 ns, worst
+  slow-corner Fmax is 80.93 MHz, and no clocks, ports, or paths are
+  unconstrained.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.

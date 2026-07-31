@@ -25,7 +25,7 @@ immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
-DO UNTIL setup words,
+DO UNTIL setup words, 124 source-closed Type 19 DAG2-indirect JUMP/CALL words,
 parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
@@ -114,6 +114,23 @@ cover the bounded execution state [ADI-UM-1989, printed pp. 4-3–4-5,
 4-12–4-13, 6-13–6-14, A-2, and A-6]. Active-loop terminal arbitration,
 fetch overlap, interrupts, wait states, and external bus phases remain outside
 this slice.
+
+Type 19 encodes fixed prefix `0000101100000000`, I `[7:6]`, fixed-zero bit
+`[5]`, S `[4]`, and COND `[3:0]`. I selects I4 through I7, S selects JUMP or
+CALL, and a taken transfer makes DAG2 drive the cycle-start I value onto PMA
+so PC loads that address without modifying I. A false predicate advances to
+wrapped PC+1 without requiring a known I value; a taken CALL simultaneously
+pushes PC+1. JUMP NOT CE performs the same sourced CNTR post-test transition
+as the direct form. Four CALL NOT CE words remain OQ-012, partitioning the
+128-word class into 124 bounded actions and four fail-closed words. Bit-5-one
+words remain `RESERVED_UNSHOWN` under SC-007 even though pinned MAME accepts
+them. Two hand-derived fixtures, all 124 assembler/disassembler forms,
+exhaustive 24-bit RTL decode, twelve directed tests, and 50,259 model/RTL
+cycles cover selected-I validity, all targets, conditions, PMA drive intent,
+CALL stacking, CNTR transitions, overflow, reset, and conflicts
+[ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4, 4-20, 6-13–6-14, A-3,
+A-6]. Active-loop arbitration, the following instruction fetch, interrupts,
+waits, and PMA pin phases remain outside the bounded slice.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight

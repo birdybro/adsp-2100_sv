@@ -3,7 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, and Type 17 decoders/integration slices, stack-control
+  Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 17, and Type 19 decoders/integration slices, stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
@@ -11,6 +11,13 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 19 indirect-transfer
+  slice passes for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone
+  constraint. It uses 353 ALMs and 400 fitted registers with no RAM or DSP
+  blocks. Across four timing models, worst setup slack is +7.520 ns, worst
+  hold slack is +0.045 ns, and worst slow-corner Fmax is 80.93 MHz, with zero
+  unconstrained clocks, ports, or paths. This is bounded-slice evidence, not
+  whole-core or MiSTer timing closure.
 - Quartus 17.0.2 full compilation of the bounded Type 11 DO UNTIL setup slice
   passes for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It
   uses 308 ALMs and 402 fitted registers with no RAM or DSP blocks. Across

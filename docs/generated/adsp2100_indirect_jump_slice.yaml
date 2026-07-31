@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "instruction": "INDIRECT-JUMP-CALL-TYPE-19",
+  "scope": "BOUNDED_DAG2_INDIRECT_FLOW_EXECUTION",
+  "decode": {
+    "mask": "0xffff20",
+    "value": "0x0b0000",
+    "field_defined_words": 128,
+    "supported_words": 124,
+    "unsupported_call_not_ce_words": 4,
+    "i_bits": "opcode[7:6] maps to I4 through I7",
+    "fixed_original_bit": "opcode[5] = 0",
+    "call_bit": "opcode[4]",
+    "condition_bits": "opcode[3:0]"
+  },
+  "cycle_contract": {
+    "base_cycles": 1,
+    "cycle_start_reads": [
+      "PC",
+      "COND_SELECTED_ASTAT_OR_CNTR",
+      "SELECTED_DAG2_I_REGISTER_WHEN_TRANSFER_IS_TAKEN",
+      "COUNT_STACK_TOP_FOR_EXPIRED_JUMP_NOT_CE"
+    ],
+    "cycle_end_writes": [
+      "TAKEN_I_TARGET_OR_FALSE_PC_PLUS_ONE_TO_PC",
+      "TAKEN_CALL_PC_PLUS_ONE_TO_PC_STACK",
+      "JUMP_NOT_CE_CNTR_AND_OPTIONAL_COUNT_STACK"
+    ],
+    "pma_indirect_drive_when_taken": true,
+    "selected_i_post_modify": false,
+    "pm_data_access": false,
+    "dm_access": false
+  },
+  "legality": {
+    "fixed_bit_five_one": "RESERVED_UNSHOWN_SC_007",
+    "call_not_ce": "FAIL_CLOSED_OQ_012",
+    "taken_transfer_with_unknown_selected_i": "FAIL_CLOSED",
+    "false_transfer_with_unknown_selected_i": "SUPPORTED_SEQUENTIAL_FLOW",
+    "active_loop_terminal": "OUTSIDE_BOUNDED_SLICE"
+  },
+  "verification": {
+    "python_decode_words": 128,
+    "rtl_exhaustive_opcode_space_words": 16777216,
+    "model_rtl_cycles": 50259,
+    "deterministic_seed": "0x210019"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 3-1–3-2",
+    "ADI-UM-1989 printed pp. 4-3–4-4 and 4-20",
+    "ADI-UM-1989 printed pp. 6-13–6-14",
+    "ADI-UM-1989 printed pp. A-3 and A-6"
+  ],
+  "confidence": "CORROBORATED"
+}

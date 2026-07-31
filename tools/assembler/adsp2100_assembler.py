@@ -376,6 +376,24 @@ def _assemble_direct_jump(statement: str) -> int | None:
     return 0x180000 | (int(call) << 18) | (address << 4) | condition
 
 
+def _assemble_indirect_jump(statement: str) -> int | None:
+    """Assemble a bounded original Type 19 DAG2-indirect JUMP or CALL."""
+
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+    match = re.fullmatch(r"(JUMP|CALL)\s+\(\s*I([4-7])\s*\)", body)
+    if match is None:
+        return None
+    operation, i_name = match.groups()
+    call = operation == "CALL"
+    if call and condition == 0xE:
+        raise AssemblyError("conditional CALL NOT CE remains unresolved under OQ-012")
+    i_local = int(i_name) - 4
+    return 0x0B0000 | (i_local << 6) | (int(call) << 4) | condition
+
+
 def _assemble_do_until(statement: str) -> int | None:
     """Assemble an original Type 11 hardware-loop setup instruction."""
 
@@ -578,6 +596,9 @@ def assemble_statement(source: str) -> AssembledWord:
     direct_jump = _assemble_direct_jump(statement)
     if direct_jump is not None:
         return AssembledWord(direct_jump)
+    indirect_jump = _assemble_indirect_jump(statement)
+    if indirect_jump is not None:
+        return AssembledWord(indirect_jump)
     do_until = _assemble_do_until(statement)
     if do_until is not None:
         return AssembledWord(do_until)

@@ -21,6 +21,24 @@
       "review_status": "HAND_DERIVED_PRIMARY_EXAMPLE"
     },
     {
+      "id": "HAND-IF-EQ-INDIRECT-JUMP-I4-0B0000",
+      "source": "IF EQ JUMP (I4);",
+      "opcode": "0x0b0000",
+      "program_word_bytes_big_endian": "0b0000",
+      "encoding_class": 19,
+      "source_citation": "ADI-UM-1989 printed pp. 4-3, 4-20, 6-13–6-14, A-3",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-UNCONDITIONAL-INDIRECT-CALL-I7-0B00DF",
+      "source": "CALL (I7);",
+      "opcode": "0x0b00df",
+      "program_word_bytes_big_endian": "0b00df",
+      "encoding_class": 19,
+      "source_citation": "ADI-UM-1989 printed pp. 4-3, 4-20, 6-13–6-14, A-3",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-DO-0123-UNTIL-CE-14123E",
       "source": "DO 0x0123 UNTIL CE;",
       "opcode": "0x14123e",

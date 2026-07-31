@@ -268,6 +268,29 @@ def _try_disassemble_direct_jump(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_indirect_jump(opcode: int) -> Disassembly | None:
+    if opcode & 0xFFFF20 != 0x0B0000:
+        return None
+    i_address = 4 + ((opcode >> 6) & 0x3)
+    call = bool((opcode >> 4) & 1)
+    condition = opcode & 0xF
+    if call and condition == 0xE:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="UNVERIFIED_TYPE_19_CALL_NOT_CE_OQ_012",
+            implemented=False,
+        )
+    prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
+    operation = "CALL" if call else "JUMP"
+    return Disassembly(
+        opcode=opcode,
+        text=f"{prefix}{operation} (I{i_address});",
+        classification="TYPE_19_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_do_until(opcode: int) -> Disassembly | None:
     if opcode & 0xFC0000 != 0x140000:
         return None
@@ -384,6 +407,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     direct_jump = _try_disassemble_direct_jump(opcode)
     if direct_jump is not None:
         return direct_jump
+    indirect_jump = _try_disassemble_indirect_jump(opcode)
+    if indirect_jump is not None:
+        return indirect_jump
     do_until = _try_disassemble_do_until(opcode)
     if do_until is not None:
         return do_until

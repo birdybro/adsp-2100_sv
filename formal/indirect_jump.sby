@@ -1,0 +1,25 @@
+[options]
+mode prove
+depth 2
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_condition_logic.sv
+read -formal -sv rtl/core/adsp2100_indirect_jump_decode.sv
+read -formal -sv rtl/core/adsp2100_counter.sv
+read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
+read -formal -sv rtl/core/adsp2100_dag_register_file.sv
+read -formal -sv rtl/core/adsp2100_indirect_jump_slice.sv
+read -formal -sv formal/harnesses/adsp2100_indirect_jump_formal.sv
+prep -top adsp2100_indirect_jump_formal
+
+[files]
+rtl/core/adsp2100_condition_logic.sv
+rtl/core/adsp2100_indirect_jump_decode.sv
+rtl/core/adsp2100_counter.sv
+rtl/core/adsp2100_sequencer_stacks.sv
+rtl/core/adsp2100_dag_register_file.sv
+rtl/core/adsp2100_indirect_jump_slice.sv
+formal/harnesses/adsp2100_indirect_jump_formal.sv

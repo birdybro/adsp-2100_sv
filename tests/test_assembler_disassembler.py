@@ -239,6 +239,52 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         )
         self.assertEqual(assemble_statement(decoded.text).value, opcode)
 
+    def test_all_bounded_indirect_jump_call_forms_round_trip(self) -> None:
+        count = 0
+        for i_address in range(4, 8):
+            for call in (False, True):
+                operation = "CALL" if call else "JUMP"
+                for condition, mnemonic in enumerate(EXPECTED_IF_MNEMONICS):
+                    if call and condition == 14:
+                        continue
+                    prefix = "" if condition == 15 else f"IF {mnemonic} "
+                    statement = f"{prefix}{operation} (I{i_address});"
+                    opcode = (
+                        0x0B0000 | ((i_address - 4) << 6)
+                        | (int(call) << 4) | condition
+                    )
+                    assembled = assemble_statement(statement)
+                    self.assertEqual(assembled.value, opcode)
+                    decoded = disassemble_word(opcode)
+                    self.assertTrue(decoded.implemented)
+                    self.assertEqual(
+                        decoded.classification,
+                        "TYPE_19_BOUNDED_EXECUTION",
+                    )
+                    self.assertEqual(decoded.text, statement)
+                    self.assertEqual(assemble_statement(decoded.text), assembled)
+                    count += 1
+        self.assertEqual(count, 124)
+
+    def test_indirect_fixed_bit_and_call_not_ce_fail_closed(self) -> None:
+        call_not_ce = disassemble_word(0x0B001E)
+        self.assertFalse(call_not_ce.implemented)
+        self.assertEqual(
+            call_not_ce.classification,
+            "UNVERIFIED_TYPE_19_CALL_NOT_CE_OQ_012",
+        )
+        self.assertEqual(
+            assemble_statement(call_not_ce.text).value,
+            call_not_ce.opcode,
+        )
+        fixed_bit = disassemble_word(0x0B0020)
+        self.assertFalse(fixed_bit.implemented)
+        self.assertEqual(fixed_bit.classification, "RESERVED_UNSHOWN")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("IF NOT CE CALL (I4);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("JUMP (I3);")
+
     def test_all_type_11_do_until_forms_round_trip(self) -> None:
         count = 0
         for address in range(1 << 14):

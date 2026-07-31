@@ -1,6 +1,6 @@
 # Program sequencer
 
-**Status: source-backed next-PC, CNTR, stack storage, and bounded Type 10/11
+**Status: source-backed next-PC, CNTR, stack storage, and bounded Type 10/11/19
 PC-state integration; whole-core timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
@@ -111,3 +111,17 @@ of the 262,144 Type 11 words plus directed invalid, nesting, and overflow
 boundaries [ADI-UM-1989, printed pp. 4-5–4-8, 4-16–4-19, 6-13–6-14,
 A-2, A-10]. Loop-end evaluation remains in the separate generic sequencer
 slice; fetch, interrupt, wait, and bus phases are not yet unified.
+
+The bounded Type 19 slice adds the original register-indirect path. Exact
+decode selects I4 through I7 and preserves Type 19 bit 5 as fixed zero. A
+taken transfer reads the selected cycle-start DAG2 I value, exposes a PMA
+indirect-drive event, and loads PC from that value without post-modifying I;
+a false transfer advances to PC+1 and does not require valid I state. Taken
+CALL and JUMP NOT CE use the same independently verified PC-stack and CNTR/
+count-stack boundaries as Type 10. The 128-word class partitions into 124
+bounded actions and four OQ-012 CALL NOT CE words. Exhaustive 24-bit decode,
+two hand-derived fixtures, twelve directed model tests, and 50,259 model/RTL
+cycles pass [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4, 4-20, 6-13–6-14,
+A-3, A-6]. The PMA observation proves next-address intent only; fetch strobes,
+cache behavior, wait extension, active-loop arbitration, interrupts, and
+eight-state pin timing remain unconnected.

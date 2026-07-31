@@ -16,6 +16,7 @@ Known cases:
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
 | Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
+| Type 19 indirect JUMP/CALL | one processor cycle for true or false supported conditions; a taken transfer makes DAG2 supply PMA/PC from I4-I7 without modifying I; no PM-data or DM data transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -111,6 +112,17 @@ CE-context validity, overflow, reset, and conflicts. This establishes the
 one-cycle setup boundary, not subsequent loop-terminal, interrupt, wait, or
 external logical bus timing [ADI-UM-1989, printed pp. 4-5–4-8,
 4-16–4-19, 6-1, 6-13–6-14, A-2, A-10].
+
+The bounded Type 19 model/RTL slice verifies cycle-start condition, PC, CNTR,
+stack tops, and selected DAG2 I sampling followed by one cycle-end PC/counter/
+stack commit. All 128 class words are exhaustively classified; 124 execute and
+four CALL NOT CE words fail closed. The 50,259 stateful cycles verify false
+flow without a valid I, true flow from each I4-I7 value, no I modification,
+PMA indirect-drive intent, CALL pushes, and JUMP NOT CE transitions. This is
+instruction-boundary evidence: the subsequent instruction fetch, cache,
+active-loop arbitration, interrupt recognition, wait extension, and logical
+PMA/PMS phases remain open [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4,
+4-20, 6-13–6-14, A-3, A-6].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

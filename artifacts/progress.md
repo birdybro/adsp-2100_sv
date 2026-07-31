@@ -45,6 +45,11 @@ cycle-, or Hard Drivin'-complete
   all 262,144 assembler/disassembler forms, exhaustive decode, simultaneous
   PC+1/loop-descriptor stack updates, distinct-end nesting, and fail-closed
   same-end/OQ-018 handling;
+- bounded Type 19 indirect JUMP/CALL semantics, two hand-derived fixtures, all
+  124 source-closed assembler/disassembler forms, exhaustive decode separating
+  four OQ-012 CALL NOT CE words, exact I4-I7 target selection without DAG
+  modification, conditional PMA drive intent, CALL return stacking, and JUMP
+  NOT CE counter transitions;
 - bounded canonical Type 14 shifter-plus-internal-MOVE semantics, two manual
   fixtures, all 25,648 algebraic forms, exhaustive four-way class
   partitioning, cycle-start selected-bank operand reads, atomic cycle-end
@@ -118,8 +123,9 @@ cycle-, or Hard Drivin'-complete
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
-- partial NOP, Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 17, Type 18, Type 21, and Type 25
-  assembler/disassembler round trip;
+- partial NOP, Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15,
+  Type 16, Type 17, Type 18, Type 19, Type 21, and Type 25 assembler/
+  disassembler round trip;
 - dependency-free regression, Verilator package lint, and CI workflow.
 
 No TASKS.md milestone is marked complete yet. The foundation is under
@@ -129,7 +135,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 341 implemented Python unit checks plus manifest/hash verification;
+- 355 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -159,6 +165,11 @@ outstanding.
 - all 262,144 Type 11 words decode to exact ADDR/TERM fields in Python and
   exhaustive RTL; 554,309 model/RTL cycles execute every word plus nesting,
   CE-context, overflow, reset, invalid, and integration-conflict cases;
+- all 128 original fixed-bit Type 19 words partition into exactly 124
+  source-closed indirect JUMP/CALL actions and four OQ-012 CALL NOT CE words
+  in Python and exhaustive RTL; 50,259 model/RTL cycles cover I4-I7 targets,
+  target validity, both predicate outcomes, PMA drive intent, CALL stacking,
+  JUMP NOT CE transitions, overflow, reset, invalid state, and conflicts;
 - all 65,536 Type 14 class words partition into exactly 25,648 canonical
   supported actions, 32,768 unverified bit-15 words, 4,096 unavailable-XOP
   words, and 3,024 same-destination conflicts in Python and exhaustive RTL;
@@ -194,7 +205,7 @@ outstanding.
   50,124, while the Type 17 state slice adds 59,430 and the Type 6 slice adds
   50,204; the Type 8 state slice adds 983,386, the Type 9 state slice adds
   283,996, the Type 10 state slice adds 554,412, the Type 11 state slice adds
-  554,309, the Type 14 state slice adds
+  554,309, the Type 19 state slice adds 50,259, the Type 14 state slice adds
   82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
@@ -235,13 +246,17 @@ outstanding.
   DSP blocks, +7.263 ns setup, +0.074 ns worst multicorner hold, 78.51 MHz
   worst slow-corner Fmax, and no unconstrained paths against its 20 ns
   standalone constraint;
+- the Type 19 slice fits in 353 ALMs and 400 fitted registers with no RAM or
+  DSP blocks, +7.520 ns setup, +0.045 ns worst multicorner hold, 80.93 MHz
+  worst slow-corner Fmax, and no unconstrained clocks, ports, or paths against
+  its 20 ns standalone constraint;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
-  Type 15, and Type 16 decode/execution (32 total) pass
+  Type 15, Type 16, and Type 19 decode/execution (33 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -253,8 +268,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Add exact Type 12/13 indirect-flow and return decode after closing their
-   active-loop and counter side-effect boundaries.
+3. Add exact Type 20 conditional RTS/RTI decode and bounded valid-stack state
+   execution after closing its status-restore and false-condition boundaries.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt/RTI sequencing to the now-composed SSTAT and
    status-stack boundary without inventing arbitration priorities.
+6. Close the Type 12/13 shifter-with-DM/PM data-transfer attachment only after
+   the shared multifunction memory and bus boundary is source-backed.

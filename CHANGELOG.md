@@ -110,6 +110,13 @@ semantic versioning after its first release.
   assembler/disassembler support, two hand-derived fixtures, deterministic
   exhaustive differential vectors, a formal harness/recipe, and a constrained
   Cyclone V synthesis project.
+- A bounded original Type 19 DAG2-indirect JUMP/CALL semantic entry covering
+  124 source-closed words; an independent exact-width PC/CNTR/I4-I7/stack
+  model, exact fixed-bit fail-closed decoder, portable stateful RTL with PMA
+  target observation, complete supported assembler/disassembler syntax, two
+  hand-derived fixtures, deterministic differential vectors, a formal recipe,
+  and a constrained Cyclone V synthesis project. Four CALL NOT CE words remain
+  OQ-012, and bit-5-one words remain reserved under SC-007.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -246,6 +253,9 @@ semantic versioning after its first release.
 - The generic sequencer boundary now rejects nested loops sharing the active
   loop's terminal instruction, matching the original documented restriction;
   a directed model/RTL vector prevents regression.
+- Corrected progress wording that mislabeled Types 12/13 as indirect-flow and
+  return formats; those are the original shifter-plus-DM/PM forms, while
+  indirect flow and conditional return are Types 19/20.
 
 ### Verified
 
@@ -455,10 +465,21 @@ semantic versioning after its first release.
   20 ns standalone constraint: 308 ALMs, 402 fitted registers, no RAM/DSP
   blocks, +7.263 ns worst setup and +0.074 ns worst multicorner hold slack,
   78.51 MHz worst slow-corner Fmax, and zero unconstrained paths.
-- The expanded `make test` passes 341 distinct Python checks, 14 local
+- Type 19 Python and RTL decoders accept exactly 128 original fixed-bit words,
+  partitioning them into 124 supported actions and four OQ-012 CALL NOT CE
+  words. Twelve directed model checks, all supported assembler/disassembler
+  forms, two hand-derived fixtures, exhaustive 24-bit RTL decode, and 50,259
+  stateful model/RTL cycles cover I4-I7 targets and validity, false/taken flow,
+  PMA drive intent, no I modification, CALL stacking, JUMP NOT CE transitions,
+  overflow, reset, invalid conditions/targets, and conflicts.
+- Quartus full compilation passes for the bounded Type 19 slice at its 20 ns
+  standalone constraint: 353 ALMs, 400 fitted registers, no RAM/DSP blocks,
+  +7.520 ns worst setup and +0.045 ns worst multicorner hold slack, 80.93 MHz
+  worst slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+- The expanded `make test` passes 355 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
-  fourteen exhaustive 24-bit decode traversals, and every existing model/RTL
-  vector regression including all 554,309 bounded Type 11 execution cycles.
+  fifteen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all 50,259 bounded Type 19 execution cycles.
 - The expanded `make test` passes 327 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   thirteen exhaustive 24-bit decode traversals, and every existing model/RTL

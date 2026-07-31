@@ -1,8 +1,8 @@
 # Conditions and visibility
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer,
-Type 9 ALU/MAC, Type 10 direct-flow, Type 11 loop setup, and Type 16 shifter
-integrations pass**
+Type 9 ALU/MAC, Type 10 direct-flow, Type 11 loop setup, Type 16 shifter, and
+Type 19 indirect-flow integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -78,6 +78,14 @@ therefore holds state and reports an invalid boundary instead of inventing a
 predicate [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 4-25, 6-13–6-14,
 A-2, A-6; ADI-2101-CROSS-1990, printed instruction-reference CALL syntax,
 later-device evidence only].
+
+The Type 19 slice applies the identical IF and CNTR rules to DAG2-indirect
+JUMP/CALL. When the predicate is false, sequential PC+1 is valid even if the
+selected I4-I7 value is reset-unknown. A true predicate requires a known
+selected I value and otherwise fails closed. JUMP NOT CE post-updates CNTR;
+the four CALL NOT CE forms remain OQ-012. This distinction is covered in both
+directed tests and the 50,259-cycle model/RTL comparison
+[ADI-UM-1989, printed pp. 4-3–4-5, 4-20, 4-25, 6-13–6-14, A-3, A-6].
 
 The Type 11 decoder accepts every inverse-sense DO termination field. Setup
 stores TERM without evaluating ASTAT or CNTR; `CE` therefore needs a valid
