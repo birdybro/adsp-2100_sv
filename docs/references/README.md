@@ -46,6 +46,16 @@ ADSP-21xx CPU and Hard Drivin' machine sources at commit
 instead of advancing it. The checkout is a license-preserving differential
 reference and is never imported into project-authored model or RTL.
 
+## Cross-software applicability boundary
+
+The cached `ADI-2101-CROSS-1990` record is a 1989 First Edition ADSP-2101
+programming reference despite the archive filename's 1990 label. Its System
+Builder section explicitly says that `.ADSP2101` distinguishes a 2101 system
+and that omission selects ADSP-2100. This is useful contemporary evidence for
+toolchain discovery, but its ADSP-2101 instruction chapter and opcode appendix
+do not establish original-device legality. The exact original ADSP-2100
+Cross-Software manual remains an open acquisition target.
+
 ## Citing sources
 
 Architecture documents cite a reference ID plus publication/revision and the

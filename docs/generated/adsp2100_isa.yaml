@@ -9,6 +9,7 @@
     "docs/generated/adsp2100_condition_codes.yaml",
     "docs/generated/adsp2100_register_codes.yaml"
   ],
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
     "architectural_behavior": "UNDOCUMENTED",
@@ -311,11 +312,11 @@
     {
       "original_type": 26,
       "name": "stack control",
-      "encoding_pattern": "00000100000000000000xxxx",
-      "opcode_mask": "0xfffff0",
+      "encoding_pattern": "0000010000000000000xxxxx",
+      "opcode_mask": "0xffffe0",
       "opcode_value": "0x040000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
+      "status": "PRIMARY_TRANSCRIPTION_CORRECTED_BY_FIELD_AUDIT",
+      "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
     },
     {

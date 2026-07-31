@@ -1,6 +1,6 @@
 # Project progress
 
-**Updated:** 2026-07-30
+**Updated:** 2026-07-31
 
 **Latest verified engineering commit:** `44dc92b`
 
@@ -18,7 +18,8 @@ cycle-, or Hard Drivin'-complete
 - original-versus-later-device feature-matrix first pass;
 - original architecture/timing documentation framework;
 - Hard Drivin' board-interface first-pass notes;
-- complete 30-class mask inventory, explicit unshown-reserved fallback, and one
+- complete 30-class mask inventory, all 106 diagrammed fields across 393
+  variable bit positions, explicit unshown-reserved fallback, and one
   hand-verified NOP semantic fixture;
 - complete source-backed IF/DO condition field with independent model and
   exhaustive combinational RTL verification;
@@ -69,8 +70,10 @@ outstanding.
 
 ## Current evidence
 
-- 18 provenance records; 13 locally acquired and hash-verified;
-- 180 implemented Python unit checks plus manifest/hash verification;
+- 19 provenance records; 14 locally acquired and hash-verified;
+- 187 implemented Python unit checks plus manifest/hash verification;
+- all 16,777,216 program words pass independent class-decode comparison:
+  15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG,
   sequencer-flow/CNTR/sequencer-stack/integration, register-file,
@@ -81,12 +84,13 @@ outstanding.
   cycles, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles plus
   50,287 status/control, 50,037 status-stack, 50,062 PC/count/loop stack, and
   50,112 MSTAT-consumer integration cycles pass simulation;
-- constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG,
+- constrained Quartus Cyclone V class-decode, condition, ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
   status-register, and status-stack block compilations plus the MSTAT
   integration-slice compilation pass with no unconstrained paths;
-- condition, ALU, MAC, shifter, DAG, sequencer-flow, register-file, and
-  CNTR, sequencer-stack, sequencer-integration, status-register, status-stack,
+- class-decode, condition, ALU, MAC, shifter, DAG, sequencer-flow,
+  register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
+  status-stack,
   and MSTAT-integration formal harnesses pass assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no architectural execution RTL, complete assembler, or whole-core synthesis
@@ -94,10 +98,10 @@ outstanding.
 
 ## Next highest-priority work
 
-1. Locate the original Cross-Software/instruction reference and a separately
-   identifiable original data sheet.
-2. Extend the independently cross-checked class masks into field-level and
-   semantic instruction records.
+1. Locate the exact original Cross-Software/instruction reference and a
+   separately identifiable original data sheet.
+2. Extend the independently cross-checked class and field-position inventory
+   into complete semantic instruction records.
 3. Add stateful PC/reset/enable integration only after the next-PC update and
    stall boundaries are source-closed.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.

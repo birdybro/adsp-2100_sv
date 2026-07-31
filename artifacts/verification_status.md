@@ -1,14 +1,16 @@
 # Verification status
 
-**Updated:** 2026-07-30
+**Updated:** 2026-07-31
 
 | Area | Status | Objective evidence |
 |---|---|---|
 | Text/source hygiene | PASS | `python3 scripts/lint_text.py` |
 | Reference manifest schema | PASS | 5 tests in `tests/test_reference_manifest.py` |
-| Cached reference hashes | PASS | 13/13 acquired files verified |
+| Cached reference hashes | PASS | 14/14 acquired files verified |
 | Repository policy/layout | PASS | 6 tests in `tests/test_repository.py` |
 | ISA class/schema | PASS, PARTIAL | 8 tests; 30 non-overlapping masks and reserved fallback |
+| Instruction-format bit placement | PASS, PARTIAL | 7 tests; 30 formats, 106 fields, and 393 variable positions independently fixture-checked; semantic legality incomplete |
+| Exhaustive RTL class decode | PASS | all 16,777,216 words match independent Appendix A classifier |
 | IF/DO condition logic | PASS | all 32 field meanings; 2,048 exhaustive RTL truth-table vectors |
 | Appendix A ISA subfields | PASS, PARTIAL | 19 finite tables exhaustive; cross-field legality incomplete |
 | Standard ALU compute | PASS, PARTIAL | 8 directed/model tests plus 51,472 RTL differential vectors |
@@ -23,18 +25,19 @@
 | Status/control storage | PASS, PARTIAL | 17 directed/model tests plus 50,287 stateful RTL cycles; all SSTAT storage sources exist, but fragment composition, interrupt recognition/connectivity, and decode remain |
 | Status stack | PASS, PARTIAL | 8 directed/model tests plus 50,037 stateful RTL cycles; interrupt/RTI connectivity and empty-pop effects remain |
 | MSTAT consumer integration | PASS, PARTIAL | 5 directed/model tests plus 50,112 stateful RTL cycles across bank, DAG1, sticky AV, and saturation consumers; decode and interrupt-adjacent timing remain |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | 13 condition/ALU/MAC/shifter/DAG/sequencer-flow/CNTR/sequencer-stack/sequencer-integration/register/status/status-stack/MSTAT-integration recipes lint; SymbiYosys unavailable |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | 14 class-decode/condition/ALU/MAC/shifter/DAG/sequencer-flow/CNTR/sequencer-stack/sequencer-integration/register/status/status-stack/MSTAT-integration recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
-| SystemVerilog lint | PASS, PARTIAL | Verilator 5.048, type and generated decode packages |
+| SystemVerilog lint | PASS, PARTIAL | Verilator 5.048, generated packages and class-decoder RTL plus implemented architectural slices |
 | Semantic decode completeness | NOT STARTED | class decode exists; only NOP has full semantics |
 | Instruction execution RTL | NOT STARTED | no execution core exists |
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 180 distinct Python
-checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
+The implemented foundation regression is `make test`: 187 distinct Python
+checks plus exhaustive 16,777,216-word class decode, the 2,048-vector
+condition and 51,472-vector ALU Verilator
 regressions, 21,760-vector MAC regression, and 644,368-vector shifter
 regression, plus the 204,864-vector DAG and 636,512-vector sequencer-flow
 regressions, 50,022 CNTR cycles, 50,011 bounded sequencer-integration cycles,

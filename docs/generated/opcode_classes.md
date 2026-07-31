@@ -29,12 +29,12 @@
 | 23 | DIVQ | `0000011100010xxx00000000` | `0xfff8ff` | `0x071000` | CORROBORATED |
 | 24 | DIVS | `00000110000xxxxx00000000` | `0xffe0ff` | `0x060000` | CORROBORATED |
 | 25 | saturate MR | `000001010000000000000000` | `0xffffff` | `0x050000` | CORROBORATED |
-| 26 | stack control | `00000100000000000000xxxx` | `0xfffff0` | `0x040000` | CORROBORATED |
+| 26 | stack control | `0000010000000000000xxxxx` | `0xffffe0` | `0x040000` | VERIFIED_PRIMARY |
 | 27 | reserved | `00000011xxxxxxxxxxxxxxxx` | `0xff0000` | `0x030000` | VERIFIED_PRIMARY |
 | 28 | reserved | `00000010xxxxxxxxxxxxxxxx` | `0xff0000` | `0x020000` | VERIFIED_PRIMARY |
 | 29 | reserved | `00000001xxxxxxxxxxxxxxxx` | `0xff0000` | `0x010000` | VERIFIED_PRIMARY |
 | 30 | NOP | `000000000000000000000000` | `0xffffff` | `0x000000` | VERIFIED_PRIMARY |
 
-The explicit, non-overlapping classes cover 15,473,162 of 16,777,216 24-bit words. The remaining 1,304,054 words are `RESERVED_UNSHOWN`; their execution behavior is undocumented and must fail closed.
+The explicit, non-overlapping classes cover 15,473,178 of 16,777,216 24-bit words. The remaining 1,304,038 words are `RESERVED_UNSHOWN`; their execution behavior is undocumented and must fail closed.
 
 Source locations are retained per class in `docs/generated/adsp2100_isa.yaml`.

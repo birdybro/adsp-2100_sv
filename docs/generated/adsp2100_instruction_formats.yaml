@@ -1,0 +1,304 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "COMPLETE_FOR_APPENDIX_A_BIT_PLACEMENT",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. A-1-A-5 (scan PDF pp. 140-144)"
+  ],
+  "format_rules": {
+    "fixed_bits_source": "The encoding_pattern in adsp2100_isa.yaml",
+    "field_coverage": "Every x bit in an encoding pattern belongs to exactly one field record.",
+    "bit_numbering": "Program word bits 23 down to 0, inclusive.",
+    "unused_x_policy": "A diagrammed x without a named architectural field remains explicitly UNUSED_X; it is not silently assigned semantics.",
+    "reserved_payload_policy": "Payload bits in original reserved Types 27-29 remain RESERVED_PAYLOAD with undocumented execution behavior."
+  },
+  "formats": [
+    {
+      "original_type": 1,
+      "fields": [
+        {"id": "PD", "msb": 21, "lsb": 20, "code_table": "ISA_FIELDS:PD", "role": "PM_READ_DESTINATION"},
+        {"id": "DD", "msb": 19, "lsb": 18, "code_table": "ISA_FIELDS:DD", "role": "DM_READ_DESTINATION"},
+        {"id": "AMF", "msb": 17, "lsb": 13, "code_table": "ISA_FIELDS:AMF", "role": "COMPUTATION_FUNCTION"},
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "COMPUTATION_Y_SOURCE"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "COMPUTATION_X_SOURCE"},
+        {"id": "PM_I", "msb": 7, "lsb": 6, "code_table": null, "role": "PM_INDEX_SELECTOR_WITH_DAG2"},
+        {"id": "PM_M", "msb": 5, "lsb": 4, "code_table": null, "role": "PM_MODIFY_SELECTOR_WITH_DAG2"},
+        {"id": "DM_I", "msb": 3, "lsb": 2, "code_table": null, "role": "DM_INDEX_SELECTOR_WITH_DAG1"},
+        {"id": "DM_M", "msb": 1, "lsb": 0, "code_table": null, "role": "DM_MODIFY_SELECTOR_WITH_DAG1"}
+      ],
+      "notes": "The diagram fixes PM to DAG2 and DM to DAG1 by providing separate two-bit I/M selectors without G fields."
+    },
+    {
+      "original_type": 2,
+      "fields": [
+        {"id": "G", "msb": 20, "lsb": 20, "code_table": "ISA_FIELDS:G", "role": "DM_DAG_SELECTOR"},
+        {"id": "DATA", "msb": 19, "lsb": 4, "code_table": null, "role": "IMMEDIATE_DATA"},
+        {"id": "I", "msb": 3, "lsb": 2, "code_table": null, "role": "INDEX_SELECTOR_WITH_G"},
+        {"id": "M", "msb": 1, "lsb": 0, "code_table": null, "role": "MODIFY_SELECTOR_WITH_G"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 3,
+      "fields": [
+        {"id": "D", "msb": 20, "lsb": 20, "code_table": "ISA_FIELDS:D", "role": "DM_DIRECTION"},
+        {"id": "RGP", "msb": 19, "lsb": 18, "code_table": "REGISTER_CODES:RGP", "role": "GENERAL_REGISTER_GROUP"},
+        {"id": "ADDR", "msb": 17, "lsb": 4, "code_table": null, "role": "DIRECT_DM_ADDRESS"},
+        {"id": "REG", "msb": 3, "lsb": 0, "code_table": "REGISTER_CODES:REG", "role": "GENERAL_REGISTER_INDEX"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 4,
+      "fields": [
+        {"id": "G", "msb": 20, "lsb": 20, "code_table": "ISA_FIELDS:G", "role": "DM_DAG_SELECTOR"},
+        {"id": "D", "msb": 19, "lsb": 19, "code_table": "ISA_FIELDS:D", "role": "DM_DIRECTION"},
+        {"id": "Z", "msb": 18, "lsb": 18, "code_table": "ISA_FIELDS:Z", "role": "COMPUTATION_DESTINATION_CLASS"},
+        {"id": "AMF", "msb": 17, "lsb": 13, "code_table": "ISA_FIELDS:AMF", "role": "COMPUTATION_FUNCTION"},
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "COMPUTATION_Y_SOURCE"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "COMPUTATION_X_SOURCE"},
+        {"id": "DREG", "msb": 7, "lsb": 4, "code_table": "ISA_FIELDS:DREG", "role": "DM_DATA_REGISTER"},
+        {"id": "I", "msb": 3, "lsb": 2, "code_table": null, "role": "INDEX_SELECTOR_WITH_G"},
+        {"id": "M", "msb": 1, "lsb": 0, "code_table": null, "role": "MODIFY_SELECTOR_WITH_G"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 5,
+      "fields": [
+        {"id": "D", "msb": 19, "lsb": 19, "code_table": "ISA_FIELDS:D", "role": "PM_DIRECTION"},
+        {"id": "Z", "msb": 18, "lsb": 18, "code_table": "ISA_FIELDS:Z", "role": "COMPUTATION_DESTINATION_CLASS"},
+        {"id": "AMF", "msb": 17, "lsb": 13, "code_table": "ISA_FIELDS:AMF", "role": "COMPUTATION_FUNCTION"},
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "COMPUTATION_Y_SOURCE"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "COMPUTATION_X_SOURCE"},
+        {"id": "DREG", "msb": 7, "lsb": 4, "code_table": "ISA_FIELDS:DREG", "role": "PM_DATA_REGISTER"},
+        {"id": "I", "msb": 3, "lsb": 2, "code_table": null, "role": "PM_INDEX_SELECTOR_WITH_DAG2"},
+        {"id": "M", "msb": 1, "lsb": 0, "code_table": null, "role": "PM_MODIFY_SELECTOR_WITH_DAG2"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 6,
+      "fields": [
+        {"id": "DATA", "msb": 19, "lsb": 4, "code_table": null, "role": "IMMEDIATE_DATA"},
+        {"id": "DREG", "msb": 3, "lsb": 0, "code_table": "ISA_FIELDS:DREG", "role": "DATA_REGISTER_DESTINATION"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 7,
+      "fields": [
+        {"id": "RGP", "msb": 19, "lsb": 18, "code_table": "REGISTER_CODES:RGP", "role": "GENERAL_REGISTER_GROUP"},
+        {"id": "DATA", "msb": 17, "lsb": 4, "code_table": null, "role": "IMMEDIATE_DATA"},
+        {"id": "REG", "msb": 3, "lsb": 0, "code_table": "REGISTER_CODES:REG", "role": "GENERAL_REGISTER_DESTINATION"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 8,
+      "fields": [
+        {"id": "Z", "msb": 18, "lsb": 18, "code_table": "ISA_FIELDS:Z", "role": "COMPUTATION_DESTINATION_CLASS"},
+        {"id": "AMF", "msb": 17, "lsb": 13, "code_table": "ISA_FIELDS:AMF", "role": "COMPUTATION_FUNCTION"},
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "COMPUTATION_Y_SOURCE"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "COMPUTATION_X_SOURCE"},
+        {"id": "DEST_DREG", "msb": 7, "lsb": 4, "code_table": "ISA_FIELDS:DREG", "role": "INTERNAL_MOVE_DESTINATION"},
+        {"id": "SOURCE_DREG", "msb": 3, "lsb": 0, "code_table": "ISA_FIELDS:DREG", "role": "INTERNAL_MOVE_SOURCE"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 9,
+      "fields": [
+        {"id": "Z", "msb": 18, "lsb": 18, "code_table": "ISA_FIELDS:Z", "role": "COMPUTATION_DESTINATION_CLASS"},
+        {"id": "AMF", "msb": 17, "lsb": 13, "code_table": "ISA_FIELDS:AMF", "role": "COMPUTATION_FUNCTION"},
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "COMPUTATION_Y_SOURCE"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "COMPUTATION_X_SOURCE"},
+        {"id": "COND", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "IF_CONDITION"}
+      ],
+      "notes": "Bits 7:4 are fixed zero."
+    },
+    {
+      "original_type": 10,
+      "fields": [
+        {"id": "S", "msb": 18, "lsb": 18, "code_table": "ISA_FIELDS:S", "role": "JUMP_OR_CALL"},
+        {"id": "ADDR", "msb": 17, "lsb": 4, "code_table": null, "role": "DIRECT_PROGRAM_ADDRESS"},
+        {"id": "COND", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "IF_CONDITION"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 11,
+      "fields": [
+        {"id": "ADDR", "msb": 17, "lsb": 4, "code_table": null, "role": "LOOP_END_ADDRESS"},
+        {"id": "TERM", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "INVERSE_DO_TERMINATION_CONDITION"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 12,
+      "fields": [
+        {"id": "G", "msb": 16, "lsb": 16, "code_table": "ISA_FIELDS:G", "role": "DM_DAG_SELECTOR"},
+        {"id": "D", "msb": 15, "lsb": 15, "code_table": "ISA_FIELDS:D", "role": "DM_DIRECTION"},
+        {"id": "SF", "msb": 14, "lsb": 11, "code_table": "ISA_FIELDS:SF", "role": "SHIFTER_FUNCTION"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "SHIFTER_X_SOURCE"},
+        {"id": "DREG", "msb": 7, "lsb": 4, "code_table": "ISA_FIELDS:DREG", "role": "DM_DATA_REGISTER"},
+        {"id": "I", "msb": 3, "lsb": 2, "code_table": null, "role": "INDEX_SELECTOR_WITH_G"},
+        {"id": "M", "msb": 1, "lsb": 0, "code_table": null, "role": "MODIFY_SELECTOR_WITH_G"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 13,
+      "fields": [
+        {"id": "D", "msb": 15, "lsb": 15, "code_table": "ISA_FIELDS:D", "role": "PM_DIRECTION"},
+        {"id": "SF", "msb": 14, "lsb": 11, "code_table": "ISA_FIELDS:SF", "role": "SHIFTER_FUNCTION"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "SHIFTER_X_SOURCE"},
+        {"id": "DREG", "msb": 7, "lsb": 4, "code_table": "ISA_FIELDS:DREG", "role": "PM_DATA_REGISTER"},
+        {"id": "I", "msb": 3, "lsb": 2, "code_table": null, "role": "PM_INDEX_SELECTOR_WITH_DAG2"},
+        {"id": "M", "msb": 1, "lsb": 0, "code_table": null, "role": "PM_MODIFY_SELECTOR_WITH_DAG2"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 14,
+      "fields": [
+        {"id": "UNUSED_X", "msb": 15, "lsb": 15, "code_table": null, "role": "DIAGRAMMED_UNNAMED_X"},
+        {"id": "SF", "msb": 14, "lsb": 11, "code_table": "ISA_FIELDS:SF", "role": "SHIFTER_FUNCTION"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "SHIFTER_X_SOURCE"},
+        {"id": "DEST_DREG", "msb": 7, "lsb": 4, "code_table": "ISA_FIELDS:DREG", "role": "INTERNAL_MOVE_DESTINATION"},
+        {"id": "SOURCE_DREG", "msb": 3, "lsb": 0, "code_table": "ISA_FIELDS:DREG", "role": "INTERNAL_MOVE_SOURCE"}
+      ],
+      "notes": "Bit 15 is printed as x with no abbreviation; no behavior is assigned to it."
+    },
+    {
+      "original_type": 15,
+      "fields": [
+        {"id": "SF", "msb": 14, "lsb": 11, "code_table": "ISA_FIELDS:SF", "role": "SHIFTER_FUNCTION"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "SHIFTER_X_SOURCE"},
+        {"id": "EXPONENT", "msb": 7, "lsb": 0, "code_table": null, "role": "SIGNED_IMMEDIATE_SHIFT_COUNT"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 16,
+      "fields": [
+        {"id": "SF", "msb": 14, "lsb": 11, "code_table": "ISA_FIELDS:SF", "role": "SHIFTER_FUNCTION"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "SHIFTER_X_SOURCE"},
+        {"id": "COND", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "IF_CONDITION"}
+      ],
+      "notes": "Bits 7:4 are fixed zero."
+    },
+    {
+      "original_type": 17,
+      "fields": [
+        {"id": "DEST_RGP", "msb": 11, "lsb": 10, "code_table": "REGISTER_CODES:RGP", "role": "DESTINATION_REGISTER_GROUP"},
+        {"id": "SOURCE_RGP", "msb": 9, "lsb": 8, "code_table": "REGISTER_CODES:RGP", "role": "SOURCE_REGISTER_GROUP"},
+        {"id": "DEST_REG", "msb": 7, "lsb": 4, "code_table": "REGISTER_CODES:REG", "role": "DESTINATION_REGISTER_INDEX"},
+        {"id": "SOURCE_REG", "msb": 3, "lsb": 0, "code_table": "REGISTER_CODES:REG", "role": "SOURCE_REGISTER_INDEX"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 18,
+      "fields": [
+        {"id": "AS_MCC", "msb": 11, "lsb": 10, "code_table": "ISA_FIELDS:MCC", "role": "AR_SATURATE_MODE_CONTROL"},
+        {"id": "OL_MCC", "msb": 9, "lsb": 8, "code_table": "ISA_FIELDS:MCC", "role": "ALU_OVERFLOW_LATCH_MODE_CONTROL"},
+        {"id": "BR_MCC", "msb": 7, "lsb": 6, "code_table": "ISA_FIELDS:MCC", "role": "BIT_REVERSE_MODE_CONTROL"},
+        {"id": "SR_MCC", "msb": 5, "lsb": 4, "code_table": "ISA_FIELDS:MCC", "role": "SECONDARY_REGISTER_BANK_MODE_CONTROL"}
+      ],
+      "notes": "Bits 3:0 are fixed zero."
+    },
+    {
+      "original_type": 19,
+      "fields": [
+        {"id": "I", "msb": 7, "lsb": 6, "code_table": null, "role": "PROGRAM_ADDRESS_INDEX_WITH_DAG2"},
+        {"id": "S", "msb": 4, "lsb": 4, "code_table": "ISA_FIELDS:S", "role": "JUMP_OR_CALL"},
+        {"id": "COND", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "IF_CONDITION"}
+      ],
+      "notes": "Bit 5 is fixed zero in the original diagram; see SC-007."
+    },
+    {
+      "original_type": 20,
+      "fields": [
+        {"id": "T", "msb": 4, "lsb": 4, "code_table": "ISA_FIELDS:T", "role": "RTS_OR_RTI"},
+        {"id": "COND", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "IF_CONDITION"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 21,
+      "fields": [
+        {"id": "G", "msb": 4, "lsb": 4, "code_table": "ISA_FIELDS:G", "role": "DAG_SELECTOR"},
+        {"id": "I", "msb": 3, "lsb": 2, "code_table": null, "role": "INDEX_SELECTOR_WITH_G"},
+        {"id": "M", "msb": 1, "lsb": 0, "code_table": null, "role": "MODIFY_SELECTOR_WITH_G"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 22,
+      "fields": [
+        {"id": "COND", "msb": 3, "lsb": 0, "code_table": "CONDITION_CODES", "role": "IF_CONDITION"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 23,
+      "fields": [
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "DIVIDEND_INPUT"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 24,
+      "fields": [
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "DIVISOR_INPUT"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "DIVIDEND_INPUT"}
+      ],
+      "notes": ""
+    },
+    {
+      "original_type": 25,
+      "fields": [],
+      "notes": "Exact opcode; no variable fields."
+    },
+    {
+      "original_type": 26,
+      "fields": [
+        {"id": "PP", "msb": 4, "lsb": 4, "code_table": "ISA_FIELDS:PP", "role": "PC_STACK_POP"},
+        {"id": "LP", "msb": 3, "lsb": 3, "code_table": "ISA_FIELDS:LP", "role": "LOOP_STACK_POP"},
+        {"id": "CP", "msb": 2, "lsb": 2, "code_table": "ISA_FIELDS:CP", "role": "COUNT_STACK_POP"},
+        {"id": "SPP", "msb": 1, "lsb": 0, "code_table": "ISA_FIELDS:SPP", "role": "STATUS_STACK_PUSH_OR_POP"}
+      ],
+      "notes": "The five variable low bits correct the earlier four-bit mask transcription that accidentally fixed PP to zero."
+    },
+    {
+      "original_type": 27,
+      "fields": [
+        {"id": "RESERVED_PAYLOAD", "msb": 15, "lsb": 0, "code_table": null, "role": "RESERVED_UNINTERPRETED"}
+      ],
+      "notes": "Original reserved class; payload behavior is undocumented."
+    },
+    {
+      "original_type": 28,
+      "fields": [
+        {"id": "RESERVED_PAYLOAD", "msb": 15, "lsb": 0, "code_table": null, "role": "RESERVED_UNINTERPRETED"}
+      ],
+      "notes": "Original reserved class; payload behavior is undocumented."
+    },
+    {
+      "original_type": 29,
+      "fields": [
+        {"id": "RESERVED_PAYLOAD", "msb": 15, "lsb": 0, "code_table": null, "role": "RESERVED_UNINTERPRETED"}
+      ],
+      "notes": "Original reserved class; payload behavior is undocumented."
+    },
+    {
+      "original_type": 30,
+      "fields": [],
+      "notes": "Exact all-zero NOP; no variable fields."
+    }
+  ],
+  "confidence": "VERIFIED_PRIMARY"
+}

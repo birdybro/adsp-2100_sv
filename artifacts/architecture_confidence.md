@@ -1,6 +1,6 @@
 # Architecture confidence
 
-**Updated:** 2026-07-30
+**Updated:** 2026-07-31
 
 | Subject | Confidence | Basis / limitation |
 |---|---|---|
@@ -10,7 +10,8 @@
 | Original four-bit MSTAT boundary | VERIFIED_PRIMARY | original manual; later modes explicitly excluded |
 | NOP `0x000000` | VERIFIED_PRIMARY | original Appendix A diagram |
 | All 30 top-level opcode masks | CORROBORATED | primary diagrams transcribed, algebraically checked, and compared to pinned MAME layout |
-| Opcode field/function legality | UNKNOWN | only class masks, register codes, and NOP semantics are closed |
+| All 30 diagrammed field layouts | CORROBORATED | 106 primary-transcribed fields exactly partition 393 variable positions and match an independent visual-review fixture |
+| Opcode field/function legality | UNKNOWN | class masks, field positions, finite code tables, register codes, and NOP semantics are closed; legal combinations and instruction effects are not |
 | IF/DO condition field and predicates | VERIFIED_PRIMARY | original Tables 4.1/4.3 and Appendix A; exhaustive model/RTL truth table |
 | Standard ALU AMF results and flags | CORROBORATED | original compute/status chapters plus explicitly common family instruction reference |
 | Standard MAC AMF results and MV | CORROBORATED | original compute chapter plus common family instruction reference; MAME rounding conflict SC-008 disclosed |

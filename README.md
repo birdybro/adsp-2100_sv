@@ -37,7 +37,8 @@ make formal
 ```
 
 `make test` currently validates repository policy, the reference manifest,
-machine-readable architecture tables, independent block models, and the
+machine-readable architecture tables, exhaustive 24-bit instruction-class
+decode, independent block models, and the
 implemented compute, DAG, sequencer-flow, CNTR, PC/count/loop/status-stack,
 computational-register, and status/control RTL slices, including bounded
 sequencer and MSTAT-consumer integration. Commands return nonzero on a real

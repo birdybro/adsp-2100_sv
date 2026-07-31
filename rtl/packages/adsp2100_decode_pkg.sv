@@ -118,7 +118,7 @@ package adsp2100_decode_pkg;
     else if ((opcode & 24'hffffff) == 24'h050000) begin
       return INSTRUCTION_TYPE_25;
     end
-    else if ((opcode & 24'hfffff0) == 24'h040000) begin
+    else if ((opcode & 24'hffffe0) == 24'h040000) begin
       return INSTRUCTION_TYPE_26;
     end
     else if ((opcode & 24'hff0000) == 24'h030000) begin

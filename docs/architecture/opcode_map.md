@@ -1,7 +1,8 @@
 # Opcode map
 
-**Status: all 30 top-level masks transcribed and mechanically checked; field
-semantics and legal subencodings remain incomplete**
+**Status: all 30 top-level masks and diagrammed field positions transcribed
+and mechanically checked; field semantics and legal subencodings remain
+incomplete**
 
 | Original type | Class |
 |---:|---|
@@ -35,15 +36,17 @@ The reviewed masks and values are maintained in
 `docs/generated/adsp2100_isa.yaml` and rendered into
 `docs/generated/opcode_classes.md`. Validation checks pattern/mask agreement,
 pairwise non-overlap, representative boundary fixtures, and the all-zero NOP.
+An independent SystemVerilog classifier exhaustively checks all 16,777,216
+program words against the generated synthesizable class decoder.
 
 The 30 shown classes cover only part of the 24-bit space. The original manual
 states that every code not shown is reserved. The database therefore has an
 explicit `RESERVED_UNSHOWN` fallback whose execution behavior is
 `UNDOCUMENTED`; model and RTL must fail closed rather than treating it as NOP.
 
-The masks are not instruction completeness. Function, register, condition,
-address, legality, and parallel-action tables remain to be independently
-transcribed.
+The masks are not instruction completeness. Function meanings, register
+effects, legality constraints, timing, and parallel-action semantics remain to
+be independently transcribed into complete semantic instruction records.
 
 The 19 finite abbreviation tables for AMF, data registers, DAG selectors,
 stack controls, jump/return types, shifter functions, and X/Y/Z operands are
@@ -51,4 +54,15 @@ now fully transcribed in `docs/generated/adsp2100_isa_fields.yaml`
 [ADI-UM-1989, printed pp. A-5–A-11, scan PDF pp. 144–150]. Condition and
 general-register tables remain separately machine-readable because they carry
 additional predicate and register-width/access metadata. Instruction-format
-bit placement and legal cross-field combinations are still incomplete.
+bit placement for all 30 types is machine-readable in
+`docs/generated/adsp2100_instruction_formats.yaml`; it contains 106 named
+fields covering all 393 variable positions. Its validator proves that the
+fields exactly partition each class mask and compares every position with an
+independently maintained visual-review fixture. Legal cross-field
+combinations remain incomplete.
+
+The field audit corrected Type 26. The original stack-control diagram places
+PC-stack pop `PP` at bit 4, followed by `LP[3]`, `CP[2]`, and `SPP[1:0]`.
+The correct class mask is therefore `0xffffe0`, not the earlier local
+`0xfffff0` transcription. The 30 shown classes cover 15,473,178 words, leaving
+1,304,038 explicitly reserved-unshown words.

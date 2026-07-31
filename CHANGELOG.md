@@ -14,16 +14,26 @@ semantic versioning after its first release.
 - Initial architecture, timing, integration, decision, and research framework.
 - Foundation automation for manifest validation, repository checks, model
   tests, lint entry points, and optional-tool reporting.
-- Eighteen-record reference manifest with thirteen hash-verified local sources,
+- Nineteen-record reference manifest with fourteen hash-verified local sources,
   including original ADI manuals/data book, Atari schematics, and a pinned
   MAME ADSP/Hard Drivin' source set.
+- A cache-only copy and applicability record for the 1989 First Edition
+  ADSP-2101 Cross-Software programming reference. It is retained as
+  contemporary later-device/toolchain comparison, not original ISA proof.
 - Isolated sparse MAME checkout workflow pinned to commit
   `030fefcbd14e47c01ec9d67655be90f64a1dc8ab`.
 - Machine-readable 30-class original opcode inventory with a complete-field,
   hand-verified all-zero NOP fixture and fail-closed schema validator.
 - Primary-transcribed masks for all 30 original encoding classes, explicit
-  accounting for 1,304,054 unshown-reserved words, generated synthesizable
+  accounting for 1,304,038 unshown-reserved words, generated synthesizable
   class decode, and a generated opcode table.
+- A complete Appendix A bit-placement database for all 30 formats: 106 named
+  fields exactly cover 393 variable positions. Generated documentation and
+  SystemVerilog masks derive from it, while independent fixtures retain review
+  separation.
+- A portable instruction-class decoder RTL boundary, an independent bounded
+  formal harness, exhaustive 24-bit Verilator comparison, and a constrained
+  Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -133,6 +143,9 @@ semantic versioning after its first release.
 - Renamed the condition boundary's counter input from the misleading
   `counter_nonzero` to `not_counter_expired`: original CE asserts at a valid
   count of one, not at zero. The exhaustive Boolean truth table is unchanged.
+- Corrected the stack-control Type 26 mask from `0xfffff0` to `0xffffe0`.
+  The original diagram identifies bit 4 as PC-stack pop (`PP`); the prior local
+  transcription accidentally excluded sixteen documented class words.
 
 ### Verified
 
@@ -159,6 +172,16 @@ semantic versioning after its first release.
   termination, exact-N and nested CE loops, JUMP CE decrement/pop, RETURN CE
   non-decrement, explicit-transfer precedence, and atomic fail-closed
   collision handling.
+- The instruction-format regression independently checks all 30 layouts,
+  validates all 106 fields and 393 variable positions, and exhaustively
+  compares the synthesizable class decoder across all 16,777,216 opcodes:
+  15,473,178 shown-class words and 1,304,038 reserved-unshown words.
+- The latest `make test` passes 187 Python checks, 14 cached-reference hashes,
+  all generated-file checks, strict RTL lint, the exhaustive class decoder,
+  and every existing compute, DAG, sequencer, register, and status regression.
+- Quartus full compilation passes for the constrained class-decoder block: 55
+  ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
+  +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -210,7 +233,8 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for the condition, ALU,
+- `make formal` passes strict assertion syntax lint for class decode,
+  condition, ALU,
   MAC, shifter, DAG, sequencer-flow, register-file, status-register, and
   status-stack, sequencer-stack, CNTR, sequencer-integration, and
   MSTAT-integration harnesses; proof execution remains explicitly skipped
@@ -286,8 +310,9 @@ semantic versioning after its first release.
 
 ### Known Issues
 
-- Cross-Software, evaluation-board, independent data-sheet revisions, errata,
-  and page-level opcode-field and semantic extraction remain incomplete.
+- The exact original ADSP-2100 Cross-Software manual, evaluation-board manual,
+  independent data-sheet revisions, and errata remain unavailable. Appendix A
+  bit placement is complete, but semantic extraction remains incomplete.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,

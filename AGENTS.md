@@ -224,7 +224,10 @@ A commit message must state the engineering change and its verification.
 
 ## Current architectural status and risk
 
-No instruction is yet claimed implemented in RTL. Source-backed condition,
+No instruction is yet claimed implemented in RTL. A generated synthesizable
+class decoder recognizes all 30 original Appendix A format classes and fails
+closed for unshown words; it has exhaustive 24-bit membership comparison, but
+does not claim semantic decode or execution. Source-backed condition,
 standard ALU, fractional MAC, all-function shifter, DAG arithmetic, and
 sequencer-flow combinational blocks exist with independent model comparison,
 and a stateful two-bank storage slice exists for the complete computational
@@ -243,8 +246,8 @@ generation. A bounded sequencer integration slice connects IF/DO condition
 evaluation, explicit flow, DO setup, CNTR, and PC/count/loop stack storage for
 source-backed cases. It rejects conditional-CALL CE (OQ-012), empty-pop
 effects remain OQ-013, and competing automatic/manual actions are held and
-flagged under OQ-018. No PC register, instruction decode, interrupt/status
-stack connection, or phase-level sequencer timing exists.
+flagged under OQ-018. No PC register, semantic instruction decode,
+interrupt/status stack connection, or phase-level sequencer timing exists.
 Multifunction legality, ordering, and whole-core cycle integration remain
 incomplete. The executable
 instruction model establishes
@@ -256,7 +259,8 @@ inputs until their named evidence gates pass.
 Highest risks are:
 
 1. separating original ADSP-2100 behavior from later ADSP-21xx behavior;
-2. complete 24-bit encoding and legal multifunction combinations;
+2. semantic completion and legal multifunction combinations after the
+   source-closed 24-bit class/field-placement inventory;
 3. pre-instruction versus same-cycle value ordering;
 4. pipeline, wait-state, interrupt, halt, and bus-arbitration timing;
 5. arithmetic edge behavior, especially MAC alignment/rounding/guard bits;

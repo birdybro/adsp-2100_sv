@@ -41,14 +41,19 @@ advance beyond research until a page-level primary citation is added.
 - **Acceptance criteria:** initial target list has complete provenance records;
   lawful configured downloads are idempotent, content-validated, hashed, and
   gitignored; missing and mismatched references are reported independently.
-- **Source references:** ADI-MANUAL-INDEX, ADI-ASM-1994, ATARI-ADSP-SCHEM,
-  MAME-ADSP2100-CORE, MAME-HARDDRIV, MAME-HARDDRIV-MACHINE
+- **Source references:** ADI-MANUAL-INDEX, ADI-ASM-1994,
+  ADI-2101-CROSS-1990, ATARI-ADSP-SCHEM, MAME-ADSP2100-CORE,
+  MAME-HARDDRIV, MAME-HARDDRIV-MACHINE
 - **Relevant tests:** `tests/test_reference_manifest.py`,
   `tests/test_reference_scripts.py`
 - **Implementation notes:** redistribution-unclear files remain only under
-  `reference_cache/`; downloaded binaries are never executed.
-- **Unresolved questions:** locate an ADI-hosted original ADSP-2100/2100A data
-  sheet and earliest user-manual revision with stable URLs.
+  `reference_cache/`; downloaded binaries are never executed. The acquired
+  1989 First Edition ADSP-2101 Cross-Software manual is later-device
+  comparative evidence only; its §2.5.3 confirms that contemporary System
+  Builder defaulted to ADSP-2100 unless `.ADSP2101` was present.
+- **Unresolved questions:** locate the exact original ADSP-2100 Cross-Software
+  manual, an ADI-hosted original ADSP-2100/2100A data sheet, and the earliest
+  user-manual revision with stable URLs.
 - **Confidence:** CORROBORATED
 
 ## M3 — Original ADSP-2100 device identification
@@ -125,14 +130,20 @@ advance beyond research until a page-level primary citation is added.
   schema validation, uniqueness checks, and hand-reviewed opcode fixtures.
 - **Source references:** ADI-ASM-1994 Appendix A,
   ADI-UM-1989 instruction chapters and Appendix A
-- **Relevant tests:** `tests/test_isa_database.py`, `make decode-tests`
+- **Relevant tests:** `tests/test_isa_database.py`,
+  `tests/test_instruction_formats.py`, `sim/unit/tb_adsp2100_decode.sv`,
+  `formal/class_decode.sby`, `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
-  1,304,054 unshown words as reserved, and generates synthesizable class
-  decode. The complete original 16-code IF and inverse-sense DO UNTIL
-  condition fields and all 19 finite Appendix A abbreviation tables are
-  separately machine-readable and exhaustively checked; only the all-zero NOP
-  is a hand-verified full instruction fixture. Generated assembler/
+  1,304,038 unshown words as reserved, and generates synthesizable class
+  decode. All 106 fields and 393 variable bit positions across the 30 diagrams
+  are machine-readable, independently fixture-checked, and required to
+  partition the masks exactly. The complete original 16-code IF and
+  inverse-sense DO UNTIL condition fields and all 19 finite Appendix A
+  abbreviation tables are separately machine-readable and exhaustively
+  checked. The generated RTL class decoder agrees with an independent
+  classifier for all 16,777,216 program words; only the all-zero NOP is a
+  hand-verified full semantic instruction fixture. Generated assembler/
   disassembler artifacts must derive from these databases as instruction
   entries are independently verified.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
@@ -188,7 +199,8 @@ advance beyond research until a page-level primary citation is added.
 - **Acceptance criteria:** all documented syntax and directives required by the
   project assemble deterministically; round trips preserve encodings; every
   class has hand-verified fixtures independent of the assembler.
-- **Source references:** ADI-ASM-1994
+- **Source references:** ADI-ASM-1994; ADI-2101-CROSS-1990 §2.5.3 for
+  contemporary original-versus-2101 tool selection only
 - **Relevant tests:** `make assembler-tests`, `make decode-tests`
 - **Implementation notes:** a fail-closed database-driven seed round-trips the
   independent NOP fixture and distinguishes legal-unimplemented, original
@@ -729,8 +741,10 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is `REF-001`, especially the original
-Cross-Software/opcode references, followed by `DEV-001`, per-field work in
-`ISA-001`, and full register semantics in `ARCH-001`. `TIME-001` must be
+The highest-priority unblocked work is `REF-001`, especially the exact original
+Cross-Software/opcode references, followed by `DEV-001`, semantic instruction
+records in `ISA-001`, and full register semantics in `ARCH-001`. Field
+placement is closed for the printed Appendix A diagrams, but legality,
+parallel-action, timing, and execution effects are not. `TIME-001` must be
 completed before architectural execution RTL is permitted to claim cycle
 accuracy.

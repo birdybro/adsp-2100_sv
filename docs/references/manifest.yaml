@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-07-30",
+  "updated": "2026-07-31",
   "references": [
     {
       "id": "ADI-UM-1989",
@@ -41,6 +41,48 @@
         "max_bytes": 20000000
       },
       "notes": "Bitsavers scan of an original Analog Devices publication. The manual itself points to the separate Cross-Software Manual for the complete instruction reference."
+    },
+    {
+      "id": "ADI-2101-CROSS-1990",
+      "title": "ADSP-2101 Cross-Software Manual: Programming Reference",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "1989",
+      "revision": "First Edition",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/1990_Analog_Devices_ADSP-2101_Cross-Software_Manual_Programming_Reference.pdf",
+      "retrieval_date": "2026-07-31",
+      "local_filename": "adi/1990_adsp2101_cross_software_programming_reference.pdf",
+      "sha256": "36463aadb14fa386064857452d9f15483e2e71f928f46d1bd530d9cb570e172a",
+      "document_type": "cross_software_programming_reference",
+      "exact_device_applicability": "ADSP-2101-specific later-device reference; it cannot establish original ADSP-2100 opcode legality unless an individual statement explicitly identifies compatibility.",
+      "family_member_applicability": [
+        "ADSP-2101"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "contemporary_toolchain",
+      "relevance": [
+        "assembler_syntax",
+        "instruction_reference_comparison",
+        "development_tools",
+        "simulator"
+      ],
+      "cited_pages_or_sections": [
+        "Front matter: First Edition and 1989 copyright",
+        "Section 2.5.3, printed p. 2-6: the System Builder requires .ADSP2101 to distinguish a 2101 system and otherwise assumes ADSP-2100",
+        "Chapter 9 and Appendix A are explicitly ADSP-2101-specific and are comparative material only"
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "PROVISIONAL",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 25000000
+      },
+      "notes": "The source filename labels this scan 1990, but the publication front matter states First Edition and 1989 copyright. The exact ADSP-2100 Cross-Software manual remains unavailable. This ADSP-2101 manual is cataloged only as a later-device contemporary comparison and must not silently define the original ISA."
     },
     {
       "id": "ADI-UM-FAMILY-1995",
