@@ -27,6 +27,14 @@ the four-bit REG code within four RGP groups and confirms reserved holes and
 that AF, MF, and PC are not generally movable [ADI-UM-1989, printed p. A-9,
 scan PDF p. 148].
 
+The exact Type 17 selector audit confirms 48 readable REG-coded registers and
+47 writable destinations. SSTAT is the only encoded read-only destination;
+AF, MF, and PC have no general-MOVE code, while blank REG-table cells remain
+reserved. This closes register direction and action decode, not the data value
+for OQ-016 narrow status reads or the composed write effects across
+computational, DAG, status, PX, CNTR, and stack state
+[ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
+
 On documented reset, PC-visible PMA is 0x0004 if the bus is not granted, stack
 pointers reset, IMASK and MSTAT clear, and ICNTL is undefined. ASTAT is not
 listed among the initialized state and remains architecturally unknown

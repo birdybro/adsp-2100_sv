@@ -43,7 +43,7 @@ implemented compute, DAG, sequencer-flow, CNTR, PC/count/loop/status-stack,
 computational-register, and status/control RTL slices, including bounded
 sequencer, MSTAT-consumer, Type 25 MR-saturation, and Type 26 stack-control
 integration, plus exact Type 18 mode-control and Type 21 address-modify
-execution. Commands return
+execution and exact Type 17 internal-MOVE action decode. Commands return
 nonzero on a real
 failure.
 Optional commands report `SKIP` when their named tool is unavailable.

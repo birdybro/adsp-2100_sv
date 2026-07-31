@@ -40,6 +40,13 @@ from .mode_slice import (
     ModeSliceState,
     apply_mode_slice_cycle,
 )
+from .internal_move import (
+    INTERNAL_MOVE_MASK,
+    INTERNAL_MOVE_VALUE,
+    InternalMoveSelection,
+    decode_internal_move,
+    register_code_by_name,
+)
 from .modify_address import (
     MODIFY_ADDRESS_MASK,
     MODIFY_ADDRESS_VALUE,
@@ -169,6 +176,9 @@ __all__ = [
     "ExplicitFlow",
     "ExactWord",
     "IF_CONDITION_MNEMONICS",
+    "INTERNAL_MOVE_MASK",
+    "INTERNAL_MOVE_VALUE",
+    "InternalMoveSelection",
     "LOOP_STACK_DEPTH",
     "LOOP_STACK_WIDTH",
     "MemorySpace",
@@ -236,6 +246,7 @@ __all__ = [
     "decode_stack_control",
     "decode_mr_saturation",
     "decode_mode_control",
+    "decode_internal_move",
     "decode_modify_address",
     "apply_stack_control_slice_cycle",
     "apply_mode_control",
@@ -253,6 +264,7 @@ __all__ = [
     "original_base_mask",
     "reverse_address",
     "read_dreg",
+    "register_code_by_name",
     "select_sequencer_flow",
     "sign_extend",
     "saturate_mr",

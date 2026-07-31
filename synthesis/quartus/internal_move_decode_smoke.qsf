@@ -1,0 +1,22 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_internal_move_decode
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_internal_move_decode
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_move_decode.sv
+set_global_assignment -name SDC_FILE internal_move_decode_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to class_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to move_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_subencoding_o
+set_instance_assignment -name VIRTUAL_PIN ON -to destination_group_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to source_group_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to destination_index_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to source_index_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to destination_code_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to source_code_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to destination_present_o
+set_instance_assignment -name VIRTUAL_PIN ON -to destination_writable_o
+set_instance_assignment -name VIRTUAL_PIN ON -to source_valid_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

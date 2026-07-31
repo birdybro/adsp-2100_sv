@@ -6,6 +6,7 @@ import unittest
 
 from tools.assembler.adsp2100_assembler import AssemblyError, assemble_statement
 from tools.disassembler.adsp2100_disassembler import disassemble_word
+from tools.generators.validate_internal_move import register_map
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -73,6 +74,55 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                         disassemble_word(opcode).text,
                         source,
                     )
+
+    def test_all_legal_internal_moves_round_trip(self) -> None:
+        registers = register_map()
+        readable = {
+            code: metadata["register"]
+            for code, metadata in registers.items()
+        }
+        writable = {
+            code: name
+            for code, name in readable.items()
+            if name != "SSTAT"
+        }
+        count = 0
+        for destination_code, destination in writable.items():
+            for source_code, source in readable.items():
+                statement = f"{destination} = {source};"
+                opcode = (
+                    0x0D0000
+                    | ((destination_code >> 4) << 10)
+                    | ((source_code >> 4) << 8)
+                    | ((destination_code & 0xF) << 4)
+                    | (source_code & 0xF)
+                )
+                assembled = assemble_statement(statement)
+                self.assertEqual(assembled.value, opcode)
+                disassembly = disassemble_word(opcode)
+                self.assertFalse(disassembly.implemented)
+                self.assertEqual(
+                    disassembly.classification,
+                    "TYPE_17_ACTION_DECODE_ONLY",
+                )
+                self.assertEqual(disassembly.text, statement)
+                count += 1
+        self.assertEqual(count, 2256)
+
+    def test_internal_move_rejects_reserved_and_read_only_destinations(
+        self,
+    ) -> None:
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SSTAT = AX0;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AX0 = AF;")
+        reserved = disassemble_word(0x0D04C0)
+        self.assertFalse(reserved.implemented)
+        self.assertEqual(
+            reserved.classification,
+            "RESERVED_TYPE_17_SUBENCODING",
+        )
+        self.assertEqual(reserved.text, ".WORD 0x0d04c0;")
 
     def test_modify_rejects_cross_dag_or_out_of_range_registers(self) -> None:
         with self.assertRaises(AssemblyError):

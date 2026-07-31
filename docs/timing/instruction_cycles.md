@@ -12,6 +12,7 @@ Known cases:
 | Case | Current sourced timing |
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
+| Type 17 internal data MOVE | one processor cycle; no PM-data or DM transfer |
 | Type 18 combined MODE CONTROL | one processor cycle for all selected original mode fields |
 | Type 21 `MODIFY (Ix, My);` | one processor cycle; no PM-data or DM transfer |
 | Type 25 `IF MV SAT MR;` | one processor cycle whether MV is true or false |
@@ -41,6 +42,13 @@ one cycle, but it is used only for that shared behavior; its later-device
 timer, GO, and multiplier controls are excluded
 [ADI-UM-1989, printed pp. 4-22–4-23, 6-14–6-15, A-3, A-8;
 ADI-2101-CROSS-1990, printed pp. 9-63–9-64].
+
+The Type 17 action database records the original one-cycle register-to-register
+MOVE and absence of PM-data/DM activity. Exhaustive decode verifies action
+selection only; cycle-start source sampling, cycle-end destination commit, and
+all cross-store side effects still need a composed state/timing test before
+Type 17 execution timing is claimed complete
+[ADI-UM-1989, printed pp. 2-6, 6-1–6-2, 6-12, A-3, A-9].
 
 The bounded Type 21 model/RTL slice verifies that selected I, M, and
 corresponding L are sampled at cycle start and that only the selected I is

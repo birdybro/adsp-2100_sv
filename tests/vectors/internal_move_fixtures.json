@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "source": "ADI-UM-1989 printed pp. 6-12, A-3, and A-9",
+  "hand_checked_cases": [
+    {
+      "source": "AR = AX0;",
+      "opcode": "0x0d00a0",
+      "destination": "AR",
+      "source_register": "AX0",
+      "legal": true
+    },
+    {
+      "source": "I0 = AR;",
+      "opcode": "0x0d040a",
+      "destination": "I0",
+      "source_register": "AR",
+      "legal": true
+    },
+    {
+      "source": "MSTAT = ASTAT;",
+      "opcode": "0x0d0f10",
+      "destination": "MSTAT",
+      "source_register": "ASTAT",
+      "legal": true
+    },
+    {
+      "source": "AX0 = SSTAT;",
+      "opcode": "0x0d0302",
+      "destination": "AX0",
+      "source_register": "SSTAT",
+      "legal": true
+    },
+    {
+      "source": null,
+      "opcode": "0x0d0c20",
+      "destination": "SSTAT",
+      "source_register": "AX0",
+      "legal": false,
+      "invalid_reason": "READ_ONLY_SSTAT_DESTINATION"
+    },
+    {
+      "source": null,
+      "opcode": "0x0d04c0",
+      "destination": null,
+      "source_register": "AX0",
+      "legal": false,
+      "invalid_reason": "RESERVED_DESTINATION_SELECTOR"
+    }
+  ]
+}

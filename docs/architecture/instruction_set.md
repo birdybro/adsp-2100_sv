@@ -31,6 +31,18 @@ fixture, require them to partition each class mask exactly, and exhaustively
 compare the synthesizable class decoder over all 16,777,216 program words with
 an independent SystemVerilog transcription.
 
+Type 17 internal data MOVE now has a bounded action-decode record. Its twelve
+payload bits select independent destination/source RGP and REG fields. The
+original REG table provides 48 readable registers; excluding read-only SSTAT
+leaves 47 writable destinations, so 2,256 of the 4,096 field-defined words
+emit a legal move action. The other 1,840 contain a reserved selector or an
+SSTAT destination and remain action-free without being treated as NOP
+[ADI-UM-1989, printed pp. 6-1–6-2, 6-12, A-3, A-9]. Independent model and RTL
+decoders agree for every selector and an exhaustive 24-bit traversal proves
+that no non-Type-17 word emits an action. Complete state execution remains
+open because it must compose banked computational registers, DAG storage,
+status/control, PX, CNTR/count-stack effects, and OQ-016 narrow status reads.
+
 Type 26 stack control is the first bounded semantic class beyond NOP.
 `docs/generated/adsp2100_stack_control.yaml` records the 32 field-defined
 words, the behavioral alias between `SPP=00` and `SPP=01`, the independent

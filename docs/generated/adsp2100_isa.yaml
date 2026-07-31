@@ -11,6 +11,7 @@
   ],
   "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
   "semantic_databases": [
+    "docs/generated/adsp2100_internal_move.yaml",
     "docs/generated/adsp2100_stack_control.yaml",
     "docs/generated/adsp2100_mr_saturation.yaml",
     "docs/generated/adsp2100_mode_control.yaml",

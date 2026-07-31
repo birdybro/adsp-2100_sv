@@ -52,6 +52,10 @@ semantic versioning after its first release.
   I/M selections, an exact decoder, independent state model, exact-width
   I/M/L register file with reset validity, bounded stateful RTL execution,
   exhaustive decode, formal recipes, and constrained Cyclone V project.
+- A primary-backed Type 17 internal-MOVE action database, independent decoder,
+  all-register assembler/disassembler syntax, portable exact RTL decoder,
+  exhaustive 24-bit fail-closed test, bounded formal recipe, and constrained
+  Cyclone V project. Full cross-store state execution remains withheld.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -240,8 +244,8 @@ semantic versioning after its first release.
   tests plus 50,112 stateful model-versus-RTL cycles. Both MR signs and banks,
   false MV, status preservation, invalid opcodes, reset unknowns, and atomic
   fail-closed setup collisions are covered.
-- The expanded `make test` passes 233 distinct Python checks, 14 local
-  reference hashes, all generated-data checks, strict Verilator lint, five
+- The expanded `make test` passes 241 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, six
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
   regression including the Type 18, Type 21, and Type 25 stateful comparisons.
 - Quartus full compilation passes for the bounded Type 25 integration slice:
@@ -267,6 +271,14 @@ semantic versioning after its first release.
   data/valid registers plus fourteen fitted routing duplicates, no RAM/DSPs,
   +2.361 ns worst setup and +0.185 ns worst hold slack across four timing
   models, with zero unconstrained clocks, ports, or paths.
+- The Type 17 regression partitions all 4,096 class words into exactly 2,256
+  legal register moves and 1,840 reserved/read-only-destination
+  subencodings, round-trips every legal register pair, and proves across all
+  16,777,216 words that no non-Type-17 word emits an action.
+- Quartus full compilation passes for the Type 17 action decoder: 42 ALMs, 24
+  combinational ALUTs, no registers/RAM/DSPs, +15.704 ns worst setup and
+  +0.462 ns worst hold slack across four timing models, with zero
+  unconstrained clocks, ports, or paths.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -321,9 +333,9 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 22 harnesses,
-  including exact Type 21 decode and bounded state execution; proof execution
-  remains explicitly skipped without SymbiYosys/Yosys.
+- `make formal` passes strict assertion syntax lint for all 23 harnesses,
+  including exact Type 17/Type 21 decode and bounded Type 21 state execution;
+  proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
 
@@ -341,6 +353,10 @@ semantic versioning after its first release.
   selected-I writeback. The later Cross-Software wording is retained only as
   corroboration, and unsupported circular configurations remain explicitly
   unclaimed.
+- Closed original Type 17 field placement and register-direction legality from
+  the original REG table and SSTAT read-only rule. OQ-016 narrow status-source
+  extension and composed computational/DAG/status/PX/CNTR execution remain
+  explicit blockers to a state-execution claim.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

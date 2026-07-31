@@ -67,6 +67,14 @@ The correct class mask is therefore `0xffffe0`, not the earlier local
 `0xfffff0` transcription. The 30 shown classes cover 15,473,178 words, leaving
 1,304,038 explicitly reserved-unshown words.
 
+Type 17 has mask/value `0xfff000`/`0x0d0000`. DEST_RGP, SOURCE_RGP,
+DEST_REG, and SOURCE_REG occupy bits `[11:10]`, `[9:8]`, `[7:4]`, and
+`[3:0]`. Applying the original REG table and SSTAT's read-only restriction
+partitions its 4,096 field-defined words into 2,256 legal moves and 1,840
+reserved/read-only-destination subencodings. The exact RTL decoder has been
+checked over all 16,777,216 words; this closes action selection, not composed
+register-state execution [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
+
 All 32 Type 26 payloads are now represented by the bounded
 `docs/generated/adsp2100_stack_control.yaml` semantics database. `SPP[1:0]`
 selects status-stack no-change/no-change/push/pop; `CP`, `LP`, and `PP`

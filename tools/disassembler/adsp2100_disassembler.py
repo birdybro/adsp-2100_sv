@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import lru_cache
 
+from tools.generators.validate_internal_move import (
+    decode_internal_move,
+    load_database as load_internal_move_database,
+    validate_database as validate_internal_move_database,
+)
 from tools.generators.validate_mode_control import (
     decode_actions as decode_mode_control_actions,
     load_database as load_mode_control_database,
@@ -23,6 +29,37 @@ class Disassembly:
     text: str
     classification: str
     implemented: bool
+
+
+@lru_cache(maxsize=1)
+def _internal_move_database() -> dict[str, object]:
+    database = load_internal_move_database()
+    validate_internal_move_database(database)
+    return database
+
+
+def _try_disassemble_internal_move(
+    opcode: int,
+) -> Disassembly | None:
+    decoded = decode_internal_move(_internal_move_database(), opcode)
+    if decoded is None:
+        return None
+    if not decoded["legal"]:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="RESERVED_TYPE_17_SUBENCODING",
+            implemented=False,
+        )
+    return Disassembly(
+        opcode=opcode,
+        text=(
+            f"{decoded['destination_register']} = "
+            f"{decoded['source_register']};"
+        ),
+        classification="TYPE_17_ACTION_DECODE_ONLY",
+        implemented=False,
+    )
 
 
 def _disassemble_mode_control(opcode: int) -> str:
@@ -68,6 +105,9 @@ def disassemble_word(opcode: int) -> Disassembly:
         raise ValueError("opcode must fit 24 bits")
     database = load_database()
     validate_database(database)
+    internal_move = _try_disassemble_internal_move(opcode)
+    if internal_move is not None:
+        return internal_move
     for instruction in database["instructions"]:
         mask = int(instruction["opcode_mask"], 16)
         value = int(instruction["opcode_value"], 16)

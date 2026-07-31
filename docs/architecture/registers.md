@@ -149,5 +149,11 @@ of this increment.
 
 AF, MF, and PC are not in the general MOVE register set in the original
 instruction overview [ADI-UM-1989, printed p. 6-12 and Appendix A register
-coding]. Exact source/destination field values will be generated only after
-hand review of Appendix A scan images.
+coding].
+
+Appendix A visual review and mechanical audit are complete for Type 17. All 48
+nonblank REG codes are legal sources; all except read-only SSTAT are legal
+destinations. The exact action decoder therefore accepts 2,256 source/
+destination pairs and rejects 1,840 reserved or read-only-destination
+subencodings. Actual cross-store writeback remains unintegrated
+[ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].

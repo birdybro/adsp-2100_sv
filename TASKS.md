@@ -107,13 +107,16 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989, ADI-DATABOOK-1987,
   ADI-UM-FAMILY-1995 for explicitly applicable comparisons only
 - **Relevant tests:** `tests/test_model_state.py`,
-  `tests/test_register_metadata.py`, `tests/test_counter.py`
+  `tests/test_register_metadata.py`, `tests/test_counter.py`,
+  `tests/test_internal_move.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
   48 codes and every blank code. CNTR now has machine-readable 14-bit,
   reset-validity, test/decrement, and count-stack transition metadata, while
-  direction-specific access paths and the remaining hidden state still require
-  complete extraction. Emulator variable names are discovery aids only.
+  Type 17 now closes the 48 readable and 47 writable general-MOVE selectors.
+  Actual cross-store access paths, OQ-016 narrow status reads, and the remaining
+  hidden state still require complete extraction. Emulator variable names are
+  discovery aids only.
 - **Unresolved questions:** hidden sequencer state, undefined reset fields, and
   exact alternate-bank coverage.
 - **Confidence:** UNKNOWN
@@ -133,15 +136,16 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `tests/test_isa_database.py`,
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
-  `tests/test_modify_address.py`,
+  `tests/test_modify_address.py`, `tests/test_internal_move.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
   `sim/unit/tb_adsp2100_mode_control_decode.sv`,
   `sim/unit/tb_adsp2100_modify_address_decode.sv`,
+  `sim/unit/tb_adsp2100_internal_move_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
-  `formal/modify_address_decode.sby`,
+  `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -176,7 +180,11 @@ advance beyond research until a page-level primary citation is added.
   same-DAG I/M selections, corresponding-L use, exact assembly syntax,
   exhaustive decode, authentic reset-invalid I/M/L storage, and 50,124
   stateful model/RTL cycles; PM/DM transfer attachment remains outside this
-  bounded no-memory-access instruction.
+  bounded no-memory-access instruction. Type 17 action decode now accounts for
+  all 4,096 field-defined words: 2,256 legal moves and 1,840 reserved or
+  read-only-SSTAT-destination subencodings. Independent model/RTL selection,
+  exhaustive fail-closed decode, and all legal assembler/disassembler pairs
+  pass, but cross-store state execution remains incomplete.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -228,7 +236,9 @@ advance beyond research until a page-level primary citation is added.
   Type 21 state model stores all 24 exact-width DAG registers with independent
   validity, applies original linear/circular post-modification to the selected
   I, and invalidates rather than inventing results for unknown or unsupported
-  configurations.
+  configurations. A separate Type 17 action model independently decodes every
+  source/destination selector and rejects reserved or read-only destinations;
+  it does not claim unresolved cross-store execution.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -251,9 +261,10 @@ advance beyond research until a page-level primary citation is added.
   reserved, and unshown-reserved words. Type 18 accepts unique comma-separated
   ENA/DIS clauses and emits raw `.WORD` syntax when an MCC=01 alias must be
   preserved exactly. All 32 original `MODIFY (Ix, My);` same-DAG combinations
-  also round trip; cross-DAG selections fail closed. First research surviving
-  lawful assemblers; do not
-  execute legacy tools on the host.
+  also round trip; cross-DAG selections fail closed. All 2,256 legal Type 17
+  register pairs round trip while SSTAT destinations and reserved selectors
+  fail closed and retain an action-decode-only classification. First research
+  surviving lawful assemblers; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -431,7 +442,8 @@ advance beyond research until a page-level primary citation is added.
   2-21–2-23, 4-8, 4-22, 5-13, 6-4–6-6, A-9
 - **Relevant tests:** `make register-tests`, `tests/test_register_banks.py`,
   `make mode-tests`, `tests/test_mode_integration.py`,
-  `formal/registers.sby`, `formal/mode_slice.sby`
+  `tests/test_internal_move.py`, `formal/registers.sby`,
+  `formal/mode_slice.sby`, `formal/internal_move_decode.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
   independent model and portable RTL implement both banks for all 16 DREG
   codes plus AF, MF, and SB; exact SE/MR2/SB widths; three cycle-start reads;
@@ -442,7 +454,9 @@ advance beyond research until a page-level primary citation is added.
   model/RTL slice connects MSTAT bit 0 using old-mode/current-cycle and
   new-mode/following-cycle visibility. The regression passes
   58,307 DREG cycles plus 50,120 full-bank/writeback cycles against the
-  independent model, plus 50,112 mixed MSTAT-consumer cycles.
+  independent model, plus 50,112 mixed MSTAT-consumer cycles. Exact Type 17
+  action decode now identifies every legal computational/DAG/status/PX/CNTR
+  source and destination, but it is not yet connected to these stores.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -702,9 +716,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Twenty-two harnesses now pass strict assertion syntax
-  lint, including exact Type 21 decode and bounded state execution. Proof
-  execution awaits an installed
+  result complete proof. Twenty-three harnesses now pass strict assertion
+  syntax lint, including exact Type 17 action decode, Type 21 decode, and
+  bounded Type 21 state execution. Proof execution awaits an installed
   SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.
 - **Confidence:** UNKNOWN
@@ -723,12 +737,14 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
   the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 18,
-  Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in 46 ALMs
-  and four registers with positive multicorner setup/hold slack and zero
-  unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly 360
-  architectural DAG data/valid registers, no RAM/DSPs, positive multicorner
-  setup/hold slack, and zero unconstrained paths. Whole-core clocks,
-  utilization, and timing remain
+  Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
+  46 ALMs and four registers with positive multicorner setup/hold slack and
+  zero unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly
+  360 architectural DAG data/valid registers, no RAM/DSPs, positive
+  multicorner setup/hold slack, and zero unconstrained paths. The Type 17
+  decoder fits in 42 ALMs and 24 combinational ALUTs with no
+  registers/RAM/DSPs, positive multicorner setup/hold slack, and zero
+  unconstrained paths. Whole-core clocks, utilization, and timing remain
   unavailable; Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.
 - **Confidence:** UNKNOWN

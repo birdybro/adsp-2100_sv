@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_17_ACTION_DECODE",
+  "confidence": "VERIFIED_PRIMARY",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "register_code_database": "docs/generated/adsp2100_register_codes.yaml",
+  "instruction": {
+    "original_type": 17,
+    "name": "internal data move",
+    "opcode_mask": "0xfff000",
+    "opcode_value": "0x0d0000",
+    "encoding_pattern": "000011010000xxxxxxxxxxxx",
+    "field_defined_encoding_count": 4096,
+    "legal_action_count": 2256,
+    "illegal_or_reserved_subencoding_count": 1840,
+    "source_register_count": 48,
+    "destination_register_count": 47,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "NONE",
+    "status_generated": "NONE"
+  },
+  "fields": [
+    {
+      "id": "DEST_RGP",
+      "msb": 11,
+      "lsb": 10,
+      "role": "DESTINATION_REGISTER_GROUP"
+    },
+    {
+      "id": "SOURCE_RGP",
+      "msb": 9,
+      "lsb": 8,
+      "role": "SOURCE_REGISTER_GROUP"
+    },
+    {
+      "id": "DEST_REG",
+      "msb": 7,
+      "lsb": 4,
+      "role": "DESTINATION_REGISTER_INDEX"
+    },
+    {
+      "id": "SOURCE_REG",
+      "msb": 3,
+      "lsb": 0,
+      "role": "SOURCE_REGISTER_INDEX"
+    }
+  ],
+  "legality": {
+    "source": "Every non-reserved REG table entry is readable, including read-only SSTAT.",
+    "destination": "Every non-reserved REG table entry except read-only SSTAT is writable.",
+    "reserved_selector": "A source or destination selector blank in the original REG table has no documented execution behavior.",
+    "read_only_destination": "SSTAT as a destination has no documented write behavior.",
+    "invalid_action_policy": "Reserved selectors and SSTAT destinations decode as Type 17 but emit no move action."
+  },
+  "execution_semantics": {
+    "source_sampling": "The selected source is read from cycle-start architectural state.",
+    "destination_commit": "The selected destination is written at cycle end.",
+    "same_register_move": "A legal same-register move reads the old value and writes it back.",
+    "memory_effect": "No PM-data or DM transaction is performed.",
+    "status_generation": "The move generates no computational status; moving to a writable status/control register directly replaces that register's documented stored bits.",
+    "destination_width": "A destination stores its documented low-width portion of the 16-bit internal move value.",
+    "known_source_extensions": "SE, MR2, M, and SB sign-extend; I, L, PX, and CNTR zero-extend; sixteen-bit computational registers require no extension.",
+    "open_source_extensions": "Upper DMD bits for ASTAT, MSTAT, SSTAT, IMASK, and ICNTL reads remain OQ-016 and block complete state execution."
+  },
+  "architectural_side_effects_requiring_composition": [
+    "MSTAT destination changes computational-bank selection for a following cycle.",
+    "MR1 destination sign-extends its sign into MR2.",
+    "CNTR destination uses the documented counter-load/count-stack behavior.",
+    "I, M, and L destinations update the selected DAG register.",
+    "ASTAT, IMASK, ICNTL, and MSTAT destinations update exact-width status/control state.",
+    "PX destination updates the PMD-DMD exchange register."
+  ],
+  "assembly": {
+    "syntax": "destination_reg = source_reg;",
+    "canonical_spacing": "DEST = SOURCE;"
+  },
+  "parallel_actions": [
+    {
+      "action": "INTERNAL_REGISTER_MOVE",
+      "reads": [
+        "CYCLE_START_SOURCE_REGISTER"
+      ],
+      "writes": [
+        "CYCLE_END_DESTINATION_REGISTER"
+      ],
+      "memory_transaction": "NONE",
+      "status_generation": "NONE"
+    }
+  ],
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 6-1–6-2 and 6-12, Tables 6.6–6.7",
+      "supports": "one-cycle register-to-register MOVE, accessible original register set, and lack of memory-data transfer"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. A-3 (scan PDF p. 142)",
+      "supports": "Type 17 fixed bits and DEST_RGP/SOURCE_RGP/DEST_REG/SOURCE_REG field positions"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. A-9 (scan PDF p. 148)",
+      "supports": "complete original REG selector table and reserved holes"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. 4-22",
+      "supports": "SSTAT is read-only"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 2-6, 2-15, 2-21, 3-2–3-3, 3-7, and 4-4",
+      "supports": "cycle-start read/cycle-end write ordering and documented narrow-register extension rules"
+    }
+  ],
+  "unresolved_issues": [
+    "OQ-016: unused upper DMD bits for ASTAT, MSTAT, SSTAT, IMASK, and ICNTL reads.",
+    "A composed Type 17 state-execution boundary does not yet connect computational, DAG, status, PX, CNTR, and count-stack state.",
+    "Interrupt-adjacent, fetch-phase, and external bus timing remain unintegrated.",
+    "Execution behavior of reserved selectors or an SSTAT destination is not documented and is not treated as NOP."
+  ]
+}

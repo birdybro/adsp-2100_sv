@@ -63,6 +63,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_dag.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_internal_move_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_modify_address_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_modify_address_slice \
@@ -125,13 +127,15 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_mr_saturation.py
 	$(PYTHON) tools/generators/validate_mode_control.py
 	$(PYTHON) tools/generators/validate_modify_address.py
+	$(PYTHON) tools/generators/validate_internal_move.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
 	$(PYTHON) tools/generators/generate_register_package.py --check
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
 		tests.test_isa_fields tests.test_instruction_formats \
-		tests.test_stack_control tests.test_mr_saturation
+		tests.test_stack_control tests.test_mr_saturation \
+		tests.test_internal_move
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -162,6 +166,13 @@ decode-tests:
 			rtl/core/adsp2100_mode_control_decode.sv \
 			sim/unit/tb_adsp2100_mode_control_decode.sv; \
 		build/obj_mode_control_decode/Vtb_adsp2100_mode_control_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_internal_move_decode \
+			--top-module tb_adsp2100_internal_move_decode \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			sim/unit/tb_adsp2100_internal_move_decode.sv; \
+		build/obj_internal_move_decode/Vtb_adsp2100_internal_move_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			-Wno-TIMESCALEMOD \
 			--Mdir build/obj_modify_address_decode \
@@ -455,6 +466,10 @@ formal:
 			rtl/core/adsp2100_mode_control_decode.sv \
 			formal/harnesses/adsp2100_mode_control_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_internal_move_decode_formal \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			formal/harnesses/adsp2100_internal_move_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_modify_address_decode_formal \
 			rtl/core/adsp2100_modify_address_decode.sv \
 			formal/harnesses/adsp2100_modify_address_decode_formal.sv; \
@@ -564,6 +579,8 @@ formal:
 			formal/mr_saturation_decode.sby; \
 		sby -f -d build/formal_mode_control_decode \
 			formal/mode_control_decode.sby; \
+		sby -f -d build/formal_internal_move_decode \
+			formal/internal_move_decode.sby; \
 		sby -f -d build/formal_modify_address_decode \
 			formal/modify_address_decode.sby; \
 		sby -f -d build/formal_stack_control_slice \
@@ -610,6 +627,8 @@ synth-quartus:
 			synthesis/quartus/mr_saturation_slice_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/mode_control_slice_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/internal_move_decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/modify_address_slice_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
@@ -688,6 +707,9 @@ clean:
 	@if [ -d build/obj_mode_control_slice ]; then \
 		find build/obj_mode_control_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_internal_move_decode ]; then \
+		find build/obj_internal_move_decode -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -717,6 +739,9 @@ clean:
 	@if [ -d build/quartus_mode_control_slice ]; then \
 		find build/quartus_mode_control_slice -depth -delete; \
 	fi
+	@if [ -d build/quartus_internal_move_decode ]; then \
+		find build/quartus_internal_move_decode -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -744,6 +769,7 @@ clean:
 		build/formal_mr_saturation_slice \
 		build/formal_mode_control_decode \
 		build/formal_mode_control_slice \
+		build/formal_internal_move_decode \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
