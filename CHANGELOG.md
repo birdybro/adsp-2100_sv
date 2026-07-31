@@ -322,10 +322,11 @@ semantic versioning after its first release.
   routing duplicates, no RAM/DSP blocks, +8.448 ns worst setup and +0.168 ns
   worst multicorner hold slack, 86.81 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 405 distinct Python checks, 14 local
+- The expanded `make test` passes 416 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
-  nineteen exhaustive 24-bit decode traversals, and every existing model/RTL
-  vector regression including all Type 23 and Type 24 division cycles.
+  twenty exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including the Type 12 state/bus clocks and all Type 23
+  and Type 24 division cycles.
 
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,

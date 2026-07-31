@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `59dcc5b`
+**Latest verified engineering commit:** `ed983a6`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -71,6 +71,11 @@ cycle-, or Hard Drivin'-complete
   partitioning, cycle-start selected-bank operand reads, atomic cycle-end
   noncolliding writeback, and explicit fail-closed handling for bit 15,
   unavailable XOP 001, and same-destination packets under OQ-021;
+- bounded Type 12 shifter-plus-DM semantics, two hand-derived fixtures, all
+  108,640 source-closed algebraic forms, exhaustive three-way class
+  partitioning, stable logical DM transactions over arbitrary DMACK waits,
+  old-value stores, completion-only DAG post-modification, and atomic
+  shifter/read/I writeback with unknown-state preservation;
 - bounded Type 15 immediate LSHIFT/ASHIFT semantics, two manual fixtures,
   original-syntax assembler/disassembler support, exhaustive class
   partitioning, selected-bank SR execution, and explicit fail-closed handling
@@ -267,6 +272,10 @@ outstanding.
   unconstrained paths;
   the Type 16 slice fits in 840 ALMs and 520 fitted registers with +2.304 ns
   setup, +0.173 ns hold, and no unconstrained paths;
+  the Type 12 slice fits in 1,704 ALMs and 1,091 fitted registers with no RAM
+  or DSP blocks, +1.377 ns setup, +0.166 ns worst multicorner hold, 50.96 MHz
+  worst slow-corner Fmax, and no unconstrained paths against its 21 ns
+  standalone constraint;
   the Type 8 slice fits in 983 ALMs and 693 fitted registers with one DSP and
   no RAM, +1.131 ns setup, +0.177 ns hold, 47.92 MHz worst slow-corner Fmax,
   and no unconstrained paths against its 22 ns standalone constraint; it
@@ -312,8 +321,8 @@ outstanding.
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
-  Type 15, Type 16, Type 19, Type 20, phase-aware Type 22, Type 23, and Type 24
-  decode/execution (37 total) pass
+  Type 12, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22, Type 23,
+  and Type 24 decode/execution (38 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -325,10 +334,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Close a source-backed memory-transfer instruction class and expose its
-   logical PM/DM transaction boundary.
-4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
-5. Research and connect interrupt-entry sequencing to the now-composed SSTAT and
-   status-stack boundary without inventing arbitration priorities.
-6. Close the Type 12/13 shifter-with-DM/PM data-transfer attachment only after
-   the shared multifunction memory and bus boundary is source-backed.
+3. Close the original Type 13 shifter-plus-PM class, including PX packing and
+   fetch-cache timing, without importing later-device semantics.
+4. Extend the bounded logical DM path into sourced native pin phases and
+   whole-core transaction arbitration.
+5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
+6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
+   and status-stack boundary without inventing arbitration priorities.

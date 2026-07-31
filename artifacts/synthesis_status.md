@@ -3,7 +3,9 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24 decoders/integration slices, stack-control
+  Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 14, Type 15,
+  Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
+  decoders/integration slices, stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
@@ -11,6 +13,15 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 12 shifter-plus-DM
+  transaction slice passes for Cyclone V `5CSEBA6U23I7` at its 21 ns
+  standalone constraint. It uses 1,704 ALMs and 1,091 fitted registers with
+  no RAM or DSP blocks. Across four timing models, worst setup slack is
+  +1.377 ns, worst hold slack is +0.166 ns, and worst slow-corner Fmax is
+  50.96 MHz, with zero unconstrained clocks, ports, or paths. The one
+  unassigned physical clock pin is expected in this virtual-pin smoke
+  project; this is bounded logical-bus evidence, not native-pin or MiSTer
+  timing closure.
 - Quartus 17.0.2 full compilation of the bounded Type 23 DIVQ slice passes
   for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It uses
   316 ALMs and 341 fitted registers (338 design registers plus three routing
@@ -245,7 +256,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 37
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 38
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -256,6 +267,7 @@ internal-move-decode, stack-control-decode, stack-control-integration,
 Type-6 integration,
 Type-8 integration,
 Type-9 integration,
+Type-12 integration,
 Type-14 integration,
 Type-15 integration,
 Type-16 integration,
