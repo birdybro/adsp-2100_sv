@@ -2,8 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `83811cb`; the verified Type 15
-increment is pending commit
+**Latest verified engineering commit:** `56845b5`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
