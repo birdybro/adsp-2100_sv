@@ -16,6 +16,7 @@ Known cases:
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
 | Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
+| Type 12 shifter plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while bus outputs and all architectural destinations remain stable |
 | Type 19 indirect JUMP/CALL | one processor cycle for true or false supported conditions; a taken transfer makes DAG2 supply PMA/PC from I4-I7 without modifying I; no PM-data or DM data transfer |
 | Type 20 conditional RTS/RTI | one processor cycle whether true or false; a taken RTS pops PC, a taken RTI pops PC/status and restores status atomically; return NOT CE never post-decrements CNTR; no PM-data or DM data transfer |
 | Type 22 conditional TRAP | one processor cycle whether true or false; accepted condition is retained through phase holds, PC+1 commits at the state-7/state-8 boundary, and a taken form asserts TRAP and holds state 8 until the HALT handshake; TRAP NOT CE never post-decrements CNTR |
@@ -61,6 +62,14 @@ or DM access. One DIVS plus fifteen DIVQ model steps are additionally checked
 as a signed division sequence. This is instruction-boundary evidence, not an
 integrated sixteen-instruction fetch or bus trace
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4, B-1–B-8].
+
+The bounded Type 12 model/RTL slice verifies 50,069 logical clocks. An
+immediately acknowledged access commits in one clock; every unacknowledged
+clock holds address, direction, select, valid write data, shifter destination,
+DM-read destination, and selected I. The first acknowledged clock atomically
+commits all three parallel actions. This verifies the sourced logical wait
+contract, not physical sub-cycle setup/hold timing or whole-core PM-fetch and
+event arbitration [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7].
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no

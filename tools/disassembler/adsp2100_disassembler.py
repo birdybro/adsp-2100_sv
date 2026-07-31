@@ -168,6 +168,46 @@ def _try_disassemble_shift_move(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_shifter_dm(opcode: int) -> Disassembly | None:
+    if opcode & 0xFE0000 != 0x120000:
+        return None
+    dag = (opcode >> 16) & 1
+    write = bool((opcode >> 15) & 1)
+    sf = (opcode >> 11) & 0xF
+    xop = (opcode >> 8) & 7
+    dreg = (opcode >> 4) & 0xF
+    i_address = (dag << 2) | ((opcode >> 2) & 3)
+    m_address = (dag << 2) | (opcode & 3)
+    if xop not in _SHIFTER_XOP_NAMES:
+        return Disassembly(
+            opcode,
+            f".WORD 0x{opcode:06x};",
+            "UNVERIFIED_TYPE_12_XOP",
+            False,
+        )
+    if not write and _shift_move_destination_collision(sf, dreg):
+        return Disassembly(
+            opcode,
+            f".WORD 0x{opcode:06x};",
+            "UNSUPPORTED_TYPE_12_DESTINATION_COLLISION",
+            False,
+        )
+    computation = _format_register_shifter(sf, xop)
+    dreg_name = _dreg_code_to_name()[dreg]
+    memory = f"DM(I{i_address}, M{m_address})"
+    text = (
+        f"{memory} = {dreg_name}, {computation};"
+        if write
+        else f"{computation}, {dreg_name} = {memory};"
+    )
+    return Disassembly(
+        opcode,
+        text,
+        "TYPE_12_BOUNDED_EXECUTION",
+        True,
+    )
+
+
 def _compute_move_destination_collision(
     z: int,
     amf: int,
@@ -491,6 +531,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     compute_move = _try_disassemble_compute_move(opcode)
     if compute_move is not None:
         return compute_move
+    shifter_dm = _try_disassemble_shifter_dm(opcode)
+    if shifter_dm is not None:
+        return shifter_dm
     shift_move = _try_disassemble_shift_move(opcode)
     if shift_move is not None:
         return shift_move

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_TYPE_12_SHIFTER_DM_TRANSACTION_EXECUTION",
+  "decode": {
+    "opcode_mask": "0xfe0000",
+    "opcode_value": "0x120000",
+    "fields": {
+      "G_DAG_SELECT": [16, 16],
+      "D_DIRECTION_WRITE": [15, 15],
+      "SF_SHIFTER_FUNCTION": [14, 11],
+      "XOP_SHIFTER_SOURCE": [10, 8],
+      "DREG_MEMORY_SOURCE_OR_DESTINATION": [7, 4],
+      "I_LOCAL": [3, 2],
+      "M_LOCAL": [1, 0]
+    },
+    "class_words": 131072,
+    "source_closed_words": 108640,
+    "unavailable_xop_words": 16384,
+    "read_destination_collision_words": 6048,
+    "xop_sources": ["SI", "UNAVAILABLE", "AR", "MR0", "MR1", "MR2", "SR0", "SR1"]
+  },
+  "parallel_actions": {
+    "cycle_start_reads": [
+      "SELECTED_BANK_SHIFTER_XOP",
+      "SELECTED_BANK_DM_WRITE_DREG_IF_WRITE",
+      "SELECTED_DAG_I_M_L",
+      "MSTAT_BIT_REVERSE_IF_DAG1"
+    ],
+    "transaction_setup": [
+      "DM_ADDRESS_FROM_OLD_I",
+      "DM_DIRECTION_FROM_D",
+      "DM_WRITE_DATA_FROM_OLD_DREG_IF_WRITE"
+    ],
+    "completion_writes": [
+      "SHIFTER_DESTINATION",
+      "ASTAT_SS_WHEN_SHIFTER_WRITES_SS",
+      "DM_READ_DREG_IF_READ",
+      "POSTMODIFIED_SELECTED_I"
+    ],
+    "dm_read_collision_rule": "SHIFTER_AND_DM_READ_MUST_NOT_WRITE_THE_SAME_REGISTER",
+    "dm_write_overlap_rule": "LEGAL_BECAUSE_WRITE_DATA_IS_THE_OLD_DREG_VALUE",
+    "base_instruction_cycles": 1,
+    "conditional": false
+  },
+  "wait_state_contract": {
+    "acknowledge": "DMACK",
+    "address_direction_select_write_data": "STABLE_UNTIL_ACKNOWLEDGED",
+    "architectural_state_during_wait": "UNCHANGED",
+    "read_data_sampling": "ACKNOWLEDGED_COMPLETION_BOUNDARY",
+    "commit": "ATOMIC_SHIFTER_DM_READ_AND_DAG_POSTMODIFY",
+    "extension_granularity": "ONE_PROCESSOR_CYCLE_PER_UNACKNOWLEDGED_ACCESS"
+  },
+  "unknown_policy": {
+    "reset_unknown": ["COMPUTATIONAL_REGISTERS", "I_REGISTERS", "M_REGISTERS", "L_REGISTERS"],
+    "unknown_shifter_source": "INVALIDATE_ONLY_DOCUMENTED_SHIFTER_DESTINATION_AT_COMPLETION",
+    "unknown_dm_read_data": "INVALIDATE_ONLY_DM_READ_DESTINATION_AT_COMPLETION",
+    "unknown_or_unsupported_dag_configuration": "ADDRESS_VALID_WHEN_OLD_I_IS_KNOWN_BUT_SELECTED_I_WRITEBACK_BECOMES_UNKNOWN"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 2-6–2-7, 2-18, and 2-28",
+    "ADI-UM-1989 printed pp. 5-9–5-12",
+    "ADI-UM-1989 printed pp. 6-3–6-7 and Tables 6.1–6.2",
+    "ADI-UM-1989 printed p. A-2"
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "tests": {
+    "python": "tests/test_shifter_dm.py",
+    "tool_round_trip": "tests/test_assembler_disassembler.py::test_all_source_closed_shifter_dm_forms_round_trip",
+    "rtl_decode": "sim/unit/tb_adsp2100_shifter_dm_decode.sv",
+    "rtl_state_and_bus": "sim/unit/tb_adsp2100_shifter_dm_slice.sv",
+    "formal": "formal/shifter_dm.sby"
+  },
+  "unresolved": [
+    "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_AND_BUS_ARBITRATION_INTEGRATION",
+    "PHYSICAL_PIN_SUBSTATE_WAVEFORMS_BEYOND_LOGICAL_CYCLE_BOUNDARY",
+    "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
+  ]
+}

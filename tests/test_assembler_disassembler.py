@@ -119,6 +119,18 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                         count += 1
         self.assertEqual(count, 25_648)
 
+    def test_all_source_closed_shifter_dm_forms_round_trip(self) -> None:
+        count = 0
+        for payload in range(1 << 17):
+            opcode = 0x120000 | payload
+            decoded = disassemble_word(opcode)
+            if not decoded.implemented:
+                continue
+            self.assertEqual(decoded.classification, "TYPE_12_BOUNDED_EXECUTION")
+            self.assertEqual(assemble_statement(decoded.text).value, opcode)
+            count += 1
+        self.assertEqual(count, 108_640)
+
     def test_all_canonical_compute_operations_round_trip(self) -> None:
         from tools.assembler.adsp2100_assembler import _format_compute_operation
 
@@ -422,6 +434,21 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             assemble_statement("SR = LSHIFT SI (HI), SR0 = AX0;")
         with self.assertRaises(AssemblyError):
             assemble_statement("SE = EXP SI (HI), SE = AX0;")
+
+    def test_shifter_dm_unsupported_forms_fail_closed(self) -> None:
+        cases = {
+            0x120100: "UNVERIFIED_TYPE_12_XOP",
+            0x1200E0: "UNSUPPORTED_TYPE_12_DESTINATION_COLLISION",
+            0x126890: "UNSUPPORTED_TYPE_12_DESTINATION_COLLISION",
+        }
+        for opcode, classification in cases.items():
+            decoded = disassemble_word(opcode)
+            self.assertFalse(decoded.implemented)
+            self.assertEqual(decoded.classification, classification)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI (HI), SR0 = DM(I0, M0);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI (HI), AX0 = DM(I0, M4);")
 
     def test_conditional_shifter_rejects_unavailable_xop_and_bad_condition(self) -> None:
         unavailable = disassemble_word(0x0E010F)

@@ -46,7 +46,9 @@ integration, plus exact Type 18 mode-control and Type 21 address-modify
 execution, exact Type 6 immediate-to-DREG execution across both computational
 banks, the 14,336 source-closed Type 15 immediate LSHIFT/ASHIFT words with
 selected-bank SR writeback, 25,648 canonical Type 14 shifter-plus-DREG
-multifunction words with old-value parallel semantics, 476,672 Type 8
+multifunction words with old-value parallel semantics, 108,640 source-closed
+Type 12 shifter-plus-DM words with ACK-stretched logical bus transactions and
+atomic shifter/DREG/DAG completion, 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
 AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
@@ -65,7 +67,9 @@ computational, DAG, status/control, PX, CNTR/count-stack, and SSTAT state.
 OQ-016 narrow status reads, OQ-021 Type 14 bit 15, OQ-022 Type 8 AMF zero,
 47,616 fail-closed Type 8 words, 39,888 fail-closed Type 14
 subencodings, 18,432 unverified Type 15 subencodings, and 256 unassigned-XOP
-Type 16 subencodings remain explicitly unresolved or unsupported. The 16,384
+Type 16 subencodings remain explicitly unresolved or unsupported. Type 12's
+16,384 unavailable-XOP words and 6,048 DM-read destination collisions fail
+closed. The 16,384
 Type 10 and four Type 19 CALL NOT CE words remain fail-closed under OQ-012.
 General HALT synchronization, BR/BG, interrupt arbitration, and complete PM
 strobes remain outside the bounded Type 22 controller. Pinned MAME's
@@ -73,6 +77,8 @@ conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
 division-flag conflict is recorded as SC-014. Division exists as bounded
 instruction slices, not yet in the top-level fetch/decode/execute model.
+Type 12 supplies a logical transaction boundary, not the original active-low
+pin-phase interface or an integrated fetch/decode/execute bus controller.
 Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 

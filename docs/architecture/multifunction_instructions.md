@@ -1,8 +1,7 @@
 # Multifunction execution semantics
 
-**Status: key ordering rule verified; bounded Type 8 ALU/MAC-plus-DREG and
-Type 14 shifter-plus-DREG moves integrated; memory multifunction classes
-pending**
+**Status: key ordering rule verified; bounded Type 8 ALU/MAC-plus-DREG,
+Type 12 shifter-plus-DM, and Type 14 shifter-plus-DREG forms integrated**
 
 All computational register reads take their values at the beginning of a cycle
 and all writes become visible at the end. Therefore a simultaneous memory load
@@ -85,6 +84,37 @@ stateful model-versus-RTL cycles cover every supported word in both banks.
 Whole-core fetch overlap, loop-terminal behavior, interrupt abort, wait
 extension, and bus phases remain outside this bounded instruction boundary.
 
+## Bounded Type 12 execution and DM transaction
+
+Original Type 12 combines one unconditional non-immediate shifter operation
+with one DAG-addressed DM read or write. The shifter source, DM-write DREG,
+and selected I/M/L values are cycle-start values. A read loads its DREG only
+at completion; a write drives the old DREG value even if the shifter replaces
+that register. The selected I is post-modified only when the transaction
+completes. A read may not target the same SR half or SE result written by the
+shifter, while the corresponding write overlap is legal because it creates no
+second register write [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 2-28,
+6-3–6-7, Tables 6.1–6.2, A-2].
+
+The exact `0001001` class contains 131,072 words. The bounded decoder executes
+108,640: both DAGs, both directions, all sixteen SF functions, seven documented
+shifter X operands, all DREGs, and all same-DAG I/M pairs, excluding only read
+destination collisions. It fails closed for 16,384 unavailable-XOP words and
+6,048 read-collision words. Two independent fixtures and every supported
+assembler/disassembler form round trip; exhaustive RTL decode traverses all
+24-bit words.
+
+The transaction boundary exposes separate logical DM select/read/write,
+14-bit address, and 16-bit write data. DMACK-low cycles preserve every
+architectural destination and retain address, direction, select, and valid
+write data. The first acknowledged boundary samples read data and atomically
+commits the memory read, shifter result/status, and DAG post-modify. Directed
+tests and 50,069 deterministic model/RTL clocks cover zero and multiple waits,
+both banks/DAGs, bit reversal, reset abort, exact and unknown operands, and
+randomized legal transactions [ADI-UM-1989, printed pp. 5-9–5-12]. This is
+logical bus-cycle evidence; physical eight-state pin waveforms, fetch overlap,
+interrupt/BR/HALT latching, and whole-core composition remain open.
+
 PM data access can add an instruction-fetch cycle when the cache cannot source
 the next instruction [ADI-UM-1989, printed pp. 1-7, 4-26, 6-21]. This external
 timing effect is part of the instruction, even though the computation itself is
@@ -92,11 +122,11 @@ single-cycle.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap for memory multifunction groups;
-- old store value versus new computation result;
+- source/destination overlap for Types 1, 4, 5, and 13;
+- old store value versus new computation result outside Type 12;
 - dual PM/DM loads and independent DAG post-modifies;
 - status from the computation visible only to the next cycle;
 - condition-false preservation and cycle/bus activity;
 - PM cache hit/miss, branch, loop-end, interrupt, wait, HALT, and BR boundaries;
 - illegal destination collisions and reserved field combinations beyond the
-  bounded Type 8 and Type 14 partitions.
+  bounded Type 8, Type 12, and Type 14 partitions.

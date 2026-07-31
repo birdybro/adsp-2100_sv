@@ -15,3 +15,12 @@ load PX and PM writes append PX [ADI-UM-1989, printed pp. 3-6–3-8].
 The architectural model exposes separate PM instruction fetch, PM data read,
 PM data write, DM read, and DM write transactions. It does not embed RAM into
 the CPU. Uninitialized memory is a model input, not silently zero.
+
+The bounded Type 12 boundary is the first executable DM transaction path. It
+drives the old selected I (or the DAG1 bit-reversal of that value), direction,
+select, and old write-source data. A missing DMACK holds all valid bus outputs
+and all architectural destinations. The first acknowledged boundary samples
+read data and atomically commits the optional DREG load, shifter action, and
+selected-I post-modification [ADI-UM-1989, printed pp. 5-9–5-12,
+6-3–6-7]. It does not yet include PM fetch concurrency, BR/BG ownership,
+interrupt/HALT latching, or a physical state-1-through-state-8 pin wrapper.

@@ -507,6 +507,56 @@ def _assemble_shift_move(statement: str) -> int | None:
     )
 
 
+def _assemble_shifter_dm(statement: str) -> int | None:
+    """Assemble a source-closed original Type 12 shifter/DM operation."""
+
+    if statement.count(",") != 2:
+        return None
+    read = re.fullmatch(
+        r"(.+),\s*([A-Z][A-Z0-9]*)\s*=\s*DM\(I([0-7]),\s*M([0-7])\)",
+        statement,
+    )
+    write = re.fullmatch(
+        r"DM\(I([0-7]),\s*M([0-7])\)\s*=\s*"
+        r"([A-Z][A-Z0-9]*),\s*(.+)",
+        statement,
+    )
+    if read is not None:
+        computation, dreg_name, i_name, m_name = read.groups()
+        is_write = False
+    elif write is not None:
+        i_name, m_name, dreg_name, computation = write.groups()
+        is_write = True
+    else:
+        return None
+
+    parsed_shifter = _parse_register_shifter(computation.strip())
+    registers = _dreg_name_to_code()
+    if parsed_shifter is None or dreg_name not in registers:
+        return None
+    i_address = int(i_name)
+    m_address = int(m_name)
+    if i_address // 4 != m_address // 4:
+        raise AssemblyError("Type 12 I and M registers must use the same DAG")
+    sf, xop = parsed_shifter
+    dreg = registers[dreg_name]
+    if not is_write and _shift_move_destination_collision(sf, dreg):
+        raise AssemblyError(
+            "Type 12 DM read destination collides with shifter destination"
+        )
+    dag = i_address // 4
+    return (
+        0x120000
+        | (dag << 16)
+        | (int(is_write) << 15)
+        | (sf << 11)
+        | (xop << 8)
+        | (dreg << 4)
+        | ((i_address & 3) << 2)
+        | (m_address & 3)
+    )
+
+
 def _assemble_immediate_shift(statement: str) -> int | None:
     match = re.fullmatch(
         r"SR\s*=\s*(SR OR\s+)?(A|L)SHIFT\s+"
@@ -678,6 +728,9 @@ def assemble_statement(source: str) -> AssembledWord:
     compute_move = _assemble_compute_move(statement)
     if compute_move is not None:
         return AssembledWord(compute_move)
+    shifter_dm = _assemble_shifter_dm(statement)
+    if shifter_dm is not None:
+        return AssembledWord(shifter_dm)
     shift_move = _assemble_shift_move(statement)
     if shift_move is not None:
         return AssembledWord(shift_move)

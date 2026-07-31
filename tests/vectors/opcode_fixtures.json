@@ -246,6 +246,24 @@
       "review_status": "HAND_TRANSCRIBED_PRIMARY"
     },
     {
+      "id": "HAND-SHIFTER-DM-READ-120000",
+      "source": "SR = LSHIFT SI (HI), AX0 = DM(I0, M0);",
+      "opcode": "0x120000",
+      "program_word_bytes_big_endian": "120000",
+      "encoding_class": 12,
+      "source_citation": "ADI-UM-1989 printed pp. 6-3–6-7 and A-2",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-SHIFTER-DM-WRITE-1380EC",
+      "source": "DM(I7, M4) = SR0, SR = LSHIFT SI (HI);",
+      "opcode": "0x1380ec",
+      "program_word_bytes_big_endian": "1380ec",
+      "encoding_class": 12,
+      "source_citation": "ADI-UM-1989 printed pp. 6-3–6-7 and A-2",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-DIVS-AY1-AX0-060800",
       "source": "DIVS AY1, AX0;",
       "opcode": "0x060800",

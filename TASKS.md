@@ -111,6 +111,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
+  `tests/test_shifter_dm.py`,
   `tests/test_compute_move.py`, `tests/test_conditional_compute.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
@@ -170,6 +171,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_immediate_shift_decode.sv`,
   `sim/unit/tb_adsp2100_conditional_shift_decode.sv`,
   `sim/unit/tb_adsp2100_shift_move_decode.sv`,
+  `sim/unit/tb_adsp2100_shifter_dm_decode.sv`,
   `sim/unit/tb_adsp2100_compute_move_decode.sv`,
   `sim/unit/tb_adsp2100_direct_jump_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
@@ -177,7 +179,7 @@ advance beyond research until a page-level primary citation is added.
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
-  `formal/shift_move.sby`,
+  `formal/shift_move.sby`, `formal/shifter_dm.sby`,
   `formal/compute_move.sby`, `formal/direct_jump.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
@@ -244,6 +246,12 @@ advance beyond research until a page-level primary citation is added.
   and 3,024 same-destination forms. Two hand fixtures, every supported syntax
   form, every supported word in both banks, and 82,597 stateful model/RTL
   cycles pass; whole-core timing remains open.
+  Type 12 exhaustively partitions all 131,072 class words into 108,640
+  source-closed actions, 16,384 unavailable-XOP words, and 6,048 illegal
+  DM-read destination collisions. Two hand-derived fixtures, all supported
+  assembler/disassembler forms, exhaustive 24-bit RTL decode, and 50,069
+  state/bus differential clocks pass; physical pin phases and whole-core
+  PM/event integration remain open.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -318,23 +326,27 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989, ADI-UM-FAMILY-1995,
   ADI-ASM-1994
 - **Relevant tests:** `make compute-tests`, `tests/test_shift_move.py`,
-  `tests/test_compute_move.py`,
+  `tests/test_shifter_dm.py`, `tests/test_compute_move.py`,
   `sim/unit/tb_adsp2100_shift_move_slice.sv`,
+  `sim/unit/tb_adsp2100_shifter_dm_slice.sv`,
   `sim/unit/tb_adsp2100_compute_move_slice.sv`, `formal/shift_move.sby`,
-  `formal/compute_move.sby`
+  `formal/shifter_dm.sby`, `formal/compute_move.sby`
 - **Implementation notes:** the bounded Type 14 action graph implements the
   first complete source-backed parallel execution boundary. Shifter X and
   DREG-move source read cycle-start selected-bank state; noncolliding DREG,
   SR/SE/SB, and SS writes commit together at cycle end. Source overlap is
   legal. The decoder fails closed for all same-destination requests and for
   source-unclosed bit-15/XOP forms. Ten directed checks and 82,597 stateful
-  RTL/model cycles cover every supported canonical word in both banks. Type
-  The bounded Type 8 action graph independently extends that rule to every
+  RTL/model cycles cover every supported canonical word in both banks. The
+  bounded Type 8 action graph independently extends that rule to every
   source-closed ALU/MAC computation and DREG move: all operands and status are
   sampled at cycle start and noncolliding result, feedback, ASTAT, and move
   writes commit together at cycle end. Its exhaustive partition and 983,386
-  stateful cycles cover both banks. Type 1, 4, 5, 12, and 13 action graphs,
-  PM/DM concurrency, and wait effects remain.
+  stateful cycles cover both banks. The bounded Type 12 graph adds old-value
+  shifter/store/DAG sampling, read-collision rejection, stable logical DM bus
+  extension, and atomic acknowledged shifter/read/I commit for 108,640 words;
+  50,069 state/bus clocks pass. Type 1, 4, 5, and 13 action graphs, PM/DM
+  concurrency, and whole-core event arbitration remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, and result forwarding outside the bounded old-value rule
   remain high-risk.
@@ -423,6 +435,11 @@ advance beyond research until a page-level primary citation is added.
   every other ASTAT bit and the inactive bank; and propagates unknown reset
   sources only to those three destinations. Eleven directed tests and 50,109
   model/RTL cycles pass for all source-closed operands and fail-closed edges.
+  A separate Type 12 transaction model captures old selected-bank shifter and
+  store operands plus selected I/M/L, holds one logical DM transaction through
+  arbitrary DMACK-low clocks, and atomically commits shifter/status, optional
+  read DREG, and I post-modification on acknowledgment. Nine directed tests
+  and 50,069 state/bus differential clocks pass across both banks and DAGs.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -457,7 +474,10 @@ advance beyond research until a page-level primary citation is added.
   and EXPADJ forms; XOP `001` remains unassembled and visibly unverified. Type
   14 round trips all 25,648 canonical noncolliding shifter-plus-DREG forms;
   bit-15-one, unavailable-XOP, and same-destination words remain visibly
-  fail-closed. Type 8 accepts canonical source-closed ALU/MAC-plus-DREG
+  fail-closed. Type 12 round trips all 108,640 source-closed shifter-plus-DM
+  read/write forms with same-DAG address syntax; unavailable-XOP, cross-DAG
+  syntax, and read destination collisions fail closed. Type 8 accepts
+  canonical source-closed ALU/MAC-plus-DREG
   packets, preserves non-unique supported aliases as raw `.WORD` encodings,
   and visibly rejects AMF-zero and same-destination words. Two hand-derived
   Type 8 fixtures and 20,513 representative canonical packets round trip.
@@ -564,7 +584,8 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make compute-tests`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `formal/shifter.sby`,
   `tests/test_shift_move.py`, `formal/immediate_shift.sby`,
-  `formal/conditional_shift.sby`, `formal/shift_move.sby`
+  `formal/conditional_shift.sby`, `formal/shift_move.sby`,
+  `tests/test_shifter_dm.py`, `formal/shifter_dm.sby`
 - **Implementation notes:** all sixteen source-backed SF functions now exist
   in the independent model and portable combinational RTL. Exact signed counts,
   HI/LO placement, PASS/OR, ASHIFT/LSHIFT, NORM AC extension, EXP HI/HIX/LO,
@@ -578,8 +599,11 @@ advance beyond research until a page-level primary citation is added.
   model/RTL cycles. Its 256 unavailable-XOP words fail closed under OQ-020.
   The bounded Type 14 slice adds old-value shifter-plus-DREG parallel reads,
   atomic noncolliding writeback, 25,648 supported canonical words, and 82,597
-  stateful model/RTL cycles. Type 12–13 memory multifunction behavior,
-  whole-core cycles, and bus phases remain.
+  stateful model/RTL cycles. The bounded Type 12 slice adds all 108,640
+  source-closed shifter-plus-DM actions, stable acknowledged/waited logical
+  bus transactions, atomic shifter/read/DAG completion, and 50,069 stateful
+  differential clocks. Type 13 PM multifunction behavior, whole-core fetch,
+  and physical eight-state bus phases remain.
 - **Unresolved questions:** reset values, same-cycle visibility during
   multifunction writeback, and OQ-011's manually loaded `SE=0x80` NORM
   negation; no undocumented shifter saturation operation is assumed.
@@ -606,7 +630,9 @@ advance beyond research until a page-level primary citation is added.
   vectors pass, including all reversed addresses. Invalid circular
   configurations are exposed diagnostically, not assigned invented semantics.
   A bounded Type 21 slice adds exact I/M/L storage, all DAG1 selections,
-  selected-I cycle-end writeback, and 50,124 stateful model/RTL cycles.
+  selected-I cycle-end writeback, and 50,124 stateful model/RTL cycles. Type
+  12 now attaches every DAG1 I/M selection to a DM transaction, including bit
+  reversal and completion-only post-modification through arbitrary waits.
 - **Unresolved questions:** ordinary data-transfer writeback and stall enables,
   same-cycle external register writes, alternate banking, multifunction
   ordering, loops, interrupts, and externally visible timing.
@@ -628,9 +654,12 @@ advance beyond research until a page-level primary citation is added.
   has a DAG2 configuration in which bit-reverse is structurally ineffective;
   all vectors compare DAG1/DAG2 arithmetic. The bounded Type 21 slice adds all
   DAG2 register selections, exact I/M/L storage, selected-I writeback, and
-  stateful comparison. The bounded Type 19 slice now reads exact I4-I7 storage
+  stateful comparison. Type 12 attaches every DAG2 I/M selection to a DM
+  transaction with completion-only post-modification. The bounded Type 19
+  slice now reads exact I4-I7 storage
   without modification, drives a testable PMA-target observation when taken,
-  and passes 50,259 model/RTL cycles. PM/DM data-bus attachment does not exist.
+  and passes 50,259 model/RTL cycles. PM and non-Type-12 DM data-bus attachment
+  does not exist.
 - **Unresolved questions:** differing register group restrictions and
   simultaneous PM/DM semantics.
 - **Confidence:** CORROBORATED
@@ -824,7 +853,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-PMBUS-001 — Native program-memory interface
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** DEV-001, TIME-001
 - **Acceptance criteria:** sourced pins/polarities, logical phases, fetch
@@ -841,7 +870,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-DMBUS-001 — Native data-memory interface
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** DEV-001, TIME-001
 - **Acceptance criteria:** sourced pins/polarities, read/write phases, waits,
@@ -849,9 +878,14 @@ advance beyond research until a page-level primary citation is added.
   formal properties.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ADI-UM-1989 system-interface chapter
-- **Relevant tests:** `make bus-tests`, `formal/dm_bus.sby`
-- **Implementation notes:** shared physical pins, if documented, may be exposed
-  through a native bus-control layer without erasing PM/DM transaction identity.
+- **Relevant tests:** `tests/test_shifter_dm.py`,
+  `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
+  `make compute-tests`
+- **Implementation notes:** the Type 12 boundary exposes a distinct logical
+  14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
+  completion, and validity signals. It holds the transaction stable over waits
+  and samples read data only at completion. This is not yet the native
+  active-low pin/state wrapper or whole-core arbitration layer.
 - **Unresolved questions:** shared data-bus turnaround and select ordering.
 - **Confidence:** UNKNOWN
 
@@ -992,7 +1026,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### TIME-002 — PM/DM wait states and transaction extension
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** TIME-001, RTL-PMBUS-001, RTL-DMBUS-001
 - **Acceptance criteria:** wait sampling, per-space configuration/input,
@@ -1000,9 +1034,13 @@ advance beyond research until a page-level primary citation is added.
   interrupts, and BR during waits pass trace and liveness tests.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ADI-UM-1989 system-interface chapter
-- **Relevant tests:** `make bus-tests`, `formal/wait_states.sby`
-- **Implementation notes:** do not substitute a generic ready/valid protocol
-  until original pin behavior is mapped.
+- **Relevant tests:** `tests/test_shifter_dm.py`,
+  `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`
+- **Implementation notes:** Type 12 implements the sourced logical DMACK rule:
+  each low sample extends the transaction by a processor clock, bus outputs
+  remain stable, state does not commit, and the first high sample commits all
+  parallel actions. PM waits, interrupt/BR/HALT latching, and physical state-6/
+  state-7 pin timing remain.
 - **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
   behavior.
 - **Confidence:** UNKNOWN
@@ -1020,8 +1058,13 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** MAME-ADSP2100-CORE, MAME-ADSP2100-OPS,
   MAME-ADSP2100-DASM, and per-instruction primary sources
 - **Relevant tests:** `make differential`, `make fuzz`
-- **Implementation notes:** MAME is an implementation under test and cannot
-  override primary evidence by itself.
+- **Implementation notes:** deterministic independent-model/RTL vector
+  comparison exists for the implemented compute, DAG, sequencer, register,
+  status, and bounded instruction slices. Type 12 adds the first memory-bus
+  transaction comparison, covering 50,069 seeded clocks with waits. These are
+  bounded state/action traces, not legal-program execution; the MAME adapter,
+  unified architectural trace schema, and reducer remain absent. MAME is an
+  implementation under test and cannot override primary evidence by itself.
 - **Unresolved questions:** minimal licensed MAME build and cycle limitations.
 - **Confidence:** UNKNOWN
 
@@ -1039,9 +1082,10 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Thirty-seven harnesses now pass strict assertion
+  result a complete proof. Thirty-eight harnesses now pass strict assertion
   syntax lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
+  bounded Type 12 shifter-plus-DM decode, wait stability, and atomic completion,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
@@ -1093,6 +1137,11 @@ advance beyond research until a page-level primary citation is added.
   The bounded Type 14 slice fits in 1,032 ALMs and 565 fitted registers with no
   RAM/DSPs, +3.041 ns worst setup, +0.171 ns worst hold, and zero unconstrained
   clocks, ports, or paths.
+  The bounded Type 12 DM transaction slice fits in 1,704 ALMs and 1,091 fitted
+  registers with no RAM/DSPs, +1.377 ns worst setup, +0.166 ns worst
+  multicorner hold slack at 21 ns, 50.96 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths. The unassigned standalone clock pin
+  warning is expected for this virtual-pin smoke project.
   The bounded Type 8 slice fits in 983 ALMs and 693 fitted registers with one
   DSP and no RAM against a 22 ns standalone-slice constraint. Worst setup is
   +1.131 ns, worst hold is +0.177 ns, worst slow-corner Fmax is 47.92 MHz, and

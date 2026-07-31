@@ -12,3 +12,13 @@ serviced during this extension [ADI-UM-1989, printed p. 5-9].
 
 Automated bus traces must check address/control/write-data stability throughout
 every extension and completion at the first accepted DMACK sample.
+
+The Type 12 execution boundary now automates that logical check. A request can
+complete on its issue clock when DMACK is asserted or enter a pending state.
+Pending state freezes the transaction descriptor and does not repeat shifter
+or DAG execution. DM read data is sampled only on the completing clock; DM
+write data is the old selected-bank DREG value. Reset cancels a pending
+transaction and invalidates reset-unknown computational and DAG state. The
+50,069-cycle differential includes arbitrary multi-clock extension and checks
+atomic completion. PM concurrency, event latching during waits, and active-low
+pin-level state timing are still unimplemented.

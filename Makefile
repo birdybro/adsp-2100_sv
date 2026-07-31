@@ -57,6 +57,16 @@ lint:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_shift_move_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_shifter_dm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_dm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_shifter_dm_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_move_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_compute_move_decode.sv \
@@ -250,7 +260,7 @@ decode-tests:
 		tests.test_stack_control tests.test_mr_saturation \
 		tests.test_internal_move tests.test_load_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
-		tests.test_shift_move tests.test_compute_move \
+		tests.test_shift_move tests.test_shifter_dm tests.test_compute_move \
 		tests.test_conditional_compute tests.test_direct_jump \
 		tests.test_do_until tests.test_indirect_jump \
 		tests.test_conditional_return tests.test_conditional_trap \
@@ -293,6 +303,13 @@ decode-tests:
 			rtl/core/adsp2100_shift_move_decode.sv \
 			sim/unit/tb_adsp2100_shift_move_decode.sv; \
 		build/obj_shift_move_decode/Vtb_adsp2100_shift_move_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_shifter_dm_decode \
+			--top-module tb_adsp2100_shifter_dm_decode \
+			rtl/core/adsp2100_shifter_dm_decode.sv \
+			sim/unit/tb_adsp2100_shifter_dm_decode.sv; \
+		build/obj_shifter_dm_decode/Vtb_adsp2100_shifter_dm_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			-Wno-TIMESCALEMOD \
 			--Mdir build/obj_compute_move_decode \
@@ -403,7 +420,7 @@ compute-tests:
 	$(PYTHON) -m unittest -v tests.test_condition_logic tests.test_alu_model \
 		tests.test_mac_model tests.test_shifter_model tests.test_mr_saturation \
 		tests.test_immediate_shift tests.test_conditional_shift \
-		tests.test_shift_move tests.test_compute_move \
+		tests.test_shift_move tests.test_shifter_dm tests.test_compute_move \
 		tests.test_conditional_compute tests.test_divide_quotient \
 		tests.test_divide_sign
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
@@ -528,6 +545,22 @@ compute-tests:
 			rtl/core/adsp2100_shift_move_slice.sv \
 			sim/unit/tb_adsp2100_shift_move_slice.sv; \
 		build/obj_shift_move_slice/Vtb_adsp2100_shift_move_slice; \
+		$(PYTHON) tools/generators/generate_shifter_dm_vectors.py \
+			--output build/shifter_dm_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_shifter_dm_slice \
+			--top-module tb_adsp2100_shifter_dm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_dm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_shifter_dm_slice.sv \
+			sim/unit/tb_adsp2100_shifter_dm_slice.sv; \
+		build/obj_shifter_dm_slice/Vtb_adsp2100_shifter_dm_slice; \
 		$(PYTHON) tools/generators/generate_compute_move_vectors.py \
 			--output build/compute_move_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -845,17 +878,17 @@ mode-tests:
 		echo "SKIP MSTAT-consumer RTL test: Verilator is not installed"; \
 	fi
 
-instruction-tests: decode-tests assembler-tests
-	@echo "SKIP RTL instruction tests: no instruction execution RTL exists"
+instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests
+	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests:
-	@echo "SKIP bus tests: native bus RTL does not exist"
+bus-tests: compute-tests
+	@echo "PASS bounded Type 12 logical DM transaction regression"
 
 interrupt-tests:
 	@echo "SKIP interrupt tests: interrupt RTL does not exist"
 
-differential:
-	@echo "SKIP differential tests: only the independent model foundation exists"
+differential: compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
+	@echo "PASS available bounded model/RTL differential regressions"
 
 fuzz:
 	@echo "SKIP fuzz tests: complete legal-instruction generator does not exist"
@@ -909,6 +942,17 @@ formal:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_shift_move_slice.sv \
 			formal/harnesses/adsp2100_shift_move_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_shifter_dm_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_dm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_shifter_dm_slice.sv \
+			formal/harnesses/adsp2100_shifter_dm_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_move_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -1123,6 +1167,7 @@ formal:
 		sby -f -d build/formal_conditional_shift \
 			formal/conditional_shift.sby; \
 		sby -f -d build/formal_shift_move formal/shift_move.sby; \
+		sby -f -d build/formal_shifter_dm formal/shifter_dm.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_conditional_compute \
 			formal/conditional_compute.sby; \
@@ -1191,6 +1236,8 @@ synth-quartus:
 			synthesis/quartus/conditional_shift_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/shift_move_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/shifter_dm_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_move_smoke; \
 		quartus_sh --flow compile \
@@ -1272,6 +1319,7 @@ clean:
 	@find build -maxdepth 1 -type f -name immediate_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shift_move_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name shifter_dm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_move_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_compute_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name direct_jump_vectors.txt -delete
@@ -1342,6 +1390,12 @@ clean:
 	fi
 	@if [ -d build/obj_shift_move_slice ]; then \
 		find build/obj_shift_move_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_shifter_dm_decode ]; then \
+		find build/obj_shifter_dm_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_shifter_dm_slice ]; then \
+		find build/obj_shifter_dm_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_compute_move_decode ]; then \
 		find build/obj_compute_move_decode -depth -delete; \
@@ -1444,6 +1498,9 @@ clean:
 	@if [ -d build/quartus_shift_move ]; then \
 		find build/quartus_shift_move -depth -delete; \
 	fi
+	@if [ -d build/quartus_shifter_dm ]; then \
+		find build/quartus_shifter_dm -depth -delete; \
+	fi
 	@if [ -d build/quartus_compute_move ]; then \
 		find build/quartus_compute_move -depth -delete; \
 	fi
@@ -1504,6 +1561,7 @@ clean:
 		build/formal_immediate_shift \
 		build/formal_conditional_shift \
 		build/formal_shift_move \
+		build/formal_shifter_dm \
 		build/formal_compute_move \
 		build/formal_conditional_compute \
 		build/formal_direct_jump \

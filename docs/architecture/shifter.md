@@ -1,7 +1,7 @@
 # Barrel shifter
 
 **Status: function block implemented and independently cross-checked; bounded
-Type 14, Type 15, and Type 16 instruction forms integrated**
+Type 12 and Type 14–16 instruction forms integrated**
 
 The original shifter maps a 16-bit input into a 32-bit result with 49
 placements from off-scale right through off-scale left. SR is split into
@@ -75,9 +75,9 @@ operands, all 256 signed counts for every shift/NORM code, the complete 16-bit
 operand space for every exponent mode, all flag combinations, and
 deterministic random values.
 
-This is not yet a complete shifter-instruction implementation. Type 12–13
-memory multifunction behavior and whole-core cycle/bus timing remain
-outside the implemented boundaries. The separate register file now
+This is not yet a complete shifter-instruction implementation. Type 13 PM
+multifunction behavior and whole-core fetch/interrupt timing remain outside
+the implemented boundaries. The separate register file now
 accepts the explicit result enables for selected-bank SR, SE, or SB
 writeback, and the separate status block accepts EXP's explicit SS update;
 instruction connectivity remains to be verified during core integration.
@@ -132,3 +132,12 @@ The slice executes 25,648 bit-15-zero words and fails closed for all unresolved
 bit-15-one, unavailable-XOP, and same-destination words. Its exhaustive decode
 and 82,597 stateful comparison cycles cover every supported word in both banks
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
+
+The separate `adsp2100_shifter_dm_slice` implements the original Type 12
+shifter-plus-DM form for all 108,640 source-closed, noncolliding words. It
+captures shifter, memory-write, and DAG sources at transaction start; exposes
+stable logical DM bus signals through arbitrary DMACK-low extensions; and
+commits shifter/status, optional read DREG, and I post-modification together
+at acknowledgment. The complete Type 12 class is exhaustively partitioned and
+50,069 deterministic state/bus clocks agree with the independent model
+[ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7, A-2].

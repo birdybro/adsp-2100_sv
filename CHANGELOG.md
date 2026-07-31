@@ -85,6 +85,12 @@ semantic versioning after its first release.
   algebraic assembler/disassembler support, two hand fixtures, deterministic
   differential vectors, formal harness/recipe, and constrained Cyclone V
   synthesis project.
+- A bounded original Type 12 shifter-plus-DM semantic/transaction entry
+  covering 108,640 source-closed words; an independent unknown-preserving
+  model with pending DMACK waits, exact fail-closed decoder, portable stateful
+  RTL, all supported assembler/disassembler forms, two hand-derived fixtures,
+  deterministic state/bus differential vectors, a bus-stability formal
+  harness/recipe, and a constrained Cyclone V synthesis project.
 - A bounded Type 8 ALU/MAC-plus-internal-DREG semantic entry covering 476,672
   source-closed noncolliding words; an independent unknown-preserving parallel
   state model, exact fail-closed decoder, portable execution RTL, canonical
@@ -286,6 +292,17 @@ semantic versioning after its first release.
 
 ### Verified
 
+- Type 12 exhaustive RTL decode traverses all 16,777,216 program words and
+  partitions its 131,072-word class into 108,640 supported actions, 16,384
+  unavailable-XOP words, and 6,048 DM-read destination collisions. The
+  50,069-clock model/RTL differential covers both banks and DAGs, immediate
+  and multi-clock DMACK completion, bit reversal, old write data, atomic
+  shifter/read/I commits, reset aborts, and unknown propagation.
+- Quartus full compilation passes for the bounded Type 12 logical DM slice at
+  its 21 ns standalone constraint: 1,704 ALMs, 1,091 fitted registers, no
+  RAM/DSP blocks, +1.377 ns worst setup and +0.166 ns worst multicorner hold
+  slack, 50.96 MHz worst slow-corner Fmax, and zero unconstrained clocks, ports,
+  or paths. The sole unassigned physical pin is the expected smoke-test clock.
 - Type 23 exhaustive RTL decode traverses all 16,777,216 program words and
   identifies exactly eight source-closed actions; 50,081 deterministic
   stateful model/RTL cycles cover both banks, reset unknowns, all divisors,
@@ -626,6 +643,10 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Closed the original Type 12 field partition, old-value parallel semantics,
+  read-collision restriction, logical DM bus ordering, completion-only DAG
+  post-modification, and DMACK wait extension with exact-device citations;
+  physical sub-cycle pins and whole-core PM/event arbitration remain open.
 - Closed the original Type 23 DIVQ add/subtract selection, quotient-bit
   recurrence, operand set, one-cycle boundary, and non-AQ status preservation;
   retained Appendix B quotient correction as software-visible sequence
@@ -772,6 +793,9 @@ semantic versioning after its first release.
   interrupt recognition/cycle integration are not implemented. Sequencer and
   MSTAT consumer wiring exists only in bounded integration slices, not a
   whole instruction execution core.
+- Type 12 now supplies verified logical DM transactions and wait stability,
+  but not a native active-low state-phase interface, PM fetch concurrency,
+  interrupt/BR/HALT latching during waits, or whole-core instruction issue.
 - Open-source synthesis and formal tools are not installed in this environment.
 - Type 8 AMF-zero legality and same-destination results are unresolved and are
   rejected rather than assigned invented behavior. Its standalone combined

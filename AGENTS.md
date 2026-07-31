@@ -229,8 +229,9 @@ source-backed RTL execution slices now implement all original Type 18 mode
 controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
 MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
-shifter-plus-DREG words, all 1,792 source-backed Type 16 conditional shifter
-words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
+shifter-plus-DREG words, 108,640 source-closed Type 12 shifter-plus-DM words,
+all 1,792 source-backed Type 16 conditional shifter words, 476,672
+source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
 conditional ALU/MAC words, 507,904 source-closed Type 10 direct JUMP/CALL
 words, all 262,144 Type 11 DO UNTIL setup words, 124 source-closed Type 19
 DAG2-indirect JUMP/CALL words, all 32 Type 20 conditional RTS/RTI words, all
@@ -243,7 +244,7 @@ excludes later timer, GO, and multiplier-placement fields and exhaustively
 covers all 256 original words. Type 21 uses an exact-width I/M/L register file
 with authentic reset-invalid state and cycle-start-read/cycle-end-write
 ordering; ordinary data transfers and multifunction DAG updates are not yet
-attached.
+attached except for the bounded Type 12 shifter-plus-DM transaction path.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at
@@ -253,14 +254,24 @@ partitions its 2,048-word class into 1,792 supported actions and 256 XOP `001`
 subencodings held under OQ-020. Its bounded slice evaluates cycle-start
 conditions, samples selected-bank SE/SR/SB and ASTAT feedback, preserves all
 destinations when false, and commits the SF-selected SR/SE/SB/SS writes at
-cycle end. Memory-access shifter multifunction classes remain unintegrated.
+cycle end. The PM-access shifter multifunction class remains unintegrated.
 The bounded Type 14 slice is the first integrated multifunction instruction:
 both shifter and DREG-move sources read cycle-start selected-bank state, and
 noncolliding move plus SR/SE/SB/SS writes commit together at cycle end. Its
 canonical bit-15-zero subset contains 25,648 supported words. The remaining
 32,768 bit-15-one, 4,096 unavailable-XOP, and 3,024 same-destination words fail
 closed; OQ-021 tracks the original diagram's unnamed bit 15. Type 12–13 memory
-multifunction classes remain unintegrated.
+multifunction work is now split: Type 12 DM is bounded and integrated below,
+while Type 13 PM remains unintegrated.
+The bounded Type 12 slice partitions all 131,072 words into 108,640 supported
+actions, 16,384 unavailable-XOP words, and 6,048 illegal DM-read destination
+collisions. It exposes a logical DM request/address/read-write/data/ack
+boundary, holds all bus outputs and architectural state over arbitrary ACK-low
+extensions, samples read data and commits the selected shifter, DREG, and DAG-I
+postmodify writes atomically on the first ACK-high boundary, and uses the old
+DREG value for a simultaneous store. It does not yet reproduce physical
+active-low DM pin phases, integrate instruction fetch, or settle whole-core
+interrupt/bus arbitration.
 The bounded Type 8 slice executes documented ALU and fractional-MAC
 computations in parallel with one internal DREG move. Both clauses sample the
 cycle-start selected bank; noncolliding DREG/AR/AF/MR/MF and ASTAT writes
