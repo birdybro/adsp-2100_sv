@@ -8,7 +8,7 @@ module adsp2100_condition_formal (
     input logic       ac,
     input logic       as_flag,
     input logic       mv,
-    input logic       counter_nonzero
+    input logic       not_counter_expired
 );
     logic                     condition_true;
 
@@ -20,7 +20,7 @@ module adsp2100_condition_formal (
         .ac_i(ac),
         .as_i(as_flag),
         .mv_i(mv),
-        .counter_nonzero_i(counter_nonzero),
+        .not_counter_expired_i(not_counter_expired),
         .condition_true_o(condition_true)
     );
 
@@ -40,7 +40,7 @@ module adsp2100_condition_formal (
             4'hb: assert (condition_true == ~as_flag);
             4'hc: assert (condition_true == mv);
             4'hd: assert (condition_true == ~mv);
-            4'he: assert (condition_true == counter_nonzero);
+            4'he: assert (condition_true == not_counter_expired);
             4'hf: assert (condition_true);
         endcase
     end

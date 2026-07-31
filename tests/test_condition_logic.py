@@ -53,7 +53,10 @@ class ConditionLogicTests(unittest.TestCase):
     def test_counter_and_unconditional_codes(self) -> None:
         self.assertFalse(evaluate_if_condition(14, ConditionInputs()))
         self.assertTrue(
-            evaluate_if_condition(14, ConditionInputs(counter_nonzero=True))
+            evaluate_if_condition(
+                14,
+                ConditionInputs(not_counter_expired=True),
+            )
         )
         self.assertTrue(evaluate_if_condition(15, ConditionInputs()))
 
@@ -67,7 +70,7 @@ class ConditionLogicTests(unittest.TestCase):
                     ac=bool(flags & 0x08),
                     as_flag=bool(flags & 0x04),
                     mv=bool(flags & 0x02),
-                    counter_nonzero=bool(flags & 0x01),
+                    not_counter_expired=bool(flags & 0x01),
                 )
                 self.assertEqual(
                     evaluate_do_termination(code, inputs),

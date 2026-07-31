@@ -32,6 +32,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_sequencer_flow.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_counter.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_sequencer_stacks.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -143,7 +145,7 @@ dag-tests:
 
 sequencer-tests:
 	$(PYTHON) -m unittest -v tests.test_sequencer_flow \
-		tests.test_sequencer_stacks
+		tests.test_counter tests.test_sequencer_stacks
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_sequencer_vectors.py \
@@ -155,6 +157,15 @@ sequencer-tests:
 			rtl/core/adsp2100_sequencer_flow.sv \
 			sim/unit/tb_adsp2100_sequencer_flow.sv; \
 		build/obj_sequencer/Vtb_adsp2100_sequencer_flow; \
+		$(PYTHON) tools/generators/generate_counter_vectors.py \
+			--output build/counter_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_counter \
+			--top-module tb_adsp2100_counter \
+			rtl/core/adsp2100_counter.sv \
+			sim/unit/tb_adsp2100_counter.sv; \
+		build/obj_counter/Vtb_adsp2100_counter; \
 		$(PYTHON) tools/generators/generate_sequencer_stack_vectors.py \
 			--output build/sequencer_stack_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -287,6 +298,10 @@ formal:
 			rtl/core/adsp2100_sequencer_flow.sv \
 			formal/harnesses/adsp2100_sequencer_flow_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_counter_formal \
+			rtl/core/adsp2100_counter.sv \
+			formal/harnesses/adsp2100_counter_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_sequencer_stacks_formal \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			formal/harnesses/adsp2100_sequencer_stacks_formal.sv; \
@@ -323,6 +338,7 @@ formal:
 		sby -f -d build/formal_shifter formal/shifter.sby; \
 		sby -f -d build/formal_dag formal/dag.sby; \
 		sby -f -d build/formal_sequencer formal/sequencer_flow.sby; \
+		sby -f -d build/formal_counter formal/counter.sby; \
 		sby -f -d build/formal_sequencer_stacks formal/sequencer_stacks.sby; \
 		sby -f -d build/formal_registers formal/registers.sby; \
 		sby -f -d build/formal_status formal/status_registers.sby; \
@@ -348,6 +364,7 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/shifter_smoke; \
 		quartus_sh --flow compile synthesis/quartus/dag_smoke; \
 		quartus_sh --flow compile synthesis/quartus/sequencer_flow_smoke; \
+		quartus_sh --flow compile synthesis/quartus/counter_smoke; \
 		quartus_sh --flow compile synthesis/quartus/register_file_smoke; \
 		quartus_sh --flow compile synthesis/quartus/status_registers_smoke; \
 		quartus_sh --flow compile synthesis/quartus/status_stack_smoke; \
@@ -372,6 +389,7 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name counter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_writeback_vectors.txt -delete
@@ -384,6 +402,7 @@ clean:
 	@if [ -d build/obj_shifter ]; then find build/obj_shifter -depth -delete; fi
 	@if [ -d build/obj_dag ]; then find build/obj_dag -depth -delete; fi
 	@if [ -d build/obj_sequencer ]; then find build/obj_sequencer -depth -delete; fi
+	@if [ -d build/obj_counter ]; then find build/obj_counter -depth -delete; fi
 	@if [ -d build/obj_sequencer_stacks ]; then \
 		find build/obj_sequencer_stacks -depth -delete; \
 	fi
@@ -400,6 +419,7 @@ clean:
 	@if [ -d build/quartus_shifter ]; then find build/quartus_shifter -depth -delete; fi
 	@if [ -d build/quartus_dag ]; then find build/quartus_dag -depth -delete; fi
 	@if [ -d build/quartus_sequencer ]; then find build/quartus_sequencer -depth -delete; fi
+	@if [ -d build/quartus_counter ]; then find build/quartus_counter -depth -delete; fi
 	@if [ -d build/quartus_register ]; then find build/quartus_register -depth -delete; fi
 	@if [ -d build/quartus_status ]; then find build/quartus_status -depth -delete; fi
 	@if [ -d build/quartus_status_stack ]; then \
@@ -413,7 +433,7 @@ clean:
 	fi
 	@for directory in build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
-		build/formal_sequencer_stacks \
+		build/formal_counter build/formal_sequencer_stacks \
 		build/formal_registers build/formal_status build/formal_status_stack \
 		build/formal_mode_slice; do \
 		if [ -d "$$directory" ]; then find "$$directory" -depth -delete; fi; \

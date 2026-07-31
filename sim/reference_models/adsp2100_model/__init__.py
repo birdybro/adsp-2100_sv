@@ -8,6 +8,13 @@ from .conditions import (
     evaluate_do_termination,
     evaluate_if_condition,
 )
+from .counter import (
+    COUNTER_MASK,
+    CounterCycleResult,
+    CounterInputs,
+    CounterState,
+    apply_counter_cycle,
+)
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
 from .mode_slice import (
@@ -98,8 +105,12 @@ __all__ = [
     "ComputationalBank",
     "ConditionInputs",
     "ComputationalWriteConflict",
+    "COUNTER_MASK",
     "COUNT_STACK_DEPTH",
     "COUNT_STACK_WIDTH",
+    "CounterCycleResult",
+    "CounterInputs",
+    "CounterState",
     "DO_TERMINATION_MNEMONICS",
     "DAGResult",
     "DREG",
@@ -146,6 +157,7 @@ __all__ = [
     "UnsupportedOpcode",
     "evaluate_do_termination",
     "evaluate_if_condition",
+    "apply_counter_cycle",
     "apply_computational_cycle",
     "apply_dreg_cycle",
     "apply_status_cycle",

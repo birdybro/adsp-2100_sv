@@ -29,7 +29,7 @@ def generate_lines() -> list[str]:
                 ac=bool(flags & 0x08),
                 as_flag=bool(flags & 0x04),
                 mv=bool(flags & 0x02),
-                counter_nonzero=bool(flags & 0x01),
+                not_counter_expired=bool(flags & 0x01),
             )
             lines.append("1" if evaluate_if_condition(code, inputs) else "0")
     return lines

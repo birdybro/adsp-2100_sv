@@ -1,12 +1,19 @@
 # Conditions and visibility
 
-**Status: original condition encodings and predicates verified; sequencer
-integration pending**
+**Status: original encodings, predicates, and CNTR source verified;
+sequencer integration pending**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
 [ADI-UM-1989, printed p. 4-25, Table 4.3]. DO UNTIL uses the inverse sense and
 offers CE/FOREVER [ADI-UM-1989, printed pp. 4-5–4-6, Table 4.1].
+
+`NOT CE` means the valid cycle-start CNTR value is not one; it does not mean
+that CNTR is nonzero. CE is true at one so that a count loaded with N produces
+exactly N loop passes. CNTR has no valid value after reset and after a true CE
+test with an empty count stack, so the implemented counter source supplies a
+separate validity output rather than inventing a predicate in those states
+[ADI-UM-1989, printed pp. 4-4–4-5].
 
 ASTAT writes at cycle end, so a conditional instruction sees flags from a
 previous cycle [ADI-UM-1989, printed pp. 4-21, 4-25]. At a loop end, a true
@@ -27,9 +34,10 @@ example, source termination `NE` uses field `0x0`, the same field used by
 [ADI-UM-1989, printed pp. 4-6–4-7, Table 4.1; printed pp. A-10–A-11,
 scan PDF pp. 149–150].
 
-The reviewed source of record is
+The reviewed condition-code source of record is
 `docs/generated/adsp2100_condition_codes.yaml`. The independent Python
 evaluator and combinational RTL are exhaustively compared for all 2,048
-condition/flag combinations by `make compute-tests`. This closes the
-predicate truth table, not counter post-decrement, loop-stack, or instruction
-timing.
+condition/flag combinations by `make compute-tests`. The independent CNTR
+model/RTL additionally supplies the source predicate and is compared across
+50,022 stateful cycles. The two blocks are not yet connected to instruction
+decode, loop-stack state, or phase-level timing.

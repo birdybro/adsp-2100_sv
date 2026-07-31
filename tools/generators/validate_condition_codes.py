@@ -65,7 +65,7 @@ EXPECTED_IF_PREDICATES = (
     "not as",
     "mv",
     "not mv",
-    "counter_nonzero",
+    "not_counter_expired",
     "true",
 )
 
@@ -84,7 +84,7 @@ EXPECTED_DO_PREDICATES = (
     "as",
     "not mv",
     "mv",
-    "not counter_nonzero",
+    "counter_expired",
     "false",
 )
 

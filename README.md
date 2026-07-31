@@ -38,7 +38,7 @@ make formal
 
 `make test` currently validates repository policy, the reference manifest,
 machine-readable architecture tables, independent block models, and the
-implemented compute, DAG, sequencer-flow, PC/count/loop/status-stack,
+implemented compute, DAG, sequencer-flow, CNTR, PC/count/loop/status-stack,
 computational-register, and status/control RTL slices, including the bounded
 MSTAT consumer integration. Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.

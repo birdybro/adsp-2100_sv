@@ -1,7 +1,7 @@
 # Programmer's model
 
-**Status: partial inventory; computational-bank and status/control storage
-slices implemented**
+**Status: partial inventory; computational-bank, status/control, and CNTR
+storage slices implemented**
 
 | Group | Original registers | Width | Initial sourced facts |
 |---|---|---:|---|
@@ -52,8 +52,17 @@ overflow, and all eight SSTAT sources [ADI-DATABOOK-1987, printed
 pp. 2-21–2-22; ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. The two SSTAT
 fragments are not yet composed into an instruction-readable status path.
 
+CNTR has 14 value bits plus a separate validity state. Reset invalidates CNTR
+without assigning a documented value. A load pushes the old count only when
+valid; CE is sampled before the cycle-end decrement, and true CE restores the
+count-stack top or leaves CNTR invalid when the stack is empty
+[ADI-UM-1989, printed pp. 4-4–4-5]. The independent model and portable RTL
+implement this boundary, but instruction decode and physical count-stack
+connectivity are not yet present.
+
 Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
 interrupt recognition and priority logic, stack action connectivity, CNTR
-valid/decrement state, empty-pop architectural effects, narrow status-register
-DMD extension, full multifunction legality, and every instruction field using
-these paths still require machine-readable extraction and tests.
+instruction connectivity, empty-pop architectural effects, narrow
+status-register DMD extension, full multifunction legality, and every
+instruction field using these paths still require machine-readable extraction
+and tests.

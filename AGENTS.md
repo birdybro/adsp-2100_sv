@@ -237,8 +237,11 @@ cycle-start/cycle-end boundary; ICNTL consumer wiring, interrupt recognition,
 and complete operand/decode connectivity do not exist. A separate original
 four-by-sixteen status stack and exact PC/count/loop stack-storage slice
 implement LIFO state, saturating depth, sticky overflow, and all eight SSTAT
-sources. The stack slices are not connected to instruction, loop, counter,
-interrupt, or return sequencing, and CNTR validity/decrement remains absent.
+sources. A separate stateful CNTR slice implements reset validity,
+pre-decrement CE/NOT CE evaluation, post-decrement, and count-stack request
+generation. It is not connected to condition logic or count-stack storage;
+conditional-CALL CE behavior remains OQ-012. The stack slices are not
+connected to instruction, loop, interrupt, or return sequencing.
 Multifunction legality, ordering, and whole-core cycle integration remain
 incomplete. The executable
 instruction model establishes

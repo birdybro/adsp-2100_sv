@@ -23,7 +23,7 @@
     {"code": 11, "bits": "1011", "mnemonic": "POS", "predicate": "not as"},
     {"code": 12, "bits": "1100", "mnemonic": "MV", "predicate": "mv"},
     {"code": 13, "bits": "1101", "mnemonic": "NOT MV", "predicate": "not mv"},
-    {"code": 14, "bits": "1110", "mnemonic": "NOT CE", "predicate": "counter_nonzero"},
+    {"code": 14, "bits": "1110", "mnemonic": "NOT CE", "predicate": "not_counter_expired"},
     {"code": 15, "bits": "1111", "mnemonic": "TRUE", "predicate": "true"}
   ],
   "do_until_termination_conditions": [
@@ -41,7 +41,7 @@
     {"code": 11, "bits": "1011", "mnemonic": "NEG", "predicate": "as", "same_code_if_mnemonic": "POS"},
     {"code": 12, "bits": "1100", "mnemonic": "NOT MV", "predicate": "not mv", "same_code_if_mnemonic": "MV"},
     {"code": 13, "bits": "1101", "mnemonic": "MV", "predicate": "mv", "same_code_if_mnemonic": "NOT MV"},
-    {"code": 14, "bits": "1110", "mnemonic": "CE", "predicate": "not counter_nonzero", "same_code_if_mnemonic": "NOT CE"},
+    {"code": 14, "bits": "1110", "mnemonic": "CE", "predicate": "counter_expired", "same_code_if_mnemonic": "NOT CE"},
     {"code": 15, "bits": "1111", "mnemonic": "FOREVER", "predicate": "false", "same_code_if_mnemonic": "TRUE"}
   ],
   "encoding_rule": "At a given field value, the DO UNTIL termination predicate is the inverse of the IF predicate. FOREVER therefore never terminates.",

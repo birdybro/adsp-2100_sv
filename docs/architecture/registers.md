@@ -117,10 +117,13 @@ SSTAT bits 4/5, while the exact PC/count/loop stack-storage block supplies bits
 0–3 and 6–7 with the same documented pointer-saturation and sticky-overflow
 rules [ADI-DATABOOK-1987, printed pp. 2-21–2-22; ADI-UM-1989, printed
 pp. 4-3–4-7, 4-22]. These fragments have not yet been composed with the
-instruction-readable SSTAT path. How unused upper DMD bits read for narrow
+instruction-readable SSTAT path. A separate CNTR model/RTL boundary implements
+its 14-bit value, reset-invalid state, pre-decrement CE predicate,
+post-decrement, valid-load push request, and true-CE count restore
+[ADI-UM-1989, printed pp. 4-4–4-5]. How unused upper DMD bits read for narrow
 general-MOVE sources remains open as OQ-016. Stack action connectivity,
-counter validity/decrement, interrupt recognition timing, DIVS/DIVQ execution,
-and instruction decode are not part of this increment.
+counter/condition connectivity, interrupt recognition timing, DIVS/DIVQ
+execution, and instruction decode are not part of this increment.
 
 ## Accessibility
 

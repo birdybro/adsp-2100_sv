@@ -9,7 +9,7 @@ module tb_adsp2100_condition_logic;
     logic       ac;
     logic       as_flag;
     logic       mv;
-    logic       counter_nonzero;
+    logic       not_counter_expired;
     logic       condition_true;
     logic       expected [0:2047];
     integer     vector_index;
@@ -22,14 +22,14 @@ module tb_adsp2100_condition_logic;
         .ac_i(ac),
         .as_i(as_flag),
         .mv_i(mv),
-        .counter_nonzero_i(counter_nonzero),
+        .not_counter_expired_i(not_counter_expired),
         .condition_true_o(condition_true)
     );
 
     initial begin
         $readmemb("build/condition_expected.mem", expected);
         for (vector_index = 0; vector_index < 2048; vector_index = vector_index + 1) begin
-            {condition, az, an, av, ac, as_flag, mv, counter_nonzero} =
+            {condition, az, an, av, ac, as_flag, mv, not_counter_expired} =
                 vector_index[10:0];
             #1;
             if (condition_true !== expected[vector_index]) begin

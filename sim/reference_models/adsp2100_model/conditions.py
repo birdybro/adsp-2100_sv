@@ -20,7 +20,7 @@ class ConditionInputs:
     ac: bool = False
     as_flag: bool = False
     mv: bool = False
-    counter_nonzero: bool = False
+    not_counter_expired: bool = False
 
 
 IF_CONDITION_MNEMONICS = (
@@ -84,7 +84,7 @@ def evaluate_if_condition(code: int, inputs: ConditionInputs) -> bool:
         not inputs.as_flag,
         inputs.mv,
         not inputs.mv,
-        inputs.counter_nonzero,
+        inputs.not_counter_expired,
         True,
     )
     return predicates[code]

@@ -30,12 +30,14 @@ clears all pointers and overflow bits without initializing stored data
 The sequencer storage exposes each current top with an explicit valid bit,
 accepted pushes, valid pops, overflow events, and empty-pop indications. Its
 SSTAT output is a fragment: bits 4/5 are zero and must be composed with the
-status-stack fragment. A count-stack push is an upstream request; the future
-CNTR controller remains responsible for the documented rule that loading a
-new count pushes the old count only when the current count is valid
-[ADI-UM-1989, printed pp. 4-4–4-5]. Same-stack simultaneous push/pop is
-suppressed globally with `write_conflict_o`; this is a fail-closed integration
-safeguard, not a claimed real-device illegal-encoding behavior.
+status-stack fragment. The separate CNTR controller now generates a count-stack
+push only when a load replaces a valid count, and generates a pop on true CE
+or manual pop. A true CE test restores a valid stack top or invalidates CNTR
+when the count stack is empty [ADI-UM-1989, printed pp. 4-4–4-5].
+CNTR and stack storage are not yet wired into one integrated sequencer.
+Same-stack simultaneous push/pop is suppressed globally with
+`write_conflict_o`; this is a fail-closed integration safeguard, not a claimed
+real-device illegal-encoding behavior.
 
 An empty pop produces no valid data; zero on the RTL data output is an
 explicitly non-architectural interface sentinel. The value and architectural
@@ -50,6 +52,7 @@ a taken jump, call, or return on the loop's final instruction performs only its
 explicit flow/PC-stack action and suppresses implicit loop, count-stack, and
 counter-test actions. A false explicit condition allows the normal loop back
 or exit path. The storage arrays exist but are not yet connected to that flow
-block. DO UNTIL setup, CNTR valid/decrement state, instruction/manual stack
-controls, interrupt/RTI actions, and every empty-pop architectural side effect
-remain outside the integrated sequencer.
+block. DO UNTIL setup, CNTR/condition/count-stack connectivity,
+instruction/manual stack controls, interrupt/RTI actions, conditional-CALL CE
+semantics (OQ-012), and every empty-pop architectural side effect remain
+outside the integrated sequencer.

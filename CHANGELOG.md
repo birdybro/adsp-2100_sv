@@ -101,6 +101,14 @@ semantic versioning after its first release.
 - Ten directed/model sequencer-stack tests, a deterministic 50,062-cycle
   model-versus-RTL regression, a bounded state-transition formal harness, and
   a constrained Cyclone V synthesis project.
+- Machine-readable original CNTR transition metadata, an independent
+  reset-valid counter model, and portable stateful RTL for pre-decrement
+  CE/NOT CE, cycle-end post-decrement, valid-load count-stack pushes, true-CE
+  pop/restore or empty invalidation, valid manual-pop restore, and fail-closed
+  unresolved action collisions.
+- Twelve directed/model CNTR tests, a deterministic 50,022-cycle
+  model-versus-RTL regression, a bounded formal harness, and a constrained
+  Cyclone V synthesis project.
 
 ### Changed
 
@@ -115,6 +123,9 @@ semantic versioning after its first release.
   cache while retaining strict local hash checks whenever the cache is present.
 - Excluded ignored Quartus database products from source-text hygiene checks so
   synthesis followed by regression is deterministic.
+- Renamed the condition boundary's counter input from the misleading
+  `counter_nonzero` to `not_counter_expired`: original CE asserts at a valid
+  count of one, not at zero. The exhaustive Boolean truth table is unchanged.
 
 ### Verified
 
@@ -128,12 +139,14 @@ semantic versioning after its first release.
   58,307 stateful DREG model-versus-RTL cycles, 50,120 complete-bank
   writeback cycles, 50,287 status/control state-transition cycles, and 50,037
   status-stack state-transition cycles.
-- The expanded `make test` passes 154 Python checks and adds 50,112 stateful
+- The expanded `make test` passes 166 Python checks and adds 50,112 stateful
   MSTAT-consumer cycles. Both banks are initialized distinctly, all 16 MSTAT
   values are observed, and ordinary-cycle old-mode/new-mode ordering is
   checked across register, DAG1, and ALU consumers. It also adds 50,062
   PC/count/loop stack-storage cycles covering exact LIFO depths, saturation,
-  independent simultaneous actions, reset, and empty-pop invalidation.
+  independent simultaneous actions, reset, and empty-pop invalidation, plus
+  50,022 CNTR cycles covering validity, N-pass CE behavior, decrement, nested
+  restore, and empty invalidation.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -177,10 +190,14 @@ semantic versioning after its first release.
   design implementation registers plus six fitter-created routing duplicates,
   no RAM/DSPs, +10.383 ns worst setup, +0.162 ns worst hold slack, and zero
   unconstrained ports or paths.
+- Quartus full compilation passes for the constrained CNTR block: 72 ALMs, 49
+  design combinational ALUTs, exactly 15 design registers plus seven
+  fitter-created routing duplicates, no RAM/DSPs, +11.818 ns worst setup,
+  +0.171 ns worst hold slack, and zero unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
   MAC, shifter, DAG, sequencer-flow, register-file, status-register, and
-  status-stack, sequencer-stack, and MSTAT-integration harnesses; proof execution remains
-  explicitly skipped without SymbiYosys.
+  status-stack, sequencer-stack, CNTR, and MSTAT-integration harnesses; proof
+  execution remains explicitly skipped without SymbiYosys.
 
 ### Documentation
 
@@ -236,8 +253,13 @@ semantic versioning after its first release.
 - Closed PC/count/loop stack storage dimensions and normal accepted-operation
   behavior from the original program-sequencer chapter, and applied the
   original global saturation/newest-loss/sticky-overflow rule to all three.
-  All SSTAT storage sources now exist, while CNTR-valid handling, action
-  connectivity, SSTAT composition, and empty-pop effects remain explicit gaps.
+  All SSTAT storage sources now exist, while CNTR/stack action connectivity,
+  SSTAT composition, and empty-pop effects remain explicit gaps.
+- Closed CNTR's separate validity state, cycle-start CE-at-one predicate,
+  cycle-end post-decrement, valid-load push rule, and true-CE
+  restore-or-invalidate behavior from the original program-control chapter.
+  Conditional CALL remains OQ-012, empty manual pop remains OQ-013, and the
+  controller is not yet connected to condition or count-stack storage.
 
 ### Known Issues
 
@@ -246,10 +268,11 @@ semantic versioning after its first release.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,
-  stack-action connectivity, CNTR validity/decrement, SSTAT-fragment
-  composition, narrow status reads, and interrupt recognition/cycle
-  integration are not implemented. MSTAT consumer wiring exists only in a
-  bounded integration slice, not a whole instruction execution core.
+  stack-action connectivity, CNTR condition/count-stack connectivity,
+  SSTAT-fragment composition, narrow status reads, and interrupt
+  recognition/cycle integration are not implemented. MSTAT consumer wiring
+  exists only in a bounded integration slice, not a whole instruction
+  execution core.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

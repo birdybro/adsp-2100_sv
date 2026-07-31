@@ -1,0 +1,35 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_counter
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_counter
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_counter.sv
+set_global_assignment -name SDC_FILE counter_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to load_i
+set_instance_assignment -name VIRTUAL_PIN ON -to load_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to ce_test_i
+set_instance_assignment -name VIRTUAL_PIN ON -to manual_pop_i
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_top_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_top_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to cntr_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to cntr_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to condition_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_expired_o
+set_instance_assignment -name VIRTUAL_PIN ON -to not_counter_expired_o
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_push_o
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_push_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to decrement_o
+set_instance_assignment -name VIRTUAL_PIN ON -to restore_o
+set_instance_assignment -name VIRTUAL_PIN ON -to empty_ce_invalidate_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_ce_test_o
+set_instance_assignment -name VIRTUAL_PIN ON -to empty_manual_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to write_conflict_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_global_assignment -name SEED 2

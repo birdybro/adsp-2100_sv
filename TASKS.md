@@ -102,12 +102,13 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989, ADI-DATABOOK-1987,
   ADI-UM-FAMILY-1995 for explicitly applicable comparisons only
 - **Relevant tests:** `tests/test_model_state.py`,
-  `tests/test_register_metadata.py`
+  `tests/test_register_metadata.py`, `tests/test_counter.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
-  48 codes and every blank code, while direction-specific access paths and all
-  hidden state still require complete metadata. Emulator variable names are
-  discovery aids only.
+  48 codes and every blank code. CNTR now has machine-readable 14-bit,
+  reset-validity, test/decrement, and count-stack transition metadata, while
+  direction-specific access paths and the remaining hidden state still require
+  complete extraction. Emulator variable names are discovery aids only.
 - **Unresolved questions:** hidden sequencer state, undefined reset fields, and
   exact alternate-bank coverage.
 - **Confidence:** UNKNOWN
@@ -313,8 +314,9 @@ advance beyond research until a page-level primary citation is added.
   loops, stacks, flushes, and control interactions match model, cycle, and
   formal properties.
 - **Source references:** ADI-UM-1989 sequencer and instruction chapters
-- **Relevant tests:** `make sequencer-tests`, `tests/test_sequencer_stacks.py`,
-  `formal/sequencer_flow.sby`, `formal/sequencer_stacks.sby`
+- **Relevant tests:** `make sequencer-tests`, `tests/test_counter.py`,
+  `tests/test_sequencer_stacks.py`, `formal/sequencer_flow.sby`,
+  `formal/counter.sby`, `formal/sequencer_stacks.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -323,11 +325,15 @@ advance beyond research until a page-level primary citation is added.
   four-entry count, and four-entry loop stack storage, saturating pointers,
   newest-push loss, sticky overflow, and their six SSTAT sources. Ten
   directed/model tests and 50,062 model-versus-RTL stack cycles pass. The flow
-  and storage blocks are not yet connected.
+  and storage blocks are not yet connected. A third independent model/RTL
+  boundary implements CNTR validity, cycle-start CE/NOT CE, cycle-end
+  post-decrement, valid-load stack push, true-CE pop/restore or empty
+  invalidation, and valid manual restore. Twelve directed/model tests and
+  50,022 model-versus-RTL counter cycles pass.
 - **Unresolved questions:** opcode integration, DO setup, stack-action
-  connectivity, CNTR validity/decrement and CE semantics including OQ-012,
-  interrupts, delayed transfers, cache interaction, empty-pop effects
-  (OQ-013), pipeline visibility, and logical bus phases.
+  connectivity, CNTR-to-condition/count-stack connectivity, conditional-CALL
+  CE semantics (OQ-012), interrupts, delayed transfers, cache interaction,
+  empty-pop effects (OQ-013), pipeline visibility, and logical bus phases.
 - **Confidence:** CORROBORATED
 
 ## M16 — Register files and alternate register bank
@@ -395,10 +401,10 @@ advance beyond research until a page-level primary citation is added.
   the documented start-read/end-write cycle boundary. Five directed tests and
   50,112 model-versus-RTL integration cycles pass.
 - **Unresolved questions:** SSTAT-fragment composition and instruction reads,
-  stack-action and interrupt recognition/decode connectivity, CNTR validity
-  and decrement, empty-pop effects (OQ-013), narrow DMD read extension
-  (OQ-016), competing-write behavior (OQ-017), and interrupt-adjacent
-  bank-switch visibility (OQ-015).
+  stack-action and interrupt recognition/decode connectivity,
+  CNTR-to-condition/count-stack connectivity, empty-pop effects (OQ-013),
+  narrow DMD read extension (OQ-016), competing-write behavior (OQ-017), and
+  interrupt-adjacent bank-switch visibility (OQ-015).
 - **Confidence:** CORROBORATED
 
 ## M18 — Program-memory interface
@@ -467,7 +473,8 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-DATABOOK-1987 printed pp. 2-21–2-22;
   ADI-UM-1989 printed pp. 4-3–4-10, 4-22, 5-13, A-10
 - **Relevant tests:** `make sequencer-tests`, `make status-tests`,
-  `tests/test_status_stack.py`, `tests/test_sequencer_stacks.py`,
+  `tests/test_counter.py`, `tests/test_status_stack.py`,
+  `tests/test_sequencer_stacks.py`, `formal/counter.sby`,
   `formal/status_stack.sby`, `formal/sequencer_stacks.sby`
 - **Implementation notes:** all original depths are now source-backed. The
   four-by-sixteen status stack has an independent state model, portable RTL,
@@ -477,9 +484,13 @@ advance beyond research until a page-level primary citation is added.
   portable RTL, ten directed/model tests, 50,062 model-versus-RTL cycles,
   a formal harness, and a constrained Cyclone V fit. Every stack drops the
   newest push when full, saturates its depth, and retains sticky overflow
-  until reset; all SSTAT source bits now exist at storage boundaries.
+  until reset; all SSTAT source bits now exist at storage boundaries. The
+  separate CNTR boundary generates the documented load/true-CE/manual-pop
+  count-stack requests and passes 50,022 model/RTL cycles, but is not yet
+  physically connected to stack storage.
 - **Unresolved questions:** instruction/flow/count/interrupt/RTI stack-action
-  connectivity, CNTR validity/decrement, SSTAT-fragment composition and read
+  connectivity, CNTR-to-condition/count-stack connectivity,
+  conditional-CALL CE behavior (OQ-012), SSTAT-fragment composition and read
   path, and empty-pop architectural behavior (OQ-013).
 - **Confidence:** CORROBORATED
 

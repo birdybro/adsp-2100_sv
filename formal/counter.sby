@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 12
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_counter.sv
+read -formal -sv formal/harnesses/adsp2100_counter_formal.sv
+prep -top adsp2100_counter_formal
+
+[files]
+rtl/core/adsp2100_counter.sv
+formal/harnesses/adsp2100_counter_formal.sv

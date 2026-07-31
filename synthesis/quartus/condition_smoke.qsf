@@ -12,7 +12,7 @@ set_instance_assignment -name VIRTUAL_PIN ON -to av_i
 set_instance_assignment -name VIRTUAL_PIN ON -to ac_i
 set_instance_assignment -name VIRTUAL_PIN ON -to as_i
 set_instance_assignment -name VIRTUAL_PIN ON -to mv_i
-set_instance_assignment -name VIRTUAL_PIN ON -to counter_nonzero_i
+set_instance_assignment -name VIRTUAL_PIN ON -to not_counter_expired_i
 set_instance_assignment -name VIRTUAL_PIN ON -to condition_true_o
 
 set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

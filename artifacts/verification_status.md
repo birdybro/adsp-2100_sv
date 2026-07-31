@@ -16,12 +16,13 @@
 | Shifter compute | PASS, PARTIAL | 10 directed/model tests plus 644,368 RTL differential vectors |
 | DAG arithmetic | PASS, PARTIAL | 10 directed/random model tests plus 204,864 RTL differential vectors |
 | Sequencer flow arbitration | PASS, PARTIAL | 9 directed/random model tests plus 636,512 RTL differential vectors |
-| PC/count/loop stack storage | PASS, PARTIAL | 10 directed/random model tests plus 50,062 stateful RTL cycles; action connectivity, CNTR validity/decrement, and empty-pop effects remain |
+| CNTR state and CE transitions | PASS, PARTIAL | 12 directed/random model tests plus 50,022 stateful RTL cycles; condition/flow/count-stack connectivity, conditional-CALL CE, and empty-pop effects remain |
+| PC/count/loop stack storage | PASS, PARTIAL | 10 directed/random model tests plus 50,062 stateful RTL cycles; action connectivity and empty-pop effects remain |
 | Computational register banks | PASS, PARTIAL | 14 directed/model tests plus 58,307 DREG and 50,120 full-bank/writeback RTL cycles |
 | Status/control storage | PASS, PARTIAL | 17 directed/model tests plus 50,287 stateful RTL cycles; all SSTAT storage sources exist, but fragment composition, interrupt recognition/connectivity, and decode remain |
 | Status stack | PASS, PARTIAL | 8 directed/model tests plus 50,037 stateful RTL cycles; interrupt/RTI connectivity and empty-pop effects remain |
 | MSTAT consumer integration | PASS, PARTIAL | 5 directed/model tests plus 50,112 stateful RTL cycles across bank, DAG1, sticky AV, and saturation consumers; decode and interrupt-adjacent timing remain |
-| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | condition/ALU/MAC/shifter/DAG/sequencer-flow/sequencer-stack/register/status/status-stack/MSTAT-integration recipes lint; SymbiYosys unavailable |
+| Formal harnesses | SYNTAX PASS, PROOFS NOT RUN | 12 condition/ALU/MAC/shifter/DAG/sequencer-flow/CNTR/sequencer-stack/register/status/status-stack/MSTAT-integration recipes lint; SymbiYosys unavailable |
 | Register encoding metadata | PASS, PARTIAL | 4 tests; all 64 RGP/REG positions accounted |
 | Assembler/disassembler | PASS, PARTIAL | 5 tests; NOP only, reserved words fail closed |
 | Model foundation | PASS, PARTIAL | 11 exact-width/reset/image/NOP/trace tests |
@@ -31,12 +32,12 @@
 | Differential testing | NOT STARTED | no comparable RTL implementation |
 | Hard Drivin' synthetic tests | NOT STARTED | no board wrapper exists |
 
-The implemented foundation regression is `make test`: 154 distinct Python
+The implemented foundation regression is `make test`: 166 distinct Python
 checks plus the 2,048-vector condition and 51,472-vector ALU Verilator
 regressions, 21,760-vector MAC regression, and 644,368-vector shifter
 regression, plus the 204,864-vector DAG and 636,512-vector sequencer-flow
-regressions, 58,307 stateful DREG cycles, and 50,120 complete-bank/writeback
-cycles, plus 50,287 status/control and 50,037 status-stack state-transition
-cycles, plus 50,062 PC/count/loop stack-storage cycles and 50,112
-MSTAT-consumer integration cycles. Targets for unavailable or unimplemented
-areas print `SKIP` and do not create false pass evidence.
+regressions, 50,022 CNTR cycles, 58,307 stateful DREG cycles, and 50,120
+complete-bank/writeback cycles, plus 50,287 status/control and 50,037
+status-stack state-transition cycles, plus 50,062 PC/count/loop stack-storage
+cycles and 50,112 MSTAT-consumer integration cycles. Targets for unavailable
+or unimplemented areas print `SKIP` and do not create false pass evidence.

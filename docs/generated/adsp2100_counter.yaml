@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "ORIGINAL_CNTR_STATE_AND_COUNTER_EXPIRED_TRANSITIONS",
+  "confidence": "VERIFIED_PRIMARY",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-4-4-5, Section 4.2.3 (CNTR width, validity, pre-test/post-decrement, stack push/pop, and reset-invalid state)",
+    "ADI-UM-1989 printed pp. 4-7 and 4-18-4-19 (loop-end precedence and final-pass stack actions)",
+    "ADI-UM-1989 printed pp. 6-13-6-15, Tables 6.8-6.9 (flow-control and explicit counter-pop forms)"
+  ],
+  "counter": {
+    "width": 14,
+    "signedness": "UNSIGNED_MAGNITUDE",
+    "load_source": "DMD_13_0",
+    "read_extension": "DMD_15_14_ZERO",
+    "reset_valid": false,
+    "reset_value": "UNSPECIFIED",
+    "condition_sample_boundary": "BEGINNING_OF_PROCESSOR_CYCLE",
+    "update_boundary": "END_OF_PROCESSOR_CYCLE",
+    "ce_asserted_value": 1,
+    "false_ce_action": "POST_DECREMENT_MODULO_14_BITS",
+    "true_ce_action": "POP_AND_RESTORE_OUTER_COUNT_OR_INVALIDATE_IF_EMPTY"
+  },
+  "stack_actions": {
+    "LOAD_WHILE_INVALID": "NO_PUSH",
+    "LOAD_WHILE_VALID": "PUSH_OLD_CNTR_THEN_LOAD_NEW_VALUE",
+    "TRUE_CE_WITH_NONEMPTY_STACK": "POP_AND_RESTORE_TOP",
+    "TRUE_CE_WITH_EMPTY_STACK": "POP_REQUEST_AND_INVALIDATE_CNTR",
+    "MANUAL_POP_WITH_NONEMPTY_STACK": "POP_AND_RESTORE_TOP",
+    "MANUAL_POP_WITH_EMPTY_STACK": "UNRESOLVED_OQ_013"
+  },
+  "test_contexts": {
+    "DO_UNTIL_CE_AT_LOOP_END": "TEST_AND_POST_DECREMENT",
+    "CONDITIONAL_JUMP": "TEST_AND_POST_DECREMENT",
+    "CONDITIONAL_RETURN": "TEST_WITHOUT_DECREMENT",
+    "CONDITIONAL_TRAP": "TEST_WITHOUT_DECREMENT",
+    "CONDITIONAL_ARITHMETIC": "TEST_WITHOUT_DECREMENT",
+    "CONDITIONAL_CALL": "UNRESOLVED_OQ_012",
+    "DIRECT_CNTR_READ": "NO_TEST_OR_DECREMENT"
+  },
+  "implementation_boundary": {
+    "implemented": [
+      "VALID_BIT",
+      "LOAD_PUSH_REQUEST",
+      "CE_AND_NOT_CE_OUTPUTS_WITH_EXPLICIT_VALIDITY",
+      "POST_DECREMENT",
+      "TRUE_CE_POP_RESTORE",
+      "TRUE_CE_EMPTY_INVALIDATION",
+      "VALID_MANUAL_POP_RESTORE",
+      "FAIL_CLOSED_ACTION_COLLISION"
+    ],
+    "not_implemented": [
+      "OPCODE_DECODE_CONNECTIVITY",
+      "CONDITIONAL_CALL_CE_SEMANTICS_OQ_012",
+      "EMPTY_MANUAL_POP_ARCHITECTURAL_EFFECT_OQ_013",
+      "PHASE_LEVEL_TIMING",
+      "WHOLE_SEQUENCER_INTEGRATION"
+    ]
+  }
+}
