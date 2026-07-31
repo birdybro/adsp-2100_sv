@@ -162,6 +162,49 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                             count += 1
         self.assertEqual(count, 20_513)
 
+    def test_all_canonical_conditional_compute_forms_round_trip(self) -> None:
+        from tools.assembler.adsp2100_assembler import _format_compute_operation
+
+        count = 0
+        for z in range(2):
+            for amf in range(1, 32):
+                for yop in range(4):
+                    for xop in range(8):
+                        computation = _format_compute_operation(z, amf, yop, xop)
+                        if computation is None:
+                            continue
+                        for condition, mnemonic in enumerate(EXPECTED_IF_MNEMONICS):
+                            prefix = "" if condition == 15 else f"IF {mnemonic} "
+                            statement = f"{prefix}{computation};"
+                            opcode = (
+                                0x200000 | (z << 18) | (amf << 13)
+                                | (yop << 11) | (xop << 8) | condition
+                            )
+                            assembled = assemble_statement(statement)
+                            self.assertEqual(assembled.value, opcode)
+                            decoded = disassemble_word(opcode)
+                            self.assertTrue(decoded.implemented)
+                            self.assertEqual(
+                                decoded.classification,
+                                "TYPE_09_BOUNDED_EXECUTION",
+                            )
+                            self.assertEqual(decoded.text, statement)
+                            self.assertEqual(assemble_statement(decoded.text), assembled)
+                            count += 1
+        self.assertEqual(count, 21_920)
+
+    def test_conditional_compute_aliases_preserve_binary_round_trip(self) -> None:
+        cases = {
+            0x200000: "TYPE_09_BOUNDED_NOP_ALIAS",
+            0x22010F: "TYPE_09_BOUNDED_ALIAS",
+        }
+        for opcode, classification in cases.items():
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, classification)
+            self.assertTrue(decoded.text.startswith(".WORD"))
+            self.assertEqual(assemble_statement(decoded.text).value, opcode)
+
     def test_compute_move_aliases_and_unsupported_forms_fail_closed(self) -> None:
         alias = disassemble_word(0x2A010D)
         self.assertTrue(alias.implemented)
@@ -369,7 +412,7 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement("IDLE;")
         with self.assertRaises(AssemblyError):
-            assemble_statement("AR = AX0 + AY0;")
+            assemble_statement("AR = AX0 * AY0;")
 
     def test_original_reserved_bytes_are_not_disassembled_as_later_features(self) -> None:
         result = disassemble_word(0x010000)

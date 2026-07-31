@@ -91,6 +91,13 @@ semantic versioning after its first release.
   algebraic assembler/disassembler support with raw-word alias preservation,
   two hand-derived fixtures, exhaustive deterministic differential vectors,
   a formal harness/recipe, and a constrained Cyclone V synthesis project.
+- A class-complete original Type 9 conditional ALU/MAC semantic entry covering
+  all 32,768 words, including 31,744 conditional computations and 1,024
+  documented AMF-zero no-operation aliases; an independent unknown-preserving
+  state model, exact decoder, portable execution RTL, complete canonical
+  assembler/disassembler support with lossless raw aliases, two hand-derived
+  fixtures, deterministic exhaustive differential vectors, a formal
+  harness/recipe, and a constrained Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -397,6 +404,22 @@ semantic versioning after its first release.
   reference hashes, all generated-data checks, strict Verilator lint, eleven
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
   regression including all 983,386 bounded Type 8 execution cycles.
+- Type 9 Python and RTL decoders classify all 32,768 words without unsupported
+  subencodings. Ten directed model checks, 21,920 canonical syntax forms, two
+  hand-derived fixtures, and 283,996 stateful model-versus-RTL cycles cover
+  every word in both banks, every nonconstant condition's true/false paths,
+  atomic result/status writeback, false preservation, reset unknowns, invalid
+  words, and conflicts.
+- Quartus full compilation passes for the bounded Type 9 conditional-compute
+  slice at its documented 22 ns standalone constraint: 970 ALMs, 697 fitted
+  registers, one DSP block, no RAM, +1.140 ns worst setup and +0.165 ns worst
+  hold slack, 47.94 MHz worst slow-corner Fmax, and zero unconstrained paths.
+  The initial 20 ns fit missed setup by 1.735 ns and measured a 46.01 MHz worst
+  slow-corner Fmax; no whole-core or MiSTer timing claim is made.
+- The expanded `make test` passes 313 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, twelve
+  exhaustive 24-bit decode traversals, and every existing model/RTL vector
+  regression including all 283,996 bounded Type 9 execution cycles.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -492,6 +515,11 @@ semantic versioning after its first release.
   transfer. Same-destination writes remain fail-closed under OQ-014, and the
   AMF-zero mismatch between the Type 8 requirement and the Appendix A no-op
   table remains fail-closed under OQ-022.
+- Closed original Type 9 field placement and action semantics: the standard
+  COND predicate reads cycle-start status/NOT CE, true nonzero-AMF words commit
+  one ALU/MAC result plus selected ASTAT fields at cycle end, false words
+  preserve state for the same one-cycle boundary, AMF zero is a documented
+  no-operation, and the format performs no PM-data or DM transfer.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

@@ -1,7 +1,7 @@
 # Conditions and visibility
 
-**Status: original encodings and predicates verified; bounded CNTR/sequencer
-and Type 16 shifter integrations pass**
+**Status: original encodings and predicates verified; bounded CNTR/sequencer,
+Type 9 ALU/MAC, and Type 16 shifter integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -44,7 +44,7 @@ predicate to explicit IF flow and stored inverse-sense DO termination and
 passes 50,011 additional stateful model-versus-RTL cycles. Conditional JUMP
 with field `0xe` updates CNTR, conditional RETURN checks the same predicate
 without updating CNTR, and conditional CALL is rejected under OQ-012. Opcode
-decode, arithmetic/trap condition consumers, and phase-level timing remain
+decode for remaining arithmetic/TRAP consumers and phase-level timing remain
 unimplemented.
 
 The bounded Type 16 conditional-shifter slice is the first complete
@@ -56,3 +56,12 @@ predicate is nonconstant, and the stateful regression covers 54,403 cycles.
 Unknown reset ASTAT remains unknown in the independent model; it is never
 silently coerced to a deterministic predicate
 [ADI-UM-1989, printed pp. 4-21, 4-25, 6-11, A-3, A-6].
+
+The bounded Type 9 conditional-compute slice evaluates the same cycle-start
+COND input before selecting any ALU/MAC write. False predicates preserve the
+selected-bank result registers and ASTAT while retaining a one-cycle boundary;
+true predicates commit the result and unit-selected status together. The
+1,024 AMF-zero words remain no-operation aliases regardless of predicate.
+All 32,768 Type 9 words execute in both banks in 283,996 stateful comparison
+cycles, with both outcomes for every nonconstant condition
+[ADI-UM-1989, printed pp. 4-21, 4-25, 6-8–6-10, A-2, A-6].

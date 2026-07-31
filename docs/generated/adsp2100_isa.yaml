@@ -375,6 +375,128 @@
   ],
   "instructions": [
     {
+      "id": "CONDITIONAL-COMPUTE-TYPE-9",
+      "mnemonic": "CONDITIONAL ALU/MAC",
+      "algebraic_assembly_syntax": "[IF condition] {ALU_COMPUTATION | MAC_COMPUTATION};",
+      "encoding_pattern": "00100xxxxxxxxxxx0000xxxx",
+      "opcode_mask": "0xf800f0",
+      "opcode_value": "0x200000",
+      "fields": ["Z", "AMF", "YOP", "XOP", "COND"],
+      "condition_field": "COND",
+      "computation_field": "AMF",
+      "source_register_selections": [
+        "UNIT_DEPENDENT_XOP",
+        "UNIT_DEPENDENT_YOP",
+        "MR_FOR_ACCUMULATE_OR_SUBTRACT",
+        "ASTAT_FOR_CONDITION_AND_FUNCTION_DEPENDENT_ARITHMETIC",
+        "CNTR_VALID_AND_VALUE_FOR_NOT_CE",
+        "MSTAT_OL_AS_SR"
+      ],
+      "destination_register_selections": [
+        "Z_SELECTED_AR_AF_OR_MR_MF"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_ASTAT_AND_NOT_CE_FOR_CONDITION",
+        "CYCLE_START_MSTAT_BANK_SELECT_AND_ALU_MODES",
+        "CYCLE_START_SELECTED_BANK_XOP",
+        "CYCLE_START_SELECTED_BANK_YOP_OR_ZERO",
+        "CYCLE_START_SELECTED_BANK_MR_FOR_MAC_ACCUMULATE_OR_SUBTRACT"
+      ],
+      "registers_written": [
+        "WHEN_TRUE_CYCLE_END_SELECTED_BANK_AR_OR_AF_FOR_ALU",
+        "WHEN_TRUE_CYCLE_END_SELECTED_BANK_MR_OR_MF_FOR_MAC",
+        "WHEN_TRUE_CYCLE_END_ASTAT_AZ_AN_AV_AC_AND_ABS_ONLY_AS_FOR_ALU",
+        "WHEN_TRUE_CYCLE_END_ASTAT_MV_FOR_MAC"
+      ],
+      "computational_unit_used": "COND_TRUE_AND_NONZERO_AMF_SELECTS_ALU_OR_MAC",
+      "status_flags_read": [
+        "COND_SELECTED_ASTAT_BITS",
+        "AC_FOR_CARRY_OR_BORROW",
+        "AV_WHEN_OVERFLOW_LATCH_MODE_IS_ENABLED"
+      ],
+      "status_flags_written": [
+        "WHEN_TRUE_AZ_AN_AV_AC_AND_ABS_ONLY_AS_FOR_ALU",
+        "WHEN_TRUE_MV_FOR_MAC"
+      ],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "ONE_CONDITION_EVALUATION",
+        "WHEN_TRUE_ONE_ALU_OR_MAC_COMPUTATION"
+      ],
+      "legal_multifunction_combinations": [
+        "This is a single conditional computation, not a multifunction data-move instruction."
+      ],
+      "illegal_or_reserved_combinations": [],
+      "old_value_new_value_semantics": "COND and function-dependent operands sample cycle-start ASTAT, NOT CE, MSTAT, selected-bank registers, and MR. When true, the result and function-selected ASTAT flags commit at cycle end. AMF=00000 performs no operation for every other field value.",
+      "write_conflict_rules": "At most one computational destination and its associated status update are selected; this format has no data-move destination collision.",
+      "condition_false_behavior": "The processor performs no architectural computation or status write, continues with the next instruction, and still consumes the ordinary one instruction cycle.",
+      "loop_interaction": "NOT CE consumes the cycle-start counter-expiration predicate; terminal-loop sequencing and explicit-control-transfer precedence are not yet integrated into this bounded slice.",
+      "interrupt_interaction": "Interrupt recognition, abort precedence, and exact phase visibility are not integrated or claimed by the bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "True, false, and AMF-zero no-operation forms each retain one instruction cycle; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; the instruction itself issues no PM-data or DM transaction.",
+      "parallel_actions": [
+        {
+          "action": "CYCLE_START_CONDITION_EVALUATION",
+          "reads": ["ASTAT", "NOT_CE"],
+          "writes": []
+        },
+        {
+          "action": "CONDITIONALLY_ENABLED_ALU_OR_MAC_COMPUTATION",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_AND_MODES",
+            "CYCLE_START_SELECTED_BANK_XOP_YOP_AND_OPTIONAL_MR",
+            "CYCLE_START_FUNCTION_DEPENDENT_ASTAT"
+          ],
+          "writes": [
+            "WHEN_TRUE_CYCLE_END_SELECTED_BANK_Z_SELECTED_RESULT",
+            "WHEN_TRUE_CYCLE_END_FUNCTION_SELECTED_ASTAT"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-6–2-20: original ALU/MAC registers, functions, status, and cycle-start read/cycle-end write behavior"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-3–4-5 and 4-25, Tables 4.1 and 4.3: condition source and cycle-start status evaluation"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-8–6-10: conditional ALU/MAC syntax, one-cycle false no-operation, and examples"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-2 and A-5–A-7: Type 9 format plus AMF no-operation, condition, X, Y, and Z fields"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "Some field-valid encodings have no unique original algebraic spelling and are preserved as raw words by the partial disassembler.",
+        "Fetch, interrupt-abort, PC, loop-terminal, counter-valid, and external wait-state phases remain outside the bounded state slice.",
+        "Whole-core ALU division iteration and reserved-opcode behavior remain outside this standard-computation class."
+      ]
+    },
+    {
       "id": "COMPUTE-INTERNAL-MOVE-TYPE-8",
       "mnemonic": "ALU/MAC WITH INTERNAL DATA REGISTER MOVE",
       "algebraic_assembly_syntax": "{ALU_COMPUTATION | MAC_COMPUTATION}, destination_dreg = source_dreg;",

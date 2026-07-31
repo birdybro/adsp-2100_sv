@@ -23,7 +23,8 @@ independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
 immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
-ALU/MAC-plus-DREG words, parameterized Type 18
+ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
+parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
@@ -62,6 +63,22 @@ alias preservation, and 983,386 model-versus-RTL cycles provide bounded
 evidence [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7,
 A-11]. Fetch, PC, loop, interrupt, wait, and external bus phases remain
 outside the slice.
+
+Type 9 encodes Z `[18]`, AMF `[17:13]`, YOP `[12:11]`, XOP `[10:8]`,
+fixed-zero bits `[7:4]`, and COND `[3:0]`. All 31,744 nonzero-AMF words
+conditionally execute the sourced standard ALU or MAC action; the remaining
+1,024 `AMF=00000` words are documented no-operation aliases. Condition,
+operands, feedback, and modes use cycle-start state. A true predicate commits
+the Z-selected result and function-selected ASTAT flags at cycle end, while a
+false predicate and every AMF-zero word preserve architectural state without
+losing the ordinary one-cycle boundary. The format performs no PM-data or DM
+transaction. Two hand-derived examples, exhaustive 24-bit RTL decode, ten
+directed model tests, all 21,920 uniquely spellable assembler/disassembler
+forms, lossless raw alias handling, and 283,996 model-versus-RTL cycles cover
+every Type 9 word in both banks and both outcomes for every nonconstant
+condition [ADI-UM-1989, printed pp. 2-6–2-20, 4-3–4-5, 4-25, 6-8–6-10,
+A-2, A-5–A-7]. Fetch, PC, counter-valid integration, loop-terminal,
+interrupt-abort, wait, and external bus phases remain outside the slice.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight
@@ -127,7 +144,7 @@ corroborated but not established by pinned MAME
 MAME-ADSP2100-OPS, same commit, lines 440–450 and 532–543]. Fetch, PC,
 interrupt adjacency, and bus phases remain outside this slice.
 
-Type 26 stack control is the first bounded semantic class beyond NOP.
+Type 26 stack control is a bounded semantic class beyond NOP.
 `docs/generated/adsp2100_stack_control.yaml` records the 32 field-defined
 words, the behavioral alias between `SPP=00` and `SPP=01`, the independent
 status/count/PC/loop stack actions, their combined one-cycle execution, and
@@ -178,13 +195,15 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 6, Type 18, Type 21, and Type 25 are the only class-complete source-backed
-semantic entries in the main instruction table. Type 16 has a bounded semantic
+Type 6, Type 9, Type 18, Type 21, and Type 25 are the class-complete
+source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic
 entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
 closed. Type 14 has a bounded semantic entry for 25,648 canonical words while
 39,888 unresolved or unsupported words fail closed. Type 15 has a bounded semantic entry
 for its 14,336 source-closed words while 18,432 subencodings fail closed.
 Type 8 has a bounded semantic entry for 476,672 words while 47,616 unresolved
-or unsupported words fail closed; most
+or unsupported words fail closed. Type 9 has a class-complete semantic entry
+for all 32,768 words, including the 1,024 documented AMF-zero no-operation
+aliases; most
 other legal combinations, register effects, parallel ordering, cycle counts,
 and bus transactions still require primary-backed entries.

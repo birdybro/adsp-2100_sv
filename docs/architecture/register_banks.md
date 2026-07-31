@@ -124,6 +124,13 @@ a Z=0 MAC result. Every one of the 476,672 supported words executes in both
 banks in the 983,386-cycle comparison
 [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
 
+`adsp2100_conditional_compute_slice` uses the identical cycle-start bank and
+operand mapping for Type 9, but gates all result/status writes with the
+cycle-start condition. True actions update only the selected AR/AF or MR/MF;
+false and AMF-zero actions preserve both banks. Every one of the 32,768 class
+words executes in each bank in the 283,996-cycle comparison
+[ADI-UM-1989, printed pp. 2-6–2-20, 4-25, 6-8–6-10, A-2, A-5–A-7].
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -167,6 +174,9 @@ therefore remains `IMPLEMENTING`.
 - `make compute-tests` adds ten directed Type 8 tests and 983,386 stateful
   model-versus-RTL cycles, executing all 476,672 supported words in both banks
   plus invalid, collision, reset-unknown, and setup-conflict boundaries.
+- `make compute-tests` adds ten directed Type 9 tests and 283,996 stateful
+  model-versus-RTL cycles, executing all 32,768 words in both banks and both
+  outcomes for every nonconstant condition.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

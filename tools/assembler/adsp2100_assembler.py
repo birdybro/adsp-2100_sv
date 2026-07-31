@@ -320,6 +320,29 @@ def _assemble_conditional_shift(statement: str) -> int | None:
     return 0x0E0000 | (sf << 11) | (xop << 8) | condition
 
 
+def _assemble_conditional_compute(statement: str) -> int | None:
+    """Assemble a canonical original Type 9 conditional ALU/MAC action."""
+
+    if "," in statement:
+        return None
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+    computation = _compute_operation_codes().get(body)
+    if computation is None:
+        return None
+    z, amf, yop, xop = computation
+    return (
+        0x200000
+        | (z << 18)
+        | (amf << 13)
+        | (yop << 11)
+        | (xop << 8)
+        | condition
+    )
+
+
 def _shift_move_destination_collision(sf: int, destination: int) -> bool:
     if sf <= 0xB:
         return destination in (14, 15)
@@ -490,6 +513,11 @@ def assemble_statement(source: str) -> AssembledWord:
     raw_word = _assemble_raw_word(statement)
     if raw_word is not None:
         return AssembledWord(raw_word)
+    # Type 9 precedes the general DREG-immediate parser so its canonical
+    # `AR = -0` negate-zero spelling round-trips to the source opcode.
+    conditional_compute = _assemble_conditional_compute(statement)
+    if conditional_compute is not None:
+        return AssembledWord(conditional_compute)
     dreg_immediate = _assemble_dreg_immediate(statement)
     if dreg_immediate is not None:
         return AssembledWord(dreg_immediate)

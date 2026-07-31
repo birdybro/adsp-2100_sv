@@ -1,7 +1,7 @@
 # Multiplier/accumulator
 
 **Status: standard fractional compute model and RTL implemented; exact Type 25
-saturation and bounded Type 8 integration complete**
+saturation and bounded Type 8/Type 9 integrations complete**
 
 The multiplier has two 16-bit inputs and a 32-bit product. A 40-bit
 adder/subtractor accumulates into MR, segmented as 16-bit MR0, 16-bit MR1, and
@@ -54,8 +54,8 @@ The separate register file accepts a full MAC result for atomic MR or
 MF-middle-word writeback in the selected bank.
 The separate status block accepts MV at the documented cycle-end boundary.
 The combinational compute block alone does not select architectural operands.
-Outside the bounded Type 8 slice, false-condition handling and Type 1/4/5/9
-selection plus complete multifunction legality/timing remain unimplemented.
+Outside the bounded Type 8 and Type 9 slices, Type 1/4/5 memory selection plus
+complete multifunction legality/timing remain unimplemented.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the
@@ -71,5 +71,13 @@ selected-bank MR/MF writeback, ASTAT.MV, and a simultaneous old-value DREG
 move. Z=0 packets whose move also targets MR0/MR1/MR2 fail closed. All
 476,672 supported Type 8 ALU/MAC words execute in both banks in the combined
 983,386-cycle comparison. AMF zero remains unassigned under OQ-022, and Types
-1/4/5/9 plus memory bus timing remain open
+1/4/5 plus memory bus timing remain open
 [ADI-UM-1989, printed pp. 2-13–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+
+The Type 9 model and RTL select the same original MAC X/Y/Z and MR-feedback
+paths behind the cycle-start condition. A true action commits MR/MF and MV at
+cycle end; a false predicate or documented AMF-zero no-operation preserves
+both computation and status state for the same one-cycle instruction
+boundary. All 32,768 class words execute in both banks within the 283,996-cycle
+differential [ADI-UM-1989, printed pp. 2-13–2-20, 4-21, 4-25, 6-8–6-10,
+A-2, A-5–A-7].

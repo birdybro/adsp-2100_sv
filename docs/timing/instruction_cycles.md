@@ -13,6 +13,7 @@ Known cases:
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
+| Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -79,6 +80,15 @@ model/RTL cycles execute every one of the 476,672 supported words in both
 banks. This remains instruction-boundary evidence; fetch overlap,
 loop-terminal handling, interrupts, waits, and pin-level phases remain open
 [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+
+The bounded Type 9 model/RTL slice verifies cycle-start condition, bank,
+operands, feedback, and arithmetic modes followed by true-only cycle-end
+result/status writes. False and AMF-zero paths preserve state without changing
+the one-cycle boundary. Exhaustive decode covers all 32,768 class words, and
+283,996 model/RTL cycles execute every word in both banks and both available
+condition outcomes. Fetch overlap, counter-valid integration, loop-terminal
+handling, interrupts, waits, and pin-level phases remain open
+[ADI-UM-1989, printed pp. 2-6–2-20, 4-21, 4-25, 6-8–6-10, A-2, A-5–A-7].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

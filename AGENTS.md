@@ -230,8 +230,8 @@ controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
 MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, all 1,792 source-backed Type 16 conditional shifter
-words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, and all Type 26
-stack-control actions,
+words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
+conditional ALU/MAC words, and all Type 26 stack-control actions,
 but they do not establish
 whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
 excludes later timer, GO, and multiplier-placement fields and exhaustively

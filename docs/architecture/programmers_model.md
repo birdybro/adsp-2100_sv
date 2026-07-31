@@ -92,6 +92,12 @@ ASTAT, and move writes become visible together at cycle end; the inactive bank
 is preserved. AMF zero and same-destination requests remain action-free under
 OQ-022/OQ-014 rather than receiving invented priority
 [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+The bounded Type 9 path uses the same cycle-start bank, operands, optional MR
+feedback, ASTAT, and mode state. A true condition commits one AR/AF or MR/MF
+result and its unit-selected ASTAT fields at cycle end; false and AMF-zero
+paths preserve both banks and status. All 32,768 words execute in both banks
+within the 283,996-cycle differential
+[ADI-UM-1989, printed pp. 2-6–2-20, 4-21, 4-25, 6-8–6-10, A-2, A-5–A-7].
 The exact Type 18 boundary independently applies all AS/OL/BR/SR fields to
 cycle-start MSTAT and commits one four-bit result at cycle end. Both
 documented no-change encodings preserve their raw decode identity, while

@@ -203,6 +203,38 @@ def _try_disassemble_compute_move(opcode: int) -> Disassembly | None:
     return Disassembly(opcode, text, classification, implemented)
 
 
+def _try_disassemble_conditional_compute(opcode: int) -> Disassembly | None:
+    if opcode & 0xF800F0 != 0x200000:
+        return None
+    z = (opcode >> 18) & 1
+    amf = (opcode >> 13) & 0x1F
+    yop = (opcode >> 11) & 3
+    xop = (opcode >> 8) & 7
+    condition = opcode & 0xF
+    if amf == 0:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="TYPE_09_BOUNDED_NOP_ALIAS",
+            implemented=True,
+        )
+    computation = _format_compute_operation(z, amf, yop, xop)
+    if computation is None:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="TYPE_09_BOUNDED_ALIAS",
+            implemented=True,
+        )
+    prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
+    return Disassembly(
+        opcode=opcode,
+        text=f"{prefix}{computation};",
+        classification="TYPE_09_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
     if opcode & 0xFF80F0 != 0x0E0000:
         return None
@@ -297,6 +329,9 @@ def disassemble_word(opcode: int) -> Disassembly:
         raise ValueError("opcode must fit 24 bits")
     database = load_database()
     validate_database(database)
+    conditional_compute = _try_disassemble_conditional_compute(opcode)
+    if conditional_compute is not None:
+        return conditional_compute
     compute_move = _try_disassemble_compute_move(opcode)
     if compute_move is not None:
         return compute_move

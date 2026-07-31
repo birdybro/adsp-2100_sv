@@ -111,7 +111,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
-  `tests/test_compute_move.py`
+  `tests/test_compute_move.py`, `tests/test_conditional_compute.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
   48 codes and every blank code. CNTR now has machine-readable 14-bit,
@@ -132,6 +132,9 @@ advance beyond research until a page-level primary citation is added.
   Bounded Type 8 execution samples ALU/MAC operands, feedback, ASTAT, and the
   simultaneous DREG source from cycle-start selected-bank state and atomically
   commits noncolliding computational, status, and DREG writes at cycle end.
+  Type 9 now applies the same banked ALU/MAC operand/feedback paths behind a
+  cycle-start condition and commits true-only result/status writes; false and
+  AMF-zero actions preserve both banks.
   Emulator variable
   names are discovery aids only.
 - **Unresolved questions:** hidden sequencer state, undefined reset fields, and
@@ -244,8 +247,13 @@ advance beyond research until a page-level primary citation is added.
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
   fixtures, 20,513 representative canonical syntax packets, every supported
-  word in both banks, and 983,386 stateful model/RTL cycles pass; conditional,
-  fetch, interrupt, and bus timing remain open.
+  word in both banks, and 983,386 stateful model/RTL cycles pass; fetch,
+  interrupt, and bus timing remain open.
+  Type 9 is class-complete: all 32,768 words partition into 31,744 conditional
+  computations and 1,024 documented AMF-zero no-operation aliases. Two
+  hand-derived fixtures, all 21,920 uniquely spellable forms plus raw aliases,
+  every word in both banks, and 283,996 stateful model/RTL cycles pass; fetch,
+  counter/loop, interrupt, and bus timing remain open.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -334,6 +342,9 @@ advance beyond research until a page-level primary citation is added.
   evaluates compute and move sources from one cycle-start bank snapshot,
   atomically commits result/feedback/status/move writes, preserves unknowns,
   and rejects AMF-zero or same-destination encodings.
+  A separate Type 9 model evaluates every condition from cycle-start status,
+  independently selects ALU/MAC operands and feedback, preserves state for
+  false and AMF-zero actions, and atomically commits true result/status writes.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -371,9 +382,11 @@ advance beyond research until a page-level primary citation is added.
   fail-closed. Type 8 accepts canonical source-closed ALU/MAC-plus-DREG
   packets, preserves non-unique supported aliases as raw `.WORD` encodings,
   and visibly rejects AMF-zero and same-destination words. Two hand-derived
-  Type 8 fixtures and 20,513 representative canonical packets round trip. First
-  research
-  surviving lawful assemblers; do not execute legacy tools on the host.
+  Type 8 fixtures and 20,513 representative canonical packets round trip.
+  Type 9 round trips all 21,920 uniquely spellable conditional/unconditional
+  computations, preserves every field-valid alias with raw `.WORD` syntax,
+  and includes two hand-derived primary examples. Research surviving lawful
+  assemblers first; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -390,13 +403,16 @@ advance beyond research until a page-level primary citation is added.
   directed boundary/differential/formal tests pass; synthesis is warning-clean.
 - **Source references:** ADI-UM-1989 computational-unit and instruction chapters
 - **Relevant tests:** `make compute-tests`, `tests/test_compute_move.py`,
-  `formal/alu.sby`, `formal/compute_move.sby`
+  `tests/test_conditional_compute.py`, `formal/alu.sby`,
+  `formal/compute_move.sby`, `formal/conditional_compute.sby`
 - **Implementation notes:** the source-backed standard AMF `0x10`–`0x1f`
   compute block, flags, sticky AV, and AR saturation exist in independent
   model and RTL. Type 8 now connects every source-closed standard ALU field to
   selected-bank operand/feedback selection, atomic AR/AF/ASTAT and parallel
-  DREG writeback, and 983,386 ALU/MAC model/RTL packet cycles. Conditional
-  computation, memory multifunction classes, and DIVS/DIVQ remain.
+  DREG writeback, and 983,386 ALU/MAC model/RTL packet cycles. Type 9 connects
+  all standard conditional ALU fields with true-only AR/AF/ASTAT writeback and
+  passes 283,996 cycles over every class word. Memory multifunction classes
+  and DIVS/DIVQ remain.
 - **Unresolved questions:** DIVS/DIVQ iteration semantics and instruction-level
   old/new value visibility remain open.
 - **Confidence:** CORROBORATED
@@ -413,7 +429,8 @@ advance beyond research until a page-level primary citation is added.
   source-backed and pass boundary, randomized, differential, and formal tests.
 - **Source references:** ADI-UM-1989 MAC and instruction chapters
 - **Relevant tests:** `make compute-tests`, `tests/test_compute_move.py`,
-  `formal/mac.sby`, `formal/compute_move.sby`
+  `tests/test_conditional_compute.py`, `formal/mac.sby`,
+  `formal/compute_move.sby`, `formal/conditional_compute.sby`
 - **Implementation notes:** the source-backed fixed-fractional AMF `0x01`–`0x0f`
   compute block, four signedness modes, unbiased rounding, MF extraction, MV,
   and SAT MR transform exist in independent model and RTL. The exact Type 25
@@ -423,8 +440,10 @@ advance beyond research until a page-level primary citation is added.
   tests, and 50,112 model/RTL cycles. Type 8 now connects every source-closed
   fractional MAC field to selected-bank operand/feedback selection and atomic
   MR/MF/MV plus parallel DREG writeback; all supported Type 8 words execute in
-  both banks within the 983,386-cycle differential run. Conditional and
-  memory-access multifunction timing remain.
+  both banks within the 983,386-cycle differential run. Type 9 connects all
+  standard conditional MAC fields with true-only MR/MF/MV writeback and passes
+  283,996 cycles over every class word. Memory-access multifunction timing
+  remains.
 - **Unresolved questions:** original-device multiplier visibility within
   multifunction instructions and the recorded MAME rounding conflict SC-008.
 - **Confidence:** CORROBORATED
@@ -607,6 +626,9 @@ advance beyond research until a page-level primary citation is added.
   feedback/status, and DREG writeback with cycle-start old-value reads. Its
   exhaustive both-bank differential run passes 983,386 cycles over all
   476,672 source-closed words plus deterministic setup/error cases.
+  The Type 9 slice uses the same selected-bank computational destinations,
+  suppresses every false/AMF-zero write, and passes 283,996 cycles over all
+  32,768 words in both banks.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -870,10 +892,11 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Twenty-nine harnesses now pass strict assertion syntax
+  result complete proof. Thirty harnesses now pass strict assertion syntax
   lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
+  class-complete bounded Type 9 conditional ALU/MAC execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -922,6 +945,11 @@ advance beyond research until a page-level primary citation is added.
   all clocks, ports, and paths are constrained. The same monolithic slice
   missed a 20 ns constraint by 1.721 ns; this is not whole-core or MiSTer
   timing closure and phase scheduling remains an integration task.
+  The bounded Type 9 slice fits in 970 ALMs and 697 fitted registers with one
+  DSP and no RAM against a 22 ns standalone constraint. Worst setup is +1.140
+  ns, worst hold is +0.165 ns, worst slow-corner Fmax is 47.94 MHz, and no
+  clocks, ports, or paths are unconstrained. Its initial 20 ns fit missed
+  setup by 1.735 ns; this likewise is not whole-core or MiSTer closure.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.
@@ -1021,8 +1049,8 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is the next source-closed multifunction
-action graph in `ISA-002`/`ISA-001`, alongside `REF-001` acquisition of the
+The highest-priority unblocked work is the next source-closed memory-transfer
+or program-flow action graph in `ISA-002`/`ISA-001`, alongside `REF-001` acquisition of the
 exact original Cross-Software/opcode reference and `DEV-001`. Field
 placement is closed for the printed Appendix A diagrams, but legality,
 parallel-action, timing, and execution effects are not. `TIME-001` must be

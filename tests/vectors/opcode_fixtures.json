@@ -3,6 +3,24 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-IF-AC-ALU-ADD-CARRY-224008",
+      "source": "IF AC AR = AX0 + AY0 + C;",
+      "opcode": "0x224008",
+      "program_word_bytes_big_endian": "224008",
+      "encoding_class": 9,
+      "source_citation": "ADI-UM-1989 printed pp. 6-8–6-10 and A-2, A-5–A-7",
+      "review_status": "HAND_DERIVED_PRIMARY_EXAMPLE"
+    },
+    {
+      "id": "HAND-IF-NOT-MV-MAC-ACCUMULATE-UU-21600D",
+      "source": "IF NOT MV MR = MR + MX0 * MY0 (UU);",
+      "opcode": "0x21600d",
+      "program_word_bytes_big_endian": "21600d",
+      "encoding_class": 9,
+      "source_citation": "ADI-UM-1989 printed pp. 6-8–6-10 and A-2, A-5–A-7",
+      "review_status": "HAND_DERIVED_PRIMARY_EXAMPLE"
+    },
+    {
       "id": "HAND-COMPUTE-MOVE-ADD-AX0-MR2-2A600D",
       "source": "AR = AX0 + AY0, AX0 = MR2;",
       "opcode": "0x2a600d",
