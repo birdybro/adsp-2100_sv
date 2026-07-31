@@ -150,8 +150,11 @@ advance beyond research until a page-level primary citation is added.
   behaviors after collapsing the two no-change aliases, combined one-cycle
   action selection, and fail-closed non-Type-26 decode. It has an independent
   model, fixtures, exhaustive RTL test, formal harness, and constrained
-  Cyclone V fit. Only the all-zero NOP remains a hand-verified full semantic
-  instruction entry with architectural execution. Generated assembler/
+  Cyclone V fit. A separate machine-readable execution boundary connects
+  those actions to all four stack classes, CNTR, ASTAT/MSTAT/IMASK, and SSTAT
+  with nine model checks and 50,015 stateful RTL comparison cycles. Only the
+  all-zero NOP remains a hand-verified full semantic instruction entry in the
+  main ISA table. Generated assembler/
   disassembler artifacts must derive from these databases as instruction
   entries are independently verified.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
@@ -193,9 +196,11 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make model-tests`, `make differential`
 - **Implementation notes:** the partial model has exact-width primitives,
   fail-closed unsupported opcodes, and a source-derived IF/DO condition
-  evaluator. It also has an independent pure Type 26 stack-control action
-  decoder that retains both SPP no-change encodings; stateful Type 26
-  execution remains unavailable.
+  evaluator. It also has independent pure Type 26 action and composed state
+  models that retain both SPP no-change encodings, sample cycle-start
+  status/stack values, and atomically update all four stack classes, CNTR, and
+  live status at cycle end. Interrupt/RTI arbitration and fetch/bus timing
+  remain outside this bounded execution slice.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -338,10 +343,10 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989 sequencer and instruction chapters
 - **Relevant tests:** `make sequencer-tests`, `tests/test_counter.py`,
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
-  `tests/test_stack_control.py`,
+  `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
-  `formal/stack_control_decode.sby`
+  `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -360,8 +365,10 @@ advance beyond research until a page-level primary citation is added.
   model-versus-RTL cycles cover exact-N/nested CE loops, JUMP/RETURN CE
   distinctions, loop-stack descriptors, and atomic rejection of unresolved
   collisions. A separate source-backed Type 26 model/RTL boundary now
-  exhaustively decodes all 32 manual stack-control words, but does not yet
-  mutate sequencer state.
+  executes all 32 manual stack-control words against all four stack classes,
+  live CNTR/status, and composed SSTAT. Nine directed/schema/random checks and
+  50,015 stateful comparison cycles pass; automatic sequencer and interrupt
+  arbitration remain deliberately unconnected.
 - **Unresolved questions:** opcode and PC-register integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
   (OQ-018), interrupts, delayed transfers, cache interaction, empty-pop
@@ -426,16 +433,18 @@ advance beyond research until a page-level primary citation is added.
   suppression; and fail-closed collision handling. Seventeen directed tests
   and 50,287 model-versus-RTL cycles pass. The SSTAT field map is extracted,
   and separate status and sequencer-stack storage blocks now provide all eight
-  SSTAT empty/sticky-overflow sources. Later
+  SSTAT empty/sticky-overflow sources. The bounded Type 26 execution slice
+  composes those sources and connects manual status push/restore to live
+  ASTAT/MSTAT/IMASK. Later
   memory-mapped peripheral control registers are excluded from the ADSP-2100
   default. A bounded integration slice now wires all four MSTAT bits to the
   computational bank, DAG1 bit reverse, sticky AV, and AR saturation using
   the documented start-read/end-write cycle boundary. Five directed tests and
   50,112 model-versus-RTL integration cycles pass.
-- **Unresolved questions:** SSTAT-fragment composition and instruction reads,
-  status-stack action and interrupt recognition/decode connectivity, empty-pop
-  effects (OQ-013), narrow DMD read extension (OQ-016), competing-write
-  behavior (OQ-017), and interrupt-adjacent bank-switch visibility (OQ-015).
+- **Unresolved questions:** architectural SSTAT instruction reads, interrupt
+  recognition/RTI/status-stack arbitration, empty-pop effects (OQ-013), narrow
+  DMD read extension (OQ-016), competing-write behavior (OQ-017), and
+  interrupt-adjacent bank-switch visibility (OQ-015).
 - **Confidence:** CORROBORATED
 
 ## M18 — Program-memory interface
@@ -507,10 +516,10 @@ advance beyond research until a page-level primary citation is added.
   `make decode-tests`,
   `tests/test_counter.py`, `tests/test_status_stack.py`,
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
-  `tests/test_stack_control.py`,
+  `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
   `formal/counter.sby`, `formal/status_stack.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
-  `formal/stack_control_decode.sby`
+  `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`
 - **Implementation notes:** all original depths are now source-backed. The
   four-by-sixteen status stack has an independent state model, portable RTL,
   eight directed/model tests, 50,037 model-versus-RTL cycles, a formal
@@ -526,12 +535,15 @@ advance beyond research until a page-level primary citation is added.
   couples DO setup/termination with PC and loop storage across 50,011
   additional model/RTL cycles. The Type 26 action decoder now maps every
   original manual encoding to status/count/PC/loop requests, retains both
-  status no-change aliases, and is exhaustive over the 24-bit input space.
-- **Unresolved questions:** stateful instruction/flow/count/interrupt/RTI
-  stack-action connectivity, interrupt/RTI/status-stack actions, conditional-CALL CE
-  behavior (OQ-012), competing automatic/manual actions (OQ-018),
-  SSTAT-fragment composition/read path, and empty-pop architectural behavior
-  (OQ-013).
+  status no-change aliases, and is exhaustive over the 24-bit input space. A
+  composed Type 26 model/RTL slice now applies all field-selected actions
+  atomically to PC/count/loop/status storage, restores CNTR and live status
+  from cycle-start tops, composes SSTAT, and passes nine directed/schema/random
+  model checks plus 50,015 model-versus-RTL cycles.
+- **Unresolved questions:** integration with automatic instruction flow and
+  interrupt/RTI actions, conditional-CALL CE behavior (OQ-012), competing
+  automatic/manual priorities (OQ-018), the architectural SSTAT read path,
+  and empty-pop architectural behavior (OQ-013).
 - **Confidence:** CORROBORATED
 
 ## M22 — Interrupt behavior

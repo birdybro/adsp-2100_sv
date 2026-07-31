@@ -13,6 +13,9 @@
   "semantic_databases": [
     "docs/generated/adsp2100_stack_control.yaml"
   ],
+  "integration_databases": [
+    "docs/generated/adsp2100_stack_control_slice.yaml"
+  ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
     "architectural_behavior": "UNDOCUMENTED",

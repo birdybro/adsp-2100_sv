@@ -39,10 +39,15 @@ synthesizable action decoder agree with independent fixtures for all 32 words;
 exhaustive RTL testing also proves that all other 24-bit words emit no Type 26
 actions.
 
-This does not yet make Type 26 a complete executed instruction in the
-architectural model or core. Stateful stack connectivity, empty-stack pop
-effects (OQ-013), PC/fetch sequencing, assembler/disassembler syntax, and
-logical bus phases remain open. NOP remains the sole full semantic entry in
-the main instruction table; most legal combinations, register effects,
-parallel ordering, cycle counts, and bus transactions still require
-primary-backed entries.
+A bounded stateful execution slice now connects Type 26 to all four stack
+classes, live CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT. It samples all
+sources at cycle start and atomically commits selected actions at cycle end;
+nine model checks and 50,015 model-versus-RTL cycles cover all combinations
+under valid, empty, full, reset, invalid-opcode, and conflicting-request
+conditions. This still does not make the whole processor instruction-complete:
+empty-stack pop effects (OQ-013), arbitration with automatic
+sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
+assembler/disassembler syntax, and logical bus phases remain open. NOP remains
+the sole full semantic entry in the main instruction table; most legal
+combinations, register effects, parallel ordering, cycle counts, and bus
+transactions still require primary-backed entries.

@@ -76,9 +76,12 @@ and status-stack connectivity, cache/fetch overlap, phase enables, complete
 reset integration, and bus-cycle timing remain unimplemented. The discovered
 MAME ordering difference is recorded as SC-012.
 
-A separate Type 26 boundary now decodes all original manual stack-control
-fields into status operation, count pop, loop pop, and PC pop requests. It is
-exhaustively isolated from non-Type-26 opcodes, but is intentionally not yet
-wired into this sequencer slice. That next connection must resolve automatic
-versus manual action collisions (OQ-018) and preserve the explicit OQ-013
-empty-pop boundary.
+A separate bounded Type 26 execution slice now connects all original manual
+stack-control fields to the status/count/loop/PC stacks, live CNTR, and
+ASTAT/MSTAT/IMASK. It reads every source from cycle-start state, commits the
+selected actions together at cycle end, composes all eight SSTAT stack bits,
+and agrees with the independent model for 50,015 stateful cycles. Non-Type-26
+words and simultaneous setup/automatic requests are action-free, the latter
+flagged as OQ-018 integration conflicts. This slice is not yet arbitrated with
+the automatic flow slice, interrupts, or RTI, and preserves the explicit
+OQ-013 empty-pop boundary.

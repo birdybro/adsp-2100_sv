@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_TYPE_26_STATEFUL_STACK_CONTROL_INTEGRATION",
+  "confidence": "CORROBORATED",
+  "action_database": "docs/generated/adsp2100_stack_control.yaml",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-3–4-7 (manual PC/count/loop stack pops and CNTR restore)",
+    "ADI-UM-1989 printed pp. 4-9–4-10 (status context contents)",
+    "ADI-UM-1989 printed pp. 6-14–6-15 and A-4, A-8–A-10 (combined stack-control syntax and fields)"
+  ],
+  "cycle_boundary": {
+    "source_reads": "CYCLE_START",
+    "state_commits": "CYCLE_END",
+    "parallel_actions_are_atomic": true,
+    "status_push_value": "CYCLE_START_ASTAT_MSTAT_IMASK",
+    "pop_value": "CYCLE_START_SELECTED_STACK_TOP",
+    "count_pop_destination": "CNTR",
+    "pc_and_loop_pop_destination": "DISCARDED"
+  },
+  "integrated_state": [
+    "ASTAT",
+    "MSTAT",
+    "IMASK",
+    "CNTR",
+    "PC_STACK",
+    "COUNT_STACK",
+    "LOOP_STACK",
+    "STATUS_STACK",
+    "SSTAT_STACK_FIELDS"
+  ],
+  "accepted_instruction_actions": [
+    "PUSH_STATUS",
+    "POP_STATUS_TO_ASTAT_MSTAT_IMASK",
+    "POP_COUNT_TO_CNTR",
+    "POP_PC_DISCARD",
+    "POP_LOOP_DISCARD",
+    "ALL_FIELD_DEFINED_PARALLEL_COMBINATIONS"
+  ],
+  "fail_closed_boundaries": {
+    "NON_TYPE_26_OPCODE": "INVALID_AND_ACTION_FREE",
+    "TYPE_26_WITH_SETUP_OR_AUTOMATIC_ACTION": "OQ-018_INTEGRATION_CONFLICT",
+    "EMPTY_POP": "OQ-013_EVENT_FLAG_AND_STATE_PRESERVATION"
+  },
+  "not_implemented": [
+    "INSTRUCTION_FETCH_OR_PC_REGISTER",
+    "AUTOMATIC_LOOP_END_OR_INTERRUPT_ARBITRATION",
+    "INTERRUPT_ENTRY_OR_RTI_DECODE",
+    "PHASE_LEVEL_OR_EXTERNAL_BUS_TIMING",
+    "DOCUMENTED_RESOLUTION_OF_EMPTY_POP_EFFECTS"
+  ]
+}

@@ -131,6 +131,13 @@ semantic versioning after its first release.
 - Fourteen directed/random sequencer-integration tests, a deterministic
   50,011-cycle model-versus-RTL regression, a bounded formal harness, and a
   constrained Cyclone V synthesis project.
+- Machine-readable Type 26 execution-boundary metadata, an independent
+  composed state model, and portable RTL connecting all 32 stack-control words
+  to PC/count/loop/status storage, CNTR restore, live status restore, and all
+  eight SSTAT stack fields without inventing interrupt arbitration.
+- Nine directed/schema/random Type 26 execution tests, a deterministic
+  50,015-cycle model-versus-RTL regression, a bounded formal harness, and a
+  constrained Cyclone V synthesis project.
 
 ### Changed
 
@@ -194,6 +201,15 @@ semantic versioning after its first release.
   12 combinational ALUTs, no registers/RAM/DSPs, +17.244 ns worst setup,
   +0.287 ns worst hold slack, and zero unconstrained paths against the 20 ns
   virtual I/O constraint.
+- The stateful Type 26 regression verifies pre-instruction status capture,
+  simultaneous status/count/loop/PC pops from cycle-start tops, valid/empty/
+  full-stack behavior, both no-effect aliases, authentic CNTR reset
+  invalidation, invalid-opcode suppression, SSTAT composition, and atomic
+  OQ-018 conflict rejection across 50,015 cycles.
+- Quartus full compilation passes for the stateful Type 26 integration slice:
+  351 ALMs, 260 combinational logic ALUTs, 465 design registers plus 12 fitter
+  duplicates, no RAM/DSPs, +10.550 ns worst setup, +0.165 ns worst hold slack,
+  and zero unconstrained paths against the 20 ns constraint.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -324,20 +340,23 @@ semantic versioning after its first release.
   automatic/manual sequencer actions and DO setup at an outer loop end.
 - Closed original Type 26 action selection from the original combined syntax
   and Appendix A field tables: status push/pop and count/PC/loop pops are
-  independently selectable in one cycle. Stateful execution, automatic/manual
-  collisions, and empty-stack effects remain explicitly outside this boundary.
+  independently selectable in one cycle. A bounded execution slice now applies
+  these actions to all four architectural stack classes, CNTR, live status,
+  and SSTAT with cycle-start reads and cycle-end commits. Automatic/interrupt
+  arbitration and empty-stack effects remain explicitly outside this boundary.
 
 ### Known Issues
 
 - The exact original ADSP-2100 Cross-Software manual, evaluation-board manual,
   independent data-sheet revisions, and errata remain unavailable. Appendix A
   bit placement is complete, but semantic extraction remains incomplete.
-- No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
-  complete. Type 26 action decode is verified, but it is not yet connected to
-  stateful architectural instruction execution.
+- No instruction-completeness, external-cycle, bus, interrupt, or Hard Drivin'
+  compatibility claim is complete. Type 26 action decode and bounded stateful
+  execution are verified, but fetch/PC, automatic-flow, interrupt/RTI, and bus
+  integration are not connected.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,
   PC-register/decode-level sequencer connectivity, status-stack interrupt/RTI
-  connectivity, SSTAT-fragment composition, narrow status reads, and
+  arbitration, architectural SSTAT reads, narrow status reads, and
   interrupt recognition/cycle integration are not implemented. Sequencer and
   MSTAT consumer wiring exists only in bounded integration slices, not a
   whole instruction execution core.

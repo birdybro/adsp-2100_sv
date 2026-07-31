@@ -24,6 +24,9 @@ cycle-, or Hard Drivin'-complete
   hand-verified NOP semantic fixture;
 - bounded Type 26 stack-control semantic database, independent executable
   action model, portable decoder RTL, and exhaustive fail-closed decode;
+- bounded stateful Type 26 model/RTL execution connecting all four stack
+  classes, CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT with cycle-start reads
+  and atomic cycle-end commits;
 - complete source-backed IF/DO condition field with independent model and
   exhaustive combinational RTL verification;
 - complete source-backed inventory of the 19 remaining finite Appendix A
@@ -74,7 +77,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 193 implemented Python unit checks plus manifest/hash verification;
+- 202 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -89,13 +92,15 @@ outstanding.
   sequencer-flow vectors, 50,022 CNTR cycles, 50,011 sequencer-integration
   cycles, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles plus
   50,287 status/control, 50,037 status-stack, 50,062 PC/count/loop stack, and
-  50,112 MSTAT-consumer integration cycles pass simulation;
+  50,112 MSTAT-consumer integration cycles plus 50,015 stateful Type 26
+  execution cycles pass simulation;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
-  status-register, and status-stack block compilations plus the MSTAT
-  integration-slice compilation pass with no unconstrained paths;
-- class-decode, stack-control decode, condition, ALU, MAC, shifter, DAG,
+  status-register, and status-stack block compilations plus the MSTAT and
+  stateful Type 26 integration-slice compilations pass with no unconstrained
+  paths;
+- class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   and MSTAT-integration formal harnesses pass assertion syntax lint, but no
@@ -112,5 +117,5 @@ outstanding.
 3. Add stateful PC/reset/enable integration only after the next-PC update and
    stall boundaries are source-closed.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
-5. Compose the SSTAT fragments and connect status-stack entry/restore only
-   after interrupt and RTI sequencing boundaries are source-closed.
+5. Research and connect interrupt/RTI sequencing to the now-composed SSTAT and
+   status-stack boundary without inventing arbitration priorities.

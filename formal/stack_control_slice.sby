@@ -1,0 +1,25 @@
+[options]
+mode prove
+depth 10
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_stack_control_decode.sv
+read -formal -sv rtl/core/adsp2100_counter.sv
+read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
+read -formal -sv rtl/core/adsp2100_status_registers.sv
+read -formal -sv rtl/core/adsp2100_status_stack.sv
+read -formal -sv rtl/core/adsp2100_stack_control_slice.sv
+read -formal -sv formal/harnesses/adsp2100_stack_control_slice_formal.sv
+prep -top adsp2100_stack_control_slice_formal
+
+[files]
+rtl/core/adsp2100_stack_control_decode.sv
+rtl/core/adsp2100_counter.sv
+rtl/core/adsp2100_sequencer_stacks.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_status_stack.sv
+rtl/core/adsp2100_stack_control_slice.sv
+formal/harnesses/adsp2100_stack_control_slice_formal.sv

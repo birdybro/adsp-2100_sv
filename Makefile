@@ -27,6 +27,14 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_stack_control_slice \
+			rtl/core/adsp2100_stack_control_decode.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_stack_control_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_condition_logic.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_alu.sv; \
@@ -183,7 +191,7 @@ dag-tests:
 sequencer-tests:
 	$(PYTHON) -m unittest -v tests.test_sequencer_flow \
 		tests.test_counter tests.test_sequencer_stacks \
-		tests.test_sequencer_slice
+		tests.test_sequencer_slice tests.test_stack_control_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_sequencer_vectors.py \
@@ -226,6 +234,20 @@ sequencer-tests:
 			rtl/core/adsp2100_sequencer_slice.sv \
 			sim/unit/tb_adsp2100_sequencer_slice.sv; \
 		build/obj_sequencer_slice/Vtb_adsp2100_sequencer_slice; \
+		$(PYTHON) tools/generators/generate_stack_control_slice_vectors.py \
+			--output build/stack_control_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_stack_control_slice \
+			--top-module tb_adsp2100_stack_control_slice \
+			rtl/core/adsp2100_stack_control_decode.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_stack_control_slice.sv \
+			sim/unit/tb_adsp2100_stack_control_slice.sv; \
+		build/obj_stack_control_slice/Vtb_adsp2100_stack_control_slice; \
 	else \
 		echo "SKIP sequencer RTL tests: Verilator is not installed"; \
 	fi
@@ -335,6 +357,15 @@ formal:
 			rtl/core/adsp2100_stack_control_decode.sv \
 			formal/harnesses/adsp2100_stack_control_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_stack_control_slice_formal \
+			rtl/core/adsp2100_stack_control_decode.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_stack_control_slice.sv \
+			formal/harnesses/adsp2100_stack_control_slice_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_condition_formal \
 			rtl/core/adsp2100_condition_logic.sv \
 			formal/harnesses/adsp2100_condition_formal.sv; \
@@ -404,6 +435,8 @@ formal:
 		sby -f -d build/formal_decode formal/class_decode.sby; \
 		sby -f -d build/formal_stack_control_decode \
 			formal/stack_control_decode.sby; \
+		sby -f -d build/formal_stack_control_slice \
+			formal/stack_control_slice.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
 		sby -f -d build/formal_alu formal/alu.sby; \
 		sby -f -d build/formal_mac formal/mac.sby; \
@@ -434,6 +467,8 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_decode_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/stack_control_slice_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mac_smoke; \
@@ -469,6 +504,7 @@ clean:
 	@find build -maxdepth 1 -type f -name counter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name stack_control_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name register_writeback_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name status_vectors.txt -delete
@@ -491,6 +527,9 @@ clean:
 	@if [ -d build/obj_sequencer_slice ]; then \
 		find build/obj_sequencer_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_stack_control_slice ]; then \
+		find build/obj_stack_control_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_register ]; then find build/obj_register -depth -delete; fi
 	@if [ -d build/obj_register_writeback ]; then \
 		find build/obj_register_writeback -depth -delete; \
@@ -502,6 +541,9 @@ clean:
 	@if [ -d build/quartus_decode ]; then find build/quartus_decode -depth -delete; fi
 	@if [ -d build/quartus_stack_control_decode ]; then \
 		find build/quartus_stack_control_decode -depth -delete; \
+	fi
+	@if [ -d build/quartus_stack_control_slice ]; then \
+		find build/quartus_stack_control_slice -depth -delete; \
 	fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
@@ -524,6 +566,7 @@ clean:
 		find build/quartus_mode_slice -depth -delete; \
 	fi
 	@for directory in build/formal_decode build/formal_stack_control_decode \
+		build/formal_stack_control_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
 		build/formal_counter build/formal_sequencer_stacks \

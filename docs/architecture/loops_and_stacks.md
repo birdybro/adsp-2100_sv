@@ -1,7 +1,7 @@
 # Loops and stacks
 
-**Status: original depths and storage implemented; PC/count/loop bounded
-sequencer connectivity verified**
+**Status: original depths and storage implemented; bounded automatic
+sequencer and manual Type 26 connectivity verified**
 
 The original has four stack classes reported by SSTAT: PC, count, status, and
 loop [ADI-UM-1989, printed p. 4-22]. Depths are 16 for the 14-bit PC stack,
@@ -36,6 +36,18 @@ the instruction remains one processor cycle [ADI-UM-1989, printed pp. 1-2,
 `rtl/core/adsp2100_stack_control_decode.sv` cover all 32 encodings while
 failing closed for every non-Type-26 word.
 
+The independent composed model and
+`rtl/core/adsp2100_stack_control_slice.sv` now execute those requests against
+all four stack classes at one cycle boundary. PUSH STS captures cycle-start
+ASTAT/MSTAT/IMASK; POP STS restores all three from the cycle-start status top;
+POP CNTR restores the cycle-start count top; and POP PC/POP LOOP discard their
+selected entries. All selected actions commit together at cycle end. Nine
+directed/schema/random model checks and 50,015 model-versus-RTL cycles cover
+combined actions, both no-effect aliases, valid/empty/full stacks, reset,
+invalid opcodes, SSTAT composition, and fail-closed integration conflicts
+[ADI-UM-1989, printed pp. 4-3–4-7, 4-9–4-10, 6-14–6-15,
+A-4, A-8–A-10].
+
 The sequencer storage exposes each current top with an explicit valid bit,
 accepted pushes, valid pops, overflow events, and empty-pop indications. Its
 SSTAT output is a fragment: bits 4/5 are zero and must be composed with the
@@ -68,8 +80,9 @@ pops the PC and loop stacks and, for true CE, restores or invalidates CNTR
 while popping the count stack. Nested CE restoration and stack-depth
 transitions match the independent model across 50,011 cycles.
 
-Interrupt/RTI and stateful Type 26/status-stack action connectivity, and every
-empty-pop architectural side effect, remain outside this integration boundary.
-Conditional-CALL CE remains OQ-012. Competing automatic/manual actions and DO
-setup on an active outer loop's final instruction are rejected under OQ-018
-instead of receiving an invented priority.
+Interrupt/RTI connectivity and arbitration between Type 26 and automatic
+sequencer/interrupt actions remain outside this integration boundary. Every
+empty-pop architectural side effect remains OQ-013. Conditional-CALL CE
+remains OQ-012. Competing automatic/manual actions and DO setup on an active
+outer loop's final instruction are rejected under OQ-018 instead of receiving
+an invented priority.

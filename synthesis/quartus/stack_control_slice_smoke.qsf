@@ -1,0 +1,71 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_stack_control_slice
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_stack_control_slice
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_stack_control_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_counter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer_stacks.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_registers.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_stack.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_stack_control_slice.sv
+set_global_assignment -name SDC_FILE stack_control_slice_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to execute_i
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_load_i
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_load_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_push_i
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_push_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_push_i
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_push_data_i[*]
+
+set_instance_assignment -name VIRTUAL_PIN ON -to boundary_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_opcode_o
+set_instance_assignment -name VIRTUAL_PIN ON -to integration_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to internal_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to status_operation_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to has_effect_o
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to alternate_bank_o
+set_instance_assignment -name VIRTUAL_PIN ON -to bit_reverse_o
+set_instance_assignment -name VIRTUAL_PIN ON -to overflow_latch_o
+set_instance_assignment -name VIRTUAL_PIN ON -to saturate_ar_o
+set_instance_assignment -name VIRTUAL_PIN ON -to cntr_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to cntr_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_restore_o
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_empty_manual_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_top_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_top_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_top_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to status_top_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_top_valid_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to status_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_empty_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_overflow_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_pop_valid_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_push_accepted_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_overflow_event_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to stack_empty_pop_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sstat_o[*]
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_global_assignment -name SEED 2

@@ -24,5 +24,11 @@ Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 combination wording is corroborated, but not extended, by
 [ADI-2101-CROSS-1990, printed p. 9-61].
 
+The bounded Type 26 model/RTL execution slice verifies that every selected
+status/count/loop/PC action reads cycle-start state and commits on the same
+cycle-end edge across 50,015 stateful cycles. This is instruction-boundary
+evidence only; fetch overlap, the eight logical internal states, wait
+extension, and external bus phases are not yet connected to that slice.
+
 Every opcode/taken/false/cache/loop/interrupt combination still needs a
 machine-readable row and automated assertion.

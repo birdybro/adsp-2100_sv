@@ -76,6 +76,12 @@ from .stack_control import (
     StackControlStatusOperation,
     decode_stack_control,
 )
+from .stack_control_slice import (
+    StackControlSliceInputs,
+    StackControlSliceResult,
+    StackControlSliceState,
+    apply_stack_control_slice_cycle,
+)
 from .registers import (
     ALURegisterWrite,
     ComputationalWriteConflict,
@@ -166,6 +172,9 @@ __all__ = [
     "StatusStackState",
     "StackControlActions",
     "StackControlStatusOperation",
+    "StackControlSliceInputs",
+    "StackControlSliceResult",
+    "StackControlSliceState",
     "STACK_CONTROL_MASK",
     "STACK_CONTROL_VALUE",
     "STATUS_STACK_DEPTH",
@@ -183,6 +192,7 @@ __all__ = [
     "apply_status_cycle",
     "apply_status_stack_cycle",
     "decode_stack_control",
+    "apply_stack_control_slice_cycle",
     "apply_mode_slice_cycle",
     "apply_sequencer_stacks_cycle",
     "apply_sequencer_slice_cycle",
