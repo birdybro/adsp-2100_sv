@@ -375,6 +375,133 @@
   ],
   "instructions": [
     {
+      "id": "CONDITIONAL-SHIFT-TYPE-16",
+      "mnemonic": "CONDITIONAL SHIFTER",
+      "algebraic_assembly_syntax": "[IF condition] {SR = [SR OR] {LSHIFT|ASHIFT|NORM} xop ({HI|LO}) | SE = EXP xop ({HI|HIX|LO}) | SB = EXPADJ xop};",
+      "encoding_pattern": "000011100xxxxxxx0000xxxx",
+      "opcode_mask": "0xff80f0",
+      "opcode_value": "0x0e0000",
+      "fields": [
+        "SF",
+        "XOP",
+        "COND"
+      ],
+      "condition_field": "COND",
+      "computation_field": "SF",
+      "source_register_selections": [
+        "XOP"
+      ],
+      "destination_register_selections": [
+        "SR",
+        "SE",
+        "SB",
+        "ASTAT.SS"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": "SHIFTER_SE_REGISTER",
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_MSTAT_BANK_SELECT",
+        "CYCLE_START_SELECTED_BANK_XOP",
+        "CYCLE_START_SELECTED_BANK_SE_FOR_SHIFT_NORM_EXP_LO",
+        "CYCLE_START_SELECTED_BANK_SR_FOR_OR",
+        "CYCLE_START_SELECTED_BANK_SB_FOR_EXPADJ",
+        "CYCLE_START_ASTAT_FOR_CONDITION_AV_AC_SS",
+        "CYCLE_START_COUNTER_EXPIRED_STATE_FOR_NOT_CE"
+      ],
+      "registers_written": [
+        "CYCLE_END_SELECTED_BANK_SR_FOR_SF_0_THROUGH_11",
+        "CYCLE_END_SELECTED_BANK_SE_FOR_SF_12_THROUGH_14_WHEN_ENABLED",
+        "CYCLE_END_SELECTED_BANK_SB_FOR_SF_15_WHEN_ENABLED",
+        "CYCLE_END_ASTAT_SS_FOR_SF_12_OR_13"
+      ],
+      "computational_unit_used": "BARREL_SHIFTER",
+      "status_flags_read": [
+        "AZ",
+        "AN",
+        "AV",
+        "AC",
+        "AS",
+        "MV",
+        "SS",
+        "NOT_CE"
+      ],
+      "status_flags_written": [
+        "SS_FOR_EXP_HI_OR_HIX"
+      ],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "CONDITION_EVALUATION_AND_ONE_SHIFTER_ACTION"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [
+        "XOP=001 is unavailable to the shifter. No behavior is assigned to those 256 class subencodings."
+      ],
+      "old_value_new_value_semantics": "Evaluate COND from cycle-start ASTAT and counter-expired state. If true, sample the selected bank, X operand, SE, optional SR OR feedback, optional SB, and ASTAT AV/AC/SS at cycle start; commit the function-selected SR, SE, SB, and/or SS writes together at cycle end. A false condition suppresses every shifter and status write.",
+      "write_conflict_rules": "One SF selects the documented shifter destinations. Collision with an external setup or another instruction boundary is outside this bounded instruction slice and fails closed atomically.",
+      "condition_false_behavior": "The instruction still consumes its normal one instruction cycle, performs no PM-data or DM transaction, and preserves SR, SE, SB, SS, and every other architectural register.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Interrupt recognition, instruction-abort precedence, and status visibility at the state-7 boundary are not integrated or claimed by this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "The conditional shifter occupies one instruction cycle whether the condition is true or false; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; no PM-data or DM transaction is issued.",
+      "parallel_actions": [
+        {
+          "action": "CONDITIONAL_SHIFTER_ACTION",
+          "reads": [
+            "CYCLE_START_CONDITION_INPUTS",
+            "CYCLE_START_MSTAT_BANK_SELECT",
+            "CYCLE_START_SELECTED_BANK_XOP",
+            "CYCLE_START_FUNCTION_DEPENDENT_SE_SR_SB",
+            "CYCLE_START_FUNCTION_DEPENDENT_ASTAT_AV_AC_SS"
+          ],
+          "writes": [
+            "CYCLE_END_FUNCTION_SELECTED_SR_SE_SB_SS_ONLY_IF_CONDITION_TRUE"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-20–2-35: complete shifter register, shift, normalize, exponent, and block-exponent semantics"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-3–4-5, Tables 4.1 and 4.3: cycle-start IF predicates and CE/NOT CE meanings"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-1–6-2 and p. 6-11 Table 6.5: one-cycle instruction convention, conditional computational forms, and all conditional shifter algebraic forms"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-3 and A-7: Type 16 SF/XOP/COND placement, all sixteen SF values, and shifter X-operand mapping"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-011: NORM with SE=0x80 uses the documented model's provisional mathematical +128 interpretation.",
+        "OQ-020: original-tool or physical behavior for Type 16 XOP=001 is unverified and fails closed.",
+        "Fetch, interrupt-abort, PC, loop-terminal, and external wait-state phases remain outside the bounded state slice."
+      ]
+    },
+    {
       "id": "IMMEDIATE-SHIFT-TYPE-15",
       "mnemonic": "LSHIFT/ASHIFT IMMEDIATE",
       "algebraic_assembly_syntax": "SR = [SR OR] {LSHIFT|ASHIFT} xop BY <exponent> ({HI|LO});",

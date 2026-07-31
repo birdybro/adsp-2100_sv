@@ -7,6 +7,7 @@ import unittest
 from tools.assembler.adsp2100_assembler import AssemblyError, assemble_statement
 from tools.disassembler.adsp2100_disassembler import disassemble_word
 from tools.generators.validate_internal_move import register_map
+from tools.generators.validate_condition_codes import EXPECTED_IF_MNEMONICS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,46 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             assemble_statement(" ena sec_reg,  dis bit_rev ;").value,
             0x0C00B0,
         )
+
+    def test_all_conditional_shifter_forms_round_trip(self) -> None:
+        xops = {0: "SI", 2: "AR", 3: "MR0", 4: "MR1", 5: "MR2", 6: "SR0", 7: "SR1"}
+        count = 0
+        for sf in range(16):
+            for xop, source in xops.items():
+                for condition, mnemonic in enumerate(EXPECTED_IF_MNEMONICS):
+                    prefix = "" if condition == 15 else f"IF {mnemonic} "
+                    if sf <= 0xB:
+                        operation = ("LSHIFT", "ASHIFT", "NORM")[sf >> 2]
+                        reference = "LO" if sf & 2 else "HI"
+                        combine = "SR OR " if sf & 1 else ""
+                        source_text = (
+                            f"{prefix}SR = {combine}{operation} {source} "
+                            f"({reference});"
+                        )
+                    elif sf <= 0xE:
+                        reference = ("HI", "HIX", "LO")[sf - 0xC]
+                        source_text = f"{prefix}SE = EXP {source} ({reference});"
+                    else:
+                        source_text = f"{prefix}SB = EXPADJ {source};"
+                    opcode = 0x0E0000 | (sf << 11) | (xop << 8) | condition
+                    assembled = assemble_statement(source_text)
+                    self.assertEqual(assembled.value, opcode)
+                    disassembled = disassemble_word(opcode)
+                    self.assertTrue(disassembled.implemented)
+                    self.assertEqual(disassembled.classification, "TYPE_16_BOUNDED_EXECUTION")
+                    self.assertEqual(disassembled.text, source_text)
+                    self.assertEqual(assemble_statement(disassembled.text), assembled)
+                    count += 1
+        self.assertEqual(count, 1_792)
+
+    def test_conditional_shifter_rejects_unavailable_xop_and_bad_condition(self) -> None:
+        unavailable = disassemble_word(0x0E010F)
+        self.assertFalse(unavailable.implemented)
+        self.assertEqual(unavailable.classification, "UNVERIFIED_TYPE_16_SUBENCODING")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("IF MAYBE SR = LSHIFT SI (HI);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT AX0 (HI);")
 
     def test_mode_control_aliases_preserve_binary_round_trip(self) -> None:
         for opcode in (0x0C0000, 0x0C0010, 0x0C0550, 0x0C0DF0):

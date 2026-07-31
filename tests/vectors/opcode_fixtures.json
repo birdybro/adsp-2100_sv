@@ -3,6 +3,24 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-IF-EQ-LSHIFT-SI-HI-0E0000",
+      "source": "IF EQ SR = LSHIFT SI (HI);",
+      "opcode": "0x0e0000",
+      "program_word_bytes_big_endian": "0e0000",
+      "encoding_class": 16,
+      "source_citation": "ADI-UM-1989 printed p. 6-11 Table 6.5 and pp. A-3 and A-7",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
+      "id": "HAND-EXPADJ-SR1-0E7F0F",
+      "source": "SB = EXPADJ SR1;",
+      "opcode": "0x0e7f0f",
+      "program_word_bytes_big_endian": "0e7f0f",
+      "encoding_class": 16,
+      "source_citation": "ADI-UM-1989 printed pp. 2-27–2-29, 6-11 Table 6.5, A-3, and A-7",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
       "id": "HAND-LSHIFT-SI-MINUS5-HI-0F00FB",
       "source": "SR = LSHIFT SI BY -5 (HI);",
       "opcode": "0x0f00fb",

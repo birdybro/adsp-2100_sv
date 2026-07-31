@@ -109,7 +109,8 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `tests/test_model_state.py`,
   `tests/test_register_metadata.py`, `tests/test_counter.py`,
   `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`,
-  `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`
+  `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
+  `tests/test_conditional_shift.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
   48 codes and every blank code. CNTR now has machine-readable 14-bit,
@@ -122,7 +123,10 @@ advance beyond research until a page-level primary citation is added.
   MR1 sign-fill side effects. Bounded Type 15 execution now covers
   selected-bank X-operand reads and SR writeback for all source-closed
   immediate LSHIFT/ASHIFT forms, while hidden state and whole-core
-  fetch/interrupt access still require complete extraction. Emulator variable
+  fetch/interrupt access still require complete extraction. Bounded Type 16
+  execution now connects all source-backed conditional shifter functions to
+  cycle-start selected-bank and ASTAT inputs plus cycle-end SR/SE/SB/SS
+  writeback. Emulator variable
   names are discovery aids only.
 - **Unresolved questions:** hidden sequencer state, undefined reset fields, and
   exact alternate-bank coverage.
@@ -145,6 +149,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
+  `tests/test_conditional_shift.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
@@ -153,10 +158,12 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_internal_move_decode.sv`,
   `sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv`,
   `sim/unit/tb_adsp2100_immediate_shift_decode.sv`,
+  `sim/unit/tb_adsp2100_conditional_shift_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
+  `formal/conditional_shift.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -174,12 +181,14 @@ advance beyond research until a page-level primary citation is added.
   model, fixtures, exhaustive RTL test, formal harness, and constrained
   Cyclone V fit. A separate machine-readable execution boundary connects
   those actions to all four stack classes, CNTR, ASTAT/MSTAT/IMASK, and SSTAT
-  with nine model checks and 50,015 stateful RTL comparison cycles. Only the
+  with nine model checks and 50,015 stateful RTL comparison cycles. The
   all-zero NOP, parameterized Type 6 immediate DREG load, parameterized Type
   18 MODE CONTROL, parameterized Type 21 MODIFY, and exact Type 25
   `IF MV SAT MR;` words are hand-verified class-complete semantic instruction
-  entries. Type 15 has a bounded semantic entry for the 14,336 source-closed
-  immediate LSHIFT/ASHIFT words; its other 18,432 subencodings fail closed.
+  entries. Type 16 has a bounded semantic entry for 1,792 documented words;
+  its 256 unassigned-XOP subencodings fail closed. Type 15 has a bounded
+  semantic entry for the 14,336 source-closed immediate LSHIFT/ASHIFT words;
+  its other 18,432 subencodings fail closed.
   Type 25 has primary-
   backed cycle-start MV/bank/MR semantics, an independent state model, exact
   decoder, bounded execution RTL, exhaustive 24-bit decode, nine model tests,
@@ -208,6 +217,11 @@ advance beyond research until a page-level primary citation is added.
   actions and 18,432 unsupported subencodings. Two manual fixtures, 280 syntax
   forms, all supported words in both banks, and 58,709 stateful model/RTL
   cycles pass; fetch/interrupt/bus timing and SF 8–15 behavior remain open.
+  Type 16 exhaustively partitions all 2,048 class words into 1,792 supported
+  actions and 256 unavailable-XOP subencodings. Two hand fixtures, every
+  supported assembler/disassembler form, all supported words in both banks,
+  and 54,403 stateful model/RTL cycles pass; OQ-020 and whole-core timing
+  remain open.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -270,7 +284,10 @@ advance beyond research until a page-level primary citation is added.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
   an independently structured compute model, commits SR at cycle end, and
-  preserves authentic unknown state and SE.
+  preserves authentic unknown state and SE. A separate Type 16 model evaluates
+  every IF condition from cycle-start state, preserves all destinations when
+  false, executes all sixteen shifter functions when true, and conservatively
+  propagates unknown predicate or operand state.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -300,7 +317,9 @@ advance beyond research until a page-level primary citation is added.
   round trips through canonical hexadecimal disassembly. Type 15 accepts all
   280 algebraic LSHIFT/ASHIFT PASS/OR HI/LO and source combinations with
   signed-decimal or raw hexadecimal exponents. Unsupported SF/XOP
-  subencodings disassemble as unverified and never assemble silently. First
+  subencodings disassemble as unverified and never assemble silently. Type 16
+  round trips all 1,792 conditional/unconditional LSHIFT, ASHIFT, NORM, EXP,
+  and EXPADJ forms; XOP `001` remains unassembled and visibly unverified. First
   research
   surviving lawful assemblers; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
@@ -363,7 +382,8 @@ advance beyond research until a page-level primary citation is added.
   pass edge, differential, and formal tests.
 - **Source references:** ADI-UM-1989 shifter and instruction chapters
 - **Relevant tests:** `make compute-tests`, `tests/test_immediate_shift.py`,
-  `formal/shifter.sby`, `formal/immediate_shift.sby`
+  `tests/test_conditional_shift.py`, `formal/shifter.sby`,
+  `formal/immediate_shift.sby`, `formal/conditional_shift.sby`
 - **Implementation notes:** all sixteen source-backed SF functions now exist
   in the independent model and portable combinational RTL. Exact signed counts,
   HI/LO placement, PASS/OR, ASHIFT/LSHIFT, NORM AC extension, EXP HI/HIX/LO,
@@ -371,8 +391,11 @@ advance beyond research until a page-level primary citation is added.
   model-versus-RTL tests. The bounded Type 15 slice adds exact decode,
   selected-bank reads, old-SR OR feedback, cycle-end SR writeback, and 58,709
   stateful cycles over all 14,336 supported words in both banks. SF 8–15 and
-  unavailable XOP `001` fail closed. Conditional/register-exponent and
-  multifunction shifter decode, whole-core cycles, and bus phases remain.
+  unavailable XOP `001` fail closed. The bounded Type 16 slice adds all 1,792
+  source-backed conditional register-exponent functions, true/false gating,
+  SR/SE/SB/SS writeback, exhaustive class partitioning, and 54,403 stateful
+  model/RTL cycles. Its 256 unavailable-XOP words fail closed under OQ-020.
+  Multifunction shifter decode, whole-core cycles, and bus phases remain.
 - **Unresolved questions:** reset values, same-cycle visibility during
   multifunction writeback, and OQ-011's manually loaded `SE=0x80` NORM
   negation; no undocumented shifter saturation operation is assumed.
@@ -486,8 +509,10 @@ advance beyond research until a page-level primary citation is added.
   `make mode-tests`, `tests/test_mode_integration.py`,
   `tests/test_internal_move.py`, `formal/registers.sby`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
+  `tests/test_conditional_shift.py`,
   `formal/mode_slice.sby`, `formal/internal_move_decode.sby`,
-  `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`
+  `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
+  `formal/conditional_shift.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
   independent model and portable RTL implement both banks for all 16 DREG
   codes plus AF, MF, and SB; exact SE/MR2/SB widths; three cycle-start reads;
@@ -506,7 +531,9 @@ advance beyond research until a page-level primary citation is added.
   DREG write path and passes exhaustive class decode plus 50,204 stateful
   model/RTL cycles across all destinations and both banks. The bounded Type 15
   slice uses the same selected-bank SR writeback and passes 58,709 cycles over
-  every supported word in both banks.
+  every supported word in both banks. The bounded Type 16 slice uses the same
+  bank boundary for all SR/SE/SB shifter writebacks, commits EXP SS to ASTAT,
+  and passes 54,403 cycles over every supported word in both banks.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -770,8 +797,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Twenty-six harnesses now pass strict assertion syntax
+  result complete proof. Twenty-seven harnesses now pass strict assertion syntax
   lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
+  bounded Type 16 conditional-shift,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -807,6 +835,9 @@ advance beyond research until a page-level primary citation is added.
   +0.133 ns worst hold, and zero unconstrained clocks, ports, or paths.
   The bounded Type 15 slice fits in 774 ALMs and 501 fitted registers with no
   RAM/DSPs, +3.728 ns worst setup, +0.057 ns worst hold, and zero unconstrained
+  clocks, ports, or paths.
+  The bounded Type 16 slice fits in 840 ALMs and 520 fitted registers with no
+  RAM/DSPs, +2.304 ns worst setup, +0.173 ns worst hold, and zero unconstrained
   clocks, ports, or paths.
   Whole-core clocks,
   utilization, and timing remain

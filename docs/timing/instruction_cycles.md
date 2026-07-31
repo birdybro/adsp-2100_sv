@@ -14,6 +14,7 @@ Known cases:
 | ordinary instruction | one eight-state processor cycle |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
+| Type 16 conditional shifter | one processor cycle whether true or false; no PM-data or DM transfer |
 | Type 17 internal data MOVE | one processor cycle; no PM-data or DM transfer |
 | Type 18 combined MODE CONTROL | one processor cycle for all selected original mode fields |
 | Type 21 `MODIFY (Ix, My);` | one processor cycle; no PM-data or DM transfer |
@@ -50,6 +51,16 @@ The 58,709-cycle comparison covers all 14,336 supported words in both banks;
 fetch overlap, loop-terminal handling, interrupts, waits, and external bus
 phases remain outside the boundary
 [ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
+
+The bounded Type 16 model/RTL slice verifies cycle-start condition, bank,
+operand, SE/SR/SB, and ASTAT inputs followed by function-selected cycle-end
+SR/SE/SB/SS writes. A false predicate preserves all of those destinations
+without changing the one-cycle boundary. Its exhaustive decoder partitions
+all 2,048 class words, and 54,403 model/RTL cycles cover every one of the 1,792
+supported words in both banks. This is still an instruction-boundary result;
+fetch overlap, loop termination, interrupt recognition/abort, wait extension,
+and pin-level phase sequencing remain open
+[ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

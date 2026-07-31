@@ -11,6 +11,10 @@ from tools.generators.validate_internal_move import (
     register_map as internal_move_register_map,
     validate_database as validate_internal_move_database,
 )
+from tools.generators.validate_condition_codes import (
+    load_database as load_condition_database,
+    validate_database as validate_condition_database,
+)
 from tools.generators.validate_mode_control import (
     load_database as load_mode_control_database,
     validate_database as validate_mode_control_database,
@@ -114,6 +118,90 @@ _SHIFTER_XOP_CODES = {
     "SR0": 6,
     "SR1": 7,
 }
+
+
+@lru_cache(maxsize=1)
+def _if_condition_codes() -> dict[str, int]:
+    database = load_condition_database()
+    validate_condition_database(database)
+    return {
+        entry["mnemonic"]: entry["code"]
+        for entry in database["if_conditions"]
+    }
+
+
+def _split_if_prefix(statement: str) -> tuple[int, str] | None:
+    for mnemonic, code in sorted(
+        _if_condition_codes().items(),
+        key=lambda item: len(item[0]),
+        reverse=True,
+    ):
+        prefix = f"IF {mnemonic} "
+        if statement.startswith(prefix):
+            return code, statement[len(prefix):]
+    if statement.startswith("IF "):
+        return None
+    return 15, statement
+
+
+def _assemble_conditional_shift(statement: str) -> int | None:
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+
+    shift = re.fullmatch(
+        r"SR\s*=\s*(SR OR\s+)?(ASHIFT|LSHIFT|NORM)\s+"
+        r"([A-Z][A-Z0-9]*)\s+\((HI|LO)\)",
+        body,
+    )
+    if shift is not None:
+        combine_or, operation, source, reference = shift.groups()
+        if source not in _SHIFTER_XOP_CODES:
+            return None
+        sf = {"LSHIFT": 0, "ASHIFT": 4, "NORM": 8}[operation]
+        if reference == "LO":
+            sf |= 2
+        if combine_or is not None:
+            sf |= 1
+        return (
+            0x0E0000
+            | (sf << 11)
+            | (_SHIFTER_XOP_CODES[source] << 8)
+            | condition
+        )
+
+    exponent = re.fullmatch(
+        r"SE\s*=\s*EXP\s+([A-Z][A-Z0-9]*)\s+\((HI|HIX|LO)\)",
+        body,
+    )
+    if exponent is not None:
+        source, reference = exponent.groups()
+        if source not in _SHIFTER_XOP_CODES:
+            return None
+        sf = {"HI": 0xC, "HIX": 0xD, "LO": 0xE}[reference]
+        return (
+            0x0E0000
+            | (sf << 11)
+            | (_SHIFTER_XOP_CODES[source] << 8)
+            | condition
+        )
+
+    expadj = re.fullmatch(
+        r"SB\s*=\s*EXPADJ\s+([A-Z][A-Z0-9]*)",
+        body,
+    )
+    if expadj is not None:
+        source = expadj.group(1)
+        if source not in _SHIFTER_XOP_CODES:
+            return None
+        return (
+            0x0E0000
+            | (0xF << 11)
+            | (_SHIFTER_XOP_CODES[source] << 8)
+            | condition
+        )
+    return None
 
 
 def _assemble_immediate_shift(statement: str) -> int | None:
@@ -255,6 +343,9 @@ def assemble_statement(source: str) -> AssembledWord:
     immediate_shift = _assemble_immediate_shift(statement)
     if immediate_shift is not None:
         return AssembledWord(immediate_shift)
+    conditional_shift = _assemble_conditional_shift(statement)
+    if conditional_shift is not None:
+        return AssembledWord(conditional_shift)
     internal_move = _assemble_internal_move(statement)
     if internal_move is not None:
         return AssembledWord(internal_move)

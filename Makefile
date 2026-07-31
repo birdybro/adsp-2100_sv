@@ -40,6 +40,15 @@ lint:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_immediate_shift_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_conditional_shift_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_conditional_shift_decode.sv \
+			rtl/core/adsp2100_condition_logic.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_conditional_shift_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_mr_saturation_decode.sv; \
@@ -162,7 +171,7 @@ decode-tests:
 		tests.test_isa_fields tests.test_instruction_formats \
 		tests.test_stack_control tests.test_mr_saturation \
 		tests.test_internal_move tests.test_load_dreg_immediate \
-		tests.test_immediate_shift
+		tests.test_immediate_shift tests.test_conditional_shift
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -187,6 +196,13 @@ decode-tests:
 			rtl/core/adsp2100_immediate_shift_decode.sv \
 			sim/unit/tb_adsp2100_immediate_shift_decode.sv; \
 		build/obj_immediate_shift_decode/Vtb_adsp2100_immediate_shift_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_conditional_shift_decode \
+			--top-module tb_adsp2100_conditional_shift_decode \
+			rtl/core/adsp2100_conditional_shift_decode.sv \
+			sim/unit/tb_adsp2100_conditional_shift_decode.sv; \
+		build/obj_conditional_shift_decode/Vtb_adsp2100_conditional_shift_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			--Mdir build/obj_stack_control_decode \
 			--top-module tb_adsp2100_stack_control_decode \
@@ -231,7 +247,7 @@ assembler-tests:
 compute-tests:
 	$(PYTHON) -m unittest -v tests.test_condition_logic tests.test_alu_model \
 		tests.test_mac_model tests.test_shifter_model tests.test_mr_saturation \
-		tests.test_immediate_shift
+		tests.test_immediate_shift tests.test_conditional_shift
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_condition_vectors.py \
@@ -299,6 +315,21 @@ compute-tests:
 			rtl/core/adsp2100_immediate_shift_slice.sv \
 			sim/unit/tb_adsp2100_immediate_shift_slice.sv; \
 		build/obj_immediate_shift_slice/Vtb_adsp2100_immediate_shift_slice; \
+		$(PYTHON) tools/generators/generate_conditional_shift_vectors.py \
+			--output build/conditional_shift_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_conditional_shift_slice \
+			--top-module tb_adsp2100_conditional_shift_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_conditional_shift_decode.sv \
+			rtl/core/adsp2100_condition_logic.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_conditional_shift_slice.sv \
+			sim/unit/tb_adsp2100_conditional_shift_slice.sv; \
+		build/obj_conditional_shift_slice/Vtb_adsp2100_conditional_shift_slice; \
 	else \
 		echo "SKIP condition RTL test: Verilator executable not available"; \
 	fi
@@ -562,6 +593,16 @@ formal:
 			rtl/core/adsp2100_immediate_shift_slice.sv \
 			formal/harnesses/adsp2100_immediate_shift_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_conditional_shift_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_conditional_shift_decode.sv \
+			rtl/core/adsp2100_condition_logic.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_conditional_shift_slice.sv \
+			formal/harnesses/adsp2100_conditional_shift_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_mr_saturation_decode_formal \
 			rtl/core/adsp2100_mr_saturation_decode.sv \
 			formal/harnesses/adsp2100_mr_saturation_decode_formal.sv; \
@@ -693,6 +734,8 @@ formal:
 			formal/load_dreg_immediate.sby; \
 		sby -f -d build/formal_immediate_shift \
 			formal/immediate_shift.sby; \
+		sby -f -d build/formal_conditional_shift \
+			formal/conditional_shift.sby; \
 		sby -f -d build/formal_stack_control_decode \
 			formal/stack_control_decode.sby; \
 		sby -f -d build/formal_mr_saturation_decode \
@@ -745,6 +788,8 @@ synth-quartus:
 			synthesis/quartus/load_dreg_immediate_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/immediate_shift_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/conditional_shift_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile \
@@ -806,6 +851,7 @@ clean:
 	@find build -maxdepth 1 -type f -name internal_move_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name load_dreg_immediate_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name immediate_shift_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name conditional_shift_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
 	@if [ -d build/obj_stack_control_decode ]; then \
 		find build/obj_stack_control_decode -depth -delete; \
@@ -856,6 +902,12 @@ clean:
 	@if [ -d build/obj_immediate_shift_slice ]; then \
 		find build/obj_immediate_shift_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_conditional_shift_decode ]; then \
+		find build/obj_conditional_shift_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_conditional_shift_slice ]; then \
+		find build/obj_conditional_shift_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -897,6 +949,9 @@ clean:
 	@if [ -d build/quartus_immediate_shift ]; then \
 		find build/quartus_immediate_shift -depth -delete; \
 	fi
+	@if [ -d build/quartus_conditional_shift ]; then \
+		find build/quartus_conditional_shift -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -928,6 +983,7 @@ clean:
 		build/formal_internal_move_slice \
 		build/formal_load_dreg_immediate \
 		build/formal_immediate_shift \
+		build/formal_conditional_shift \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \

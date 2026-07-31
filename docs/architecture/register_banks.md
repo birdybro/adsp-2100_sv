@@ -96,6 +96,14 @@ exponent does not modify SE, and the inactive bank remains untouched. The
 deterministic invalid/conflict sequences
 [ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
 
+`adsp2100_conditional_shift_slice` extends the same boundary through every
+source-backed Type 16 shifter function. Cycle-start MSTAT selects the X, SE,
+SR, and SB operands; condition-false preserves both banks; and condition-true
+commits exactly the SF-selected SR, SE, or SB destination. EXP HI/HIX also
+updates the unbanked ASTAT.SS on the same cycle-end edge. The inactive bank is
+unchanged across all 54,403 model/RTL cycles
+[ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-11, A-3, A-6–A-7].
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -130,6 +138,9 @@ therefore remains `IMPLEMENTING`.
   SE/MR2/MR1 storage side effects.
 - `make compute-tests` adds eight directed Type 15 tests and 58,709 stateful
   model-versus-RTL cycles, including all 14,336 supported words in each bank.
+- `make compute-tests` adds ten directed Type 16 tests and 54,403 stateful
+  model-versus-RTL cycles, including all 1,792 supported words in both banks
+  under true and false condition patterns.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

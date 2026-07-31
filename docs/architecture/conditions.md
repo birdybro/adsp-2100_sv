@@ -1,7 +1,7 @@
 # Conditions and visibility
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer
-integration passes**
+and Type 16 shifter integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -46,3 +46,13 @@ with field `0xe` updates CNTR, conditional RETURN checks the same predicate
 without updating CNTR, and conditional CALL is rejected under OQ-012. Opcode
 decode, arithmetic/trap condition consumers, and phase-level timing remain
 unimplemented.
+
+The bounded Type 16 conditional-shifter slice is the first complete
+computational condition consumer. It evaluates COND from cycle-start status
+and NOT CE, retains the ordinary one-cycle boundary when false, suppresses all
+shifter/status writes on that path, and applies true-path SR/SE/SB/SS writes at
+cycle end. All sixteen conditions are exercised with both outcomes where the
+predicate is nonconstant, and the stateful regression covers 54,403 cycles.
+Unknown reset ASTAT remains unknown in the independent model; it is never
+silently coerced to a deterministic predicate
+[ADI-UM-1989, printed pp. 4-21, 4-25, 6-11, A-3, A-6].

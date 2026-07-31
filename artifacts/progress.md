@@ -29,6 +29,10 @@ cycle-, or Hard Drivin'-complete
   original-syntax assembler/disassembler support, exhaustive class
   partitioning, selected-bank SR execution, and explicit fail-closed handling
   for every source-unclosed subencoding;
+- complete source-backed Type 16 conditional-shifter semantics, two hand
+  fixtures, all 1,792 algebraic forms, exhaustive class partitioning,
+  cycle-start condition/bank/operand reads, cycle-end SR/SE/SB/SS execution,
+  and explicit fail-closed handling for the 256 unavailable-XOP words;
 - exact Type 17 internal-MOVE action decode covering all register selectors,
   reserved holes, SSTAT read-only direction, and all 2,256 legal assembler/
   disassembler pairs;
@@ -89,7 +93,7 @@ cycle-, or Hard Drivin'-complete
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
-- partial NOP, Type 6, Type 15, Type 17, Type 18, Type 21, and Type 25
+- partial NOP, Type 6, Type 15, Type 16, Type 17, Type 18, Type 21, and Type 25
   assembler/disassembler round trip;
 - dependency-free regression, Verilator package lint, and CI workflow.
 
@@ -100,7 +104,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 265 implemented Python unit checks plus manifest/hash verification;
+- 277 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -116,6 +120,10 @@ outstanding.
 - all 32,768 Type 15 class words partition into 14,336 source-closed actions
   and 18,432 unsupported subencodings in Python and exhaustive RTL traversal;
   58,709 model/RTL cycles cover every supported word in both banks;
+- all 2,048 Type 16 class words partition into 1,792 source-backed actions and
+  256 unavailable-XOP subencodings in Python and exhaustive RTL traversal;
+  54,403 model/RTL cycles cover every supported word in both banks and all
+  condition/writeback forms;
 - exact Type 25 word `0x050000` is the sole MR-saturation action across an
   exhaustive 16,777,216-word RTL traversal;
 - exactly 256 Type 18 words decode as original MODE CONTROL across an
@@ -137,7 +145,8 @@ outstanding.
   execution cycles and 50,112 stateful Type 25 cycles pass simulation;
   the Type 18 state slice adds 58,248 passing cycles and the Type 21 slice adds
   50,124, while the Type 17 state slice adds 59,430 and the Type 6 slice adds
-  50,204; the Type 15 state slice adds 58,709;
+  50,204; the Type 15 state slice adds 58,709 and the Type 16 state slice adds
+  54,403;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
@@ -155,12 +164,14 @@ outstanding.
   fits in 302 ALMs and 484 registers with +8.167 ns setup, +0.133 ns hold, and
   no unconstrained paths; the Type 15 slice fits in 774 ALMs and 501 fitted
   registers with +3.728 ns setup, +0.057 ns hold, and no unconstrained paths;
+  the Type 16 slice fits in 840 ALMs and 520 fitted registers with +2.304 ns
+  setup, +0.173 ns hold, and no unconstrained paths;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
-  formal harnesses plus Type 6 and Type 15 decode/execution (26 total) pass
+  formal harnesses plus Type 6, Type 15, and Type 16 decode/execution (27 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core

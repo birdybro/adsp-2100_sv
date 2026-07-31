@@ -10,6 +10,10 @@ from tools.generators.validate_internal_move import (
     load_database as load_internal_move_database,
     validate_database as validate_internal_move_database,
 )
+from tools.generators.validate_condition_codes import (
+    load_database as load_condition_database,
+    validate_database as validate_condition_database,
+)
 from tools.generators.validate_mode_control import (
     decode_actions as decode_mode_control_actions,
     load_database as load_mode_control_database,
@@ -91,6 +95,49 @@ _SHIFTER_XOP_NAMES = {
 }
 
 
+@lru_cache(maxsize=1)
+def _if_condition_names() -> dict[int, str]:
+    database = load_condition_database()
+    validate_condition_database(database)
+    return {
+        entry["code"]: entry["mnemonic"]
+        for entry in database["if_conditions"]
+    }
+
+
+def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
+    if opcode & 0xFF80F0 != 0x0E0000:
+        return None
+    sf = (opcode >> 11) & 0xF
+    xop = (opcode >> 8) & 0x7
+    condition = opcode & 0xF
+    if xop not in _SHIFTER_XOP_NAMES:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="UNVERIFIED_TYPE_16_SUBENCODING",
+            implemented=False,
+        )
+    prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
+    source = _SHIFTER_XOP_NAMES[xop]
+    if sf <= 0xB:
+        operation = ("LSHIFT", "ASHIFT", "NORM")[sf >> 2]
+        reference = "LO" if sf & 2 else "HI"
+        combine_or = "SR OR " if sf & 1 else ""
+        text = f"{prefix}SR = {combine_or}{operation} {source} ({reference});"
+    elif sf <= 0xE:
+        reference = ("HI", "HIX", "LO")[sf - 0xC]
+        text = f"{prefix}SE = EXP {source} ({reference});"
+    else:
+        text = f"{prefix}SB = EXPADJ {source};"
+    return Disassembly(
+        opcode=opcode,
+        text=text,
+        classification="TYPE_16_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_immediate_shift(opcode: int) -> Disassembly | None:
     if opcode & 0xFF8000 != 0x0F0000:
         return None
@@ -168,6 +215,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     immediate_shift = _try_disassemble_immediate_shift(opcode)
     if immediate_shift is not None:
         return immediate_shift
+    conditional_shift = _try_disassemble_conditional_shift(opcode)
+    if conditional_shift is not None:
+        return conditional_shift
     for instruction in database["instructions"]:
         mask = int(instruction["opcode_mask"], 16)
         value = int(instruction["opcode_value"], 16)

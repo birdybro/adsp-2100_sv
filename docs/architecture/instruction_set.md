@@ -21,7 +21,8 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
-immediate-shift subset, parameterized Type 18 mode control, and all 32 Type 21
+immediate-shift subset, all 1,792 source-backed Type 16 conditional shifter
+words, parameterized Type 18 mode control, and all 32 Type 21
 MODIFY selections. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
 fields across the 30 diagrams, including every one of their 393 variable bit
@@ -61,6 +62,21 @@ Two hand-transcribed manual examples, exhaustive Python/RTL partitioning, 280
 assembler/disassembler forms, and 58,709 deterministic model-versus-RTL
 cycles provide bounded evidence. Fetch, interrupt, loop-terminal, and
 external wait-state timing remain outside this slice.
+
+Type 16 encodes SF `[14:11]`, XOP `[10:8]`, fixed-zero bits `[7:4]`, and COND
+`[3:0]`. All sixteen SF functions are legal: LSHIFT, ASHIFT, and NORM
+PASS/OR HI/LO write SR; EXP HI/HIX write SE and SS; EXP LO conditionally
+writes SE; and EXPADJ conditionally writes SB. Combined with the seven
+documented shifter X operands this defines 1,792 executable words. The 256
+XOP `001` words fail closed under OQ-020. Condition evaluation and all operand
+reads use cycle-start state; a true action commits its selected-bank result and
+SS at cycle end, while a false action preserves all destinations without
+losing its normal one-cycle timing
+[ADI-UM-1989, printed pp. 2-20–2-35, 4-25, 6-1–6-2, 6-11 Table 6.5,
+A-3, and A-6–A-7]. Two hand fixtures, all 1,792 assembler/disassembler forms,
+exhaustive Python/RTL class partitioning, and 54,403 deterministic stateful
+cycles provide bounded evidence. Fetch, loop-terminal, interrupt-abort, wait,
+and external bus phases remain outside the slice.
 
 Type 17 internal data MOVE now has a bounded action-decode record. Its twelve
 payload bits select independent destination/source RGP and REG fields. The
@@ -134,8 +150,10 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 6, Type 18, Type 21, and Type 25 are the only class-complete semantic
-entries in the main instruction table. Type 15 has a bounded semantic entry
+Type 6, Type 18, Type 21, and Type 25 are the only class-complete source-backed
+semantic entries in the main instruction table. Type 16 has a bounded semantic
+entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
+closed. Type 15 has a bounded semantic entry
 for its 14,336 source-closed words while 18,432 subencodings fail closed; most
 other legal combinations, register effects, parallel ordering, cycle counts,
 and bus transactions still require primary-backed entries.

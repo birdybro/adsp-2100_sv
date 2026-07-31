@@ -1,7 +1,7 @@
 # Barrel shifter
 
 **Status: function block implemented and independently cross-checked; Type 15
-immediate LSHIFT/ASHIFT subset integrated**
+immediate and complete source-backed Type 16 conditional forms integrated**
 
 The original shifter maps a 16-bit input into a 32-bit result with 49
 placements from off-scale right through off-scale left. SR is split into
@@ -75,9 +75,9 @@ operands, all 256 signed counts for every shift/NORM code, the complete 16-bit
 operand space for every exponent mode, all flag combinations, and
 deterministic random values.
 
-This is not yet a complete shifter-instruction implementation. Operand-field
-decode, conditional-false behavior, complete multifunction ordering, and
-cycle/bus timing remain outside this block. The separate register file now
+This is not yet a complete shifter-instruction implementation. Type 12–14
+multifunction operand/move ordering and whole-core cycle/bus timing remain
+outside the implemented boundaries. The separate register file now
 accepts the explicit result enables for selected-bank SR, SE, or SB
 writeback, and the separate status block accepts EXP's explicit SS update;
 instruction connectivity remains to be verified during core integration.
@@ -97,6 +97,28 @@ classification and preserve state. The supported words pass both-bank
 model/RTL comparison over 58,709 cycles, including the manual's logical and
 arithmetic negative-five examples, PASS/OR feedback, every exponent, reset
 unknowns and warm-reset bank retention, invalid words, and collision
-suppression. Conditional and
-multifunction shifter instructions, fetch phases, and interrupt timing remain
-unintegrated.
+suppression. Multifunction shifter instructions, fetch phases, and interrupt
+timing remain unintegrated.
+
+The separate `adsp2100_conditional_shift_slice` connects every source-backed
+Type 16 field combination to condition logic, both computational banks, the
+all-function shifter, and ASTAT.SS. Type 16 encodes SF `[14:11]`, XOP
+`[10:8]`, fixed-zero bits `[7:4]`, and COND `[3:0]`. All sixteen SF codes and
+the seven documented X operands form 1,792 executable words. XOP `001` has no
+entry in the original shifter operand table, so the other 256 class words fail
+closed under OQ-020
+[ADI-UM-1989, printed p. 6-11 Table 6.5, pp. A-3 and A-7].
+
+COND is evaluated from cycle-start ASTAT and NOT CE. A false condition remains
+a valid one-cycle instruction boundary but suppresses every SR, SE, SB, and SS
+write. A true condition samples the selected-bank X operand and the
+function-dependent old SE/SR/SB plus AV/AC/SS, then commits the documented
+function-selected outputs together at cycle end. EXP HI/HIX update SE and SS;
+EXP LO conditionally updates only SE; EXPADJ conditionally updates only SB.
+The complete class partition is exhaustively checked, all 1,792 supported
+words round trip through the assembler/disassembler, and 54,403 deterministic
+model/RTL cycles execute every supported word in both banks under true/false
+status patterns plus randomized reset/conflict cases. Fetch overlap,
+loop-terminal behavior, interrupt abort, waits, and external bus phases remain
+outside the bounded slice
+[ADI-UM-1989, printed pp. 2-20–2-35, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].

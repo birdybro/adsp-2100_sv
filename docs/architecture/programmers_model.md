@@ -74,6 +74,12 @@ instruction exponent leaves SE unchanged. Only the seven documented shifter
 X operands and SF codes 0–7 execute; the remaining class subencodings fail
 closed pending stronger evidence
 [ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
+The bounded Type 16 path uses the same cycle-start bank selection for every
+LSHIFT/ASHIFT/NORM/EXP/EXPADJ source and feedback register. Condition-false
+preserves both banks. Condition-true writes only the SF-selected SR, SE, or SB
+destination at cycle end, while EXP HI/HIX update unbanked ASTAT.SS on that
+same edge. Unknown reset ASTAT remains unknown in the independent model
+[ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-11, A-3, A-6–A-7].
 The exact Type 18 boundary independently applies all AS/OL/BR/SR fields to
 cycle-start MSTAT and commits one four-bit result at cycle end. Both
 documented no-change encodings preserve their raw decode identity, while
