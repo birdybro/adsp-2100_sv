@@ -66,3 +66,12 @@ PC-stack pop `PP` at bit 4, followed by `LP[3]`, `CP[2]`, and `SPP[1:0]`.
 The correct class mask is therefore `0xffffe0`, not the earlier local
 `0xfffff0` transcription. The 30 shown classes cover 15,473,178 words, leaving
 1,304,038 explicitly reserved-unshown words.
+
+All 32 Type 26 payloads are now represented by the bounded
+`docs/generated/adsp2100_stack_control.yaml` semantics database. `SPP[1:0]`
+selects status-stack no-change/no-change/push/pop; `CP`, `LP`, and `PP`
+independently request count-, loop-, and PC-stack pops. The original combined
+syntax and one-cycle instruction rule support parallel assertion of these
+actions [ADI-UM-1989, printed pp. 1-2, 6-14–6-15, A-4, A-8–A-10].
+This closes action selection, not stateful underflow behavior or whole-core
+instruction execution.

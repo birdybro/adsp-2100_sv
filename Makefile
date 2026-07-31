@@ -25,6 +25,8 @@ lint:
 			rtl/packages/adsp2100_format_pkg.sv \
 			rtl/core/adsp2100_class_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_stack_control_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_condition_logic.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_alu.sv; \
@@ -85,12 +87,14 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_condition_codes.py
 	$(PYTHON) tools/generators/validate_isa_fields.py
 	$(PYTHON) tools/generators/validate_instruction_formats.py
+	$(PYTHON) tools/generators/validate_stack_control.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
 	$(PYTHON) tools/generators/generate_register_package.py --check
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
-		tests.test_isa_fields tests.test_instruction_formats
+		tests.test_isa_fields tests.test_instruction_formats \
+		tests.test_stack_control
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -101,6 +105,12 @@ decode-tests:
 			rtl/core/adsp2100_class_decode.sv \
 			sim/unit/tb_adsp2100_decode.sv; \
 		build/obj_decode/Vtb_adsp2100_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			--Mdir build/obj_stack_control_decode \
+			--top-module tb_adsp2100_stack_control_decode \
+			rtl/core/adsp2100_stack_control_decode.sv \
+			sim/unit/tb_adsp2100_stack_control_decode.sv; \
+		build/obj_stack_control_decode/Vtb_adsp2100_stack_control_decode; \
 	else \
 		echo "SKIP exhaustive RTL decode: Verilator is not installed"; \
 	fi
@@ -321,6 +331,10 @@ formal:
 			rtl/core/adsp2100_class_decode.sv \
 			formal/harnesses/adsp2100_class_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_stack_control_decode_formal \
+			rtl/core/adsp2100_stack_control_decode.sv \
+			formal/harnesses/adsp2100_stack_control_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_condition_formal \
 			rtl/core/adsp2100_condition_logic.sv \
 			formal/harnesses/adsp2100_condition_formal.sv; \
@@ -388,6 +402,8 @@ formal:
 	@if command -v sby >/dev/null 2>&1; then \
 		set -e; \
 		sby -f -d build/formal_decode formal/class_decode.sby; \
+		sby -f -d build/formal_stack_control_decode \
+			formal/stack_control_decode.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
 		sby -f -d build/formal_alu formal/alu.sby; \
 		sby -f -d build/formal_mac formal/mac.sby; \
@@ -416,6 +432,8 @@ synth-quartus:
 	@if command -v quartus_sh >/dev/null 2>&1; then \
 		set -e; \
 		quartus_sh --flow compile synthesis/quartus/decode_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mac_smoke; \
@@ -457,6 +475,9 @@ clean:
 	@find build -maxdepth 1 -type f -name status_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mode_slice_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
+	@if [ -d build/obj_stack_control_decode ]; then \
+		find build/obj_stack_control_decode -depth -delete; \
+	fi
 	@if [ -d build/obj_condition ]; then find build/obj_condition -depth -delete; fi
 	@if [ -d build/obj_alu ]; then find build/obj_alu -depth -delete; fi
 	@if [ -d build/obj_mac ]; then find build/obj_mac -depth -delete; fi
@@ -479,6 +500,9 @@ clean:
 	@if [ -d build/obj_mode_slice ]; then find build/obj_mode_slice -depth -delete; fi
 	@if [ -d build/quartus_condition ]; then find build/quartus_condition -depth -delete; fi
 	@if [ -d build/quartus_decode ]; then find build/quartus_decode -depth -delete; fi
+	@if [ -d build/quartus_stack_control_decode ]; then \
+		find build/quartus_stack_control_decode -depth -delete; \
+	fi
 	@if [ -d build/quartus_alu ]; then find build/quartus_alu -depth -delete; fi
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
 	@if [ -d build/quartus_shifter ]; then find build/quartus_shifter -depth -delete; fi
@@ -499,7 +523,8 @@ clean:
 	@if [ -d build/quartus_mode_slice ]; then \
 		find build/quartus_mode_slice -depth -delete; \
 	fi
-	@for directory in build/formal_decode build/formal_condition build/formal_alu build/formal_mac \
+	@for directory in build/formal_decode build/formal_stack_control_decode \
+		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
 		build/formal_counter build/formal_sequencer_stacks \
 		build/formal_sequencer_slice \

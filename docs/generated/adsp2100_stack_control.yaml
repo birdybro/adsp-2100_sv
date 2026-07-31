@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "COMPLETE_FOR_TYPE_26_ACTION_DECODE",
+  "confidence": "VERIFIED_PRIMARY",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "instruction": {
+    "original_type": 26,
+    "name": "stack control",
+    "opcode_mask": "0xffffe0",
+    "opcode_value": "0x040000",
+    "encoding_pattern": "0000010000000000000xxxxx",
+    "field_defined_encoding_count": 32,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "memory_spaces_accessed": [
+      "PROGRAM_INSTRUCTION_FETCH"
+    ],
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "NONE",
+    "wait_state_sensitivity": "Normal PM instruction fetch only.",
+    "combination_rule": "Every PP/LP/CP/SPP combination is field-defined. Every requested stack action belongs to the same instruction and instruction cycle.",
+    "source_value_rule": "A PUSH STS captures the pre-instruction ASTAT, MSTAT, and IMASK values. Each requested POP consumes the pre-instruction top of its selected stack.",
+    "underflow_rule": "OPEN_QUESTION_OQ_013",
+    "overflow_rule": "Status-stack overflow behavior is owned by the status-stack specification and is not redefined by this action decoder."
+  },
+  "fields": [
+    {
+      "id": "PP",
+      "msb": 4,
+      "lsb": 4,
+      "actions": {
+        "0": "NO_CHANGE",
+        "1": "POP_PC_STACK"
+      }
+    },
+    {
+      "id": "LP",
+      "msb": 3,
+      "lsb": 3,
+      "actions": {
+        "0": "NO_CHANGE",
+        "1": "POP_LOOP_STACK"
+      }
+    },
+    {
+      "id": "CP",
+      "msb": 2,
+      "lsb": 2,
+      "actions": {
+        "0": "NO_CHANGE",
+        "1": "POP_COUNT_STACK_TO_CNTR"
+      }
+    },
+    {
+      "id": "SPP",
+      "msb": 1,
+      "lsb": 0,
+      "actions": {
+        "0": "NO_CHANGE_ZERO",
+        "1": "NO_CHANGE_ONE",
+        "2": "PUSH_STATUS_STACK",
+        "3": "POP_STATUS_STACK_TO_ASTAT_MSTAT_IMASK"
+      }
+    }
+  ],
+  "assembly": {
+    "component_order": [
+      "STATUS_STACK",
+      "COUNT_STACK",
+      "PC_STACK",
+      "LOOP_STACK"
+    ],
+    "status_stack_components": {
+      "0": null,
+      "1": null,
+      "2": "PUSH STS",
+      "3": "POP STS"
+    },
+    "count_stack_components": {
+      "0": null,
+      "1": "POP CNTR"
+    },
+    "pc_stack_components": {
+      "0": null,
+      "1": "POP PC"
+    },
+    "loop_stack_components": {
+      "0": null,
+      "1": "POP LOOP"
+    },
+    "no_effect_aliases": [
+      "0x040000",
+      "0x040001"
+    ],
+    "alias_policy": "SPP=00 and SPP=01 both encode no status-stack change. Preserve the binary distinction in traces; do not infer additional behavior."
+  },
+  "parallel_actions": [
+    {
+      "action": "STATUS_STACK_OPERATION",
+      "field": "SPP",
+      "reads": [
+        "ASTAT",
+        "MSTAT",
+        "IMASK",
+        "STATUS_STACK_TOP"
+      ],
+      "writes": [
+        "STATUS_STACK",
+        "ASTAT",
+        "MSTAT",
+        "IMASK"
+      ]
+    },
+    {
+      "action": "COUNT_STACK_POP",
+      "field": "CP",
+      "reads": [
+        "COUNT_STACK_TOP"
+      ],
+      "writes": [
+        "COUNT_STACK",
+        "CNTR"
+      ]
+    },
+    {
+      "action": "PC_STACK_POP",
+      "field": "PP",
+      "reads": [
+        "PC_STACK_TOP"
+      ],
+      "writes": [
+        "PC_STACK"
+      ],
+      "notes": "Manual POP PC discards the popped entry; it is not a return."
+    },
+    {
+      "action": "LOOP_STACK_POP",
+      "field": "LP",
+      "reads": [
+        "LOOP_STACK_TOP"
+      ],
+      "writes": [
+        "LOOP_STACK"
+      ],
+      "notes": "Manual POP LOOP discards the popped entry."
+    }
+  ],
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 1-2, 6-14–6-15, A-4, and A-8–A-10 (scan PDF pp. 14, 131–132, 143, and 147–149)",
+      "supports": "single-cycle instruction baseline, combined stack-control syntax, Type 26 encoding, and PP/LP/CP/SPP field meanings"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 4-3–4-7 and 4-9–4-10 (scan PDF pp. 70–74 and 76–77)",
+      "supports": "manual PC/count/loop pops, CNTR restore, status context contents, and interrupt stack context"
+    },
+    {
+      "reference_id": "ADI-2101-CROSS-1990",
+      "authority": "LATER_DEVICE_CORROBORATION_ONLY",
+      "location": "printed p. 9-61",
+      "supports": "one-cycle combined execution and explicit push/pop state descriptions; not used to add later-device features"
+    }
+  ],
+  "unresolved_issues": [
+    "OQ-013: architectural data and status side effects of a pop from an already-empty stack.",
+    "Exact externally visible fetch/bus phase timing remains outside this action-decode database."
+  ]
+}

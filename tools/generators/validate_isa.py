@@ -95,6 +95,12 @@ def validate_database(data: dict[str, Any]) -> None:
         raise ISAValidationError(
             "ISA instruction-format database link is incomplete"
         )
+    if data.get("semantic_databases") != [
+        "docs/generated/adsp2100_stack_control.yaml"
+    ]:
+        raise ISAValidationError(
+            "ISA semantic database links are incomplete"
+        )
     unshown_policy = data.get("unshown_encoding_policy")
     if not isinstance(unshown_policy, dict):
         raise ISAValidationError("unshown_encoding_policy must be an object")

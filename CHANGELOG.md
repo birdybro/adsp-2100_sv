@@ -34,6 +34,11 @@ semantic versioning after its first release.
 - A portable instruction-class decoder RTL boundary, an independent bounded
   formal harness, exhaustive 24-bit Verilator comparison, and a constrained
   Cyclone V synthesis project.
+- A primary-backed Type 26 stack-control semantics database, independent
+  executable action decoder, hand-reviewed fixtures, portable RTL decoder,
+  bounded formal harness, exhaustive 24-bit fail-closed simulation, and
+  constrained Cyclone V synthesis project. All 32 encodings and both SPP
+  no-change aliases are retained without inventing OQ-013 underflow effects.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -179,6 +184,16 @@ semantic versioning after its first release.
 - The latest `make test` passes 187 Python checks, 14 cached-reference hashes,
   all generated-file checks, strict RTL lint, the exhaustive class decoder,
   and every existing compute, DAG, sequencer, register, and status regression.
+- The Type 26 focused regression adds six schema/model tests, checks all 32
+  stack-control words, exhaustively proves that every other 24-bit word emits
+  no stack action in RTL, and passes strict lint plus formal-harness lint.
+- The expanded `make test` now passes 193 Python checks, 14 cached-reference
+  hashes, all generated-file checks, both exhaustive 24-bit decoders, and
+  every existing compute, DAG, sequencer, register, and status regression.
+- Quartus full compilation passes for the Type 26 action decoder: 25 ALMs,
+  12 combinational ALUTs, no registers/RAM/DSPs, +17.244 ns worst setup,
+  +0.287 ns worst hold slack, and zero unconstrained paths against the 20 ns
+  virtual I/O constraint.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -307,6 +322,10 @@ semantic versioning after its first release.
   instruction boundary. Conditional CALL CE remains rejected as OQ-012;
   empty-pop effects remain OQ-013; and newly recorded OQ-018 covers competing
   automatic/manual sequencer actions and DO setup at an outer loop end.
+- Closed original Type 26 action selection from the original combined syntax
+  and Appendix A field tables: status push/pop and count/PC/loop pops are
+  independently selectable in one cycle. Stateful execution, automatic/manual
+  collisions, and empty-stack effects remain explicitly outside this boundary.
 
 ### Known Issues
 
@@ -314,7 +333,8 @@ semantic versioning after its first release.
   independent data-sheet revisions, and errata remain unavailable. Appendix A
   bit placement is complete, but semantic extraction remains incomplete.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
-  complete.
+  complete. Type 26 action decode is verified, but it is not yet connected to
+  stateful architectural instruction execution.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,
   PC-register/decode-level sequencer connectivity, status-stack interrupt/RTI
   connectivity, SSTAT-fragment composition, narrow status reads, and

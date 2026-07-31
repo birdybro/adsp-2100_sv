@@ -69,6 +69,13 @@ from .status_stack import (
     StatusStackState,
     apply_status_stack_cycle,
 )
+from .stack_control import (
+    STACK_CONTROL_MASK,
+    STACK_CONTROL_VALUE,
+    StackControlActions,
+    StackControlStatusOperation,
+    decode_stack_control,
+)
 from .registers import (
     ALURegisterWrite,
     ComputationalWriteConflict,
@@ -157,6 +164,10 @@ __all__ = [
     "StatusStackEntry",
     "StatusStackOperation",
     "StatusStackState",
+    "StackControlActions",
+    "StackControlStatusOperation",
+    "STACK_CONTROL_MASK",
+    "STACK_CONTROL_VALUE",
     "STATUS_STACK_DEPTH",
     "ReservedOpcode",
     "TransactionKind",
@@ -171,6 +182,7 @@ __all__ = [
     "apply_dreg_cycle",
     "apply_status_cycle",
     "apply_status_stack_cycle",
+    "decode_stack_control",
     "apply_mode_slice_cycle",
     "apply_sequencer_stacks_cycle",
     "apply_sequencer_slice_cycle",

@@ -1,0 +1,16 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_stack_control_decode
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_stack_control_decode
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_stack_control_decode.sv
+set_global_assignment -name SDC_FILE stack_control_decode_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to status_operation_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_pop_o
+set_instance_assignment -name VIRTUAL_PIN ON -to has_effect_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

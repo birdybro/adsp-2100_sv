@@ -27,7 +27,22 @@ positions [ADI-UM-1989, printed pp. A-1–A-5, scan PDF pp. 140–144].
 Automated checks compare those field positions with a separate hand-reviewed
 fixture, require them to partition each class mask exactly, and exhaustively
 compare the synthesizable class decoder over all 16,777,216 program words with
-an independent SystemVerilog transcription. These are bit-placement and class
-membership results only. NOP remains the sole complete semantic instruction
-record; legal combinations, register effects, parallel ordering, cycle counts,
-and bus transactions still require primary-backed entries.
+an independent SystemVerilog transcription.
+
+Type 26 stack control is the first bounded semantic class beyond NOP.
+`docs/generated/adsp2100_stack_control.yaml` records the 32 field-defined
+words, the behavioral alias between `SPP=00` and `SPP=01`, the independent
+status/count/PC/loop stack actions, their combined one-cycle execution, and
+the absence of PM/DM data transfers [ADI-UM-1989, printed pp. 1-2,
+4-3–4-10, 6-14–6-15, A-4, A-8–A-10]. A separate executable model and
+synthesizable action decoder agree with independent fixtures for all 32 words;
+exhaustive RTL testing also proves that all other 24-bit words emit no Type 26
+actions.
+
+This does not yet make Type 26 a complete executed instruction in the
+architectural model or core. Stateful stack connectivity, empty-stack pop
+effects (OQ-013), PC/fetch sequencing, assembler/disassembler syntax, and
+logical bus phases remain open. NOP remains the sole full semantic entry in
+the main instruction table; most legal combinations, register effects,
+parallel ordering, cycle counts, and bus transactions still require
+primary-backed entries.

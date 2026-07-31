@@ -10,6 +10,9 @@
     "docs/generated/adsp2100_register_codes.yaml"
   ],
   "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "semantic_databases": [
+    "docs/generated/adsp2100_stack_control.yaml"
+  ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
     "architectural_behavior": "UNDOCUMENTED",

@@ -131,8 +131,11 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-ASM-1994 Appendix A,
   ADI-UM-1989 instruction chapters and Appendix A
 - **Relevant tests:** `tests/test_isa_database.py`,
-  `tests/test_instruction_formats.py`, `sim/unit/tb_adsp2100_decode.sv`,
-  `formal/class_decode.sby`, `make decode-tests`
+  `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
+  `sim/unit/tb_adsp2100_decode.sv`,
+  `sim/unit/tb_adsp2100_stack_control_decode.sv`,
+  `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
+  `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
   1,304,038 unshown words as reserved, and generates synthesizable class
@@ -142,8 +145,13 @@ advance beyond research until a page-level primary citation is added.
   inverse-sense DO UNTIL condition fields and all 19 finite Appendix A
   abbreviation tables are separately machine-readable and exhaustively
   checked. The generated RTL class decoder agrees with an independent
-  classifier for all 16,777,216 program words; only the all-zero NOP is a
-  hand-verified full semantic instruction fixture. Generated assembler/
+  classifier for all 16,777,216 program words. A bounded Type 26 semantic
+  database now covers all 32 stack-control action encodings, 24 distinct
+  behaviors after collapsing the two no-change aliases, combined one-cycle
+  action selection, and fail-closed non-Type-26 decode. It has an independent
+  model, fixtures, exhaustive RTL test, formal harness, and constrained
+  Cyclone V fit. Only the all-zero NOP remains a hand-verified full semantic
+  instruction entry with architectural execution. Generated assembler/
   disassembler artifacts must derive from these databases as instruction
   entries are independently verified.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
@@ -185,7 +193,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make model-tests`, `make differential`
 - **Implementation notes:** the partial model has exact-width primitives,
   fail-closed unsupported opcodes, and a source-derived IF/DO condition
-  evaluator; full instruction behavior remains unavailable.
+  evaluator. It also has an independent pure Type 26 stack-control action
+  decoder that retains both SPP no-change encodings; stateful Type 26
+  execution remains unavailable.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -328,8 +338,10 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989 sequencer and instruction chapters
 - **Relevant tests:** `make sequencer-tests`, `tests/test_counter.py`,
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
+  `tests/test_stack_control.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
-  `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`
+  `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
+  `formal/stack_control_decode.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -347,7 +359,9 @@ advance beyond research until a page-level primary citation is added.
   sequencer stacks. Fourteen directed/random tests and 50,011 stateful
   model-versus-RTL cycles cover exact-N/nested CE loops, JUMP/RETURN CE
   distinctions, loop-stack descriptors, and atomic rejection of unresolved
-  collisions.
+  collisions. A separate source-backed Type 26 model/RTL boundary now
+  exhaustively decodes all 32 manual stack-control words, but does not yet
+  mutate sequencer state.
 - **Unresolved questions:** opcode and PC-register integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
   (OQ-018), interrupts, delayed transfers, cache interaction, empty-pop
@@ -490,10 +504,13 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-DATABOOK-1987 printed pp. 2-21–2-22;
   ADI-UM-1989 printed pp. 4-3–4-10, 4-22, 5-13, A-10
 - **Relevant tests:** `make sequencer-tests`, `make status-tests`,
+  `make decode-tests`,
   `tests/test_counter.py`, `tests/test_status_stack.py`,
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
+  `tests/test_stack_control.py`,
   `formal/counter.sby`, `formal/status_stack.sby`,
-  `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`
+  `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
+  `formal/stack_control_decode.sby`
 - **Implementation notes:** all original depths are now source-backed. The
   four-by-sixteen status stack has an independent state model, portable RTL,
   eight directed/model tests, 50,037 model-versus-RTL cycles, a formal
@@ -507,9 +524,11 @@ advance beyond research until a page-level primary citation is added.
   count-stack requests and passes 50,022 model/RTL cycles. A bounded
   integration slice physically connects those requests to count storage and
   couples DO setup/termination with PC and loop storage across 50,011
-  additional model/RTL cycles.
-- **Unresolved questions:** instruction/flow/count/interrupt/RTI stack-action
-  decode connectivity, interrupt/RTI/status-stack actions, conditional-CALL CE
+  additional model/RTL cycles. The Type 26 action decoder now maps every
+  original manual encoding to status/count/PC/loop requests, retains both
+  status no-change aliases, and is exhaustive over the 24-bit input space.
+- **Unresolved questions:** stateful instruction/flow/count/interrupt/RTI
+  stack-action connectivity, interrupt/RTI/status-stack actions, conditional-CALL CE
   behavior (OQ-012), competing automatic/manual actions (OQ-018),
   SSTAT-fragment composition/read path, and empty-pop architectural behavior
   (OQ-013).

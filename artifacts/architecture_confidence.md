@@ -11,7 +11,8 @@
 | NOP `0x000000` | VERIFIED_PRIMARY | original Appendix A diagram |
 | All 30 top-level opcode masks | CORROBORATED | primary diagrams transcribed, algebraically checked, and compared to pinned MAME layout |
 | All 30 diagrammed field layouts | CORROBORATED | 106 primary-transcribed fields exactly partition 393 variable positions and match an independent visual-review fixture |
-| Opcode field/function legality | UNKNOWN | class masks, field positions, finite code tables, register codes, and NOP semantics are closed; legal combinations and instruction effects are not |
+| Type 26 stack-control action decode | VERIFIED_PRIMARY | original combined syntax and Appendix A tables close all 32 action encodings and one-cycle selection; exhaustive model/RTL decode passes, while stateful effects and OQ-013 remain incomplete |
+| Opcode field/function legality | UNKNOWN | class masks, field positions, finite code tables, register codes, NOP semantics, and bounded Type 26 action selection are closed; remaining legal combinations and instruction effects are not |
 | IF/DO condition field and predicates | VERIFIED_PRIMARY | original Tables 4.1/4.3 and Appendix A; exhaustive model/RTL truth table |
 | Standard ALU AMF results and flags | CORROBORATED | original compute/status chapters plus explicitly common family instruction reference |
 | Standard MAC AMF results and MV | CORROBORATED | original compute chapter plus common family instruction reference; MAME rounding conflict SC-008 disclosed |

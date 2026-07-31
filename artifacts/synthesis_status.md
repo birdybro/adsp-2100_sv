@@ -2,8 +2,8 @@
 
 **Updated:** 2026-07-31
 
-- Verilator 5.048 parses and lints the generated packages, class decoder, and
-  source-backed
+- Verilator 5.048 parses and lints the generated packages, class decoder,
+  stack-control decoder, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
@@ -15,6 +15,12 @@
   Across four timing models, worst setup slack is 14.723 ns and worst hold
   slack is 0.407 ns against the 20 ns virtual I/O constraint, with zero
   unconstrained clocks, ports, or paths.
+- Quartus 17.0.2 full compilation of the Type 26 stack-control decoder passes
+  for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 25 ALMs,
+  12 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks. Across
+  four timing models, worst setup slack is +17.244 ns and worst hold slack is
+  +0.287 ns against the 20 ns virtual I/O constraint, with zero unconstrained
+  clocks, ports, or paths.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
   6 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks.
@@ -103,13 +109,13 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys is not installed. `make formal` strictly lints the fourteen available
+- SymbiYosys is not installed. `make formal` strictly lints the fifteen available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
-skip; `make synth-quartus` runs the bounded class-decode, condition, ALU, MAC,
-shifter, DAG,
+skip; `make synth-quartus` runs the bounded class-decode,
+stack-control-decode, condition, ALU, MAC, shifter, DAG,
 sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
 status-register, and status-stack block smoke projects plus the bounded MSTAT
 integration project.

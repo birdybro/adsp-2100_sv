@@ -27,6 +27,15 @@ the exact PC, count, and loop dimensions and SSTAT bits 0–3 and 6–7. Reset
 clears all pointers and overflow bits without initializing stored data
 [ADI-UM-1989, printed pp. 4-3–4-7, 4-10, 4-22, 5-13, A-10].
 
+The original Type 26 action selection is now independently machine-readable
+and executable. `SPP[1:0]` preserves both no-change encodings and selects
+status push/pop; `CP`, `LP`, and `PP` independently select count-, loop-, and
+PC-stack pops. The original grammar permits these clauses to be combined, and
+the instruction remains one processor cycle [ADI-UM-1989, printed pp. 1-2,
+6-14–6-15, A-4, A-8–A-10]. The Python action model and
+`rtl/core/adsp2100_stack_control_decode.sv` cover all 32 encodings while
+failing closed for every non-Type-26 word.
+
 The sequencer storage exposes each current top with an explicit valid bit,
 accepted pushes, valid pops, overflow events, and empty-pop indications. Its
 SSTAT output is a fragment: bits 4/5 are zero and must be composed with the
@@ -59,8 +68,8 @@ pops the PC and loop stacks and, for true CE, restores or invalidates CNTR
 while popping the count stack. Nested CE restoration and stack-depth
 transitions match the independent model across 50,011 cycles.
 
-Interrupt/RTI and status-stack actions, instruction decode, and every
-empty-pop architectural side effect remain outside this integration boundary.
+Interrupt/RTI and stateful Type 26/status-stack action connectivity, and every
+empty-pop architectural side effect, remain outside this integration boundary.
 Conditional-CALL CE remains OQ-012. Competing automatic/manual actions and DO
 setup on an active outer loop's final instruction are rejected under OQ-018
 instead of receiving an invented priority.

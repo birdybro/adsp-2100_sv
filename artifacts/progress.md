@@ -5,7 +5,8 @@
 **Latest verified engineering commit:** `116327f`
 
 **Current milestone:** architecture extraction, executable model, and
-source-backed compute/address-generation/register/status-storage blocks
+source-backed compute/address-generation/register/status-storage blocks plus
+bounded semantic instruction decode
 
 **Release status:** research/implementation in progress; not instruction-,
 cycle-, or Hard Drivin'-complete
@@ -21,6 +22,8 @@ cycle-, or Hard Drivin'-complete
 - complete 30-class mask inventory, all 106 diagrammed fields across 393
   variable bit positions, explicit unshown-reserved fallback, and one
   hand-verified NOP semantic fixture;
+- bounded Type 26 stack-control semantic database, independent executable
+  action model, portable decoder RTL, and exhaustive fail-closed decode;
 - complete source-backed IF/DO condition field with independent model and
   exhaustive combinational RTL verification;
 - complete source-backed inventory of the 19 remaining finite Appendix A
@@ -71,9 +74,12 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 187 implemented Python unit checks plus manifest/hash verification;
+- 193 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
+- all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
+  other 24-bit word produces no stack-control action in exhaustive RTL
+  simulation;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG,
   sequencer-flow/CNTR/sequencer-stack/integration, register-file,
@@ -84,11 +90,12 @@ outstanding.
   cycles, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles plus
   50,287 status/control, 50,037 status-stack, 50,062 PC/count/loop stack, and
   50,112 MSTAT-consumer integration cycles pass simulation;
-- constrained Quartus Cyclone V class-decode, condition, ALU, MAC, shifter, DAG,
+- constrained Quartus Cyclone V class-decode, stack-control decode, condition,
+  ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
   status-register, and status-stack block compilations plus the MSTAT
   integration-slice compilation pass with no unconstrained paths;
-- class-decode, condition, ALU, MAC, shifter, DAG, sequencer-flow,
+- class-decode, stack-control decode, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   and MSTAT-integration formal harnesses pass assertion syntax lint, but no

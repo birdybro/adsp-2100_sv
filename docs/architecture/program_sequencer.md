@@ -75,3 +75,10 @@ register layout is claimed. A PC state register, opcode legality, interrupt
 and status-stack connectivity, cache/fetch overlap, phase enables, complete
 reset integration, and bus-cycle timing remain unimplemented. The discovered
 MAME ordering difference is recorded as SC-012.
+
+A separate Type 26 boundary now decodes all original manual stack-control
+fields into status operation, count pop, loop pop, and PC pop requests. It is
+exhaustively isolated from non-Type-26 opcodes, but is intentionally not yet
+wired into this sequencer slice. That next connection must resolve automatic
+versus manual action collisions (OQ-018) and preserve the explicit OQ-013
+empty-pop boundary.
