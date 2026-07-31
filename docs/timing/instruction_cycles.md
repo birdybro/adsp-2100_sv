@@ -18,6 +18,7 @@ Known cases:
 | Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
 | Type 19 indirect JUMP/CALL | one processor cycle for true or false supported conditions; a taken transfer makes DAG2 supply PMA/PC from I4-I7 without modifying I; no PM-data or DM data transfer |
 | Type 20 conditional RTS/RTI | one processor cycle whether true or false; a taken RTS pops PC, a taken RTI pops PC/status and restores status atomically; return NOT CE never post-decrements CNTR; no PM-data or DM data transfer |
+| Type 22 conditional TRAP | one processor cycle whether true or false; accepted condition is retained through phase holds, PC+1 commits at the state-7/state-8 boundary, and a taken form asserts TRAP and holds state 8 until the HALT handshake; TRAP NOT CE never post-decrements CNTR |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -134,6 +135,18 @@ OQ-013. This establishes one instruction boundary, not active-loop
 arbitration, interrupt entry/vector timing, redirected fetch, waits, or
 logical bus phases [ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10,
 6-14 Table 6.8, A-4, A-6].
+
+The Type 22 model/RTL slice exposes the manual's logical phases directly. An
+instruction is accepted in state 1; a disabled transition in state 7 preserves
+the pending decision; an enabled state-7/state-8 transition commits PC+1 and,
+when true, asserts TRAP and holds state 8. An externally recognized HALT clears
+TRAP while retaining the hold, and HALT release resumes at the already
+committed PC+1. The 50,168-clock comparison covers both outcomes for every
+condition plus reset, unknown status, invalid phase/opcode, and handshake
+cases. It does not supply the general HALT synchronizer, phase generator,
+PMS/PMRD fetch control, BR/BG, or interrupt arbitration
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, Figure 5.10, 6-14,
+A-4, A-6].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

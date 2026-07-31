@@ -145,3 +145,20 @@ The clean-room flow model and RTL apply explicit-transfer precedence and have
 dedicated loop-end CALL and RETURN regressions. A reduced executable MAME trace
 is still required before classifying exact downstream state differences for
 each condition combination.
+
+## SC-013 — MAME omits the original ADSP-2100 TRAP instruction
+
+The original manual assigns all sixteen `0x080000` through `0x08000f` words
+to Type 22 conditional TRAP and documents its output/processor handshake in
+detail [ADI-UM-1989, printed pp. 5-14–5-15, 6-14, A-4, and A-6]. Pinned MAME
+instead labels top byte `0x08` reserved in both execution and disassembly
+[MAME-ADSP2100-CORE, commit
+`030fefcbd14e47c01ec9d67655be90f64a1dc8ab`, lines 1333–1335;
+MAME-ADSP2100-DASM, same commit, lines 333–336].
+
+The clean-room model and RTL follow the exact-device primary source: a true
+condition asserts TRAP at the state-7/state-8 boundary and halts in state 8;
+a false condition continues to PC+1. MAME cannot serve as a Type 22 execution
+oracle unless its adapter is independently corrected. This does not establish
+whether Atari production software executes TRAP; OQ-010 retains that separate
+integration question.

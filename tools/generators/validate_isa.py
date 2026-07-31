@@ -113,6 +113,7 @@ def validate_database(data: dict[str, Any]) -> None:
         "docs/generated/adsp2100_do_until_slice.yaml",
         "docs/generated/adsp2100_indirect_jump_slice.yaml",
         "docs/generated/adsp2100_conditional_return_slice.yaml",
+        "docs/generated/adsp2100_conditional_trap_slice.yaml",
     ]:
         raise ISAValidationError(
             "ISA integration database links are incomplete"

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "instruction": "CONDITIONAL-TRAP-TYPE-22",
+  "scope": "PHASE_AWARE_TRAP_HALT_HANDSHAKE",
+  "decode": {
+    "mask": "0xfffff0",
+    "value": "0x080000",
+    "field_defined_words": 16,
+    "supported_words": 16,
+    "condition_bits": "opcode[3:0]"
+  },
+  "cycle_contract": {
+    "instruction_accept_phase": "STATE_1",
+    "condition_sample": "ACCEPTED_INSTRUCTION_CYCLE_START",
+    "trap_assert_phase": "STATE_7_TO_STATE_8_TRANSITION",
+    "halt_phase": "STATE_8",
+    "pma_while_halted": "PC_PLUS_ONE_FOLLOWING_TRAP",
+    "trap_clear": "EXTERNALLY_RECOGNIZED_HALT",
+    "resume": "RELEASE_OF_RECOGNIZED_HALT",
+    "trap_not_ce_decrements_counter": false,
+    "state_7_wait_preserves_pending_action": true,
+    "pm_data_access": false,
+    "dm_access": false
+  },
+  "integration_boundary": {
+    "phase_input": "EXTERNAL_LOGICAL_STATE_1_THROUGH_STATE_8",
+    "phase_advance_input": "TRANSITION_ENABLE; LOW EXTENDS CURRENT_STATE",
+    "halt_input": "HALT_ALREADY_RECOGNIZED_BY_SYSTEM_CONTROL",
+    "phase_hold_output": "REQUEST_STATE_8_HOLD_DURING_TRAP_OR_HALT_HANDOFF",
+    "general_halt_and_synchronizer": "OUTSIDE_BOUNDED_SLICE",
+    "bus_request_and_grant": "OUTSIDE_BOUNDED_SLICE",
+    "interrupt_recognition": "OUTSIDE_BOUNDED_SLICE",
+    "pms_pmrd_and_fetch_data": "OUTSIDE_BOUNDED_SLICE"
+  },
+  "verification": {
+    "python_decode_words": 16,
+    "rtl_exhaustive_opcode_space_words": 16777216,
+    "model_rtl_clocks": 50168,
+    "deterministic_seed": "0x210022"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-3–4-4 and 4-25",
+    "ADI-UM-1989 printed pp. 5-14–5-15 and Figure 5.10",
+    "ADI-UM-1989 printed p. 6-14 Table 6.8",
+    "ADI-UM-1989 printed pp. A-4 and A-6"
+  ],
+  "reference_conflicts": [
+    "SC-013: pinned MAME treats original Type 22 as reserved"
+  ],
+  "confidence": "VERIFIED_PRIMARY"
+}

@@ -24,7 +24,8 @@
     "docs/generated/adsp2100_modify_address_slice.yaml",
     "docs/generated/adsp2100_do_until_slice.yaml",
     "docs/generated/adsp2100_indirect_jump_slice.yaml",
-    "docs/generated/adsp2100_conditional_return_slice.yaml"
+    "docs/generated/adsp2100_conditional_return_slice.yaml",
+    "docs/generated/adsp2100_conditional_trap_slice.yaml"
   ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
@@ -819,6 +820,98 @@
         "OQ-013: taken empty-stack effects are undocumented and fail closed.",
         "Active-loop terminal arbitration and interrupt recognition/abort are not connected in this slice.",
         "External fetch/cache waits and eight-state logical PM timing remain outside this slice."
+      ]
+    },
+    {
+      "id": "CONDITIONAL-TRAP-TYPE-22",
+      "mnemonic": "CONDITIONAL TRAP",
+      "algebraic_assembly_syntax": "[IF condition] TRAP;",
+      "encoding_pattern": "00001000000000000000xxxx",
+      "opcode_mask": "0xfffff0",
+      "opcode_value": "0x080000",
+      "fields": ["COND"],
+      "condition_field": "COND",
+      "computation_field": null,
+      "source_register_selections": [
+        "CYCLE_START_ASTAT_OR_CNTR_FOR_CONDITION",
+        "PC_FOR_FOLLOWING_INSTRUCTION_ADDRESS"
+      ],
+      "destination_register_selections": [
+        "PC",
+        "TRAP_OUTPUT_LATCH",
+        "PROCESSOR_HALT_STATE"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": ["COND"],
+      "registers_read": [
+        "COND_SELECTED_ASTAT_OR_CNTR",
+        "PC"
+      ],
+      "registers_written": [
+        "PC",
+        "TRAP_OUTPUT_LATCH",
+        "PROCESSOR_HALT_STATE"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": ["COND_SELECTED_ASTAT_BITS_OR_NOT_CE"],
+      "status_flags_written": [],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "At the state-7/state-8 boundary, a taken TRAP leaves the following instruction address, PC+1, observable on PMA and halts in state 8. PMS and fetch-data phases remain outside the bounded slice.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "CONDITION_EVALUATION_AND_SEQUENTIAL_PC_SELECTION",
+        "TAKEN_STATE_7_TO_STATE_8_TRAP_ASSERT_AND_HALT"
+      ],
+      "legal_multifunction_combinations": [
+        "This is a program-control instruction, not a computational or data-move multifunction packet."
+      ],
+      "illegal_or_reserved_combinations": [],
+      "old_value_new_value_semantics": "COND samples accepted cycle-start ASTAT or CNTR. The decision remains pending through any held logical phase. At the enabled state-7/state-8 transition, PC advances to PC+1; a true condition simultaneously asserts TRAP and holds state 8. TRAP clears when HALT is recognized, the processor remains halted while HALT is held, and HALT release resumes at PC+1.",
+      "write_conflict_rules": "Type 22 has no stack, arithmetic, or data-memory destination. Concurrent setup writes and a second in-flight instruction fail closed in the bounded slice.",
+      "condition_false_behavior": "At the enabled state-7/state-8 transition, PC advances to PC+1 without asserting TRAP or halting. Conditional TRAP NOT CE never decrements CNTR.",
+      "loop_interaction": "The manual gives taken explicit actions precedence at an active loop terminal; active-loop state is not connected in this Type 22 slice.",
+      "interrupt_interaction": "Interrupts latch but are not serviced during TRAP. Recognition and arbitration at the trapping boundary remain outside the bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "TRAP asserts on the state-7/state-8 transition and holds the processor in state 8 until the external HALT handshake completes."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "FOLLOWING_INSTRUCTION_ADDRESS_OBSERVATION",
+          "width": 24,
+          "address_source": "PC_PLUS_ONE"
+        }
+      ],
+      "wait_state_sensitivity": "A disabled phase transition preserves the pending action. Complete PM fetch/cache and external wait attachment remains outside the bounded slice.",
+      "parallel_actions": [
+        {
+          "action": "CONDITIONAL_TRAP_BOUNDARY",
+          "reads": ["ASTAT_OR_CNTR", "PC"],
+          "writes": ["PC", "TRAP_OUTPUT_IF_TRUE", "HALT_STATE_IF_TRUE"]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-3–4-4 and 4-25: false TRAP selects PC+1, condition codes, and NOT CE does not decrement"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 5-14–5-15 and Figure 5.10: state-7/state-8 assertion, state-8 halt, following PMA, HALT clear, and release restart"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. 6-14 Table 6.8 and pp. A-4, A-6: algebraic syntax and exact COND encoding"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "General HALT synchronizer timing, BR/BG during TRAP, interrupt-boundary arbitration, and complete PM strobes are not connected.",
+        "SC-013 records that pinned MAME incorrectly treats the original Type 22 class as reserved."
       ]
     },
     {

@@ -57,6 +57,24 @@
       "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
     },
     {
+      "id": "HAND-IF-EQ-TRAP-080000",
+      "source": "IF EQ TRAP;",
+      "opcode": "0x080000",
+      "program_word_bytes_big_endian": "080000",
+      "encoding_class": 22,
+      "source_citation": "ADI-UM-1989 printed pp. 4-25, 5-14–5-15, 6-14, and A-4",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-UNCONDITIONAL-TRAP-08000F",
+      "source": "TRAP;",
+      "opcode": "0x08000f",
+      "program_word_bytes_big_endian": "08000f",
+      "encoding_class": 22,
+      "source_citation": "ADI-UM-1989 printed pp. 5-14–5-15, 6-14, and A-4",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-DO-0123-UNTIL-CE-14123E",
       "source": "DO 0x0123 UNTIL CE;",
       "opcode": "0x14123e",

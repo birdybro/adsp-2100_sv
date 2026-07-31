@@ -308,6 +308,22 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                 count += 1
         self.assertEqual(count, 32)
 
+    def test_all_conditional_trap_forms_round_trip(self) -> None:
+        for condition, mnemonic in enumerate(EXPECTED_IF_MNEMONICS):
+            prefix = "" if condition == 15 else f"IF {mnemonic} "
+            statement = f"{prefix}TRAP;"
+            opcode = 0x080000 | condition
+            assembled = assemble_statement(statement)
+            self.assertEqual(assembled.value, opcode)
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(
+                decoded.classification,
+                "TYPE_22_PHASE_AWARE_EXECUTION",
+            )
+            self.assertEqual(decoded.text, statement)
+            self.assertEqual(assemble_statement(decoded.text), assembled)
+
     def test_all_type_11_do_until_forms_round_trip(self) -> None:
         count = 0
         for address in range(1 << 14):

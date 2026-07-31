@@ -2,7 +2,8 @@
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer,
 Type 9 ALU/MAC, Type 10 direct-flow, Type 11 loop setup, Type 16 shifter, and
-Type 19 indirect-flow, and Type 20 return integrations pass**
+Type 19 indirect-flow, Type 20 return, and Type 22 phase-aware TRAP
+integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -44,9 +45,11 @@ model/RTL additionally supplies the source predicate and is compared across
 predicate to explicit IF flow and stored inverse-sense DO termination and
 passes 50,014 additional stateful model-versus-RTL cycles. Conditional JUMP
 with field `0xe` updates CNTR, conditional RETURN checks the same predicate
-without updating CNTR, and conditional CALL is rejected under OQ-012. Opcode
-decode for remaining arithmetic/TRAP consumers and phase-level timing remain
-unimplemented.
+without updating CNTR, and conditional CALL is rejected under OQ-012. Type 22
+TRAP samples the same condition boundary at accepted cycle start and retains
+the decision to the state-7/state-8 action boundary; its `NOT CE` form also
+does not mutate CNTR. Opcode decode for remaining arithmetic consumers remains
+unimplemented [ADI-UM-1989, printed pp. 4-4, 4-25, and 5-14].
 
 The bounded Type 16 conditional-shifter slice is the first complete
 computational condition consumer. It evaluates COND from cycle-start status

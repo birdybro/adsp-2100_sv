@@ -27,6 +27,7 @@ ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
 DO UNTIL setup words, 124 source-closed Type 19 DAG2-indirect JUMP/CALL words,
 all 32 Type 20 conditional RTS/RTI words,
+all 16 Type 22 conditional TRAP words,
 parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
@@ -150,6 +151,20 @@ atomic status restoration, NOT CE preservation, reset, and conflicts
 A-4, A-6]. Active-loop arbitration, interrupt recognition/vectoring, the
 following instruction fetch, waits, and external bus phases remain outside
 the bounded slice.
+
+Type 22 encodes `00001000000000000000 COND[3:0]`. All sixteen condition
+forms are source-backed. The phase-aware boundary samples the condition at
+accepted cycle start, preserves the decision through a disabled phase
+transition, and commits PC+1 at the state-7/state-8 boundary. If true, TRAP
+asserts at that boundary and the processor remains in state 8 until an
+external HALT is recognized; that recognition clears TRAP but retains halt,
+and releasing HALT resumes at PC+1. `NOT CE` does not mutate CNTR. Two
+hand-derived fixtures, every assembler/disassembler form, exhaustive 24-bit
+RTL decode, twelve directed model tests, and 50,168 model/RTL clocks pass
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, Figure 5.10, 6-14,
+A-4, A-6]. General HALT synchronization, BR/BG, interrupt arbitration, and
+complete PM bus controls remain open. SC-013 records MAME's lower-authority
+reserved classification.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight

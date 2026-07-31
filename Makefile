@@ -108,6 +108,11 @@ lint:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_conditional_return_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_conditional_trap_slice \
+			rtl/core/adsp2100_condition_logic.sv \
+			rtl/core/adsp2100_conditional_trap_decode.sv \
+			rtl/core/adsp2100_conditional_trap_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_mr_saturation_decode.sv; \
@@ -234,7 +239,7 @@ decode-tests:
 		tests.test_shift_move tests.test_compute_move \
 		tests.test_conditional_compute tests.test_direct_jump \
 		tests.test_do_until tests.test_indirect_jump \
-		tests.test_conditional_return
+		tests.test_conditional_return tests.test_conditional_trap
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -315,6 +320,13 @@ decode-tests:
 			rtl/core/adsp2100_conditional_return_decode.sv \
 			sim/unit/tb_adsp2100_conditional_return_decode.sv; \
 		build/obj_conditional_return_decode/Vtb_adsp2100_conditional_return_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_conditional_trap_decode \
+			--top-module tb_adsp2100_conditional_trap_decode \
+			rtl/core/adsp2100_conditional_trap_decode.sv \
+			sim/unit/tb_adsp2100_conditional_trap_decode.sv; \
+		build/obj_conditional_trap_decode/Vtb_adsp2100_conditional_trap_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			--Mdir build/obj_stack_control_decode \
 			--top-module tb_adsp2100_stack_control_decode \
@@ -530,7 +542,7 @@ sequencer-tests:
 		tests.test_counter tests.test_sequencer_stacks \
 		tests.test_sequencer_slice tests.test_stack_control_slice \
 		tests.test_direct_jump tests.test_do_until tests.test_indirect_jump \
-		tests.test_conditional_return
+		tests.test_conditional_return tests.test_conditional_trap
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_sequencer_vectors.py \
@@ -627,6 +639,17 @@ sequencer-tests:
 			rtl/core/adsp2100_conditional_return_slice.sv \
 			sim/unit/tb_adsp2100_conditional_return_slice.sv; \
 		build/obj_conditional_return_slice/Vtb_adsp2100_conditional_return_slice; \
+		$(PYTHON) tools/generators/generate_conditional_trap_vectors.py \
+			--output build/conditional_trap_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_conditional_trap_slice \
+			--top-module tb_adsp2100_conditional_trap_slice \
+			rtl/core/adsp2100_condition_logic.sv \
+			rtl/core/adsp2100_conditional_trap_decode.sv \
+			rtl/core/adsp2100_conditional_trap_slice.sv \
+			sim/unit/tb_adsp2100_conditional_trap_slice.sv; \
+		build/obj_conditional_trap_slice/Vtb_adsp2100_conditional_trap_slice; \
 		$(PYTHON) tools/generators/generate_stack_control_slice_vectors.py \
 			--output build/stack_control_slice_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -986,6 +1009,12 @@ formal:
 			rtl/core/adsp2100_conditional_return_slice.sv \
 			formal/harnesses/adsp2100_conditional_return_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_conditional_trap_formal \
+			rtl/core/adsp2100_condition_logic.sv \
+			rtl/core/adsp2100_conditional_trap_decode.sv \
+			rtl/core/adsp2100_conditional_trap_slice.sv \
+			formal/harnesses/adsp2100_conditional_trap_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_register_file_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_register_file.sv \
@@ -1057,6 +1086,8 @@ formal:
 		sby -f -d build/formal_indirect_jump formal/indirect_jump.sby; \
 		sby -f -d build/formal_conditional_return \
 			formal/conditional_return.sby; \
+		sby -f -d build/formal_conditional_trap \
+			formal/conditional_trap.sby; \
 		sby -f -d build/formal_registers formal/registers.sby; \
 		sby -f -d build/formal_status formal/status_registers.sby; \
 		sby -f -d build/formal_status_stack formal/status_stack.sby; \
@@ -1096,6 +1127,8 @@ synth-quartus:
 			synthesis/quartus/indirect_jump_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/conditional_return_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/conditional_trap_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile \
@@ -1165,6 +1198,7 @@ clean:
 	@find build -maxdepth 1 -type f -name do_until_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name indirect_jump_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_return_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name conditional_trap_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
 	@if [ -d build/obj_stack_control_decode ]; then \
 		find build/obj_stack_control_decode -depth -delete; \
@@ -1263,6 +1297,12 @@ clean:
 	@if [ -d build/obj_conditional_return_slice ]; then \
 		find build/obj_conditional_return_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_conditional_trap_decode ]; then \
+		find build/obj_conditional_trap_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_conditional_trap_slice ]; then \
+		find build/obj_conditional_trap_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -1328,6 +1368,9 @@ clean:
 	@if [ -d build/quartus_conditional_return ]; then \
 		find build/quartus_conditional_return -depth -delete; \
 	fi
+	@if [ -d build/quartus_conditional_trap ]; then \
+		find build/quartus_conditional_trap -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -1367,6 +1410,7 @@ clean:
 		build/formal_do_until \
 		build/formal_indirect_jump \
 		build/formal_conditional_return \
+		build/formal_conditional_trap \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \

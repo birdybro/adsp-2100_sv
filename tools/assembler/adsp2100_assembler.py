@@ -406,6 +406,18 @@ def _assemble_conditional_return(statement: str) -> int | None:
     return 0x0A0000 | (int(body == "RTI") << 4) | condition
 
 
+def _assemble_conditional_trap(statement: str) -> int | None:
+    """Assemble an original Type 22 conditional TRAP."""
+
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+    if body != "TRAP":
+        return None
+    return 0x080000 | condition
+
+
 def _assemble_do_until(statement: str) -> int | None:
     """Assemble an original Type 11 hardware-loop setup instruction."""
 
@@ -614,6 +626,9 @@ def assemble_statement(source: str) -> AssembledWord:
     conditional_return = _assemble_conditional_return(statement)
     if conditional_return is not None:
         return AssembledWord(conditional_return)
+    conditional_trap = _assemble_conditional_trap(statement)
+    if conditional_trap is not None:
+        return AssembledWord(conditional_trap)
     do_until = _assemble_do_until(statement)
     if do_until is not None:
         return AssembledWord(do_until)

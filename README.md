@@ -54,7 +54,8 @@ words with a decoder-connected PC register, CALL return stacking, and JUMP
 NOT CE counter transitions, all 262,144 Type 11 DO UNTIL setup words with
 simultaneous PC/loop-stack state, 124 source-closed Type 19 DAG2-indirect
 JUMP/CALL words with PMA target observation, all 32 Type 20 conditional RTS/RTI
-words with valid-stack PC/status restoration, all 1,792 source-backed Type 16 conditional
+words with valid-stack PC/status restoration, all 16 Type 22 conditional TRAP
+words with phase-aware state-7/state-8 assertion and HALT restart, all 1,792 source-backed Type 16 conditional
 LSHIFT/ASHIFT/NORM/EXP/EXPADJ words with selected-bank and status writeback,
 and bounded Type 17 internal-MOVE execution across
 computational, DAG, status/control, PX, CNTR/count-stack, and SSTAT state.
@@ -63,6 +64,9 @@ OQ-016 narrow status reads, OQ-021 Type 14 bit 15, OQ-022 Type 8 AMF zero,
 subencodings, 18,432 unverified Type 15 subencodings, and 256 unassigned-XOP
 Type 16 subencodings remain explicitly unresolved or unsupported. The 16,384
 Type 10 and four Type 19 CALL NOT CE words remain fail-closed under OQ-012.
+General HALT synchronization, BR/BG, interrupt arbitration, and complete PM
+strobes remain outside the bounded Type 22 controller. Pinned MAME's
+conflicting reserved classification is recorded as SC-013.
 Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 

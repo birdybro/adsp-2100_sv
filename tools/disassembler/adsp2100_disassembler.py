@@ -306,6 +306,19 @@ def _try_disassemble_conditional_return(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_conditional_trap(opcode: int) -> Disassembly | None:
+    if opcode & 0xFFFFF0 != 0x080000:
+        return None
+    condition = opcode & 0xF
+    prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
+    return Disassembly(
+        opcode=opcode,
+        text=f"{prefix}TRAP;",
+        classification="TYPE_22_PHASE_AWARE_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_do_until(opcode: int) -> Disassembly | None:
     if opcode & 0xFC0000 != 0x140000:
         return None
@@ -428,6 +441,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     conditional_return = _try_disassemble_conditional_return(opcode)
     if conditional_return is not None:
         return conditional_return
+    conditional_trap = _try_disassemble_conditional_trap(opcode)
+    if conditional_trap is not None:
+        return conditional_trap
     do_until = _try_disassemble_do_until(opcode)
     if do_until is not None:
         return do_until

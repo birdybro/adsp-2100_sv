@@ -1,7 +1,8 @@
 # Program sequencer
 
 **Status: source-backed next-PC, CNTR, stack storage, and bounded Type
-10/11/19/20 PC-state integration; whole-core timing incomplete**
+10/11/19/20 and phase-aware Type 22 PC-state integration; whole-core timing
+incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
 incrementer normally provides the next address [ADI-UM-1989, printed p. 4-3].
@@ -139,3 +140,17 @@ two hand-derived fixtures, twelve model tests, and 50,254 model/RTL cycles pass
 A-4, A-6]. Active-loop precedence is already proved in the generic sequencer
 flow block but is not yet physically unified with this decoder-connected
 slice. Interrupt entry/vectoring, fetch, waits, and bus phases remain open.
+
+The bounded Type 22 slice closes all sixteen conditional TRAP words and, unlike
+the instruction-boundary-only slices, retains an accepted condition decision
+through explicit logical phases. False and true forms both commit PC+1 at the
+enabled state-7/state-8 boundary. A true form simultaneously asserts TRAP and
+requests a state-8 phase hold; an already-recognized HALT clears TRAP but keeps
+the processor stopped, and releasing HALT produces a resume event without
+changing PC. Conditional TRAP `NOT CE` observes CNTR without decrementing it.
+Twelve model tests, exhaustive 24-bit decode, two hand-derived fixtures, and
+50,168 model/RTL clocks pass [ADI-UM-1989, printed pp. 4-3–4-4, 4-25,
+5-14–5-15, Figure 5.10, 6-14, A-4, and A-6]. General HALT recognition,
+active-loop and interrupt arbitration, BR/BG, complete fetch strobes, and bus
+ownership remain separate incomplete boundaries. SC-013 records MAME's
+incorrect reserved classification for these original-device words.

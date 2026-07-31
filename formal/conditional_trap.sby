@@ -1,0 +1,19 @@
+[options]
+mode prove
+depth 4
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_condition_logic.sv
+read -formal -sv rtl/core/adsp2100_conditional_trap_decode.sv
+read -formal -sv rtl/core/adsp2100_conditional_trap_slice.sv
+read -formal -sv formal/harnesses/adsp2100_conditional_trap_formal.sv
+prep -top adsp2100_conditional_trap_formal
+
+[files]
+rtl/core/adsp2100_condition_logic.sv
+rtl/core/adsp2100_conditional_trap_decode.sv
+rtl/core/adsp2100_conditional_trap_slice.sv
+formal/harnesses/adsp2100_conditional_trap_formal.sv

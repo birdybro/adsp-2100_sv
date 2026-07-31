@@ -124,6 +124,11 @@ semantic versioning after its first release.
   vectors, a bounded formal recipe, and a constrained Cyclone V synthesis
   project. Missing taken-return stack context remains fail-closed under
   OQ-013.
+- A class-complete, phase-aware original Type 22 conditional TRAP semantic
+  entry covering all sixteen words; an independent PC/ASTAT/CNTR/TRAP/HALT
+  model, exact decoder, portable stateful RTL, complete assembler/disassembler
+  support, two hand-derived fixtures, deterministic phase-level differential
+  vectors, a bounded formal recipe, and a constrained Cyclone V project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -489,6 +494,17 @@ semantic versioning after its first release.
   model/RTL cycles cover false/taken flow, valid PC/status pops, atomic RTI
   status restoration, return NOT CE counter preservation, reset, invalid
   context, and conflicts.
+- Type 22 Python and RTL decoders accept exactly all sixteen conditional TRAP
+  words. Twelve directed model checks, all assembler/disassembler forms, two
+  hand-derived fixtures, exhaustive 24-bit RTL decode, and 50,168 model/RTL
+  clocks cover false/taken conditions, held state 7, state-7/state-8 assertion,
+  observable PC+1, state-8 halt, HALT acknowledgment/release, reset, invalid
+  phase/opcode, unknown predicates, and setup conflicts.
+- Quartus full compilation passes for the bounded phase-aware Type 22 slice at
+  its 20 ns standalone constraint: 116 ALMs, 53 design registers plus fourteen
+  routing duplicates, no RAM/DSP blocks, +7.592 ns worst setup and +0.069 ns
+  worst multicorner hold slack, 80.59 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths.
 - Quartus full compilation passes for the bounded Type 20 slice at its 20 ns
   standalone constraint: 318 ALMs, 417 fitted registers, no RAM/DSP blocks,
   +7.725 ns worst setup and +0.136 ns worst multicorner hold slack, 81.47 MHz
@@ -497,6 +513,10 @@ semantic versioning after its first release.
   reference hashes, all generated-data checks, strict Verilator lint,
   sixteen exhaustive 24-bit decode traversals, and every existing model/RTL
   vector regression including all 50,254 bounded Type 20 execution cycles.
+- The expanded `make test` passes 381 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint,
+  seventeen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all 50,168 phase-aware Type 22 clocks.
 - The expanded `make test` passes 355 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   fifteen exhaustive 24-bit decode traversals, and every existing model/RTL
@@ -617,6 +637,12 @@ semantic versioning after its first release.
   NOT CE never mutates CNTR/count-stack state. Physical empty-pop effects,
   active-loop attachment, interrupt entry/vectoring, fetch, and bus timing
   remain explicit gaps.
+- Closed original Type 22 field placement, phase timing, and external
+  handshake semantics: false TRAP advances to PC+1; true TRAP asserts at the
+  state-7/state-8 boundary and halts in state 8; recognized HALT clears TRAP;
+  HALT release resumes at PC+1; and TRAP NOT CE does not mutate CNTR. General
+  HALT synchronization, BR/BG, interrupt/loop arbitration, and complete PM bus
+  control remain explicit gaps.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and
@@ -635,6 +661,8 @@ semantic versioning after its first release.
   later family's strict inequality (SC-011).
 - Recorded MAME's loop-before-instruction ordering against the original
   explicit-control-transfer precedence rule (SC-012).
+- Recorded pinned MAME's omission of original Type 22 TRAP as SC-013 and kept
+  the original ADI manual authoritative for the exact device.
 - Closed the computational-bank membership and DREG access/storage slice,
   preserving undocumented reset state and recording illegal write collisions
   and interrupt-adjacent bank-switch visibility as OQ-014/OQ-015.

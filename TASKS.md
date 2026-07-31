@@ -278,6 +278,14 @@ advance beyond research until a page-level primary citation is added.
   return NOT CE. Missing taken-return context remains an explicit OQ-013
   fail-closed boundary; active-loop/fetch/interrupt-entry/bus phases remain
   open.
+  Type 22 is class-complete and phase-aware: all sixteen conditional TRAP
+  words decode and execute. Two hand-derived fixtures, every syntax form,
+  exhaustive 24-bit RTL decode, twelve model tests, and 50,168 model/RTL
+  clocks cover condition outcomes, a held state 7, the state-7/state-8 TRAP
+  assertion, state-8 halt, observable PC+1, HALT acknowledgment, and restart.
+  General HALT synchronization, BR/BG, interrupt and loop arbitration, and PM
+  strobes remain outside the bounded slice; SC-013 records MAME's conflicting
+  reserved classification.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -384,6 +392,12 @@ advance beyond research until a page-level primary citation is added.
   PC/status pop plus ASTAT/MSTAT/IMASK restore; and samples return NOT CE
   without any counter transition. Missing taken-return context fails closed
   under OQ-013.
+  A separate Type 22 model stores exact PC/ASTAT/CNTR validity plus pending,
+  TRAP, halt, and HALT-handoff state. It accepts a condition in logical state
+  1, preserves it across disabled phase transitions, commits PC+1 and taken
+  TRAP at the state-7/state-8 boundary, and resumes only after the documented
+  external HALT acknowledgment/release handshake. Twelve directed tests and
+  50,168 model/RTL clocks pass.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -435,6 +449,9 @@ advance beyond research until a page-level primary citation is added.
   CE words remain visibly fail-closed.
   Type 20 round trips all 32 `[IF condition] RTS/RTI;` forms and includes two
   independent hand-derived fixtures.
+  Type 22 round trips all sixteen `[IF condition] TRAP;` forms and includes
+  two independent hand-derived fixtures. Pinned MAME is not used as its oracle
+  because SC-013 records that MAME labels this exact original class reserved.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -597,11 +614,12 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
   `tests/test_direct_jump.py`, `tests/test_do_until.py`,
   `tests/test_indirect_jump.py`, `tests/test_conditional_return.py`,
+  `tests/test_conditional_trap.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
   `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`,
   `formal/direct_jump.sby`, `formal/do_until.sby`, `formal/indirect_jump.sby`,
-  `formal/conditional_return.sby`
+  `formal/conditional_return.sby`, `formal/conditional_trap.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -644,6 +662,11 @@ advance beyond research until a page-level primary citation is added.
   restore. Twelve model tests, exhaustive 24-bit RTL decode, and 50,254
   stateful cycles cover all 32 words, including return NOT CE without counter
   mutation and OQ-013 missing-context rejection.
+  A phase-aware Type 22 instruction slice connects exact decode to PC+1,
+  condition sampling, state-7/state-8 TRAP assertion, state-8 hold, and the
+  external HALT handoff. Twelve model tests, exhaustive 24-bit RTL decode,
+  and 50,168 deterministic model/RTL clocks cover every word and the complete
+  documented handshake.
 - **Unresolved questions:** whole-core PC/fetch integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
   (OQ-018), interrupt recognition/entry, delayed transfers, cache interaction,
@@ -886,7 +909,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-SYS-001 — Reset, HALT, BR/BG, and restart
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** DEV-001, TIME-001, RTL-PMBUS-001, RTL-DMBUS-001
 - **Acceptance criteria:** assertion/release, minimum reset, initial fetch,
@@ -895,11 +918,15 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ATARI-ADSP-SCHEM
 - **Relevant tests:** `make bus-tests`, `make interrupt-tests`,
+  `tests/test_conditional_trap.py`, `formal/conditional_trap.sby`,
   `formal/system_control.sby`
 - **Implementation notes:** use clock enables and phase state, never gated
-  clocks.
-- **Unresolved questions:** whether “halt” is an instruction, pin, board
-  mechanism, or a combination on the exact device.
+  clocks. The Type 22 boundary now implements the source-backed TRAP half of
+  system control, including state-8 hold and an input explicitly representing
+  HALT after recognition. The raw asynchronous HALT synchronizer, general
+  pin-driven halt, BR/BG, and bus tristate control remain unimplemented.
+- **Unresolved questions:** exact composition priority among general HALT,
+  TRAP, BR/BG, DMACK waits, reset, and interrupts.
 - **Confidence:** UNKNOWN
 
 ## M24 — Pipeline and instruction timing
@@ -916,9 +943,10 @@ advance beyond research until a page-level primary citation is added.
   ADI-UM-1989, ADR-0003
 - **Relevant tests:** `tests/test_cycle_tables.py`, all timing/bus regressions
 - **Implementation notes:** the eight-state baseline, ordinary/PM-miss/wait/
-  interrupt/HALT cases, and phase sampling points are documented; the full
-  opcode timing table is not. Logical phase fidelity is separate from analog
-  delay modeling.
+  interrupt/HALT cases, and phase sampling points are documented. Type 22 now
+  has an automated phase-level state-7/state-8 assertion and HALT handshake,
+  including phase-hold testing; the full opcode timing table is not. Logical
+  phase fidelity is separate from analog delay modeling.
 - **Unresolved questions:** fetch/decode/execute visibility and PM-data conflict
   penalties.
 - **Confidence:** UNKNOWN
@@ -974,7 +1002,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Thirty-four harnesses now pass strict assertion
+  result a complete proof. Thirty-five harnesses now pass strict assertion
   syntax lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
@@ -983,6 +1011,7 @@ advance beyond research until a page-level primary citation is added.
   bounded Type 11 DO UNTIL decode and state execution,
   bounded Type 19 indirect JUMP/CALL decode and state execution,
   class-complete bounded Type 20 conditional RTS/RTI state execution,
+  phase-aware Type 22 conditional TRAP and HALT-handoff execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -1054,6 +1083,11 @@ advance beyond research until a page-level primary citation is added.
   with no RAM or DSP blocks against a 20 ns standalone constraint. Worst
   setup is +7.725 ns, worst multicorner hold is +0.136 ns, worst slow-corner
   Fmax is 81.47 MHz, and no clocks, ports, or paths are unconstrained.
+  The bounded phase-aware Type 22 TRAP slice fits in 116 ALMs and 67 fitted
+  registers (53 design registers plus fourteen routing duplicates), with no
+  RAM or DSP blocks against a 20 ns standalone constraint. Worst setup is
+  +7.592 ns, worst multicorner hold is +0.069 ns, worst slow-corner Fmax is
+  80.59 MHz, and no clocks, ports, or paths are unconstrained.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.
