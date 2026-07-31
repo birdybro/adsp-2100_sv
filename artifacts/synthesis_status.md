@@ -3,7 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 17, and Type 19 decoders/integration slices, stack-control
+  Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 17, Type 19, and Type 20 decoders/integration slices, stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
@@ -11,6 +11,13 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 20 conditional-return
+  slice passes for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone
+  constraint. It uses 318 ALMs and 417 fitted registers with no RAM or DSP
+  blocks. Across four timing models, worst setup slack is +7.725 ns, worst
+  hold slack is +0.136 ns, and worst slow-corner Fmax is 81.47 MHz, with zero
+  unconstrained clocks, ports, or paths. This is bounded-slice evidence, not
+  whole-core or MiSTer timing closure.
 - Quartus 17.0.2 full compilation of the bounded Type 19 indirect-transfer
   slice passes for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone
   constraint. It uses 353 ALMs and 400 fitted registers with no RAM or DSP
@@ -214,7 +221,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 30
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 34
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -229,6 +236,8 @@ Type-14 integration,
 Type-15 integration,
 Type-16 integration,
 Type-18 integration,
+Type-19 integration,
+Type-20 integration,
 Type-21 integration, Type-25 integration,
 condition, ALU, MAC, shifter, DAG, sequencer-flow, CNTR, sequencer-stack,
 sequencer-integration, register-file, status-register, and status-stack block
