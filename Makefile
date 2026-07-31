@@ -65,6 +65,17 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_internal_move_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_internal_move_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_modify_address_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_modify_address_slice \
@@ -342,7 +353,8 @@ sequencer-tests:
 	fi
 
 register-tests:
-	$(PYTHON) -m unittest -v tests.test_register_banks
+	$(PYTHON) -m unittest -v tests.test_register_banks \
+		tests.test_internal_move_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_register_vectors.py \
@@ -365,6 +377,23 @@ register-tests:
 			rtl/core/adsp2100_register_file.sv \
 			sim/unit/tb_adsp2100_register_writeback.sv; \
 		build/obj_register_writeback/Vtb_adsp2100_register_writeback; \
+		$(PYTHON) tools/reference/generate_internal_move_slice_vectors.py \
+			--output build/internal_move_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_internal_move_slice \
+			--top-module tb_adsp2100_internal_move_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			sim/unit/tb_adsp2100_internal_move_slice.sv; \
+		build/obj_internal_move_slice/Vtb_adsp2100_internal_move_slice; \
 	else \
 		echo "SKIP register-file RTL test: Verilator is not installed"; \
 	fi
@@ -469,6 +498,18 @@ formal:
 			--top-module adsp2100_internal_move_decode_formal \
 			rtl/core/adsp2100_internal_move_decode.sv \
 			formal/harnesses/adsp2100_internal_move_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_internal_move_slice_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			formal/harnesses/adsp2100_internal_move_slice_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_modify_address_decode_formal \
 			rtl/core/adsp2100_modify_address_decode.sv \
@@ -581,6 +622,8 @@ formal:
 			formal/mode_control_decode.sby; \
 		sby -f -d build/formal_internal_move_decode \
 			formal/internal_move_decode.sby; \
+		sby -f -d build/formal_internal_move_slice \
+			formal/internal_move_slice.sby; \
 		sby -f -d build/formal_modify_address_decode \
 			formal/modify_address_decode.sby; \
 		sby -f -d build/formal_stack_control_slice \
@@ -630,6 +673,8 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/internal_move_decode_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/internal_move_slice_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/modify_address_slice_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
@@ -675,6 +720,7 @@ clean:
 	@find build -maxdepth 1 -type f -name status_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name status_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mode_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name internal_move_slice_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
 	@if [ -d build/obj_stack_control_decode ]; then \
 		find build/obj_stack_control_decode -depth -delete; \
@@ -710,6 +756,9 @@ clean:
 	@if [ -d build/obj_internal_move_decode ]; then \
 		find build/obj_internal_move_decode -depth -delete; \
 	fi
+	@if [ -d build/obj_internal_move_slice ]; then \
+		find build/obj_internal_move_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -742,6 +791,9 @@ clean:
 	@if [ -d build/quartus_internal_move_decode ]; then \
 		find build/quartus_internal_move_decode -depth -delete; \
 	fi
+	@if [ -d build/quartus_internal_move_slice ]; then \
+		find build/quartus_internal_move_slice -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -770,6 +822,7 @@ clean:
 		build/formal_mode_control_decode \
 		build/formal_mode_control_slice \
 		build/formal_internal_move_decode \
+		build/formal_internal_move_slice \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \

@@ -45,9 +45,11 @@ ADI-2101-CROSS-1990, printed pp. 9-63–9-64].
 
 The Type 17 action database records the original one-cycle register-to-register
 MOVE and absence of PM-data/DM activity. Exhaustive decode verifies action
-selection only; cycle-start source sampling, cycle-end destination commit, and
-all cross-store side effects still need a composed state/timing test before
-Type 17 execution timing is claimed complete
+selection. The bounded state slice verifies a single cycle-start
+read/cycle-end write boundary, no PM-data or DM request, old-bank selection for
+the current move, and count-stack update at the commit edge. It does not model
+fetch overlap, interrupts, waits, or external bus phases, so Type 17 execution
+timing is not claimed complete
 [ADI-UM-1989, printed pp. 2-6, 6-1–6-2, 6-12, A-3, A-9].
 
 The bounded Type 21 model/RTL slice verifies that selected I, M, and

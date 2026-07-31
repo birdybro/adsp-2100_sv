@@ -30,9 +30,11 @@ scan PDF p. 148].
 The exact Type 17 selector audit confirms 48 readable REG-coded registers and
 47 writable destinations. SSTAT is the only encoded read-only destination;
 AF, MF, and PC have no general-MOVE code, while blank REG-table cells remain
-reserved. This closes register direction and action decode, not the data value
-for OQ-016 narrow status reads or the composed write effects across
-computational, DAG, status, PX, CNTR, and stack state
+reserved. This closes register direction and action decode. A bounded execution
+slice now composes write effects across computational, DAG, status, PX, CNTR,
+and count-stack state. It deliberately does not close the data value for
+OQ-016 narrow status reads: those five sources use an observable provisional
+zero-extension hypothesis
 [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
 
 On documented reset, PC-visible PMA is 0x0004 if the bus is not granted, stack
@@ -75,7 +77,8 @@ A separate exact four-by-sixteen status stack and a combined exact
 storage, pointer saturation, loss of the newest overflowing push, sticky
 overflow, and all eight SSTAT sources [ADI-DATABOOK-1987, printed
 pp. 2-21–2-22; ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. The two SSTAT
-fragments are not yet composed into an instruction-readable status path.
+fragments are now composed in the bounded Type 17 and Type 26 execution
+slices. This is not yet a whole-core fetch/execute path.
 
 CNTR has 14 value bits plus a separate validity state. Reset invalidates CNTR
 without assigning a documented value. A load pushes the old count only when
@@ -86,10 +89,9 @@ implement this boundary. A bounded sequencer slice physically connects CNTR
 to count-stack storage and IF/DO flow for sourced cases, but instruction
 decode and a stateful PC remain absent.
 
-Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
-interrupt recognition and priority logic, stack action connectivity, CNTR
-decode connectivity, empty-pop architectural effects, narrow
-status-register DMD extension, general MOVE access to DAG storage, full
+Direction-specific restrictions outside the now-bounded Type 17 path, exact
+interrupt recognition and priority logic, empty-pop architectural effects,
+narrow status-register DMD extension, full
 multifunction legality, and every
 instruction field using these paths still require machine-readable extraction
 and tests.

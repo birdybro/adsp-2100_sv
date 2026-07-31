@@ -24,7 +24,10 @@ cycle-, or Hard Drivin'-complete
   hand-verified NOP semantic fixture;
 - exact Type 17 internal-MOVE action decode covering all register selectors,
   reserved holes, SSTAT read-only direction, and all 2,256 legal assembler/
-  disassembler pairs without claiming cross-store state execution;
+  disassembler pairs;
+- bounded Type 17 state execution connecting both computational banks, both
+  DAG register files, status/control, PX, CNTR/count-stack, and SSTAT, with
+  OQ-016 narrow status extension exposed as a provisional output;
 - bounded Type 26 stack-control semantic database, independent executable
   action model, portable decoder RTL, and exhaustive fail-closed decode;
 - exact Type 25 MR-saturation semantic entry, hand-reviewed assembler fixture,
@@ -89,7 +92,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 241 implemented Python unit checks plus manifest/hash verification;
+- 248 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -97,7 +100,8 @@ outstanding.
   simulation;
 - all 4,096 Type 17 class words partition into exactly 2,256 legal moves and
   1,840 reserved/read-only-destination subencodings; all other program words
-  are action-free in exhaustive RTL simulation;
+  are action-free in exhaustive RTL simulation; all 4,512 legal pair/bank
+  executions and 59,430 stateful model/RTL cycles pass;
 - exact Type 25 word `0x050000` is the sole MR-saturation action across an
   exhaustive 16,777,216-word RTL traversal;
 - exactly 256 Type 18 words decode as original MODE CONTROL across an
@@ -118,7 +122,7 @@ outstanding.
   50,112 MSTAT-consumer integration cycles plus 50,015 stateful Type 26
   execution cycles and 50,112 stateful Type 25 cycles pass simulation;
   the Type 18 state slice adds 58,248 passing cycles and the Type 21 slice adds
-  50,124;
+  50,124, while the Type 17 state slice adds 59,430;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
@@ -131,13 +135,14 @@ outstanding.
   architectural DAG data/valid registers, positive setup/hold slack, and no
   unconstrained paths; the Type 17 decoder fits in 42 ALMs and 24
   combinational ALUTs with positive multicorner slack and no unconstrained
-  paths;
+  paths, while the Type 17 state slice fits in 816 ALMs and 906 registers with
+  +6.401 ns setup, +0.151 ns hold, and no unconstrained paths;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
-  Type 25 decode/execution plus Type 17 action decode
-  formal harnesses pass assertion syntax lint, but no
+  Type 25 decode/execution plus Type 17 action/state execution
+  formal harnesses (24 total) pass assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
   synthesis top exists.
@@ -146,9 +151,8 @@ outstanding.
 
 1. Locate the exact original Cross-Software/instruction reference and a
    separately identifiable original data sheet.
-2. Locate primary evidence for OQ-016 and compose Type 17 state execution
-   across computational, DAG, status, PX, CNTR, and count-stack storage
-   without inventing narrow-read or collision behavior.
+2. Locate primary or physical evidence for OQ-016 to replace or reject the
+   bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
 3. Add stateful PC/reset/enable integration only after the next-PC update and
    stall boundaries are source-closed.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.

@@ -17,10 +17,25 @@
 | OQ-013 | What value/state results from popping an already-empty stack? | pointer saturates and stale bottom is exposed; no data change; undefined | original simulator and physical-chip signatures for each stack | low unless corrupt code or diagnostics rely on it | OPEN |
 | OQ-014 | What happens if an illegal multifunction encoding writes one computational destination twice, including an MR1 preload colliding with MR2? | one source wins; both writes combine; undefined result | original assembler rejection, original simulator behavior, or physical-chip signature | low unless diagnostics execute illegal encodings | OPEN |
 | OQ-015 | At which exact boundary does an MSTAT bank-select change become visible relative to interrupt recognition and context stacking? | end-of-instruction before interrupt entry; interrupt entry sees old bank; device-specific ordering | original instruction/timing reference or physical-chip trace around MODE CONTROL plus IRQ | context-switch timing | OPEN |
-| OQ-016 | What values occupy unused upper DMD bits when narrow ASTAT, MSTAT, IMASK, or ICNTL is read by a general MOVE? | zero extension; sign extension; retained bus bits; device-specific undefined | original Cross-Software/instruction reference, simulator signature, or physical-chip bus/register test | low for normal software, relevant to exact register reads | OPEN |
+| OQ-016 | What values occupy unused upper DMD bits when narrow ASTAT, MSTAT, SSTAT, IMASK, or ICNTL is read by a general MOVE? | zero extension; sign extension; retained bus bits; device-specific undefined | original Cross-Software/instruction reference, original simulator signature, or physical-chip register test | low for normal software, relevant to exact register reads | OPEN; PROVISIONAL zero-extension isolated in Type 17 slice |
 | OQ-017 | Can any original legal encoding request competing direct/automatic ASTAT writes or direct MSTAT plus active MODE CONTROL, and if so what wins? | encodings are illegal; direct move wins; automatic update wins; undefined | complete original instruction legality table, assembler diagnostics, or hardware signature | low unless diagnostics use an unusual multifunction form | OPEN |
 | OQ-018 | What is the architectural ordering when one instruction boundary requests competing automatic and explicit sequencer-state actions, such as CNTR load at a CE loop end, manual stack pop plus automatic loop pop, or DO UNTIL setup on an outer loop's end instruction? | encoding/context is illegal; explicit action wins; automatic loop action wins; multiple ordered updates occur | original instruction legality/reference text, original simulator diagnostics, or physical-chip signature | low for normal compiler output, relevant to adversarial cycle accuracy | OPEN |
 
 Provisional behavior must cite one of these IDs in code and tests. Resolving an
 item requires updating the relevant architecture document, task confidence, and
 changelog.
+
+OQ-016 remains open after reviewing the original 1989 manual's register and
+MOVE sections. They establish the stored widths and DMD readability but do not
+state the unused upper-bit values for these five sources
+[ADI-UM-1989, printed pp. 4-20–4-24, 6-1–6-2, 6-12, A-9]. As a lower-authority
+observation, pinned MAME commit
+`030fefcbd14e47c01ec9d67655be90f64a1dc8ab` dispatches Type 17 through its
+register accessors and returns ASTAT, MSTAT, SSTAT, IMASK, and ICNTL as
+nonnegative integer members, which effectively zero-extends them at that
+boundary [MAME-ADSP2100-CORE, `adsp2100.cpp` lines 1375–1394;
+MAME-ADSP2100-OPS, `2100ops.hxx` lines 440–450 and 532–543]. The independent
+model and bounded RTL therefore implement zero-extension only as a labeled
+provisional hypothesis and assert an observable provisional flag whenever one
+of those sources is selected. MAME does not promote the hypothesis to
+primary-verified or physical-hardware evidence.

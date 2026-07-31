@@ -47,6 +47,13 @@ from .internal_move import (
     decode_internal_move,
     register_code_by_name,
 )
+from .internal_move_slice import (
+    InternalMoveCycleResult,
+    InternalMoveSetup,
+    InternalMoveSliceState,
+    apply_internal_move_cycle,
+    read_internal_move_register,
+)
 from .modify_address import (
     MODIFY_ADDRESS_MASK,
     MODIFY_ADDRESS_VALUE,
@@ -178,7 +185,10 @@ __all__ = [
     "IF_CONDITION_MNEMONICS",
     "INTERNAL_MOVE_MASK",
     "INTERNAL_MOVE_VALUE",
+    "InternalMoveCycleResult",
     "InternalMoveSelection",
+    "InternalMoveSetup",
+    "InternalMoveSliceState",
     "LOOP_STACK_DEPTH",
     "LOOP_STACK_WIDTH",
     "MemorySpace",
@@ -252,6 +262,7 @@ __all__ = [
     "apply_mode_control",
     "apply_mode_control_slice_cycle",
     "apply_mode_slice_cycle",
+    "apply_internal_move_cycle",
     "apply_modify_address_cycle",
     "apply_mr_saturation_slice_cycle",
     "apply_sequencer_stacks_cycle",
@@ -264,6 +275,7 @@ __all__ = [
     "original_base_mask",
     "reverse_address",
     "read_dreg",
+    "read_internal_move_register",
     "register_code_by_name",
     "select_sequencer_flow",
     "sign_extend",

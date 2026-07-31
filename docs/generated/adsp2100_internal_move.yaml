@@ -65,7 +65,22 @@
     "status_generation": "The move generates no computational status; moving to a writable status/control register directly replaces that register's documented stored bits.",
     "destination_width": "A destination stores its documented low-width portion of the 16-bit internal move value.",
     "known_source_extensions": "SE, MR2, M, and SB sign-extend; I, L, PX, and CNTR zero-extend; sixteen-bit computational registers require no extension.",
-    "open_source_extensions": "Upper DMD bits for ASTAT, MSTAT, SSTAT, IMASK, and ICNTL reads remain OQ-016 and block complete state execution."
+    "open_source_extensions": "Upper DMD bits for ASTAT, MSTAT, SSTAT, IMASK, and ICNTL reads remain OQ-016. The bounded state slice uses a flagged PROVISIONAL zero-extension hypothesis; this is not primary-verified behavior."
+  },
+  "bounded_state_execution": {
+    "status": "IMPLEMENTED_WITH_PROVISIONAL_OQ_016",
+    "confidence": "CORROBORATED_EXCEPT_NARROW_STATUS_EXTENSION",
+    "connected_state": [
+      "PRIMARY_AND_ALTERNATE_COMPUTATIONAL_BANKS",
+      "DAG1_AND_DAG2_I_M_L_REGISTERS",
+      "ASTAT_MSTAT_ICNTL_IMASK",
+      "PX",
+      "CNTR_AND_COUNT_STACK",
+      "COMPOSED_SSTAT"
+    ],
+    "ordering": "All sources and MSTAT bank selection are sampled from cycle-start state; one destination and documented implicit side effects commit at cycle end.",
+    "fail_closed": "Non-Type-17 words, reserved selectors, SSTAT destinations, and integration conflicts preserve state.",
+    "provisional_observable": "source_extension_provisional is asserted for ASTAT, MSTAT, SSTAT, IMASK, or ICNTL sources."
   },
   "architectural_side_effects_requiring_composition": [
     "MSTAT destination changes computational-bank selection for a following cycle.",
@@ -122,11 +137,16 @@
       "authority": "ORIGINAL_DEVICE_PRIMARY",
       "location": "printed pp. 2-6, 2-15, 2-21, 3-2–3-3, 3-7, and 4-4",
       "supports": "cycle-start read/cycle-end write ordering and documented narrow-register extension rules"
+    },
+    {
+      "reference_id": "MAME-ADSP2100-CORE",
+      "authority": "MAINTAINED_EMULATOR_OBSERVATION",
+      "location": "commit 030fefcbd14e47c01ec9d67655be90f64a1dc8ab, adsp2100.cpp lines 1375–1394 and 2100ops.hxx lines 440–450, 532–543",
+      "supports": "corroborating observation that Type 17 dispatches through register accessors and current MAME returns narrow status members as nonnegative integer values, effectively zero-extending them; it does not resolve OQ-016 for physical ADSP-2100 hardware"
     }
   ],
   "unresolved_issues": [
     "OQ-016: unused upper DMD bits for ASTAT, MSTAT, SSTAT, IMASK, and ICNTL reads.",
-    "A composed Type 17 state-execution boundary does not yet connect computational, DAG, status, PX, CNTR, and count-stack state.",
     "Interrupt-adjacent, fetch-phase, and external bus timing remain unintegrated.",
     "Execution behavior of reserved selectors or an SSTAT destination is not documented and is not treated as NOP."
   ]

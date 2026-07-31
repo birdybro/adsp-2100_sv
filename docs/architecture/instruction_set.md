@@ -39,9 +39,18 @@ emit a legal move action. The other 1,840 contain a reserved selector or an
 SSTAT destination and remain action-free without being treated as NOP
 [ADI-UM-1989, printed pp. 6-1–6-2, 6-12, A-3, A-9]. Independent model and RTL
 decoders agree for every selector and an exhaustive 24-bit traversal proves
-that no non-Type-17 word emits an action. Complete state execution remains
-open because it must compose banked computational registers, DAG storage,
-status/control, PX, CNTR/count-stack effects, and OQ-016 narrow status reads.
+that no non-Type-17 word emits an action. A bounded stateful slice now composes
+both computational banks, both DAG register files, status/control, PX, CNTR,
+count-stack effects, and SSTAT. It samples the source and MSTAT bank at cycle
+start and commits the selected destination at cycle end, including MR1's MR2
+sign-fill and CNTR's old-count push. The model executes all 2,256 legal pairs
+in both banks, and 59,430 deterministic cycles agree with RTL. OQ-016 remains
+open: narrow status sources use explicitly flagged provisional zero-extension,
+corroborated but not established by pinned MAME
+[MAME-ADSP2100-CORE, commit
+030fefcbd14e47c01ec9d67655be90f64a1dc8ab, lines 1375–1394;
+MAME-ADSP2100-OPS, same commit, lines 440–450 and 532–543]. Fetch, PC,
+interrupt adjacency, and bus phases remain outside this slice.
 
 Type 26 stack control is the first bounded semantic class beyond NOP.
 `docs/generated/adsp2100_stack_control.yaml` records the 32 field-defined

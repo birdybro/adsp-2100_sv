@@ -129,6 +129,13 @@ class InternalMoveActionDecodeTests(unittest.TestCase):
         with self.assertRaises(InternalMoveValidationError):
             validate_database(memory_access)
 
+        hidden_provisional = copy.deepcopy(self.database)
+        hidden_provisional["bounded_state_execution"][
+            "provisional_observable"
+        ] = "NONE"
+        with self.assertRaises(InternalMoveValidationError):
+            validate_database(hidden_provisional)
+
 
 if __name__ == "__main__":
     unittest.main()

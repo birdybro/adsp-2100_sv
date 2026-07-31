@@ -450,7 +450,7 @@
         "timing_limitations"
       ],
       "cited_pages_or_sections": [
-        "Pin exact line ranges only when discussed."
+        "Commit 030fefcbd14e47c01ec9d67655be90f64a1dc8ab, lines 1375–1394: Type 17 dispatch through register read/write accessors; corroborating implementation observation only"
       ],
       "may_commit": true,
       "acquisition_status": "acquired",
@@ -488,7 +488,7 @@
         "opcode_cross_check"
       ],
       "cited_pages_or_sections": [
-        "Pin exact line ranges only when discussed."
+        "Commit 030fefcbd14e47c01ec9d67655be90f64a1dc8ab, lines 440–450 and 532–543: narrow status/control write masks and register reads; corroborating OQ-016 observation only"
       ],
       "may_commit": true,
       "acquisition_status": "acquired",

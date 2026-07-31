@@ -134,12 +134,14 @@ and four-bit IMASK storage. A separate four-by-sixteen status stack supplies
 SSTAT bits 4/5, while the exact PC/count/loop stack-storage block supplies bits
 0–3 and 6–7 with the same documented pointer-saturation and sticky-overflow
 rules [ADI-DATABOOK-1987, printed pp. 2-21–2-22; ADI-UM-1989, printed
-pp. 4-3–4-7, 4-22]. These fragments have not yet been composed with the
-instruction-readable SSTAT path. A separate CNTR model/RTL boundary implements
+pp. 4-3–4-7, 4-22]. These fragments are composed by the bounded Type 17 and
+Type 26 execution slices, but not by an integrated fetch/execute core. A
+separate CNTR model/RTL boundary implements
 its 14-bit value, reset-invalid state, pre-decrement CE predicate,
 post-decrement, valid-load push request, and true-CE count restore
 [ADI-UM-1989, printed pp. 4-4–4-5]. How unused upper DMD bits read for narrow
-general-MOVE sources remains open as OQ-016. A bounded sequencer slice connects
+general-MOVE sources remains open as OQ-016; Type 17 exposes its provisional
+zero-extension choice explicitly. A bounded sequencer slice connects
 CNTR, IF/DO conditions, and PC/count/loop storage without adding decode or
 PC-register claims. Interrupt/status-stack action connectivity, interrupt
 recognition timing, DIVS/DIVQ execution, and instruction decode are not part
@@ -155,5 +157,8 @@ Appendix A visual review and mechanical audit are complete for Type 17. All 48
 nonblank REG codes are legal sources; all except read-only SSTAT are legal
 destinations. The exact action decoder therefore accepts 2,256 source/
 destination pairs and rejects 1,840 reserved or read-only-destination
-subencodings. Actual cross-store writeback remains unintegrated
+subencodings. The bounded cross-store slice connects both computational banks,
+both DAGs, exact-width status/control, PX, CNTR/count-stack, and SSTAT with
+cycle-start read/cycle-end write ordering; it remains outside whole-core
+fetch/interrupt/bus sequencing
 [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].

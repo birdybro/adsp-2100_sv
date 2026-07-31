@@ -3,7 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 17 action decoder, stack-control decoder/integration slice, Type 21
+  Type 17 action decoder/integration slice, stack-control decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
@@ -21,6 +21,12 @@
   ALUTs, no registers, no RAM, and no DSPs. Across four timing models, worst
   setup slack is +15.704 ns and worst hold slack is +0.462 ns against 20 ns,
   with zero unconstrained clocks, ports, or paths.
+- Quartus 17.0.2 full compilation of the bounded Type 17 state slice passes
+  for Cyclone V `5CSEBA6U23I7`. It uses 816 ALMs and 906 registers with no
+  M10K or DSP blocks. Across four timing models, worst setup slack is +6.401
+  ns and worst hold slack is +0.151 ns against 20 ns, with zero unconstrained
+  clocks, ports, or paths. Constant no-PM/no-DM outputs and untouched stack
+  status fragments are expected properties of this bounded instruction slice.
 - Quartus 17.0.2 full compilation of the Type 26 stack-control decoder passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 25 ALMs,
   12 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks. Across

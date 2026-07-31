@@ -43,7 +43,9 @@ implemented compute, DAG, sequencer-flow, CNTR, PC/count/loop/status-stack,
 computational-register, and status/control RTL slices, including bounded
 sequencer, MSTAT-consumer, Type 25 MR-saturation, and Type 26 stack-control
 integration, plus exact Type 18 mode-control and Type 21 address-modify
-execution and exact Type 17 internal-MOVE action decode. Commands return
+execution and bounded Type 17 internal-MOVE execution across computational,
+DAG, status/control, PX, CNTR/count-stack, and SSTAT state. OQ-016 narrow
+status reads remain explicitly provisional. Commands return
 nonzero on a real
 failure.
 Optional commands report `SKIP` when their named tool is unavailable.

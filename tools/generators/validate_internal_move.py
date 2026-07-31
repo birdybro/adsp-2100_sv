@@ -146,6 +146,7 @@ def validate_database(data: dict[str, Any]) -> None:
         "fields",
         "legality",
         "execution_semantics",
+        "bounded_state_execution",
         "architectural_side_effects_requiring_composition",
         "assembly",
         "parallel_actions",
@@ -171,6 +172,30 @@ def validate_database(data: dict[str, Any]) -> None:
     if data["confidence"] != "VERIFIED_PRIMARY":
         raise InternalMoveValidationError(
             "Type 17 action decode must retain primary confidence"
+        )
+
+    bounded = data["bounded_state_execution"]
+    if set(bounded) != {
+        "status",
+        "confidence",
+        "connected_state",
+        "ordering",
+        "fail_closed",
+        "provisional_observable",
+    }:
+        raise InternalMoveValidationError(
+            "bounded state metadata has an unexpected shape"
+        )
+    if (
+        bounded["status"] != "IMPLEMENTED_WITH_PROVISIONAL_OQ_016"
+        or bounded["confidence"]
+        != "CORROBORATED_EXCEPT_NARROW_STATUS_EXTENSION"
+        or "COMPOSED_SSTAT" not in bounded["connected_state"]
+        or "source_extension_provisional"
+        not in bounded["provisional_observable"]
+    ):
+        raise InternalMoveValidationError(
+            "bounded state metadata must preserve the OQ-016 boundary"
         )
 
     isa = load_isa_database()

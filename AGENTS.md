@@ -237,10 +237,13 @@ attached.
 A generated
 synthesizable class decoder recognizes all 30 original Appendix A format
 classes and fails closed for unshown words; it has exhaustive 24-bit membership
-comparison. A separate exact Type 17 action decoder partitions its 4,096 words
-into 2,256 legal moves and 1,840 reserved/read-only-destination
-subencodings; full cross-store execution remains unimplemented under OQ-016
-and the documented CNTR/count-stack side effect. Source-backed condition,
+comparison. A separate exact Type 17 decoder partitions its 4,096 words into
+2,256 legal moves and 1,840 reserved/read-only-destination subencodings. A
+bounded Type 17 state slice now connects both computational banks, both DAG
+register files, status/control, PX, CNTR/count-stack, and SSTAT with
+cycle-start read/cycle-end write ordering. Its narrow status-source
+zero-extension is visibly PROVISIONAL under OQ-016; fetch, interrupts, PC, and
+bus phases remain unintegrated. Source-backed condition,
 standard ALU, fractional MAC, all-function shifter, DAG arithmetic, and
 sequencer-flow combinational blocks exist with independent model comparison,
 and a stateful two-bank storage slice exists for the complete computational
@@ -268,7 +271,7 @@ incomplete. The executable
 instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP in its top-level step
-method. Independent bounded models cover Type 17 action selection and
+method. Independent bounded models cover Type 17 action/state selection and
 Type 18, Type 21, Type 25, and Type 26 state/action behavior outside that
 top-level step path; all other opcodes still fail closed. Architectural
 documents marked partial or provisional remain research inputs until their

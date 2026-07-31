@@ -69,6 +69,13 @@ change BR, OL, or AS. It does not yet connect a same-instruction
 computational-register access or interrupt recognition, so OQ-015 and full
 multifunction legality remain unchanged.
 
+`adsp2100_internal_move_slice` also composes general Type 17 access with this
+bank boundary. Source and bank selection come from cycle-start MSTAT; a MOVE
+to MSTAT changes the selected bank only after its source has been read. The
+slice covers all legal computational-register source/destination pairs and
+retains the MR1-to-MR2 side effect. Its 59,430-cycle comparison initializes
+both banks independently and checks the complete register cross-product.
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -94,6 +101,10 @@ therefore remains `IMPLEMENTING`.
   banks, traverses all 16 MSTAT values, and checks that selection changes only
   after the writing cycle. The exact Type 18 slice adds 58,248 cycles,
   including every one of the 4,096 opcode/initial-MSTAT transforms.
+- `make register-tests` adds seven directed Type 17 state tests, executes all
+  2,256 legal pairs with each bank selected, and compares 59,430 deterministic
+  stateful cycles with RTL. Narrow status reads remain labeled provisional
+  under OQ-016.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.
