@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `d578765`
+**Latest verified engineering commit:** `51db567`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -58,6 +58,10 @@ cycle-, or Hard Drivin'-complete
   hand-derived fixtures, all 16 assembler/disassembler forms, exhaustive
   decode, state-7/state-8 TRAP assertion, PC+1 observation, state-8 hold, and
   the recognized-HALT clear/release handshake;
+- source-closed Type 24 DIVS initialization semantics, two hand-derived
+  fixtures, all 16 AY1/AF-by-ALU-X assembler/disassembler forms, exhaustive
+  32-word class partitioning, cycle-start selected-bank operand reads, and
+  atomic cycle-end AF/AY0/AQ writeback with non-AQ ASTAT preservation;
 - bounded canonical Type 14 shifter-plus-internal-MOVE semantics, two manual
   fixtures, all 25,648 algebraic forms, exhaustive four-way class
   partitioning, cycle-start selected-bank operand reads, atomic cycle-end
@@ -132,8 +136,8 @@ cycle-, or Hard Drivin'-complete
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
 - partial NOP, Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15,
-  Type 16, Type 17, Type 18, Type 19, Type 20, Type 21, Type 22, and Type 25
-  assembler/disassembler round trip;
+  Type 16, Type 17, Type 18, Type 19, Type 20, Type 21, Type 22, Type 24, and
+  Type 25 assembler/disassembler round trip;
 - dependency-free regression, Verilator package lint, and CI workflow.
 
 No TASKS.md milestone is marked complete yet. The foundation is under
@@ -143,7 +147,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 381 implemented Python unit checks plus manifest/hash verification;
+- 394 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -186,6 +190,11 @@ outstanding.
   model/RTL clocks cover every condition, false/taken flow, held state 7,
   state-8 halt, PC+1 observation, recognized-HALT acknowledgment/release,
   reset, invalid phase/state, and conflicts;
+- all 32 field-defined Type 24 words partition in Python and exhaustive RTL
+  into 16 source-closed AY1/AF actions and 16 unsupported AY0/zero YOP words;
+  50,109 model/RTL cycles cover both banks, every legal operand combination,
+  atomic AF/AY0/AQ writeback, non-AQ ASTAT preservation, reset unknowns,
+  unsupported words, invalid state, and conflicts;
 - all 65,536 Type 14 class words partition into exactly 25,648 canonical
   supported actions, 32,768 unverified bit-15 words, 4,096 unavailable-XOP
   words, and 3,024 same-destination conflicts in Python and exhaustive RTL;
@@ -222,7 +231,8 @@ outstanding.
   50,204; the Type 8 state slice adds 983,386, the Type 9 state slice adds
   283,996, the Type 10 state slice adds 554,412, the Type 11 state slice adds
   554,309, the Type 19 state slice adds 50,259, the Type 20 slice adds 50,254,
-  the phase-aware Type 22 slice adds 50,168 clocks,
+  the phase-aware Type 22 slice adds 50,168 clocks, the Type 24 slice adds
+  50,109 cycles,
   and the Type 14 state slice adds
   82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
@@ -277,14 +287,19 @@ outstanding.
   +0.069 ns worst multicorner hold, 80.59 MHz worst slow-corner Fmax, and no
   unconstrained clocks, ports, or paths against its 20 ns standalone
   constraint;
+- the Type 24 slice fits in 351 ALMs and 381 fitted registers (372 design plus
+  nine routing duplicates) with no RAM or DSP blocks, +8.448 ns setup,
+  +0.168 ns worst multicorner hold, 86.81 MHz worst slow-corner Fmax, and no
+  unconstrained clocks, ports, or paths against its 20 ns standalone
+  constraint;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
-  Type 15, Type 16, Type 19, Type 20, and phase-aware Type 22
-  decode/execution (35 total) pass
+  Type 15, Type 16, Type 19, Type 20, phase-aware Type 22, and Type 24
+  decode/execution (36 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -296,8 +311,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Close original Type 24 DIVS initialization before composing Type 23 DIVQ
-   iteration and the shared quotient/status state boundary.
+3. Close original Type 23 DIVQ iteration and compose the verified DIVS/DIVQ
+   quotient/status sequence boundary.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT and
    status-stack boundary without inventing arbitration priorities.
