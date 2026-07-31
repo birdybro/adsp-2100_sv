@@ -285,6 +285,29 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement("JUMP (I3);")
 
+    def test_all_conditional_return_forms_round_trip(self) -> None:
+        count = 0
+        for interrupt_return in (False, True):
+            operation = "RTI" if interrupt_return else "RTS"
+            for condition, mnemonic in enumerate(EXPECTED_IF_MNEMONICS):
+                prefix = "" if condition == 15 else f"IF {mnemonic} "
+                statement = f"{prefix}{operation};"
+                opcode = (
+                    0x0A0000 | (int(interrupt_return) << 4) | condition
+                )
+                assembled = assemble_statement(statement)
+                self.assertEqual(assembled.value, opcode)
+                decoded = disassemble_word(opcode)
+                self.assertTrue(decoded.implemented)
+                self.assertEqual(
+                    decoded.classification,
+                    "TYPE_20_BOUNDED_EXECUTION",
+                )
+                self.assertEqual(decoded.text, statement)
+                self.assertEqual(assemble_statement(decoded.text), assembled)
+                count += 1
+        self.assertEqual(count, 32)
+
     def test_all_type_11_do_until_forms_round_trip(self) -> None:
         count = 0
         for address in range(1 << 14):

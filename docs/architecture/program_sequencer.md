@@ -1,7 +1,7 @@
 # Program sequencer
 
-**Status: source-backed next-PC, CNTR, stack storage, and bounded Type 10/11/19
-PC-state integration; whole-core timing incomplete**
+**Status: source-backed next-PC, CNTR, stack storage, and bounded Type
+10/11/19/20 PC-state integration; whole-core timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
 incrementer normally provides the next address [ADI-UM-1989, printed p. 4-3].
@@ -125,3 +125,17 @@ cycles pass [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4, 4-20, 6-13–6-14,
 A-3, A-6]. The PMA observation proves next-address intent only; fetch strobes,
 cache behavior, wait extension, active-loop arbitration, interrupts, and
 eight-state pin timing remain unconnected.
+
+The bounded Type 20 slice closes the original conditional-return format. It
+samples COND, the PC-stack top, and, for RTI, the status-stack top at cycle
+start. A false condition commits PC+1 and no stack action. A true RTS pops PC;
+a true RTI atomically pops PC and status and restores ASTAT/MSTAT/IMASK. Return
+`NOT CE` reads CNTR only as a predicate and requests no test, decrement, count
+pop, or restore. Missing condition state or required taken-return context is
+action-free and explicitly reported; this applies the OQ-013 fail-closed
+boundary without claiming real empty-pop behavior. Exhaustive 24-bit decode,
+two hand-derived fixtures, twelve model tests, and 50,254 model/RTL cycles pass
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10, 6-14 Table 6.8,
+A-4, A-6]. Active-loop precedence is already proved in the generic sequencer
+flow block but is not yet physically unified with this decoder-connected
+slice. Interrupt entry/vectoring, fetch, waits, and bus phases remain open.

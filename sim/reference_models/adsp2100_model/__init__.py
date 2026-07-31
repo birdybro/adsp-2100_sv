@@ -126,6 +126,16 @@ from .indirect_jump import (
     decode_indirect_jump,
     is_indirect_jump_class,
 )
+from .conditional_return import (
+    CONDITIONAL_RETURN_CLASS_MASK,
+    CONDITIONAL_RETURN_CLASS_VALUE,
+    ConditionalReturnAction,
+    ConditionalReturnCycleResult,
+    ConditionalReturnState,
+    apply_conditional_return_cycle,
+    decode_conditional_return,
+    is_conditional_return_class,
+)
 from .load_dreg_immediate import (
     LOAD_DREG_IMMEDIATE_MASK,
     LOAD_DREG_IMMEDIATE_VALUE,
@@ -433,6 +443,14 @@ __all__ = [
     "reverse_address",
     "is_immediate_shift_class",
     "is_indirect_jump_class",
+    "CONDITIONAL_RETURN_CLASS_MASK",
+    "CONDITIONAL_RETURN_CLASS_VALUE",
+    "ConditionalReturnAction",
+    "ConditionalReturnCycleResult",
+    "ConditionalReturnState",
+    "apply_conditional_return_cycle",
+    "decode_conditional_return",
+    "is_conditional_return_class",
     "is_shift_move_class",
     "read_dreg",
     "read_internal_move_register",

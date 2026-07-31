@@ -233,7 +233,8 @@ shifter-plus-DREG words, all 1,792 source-backed Type 16 conditional shifter
 words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
 conditional ALU/MAC words, 507,904 source-closed Type 10 direct JUMP/CALL
 words, all 262,144 Type 11 DO UNTIL setup words, 124 source-closed Type 19
-DAG2-indirect JUMP/CALL words, and all Type 26 stack-control actions,
+DAG2-indirect JUMP/CALL words, all 32 Type 20 conditional RTS/RTI words, and
+all Type 26 stack-control actions,
 but they do not establish
 whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
 excludes later timer, GO, and multiplier-placement fields and exhaustively
@@ -304,7 +305,11 @@ including PC+1/descriptor pushes and source-backed nesting legality, while
 holding DO-on-active-terminal under OQ-018. A bounded Type 19 slice connects
 I4-I7 targets, conditional PC flow, taken CALL return stacking, JUMP NOT CE
 transitions, and a PMA-drive observation; four CALL NOT CE words remain
-OQ-012 and active-loop/fetch/bus phases remain outside the slice. No whole-core PC/fetch path,
+OQ-012 and active-loop/fetch/bus phases remain outside the slice. A bounded
+Type 20 slice connects conditional RTS/RTI to PC/status stacks and exact live
+status restoration; it fails closed for missing taken-return context under
+OQ-013 and does not integrate interrupt entry, active loops, fetch, or bus
+phases. No whole-core PC/fetch path,
 integrated multi-class semantic
 decode, interrupt recognition, or phase-level sequencer timing exists.
 Multifunction legality, ordering, and whole-core cycle integration remain
@@ -314,7 +319,7 @@ exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP in its top-level step
 method. Independent bounded models cover Type 17 action/state selection and
 Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 18,
-Type 19, Type 21,
+Type 19, Type 20, Type 21,
 Type 25, and
 Type 26 state/action behavior outside that
 top-level step path; all other opcodes still fail closed. Architectural

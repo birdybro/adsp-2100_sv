@@ -1,7 +1,7 @@
 # Loops and stacks
 
-**Status: original depths and storage implemented; bounded automatic
-sequencer and manual Type 26 connectivity verified**
+**Status: original depths and storage implemented; bounded automatic,
+Type 20 return, and manual Type 26 connectivity verified**
 
 The original has four stack classes reported by SSTAT: PC, count, status, and
 loop [ADI-UM-1989, printed p. 4-22]. Depths are 16 for the 14-bit PC stack,
@@ -107,3 +107,13 @@ stack contract. The associated PC-stack push remains an independent hardware
 action. The exact full-chip recovery behavior after deliberately overflowing
 only one of the two stacks is not claimed [ADI-UM-1989, printed pp. 4-5–4-8,
 4-22, A-2, A-10].
+
+The bounded Type 20 slice connects RTS to the cycle-start PC-stack top and RTI
+to both PC- and status-stack tops. A false condition pops neither stack. A
+taken RTS pops only PC; a taken RTI pops both in the same instruction boundary
+and restores ASTAT/MSTAT/IMASK from the status word. If a taken return lacks a
+required top, the slice requests no pop and reports OQ-013 context failure.
+This verifies valid-stack connectivity and prevents a sentinel value from
+becoming architectural behavior; it does not resolve what physical hardware
+does for an intentionally empty pop [ADI-UM-1989, printed pp. 4-3–4-4,
+4-9–4-10, 4-22, 6-14 Table 6.8].

@@ -394,6 +394,18 @@ def _assemble_indirect_jump(statement: str) -> int | None:
     return 0x0B0000 | (i_local << 6) | (int(call) << 4) | condition
 
 
+def _assemble_conditional_return(statement: str) -> int | None:
+    """Assemble an original Type 20 conditional RTS or RTI."""
+
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+    if body not in ("RTS", "RTI"):
+        return None
+    return 0x0A0000 | (int(body == "RTI") << 4) | condition
+
+
 def _assemble_do_until(statement: str) -> int | None:
     """Assemble an original Type 11 hardware-loop setup instruction."""
 
@@ -599,6 +611,9 @@ def assemble_statement(source: str) -> AssembledWord:
     indirect_jump = _assemble_indirect_jump(statement)
     if indirect_jump is not None:
         return AssembledWord(indirect_jump)
+    conditional_return = _assemble_conditional_return(statement)
+    if conditional_return is not None:
+        return AssembledWord(conditional_return)
     do_until = _assemble_do_until(statement)
     if do_until is not None:
         return AssembledWord(do_until)

@@ -117,6 +117,13 @@ semantic versioning after its first release.
   hand-derived fixtures, deterministic differential vectors, a formal recipe,
   and a constrained Cyclone V synthesis project. Four CALL NOT CE words remain
   OQ-012, and bit-5-one words remain reserved under SC-007.
+- A class-complete original Type 20 conditional RTS/RTI semantic entry
+  covering all 32 words; an independent exact-width PC/status/CNTR/stack
+  model, exact decoder, portable stateful RTL slice, complete assembler/
+  disassembler support, two hand-derived fixtures, deterministic differential
+  vectors, a bounded formal recipe, and a constrained Cyclone V synthesis
+  project. Missing taken-return stack context remains fail-closed under
+  OQ-013.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -476,6 +483,20 @@ semantic versioning after its first release.
   standalone constraint: 353 ALMs, 400 fitted registers, no RAM/DSP blocks,
   +7.520 ns worst setup and +0.045 ns worst multicorner hold slack, 80.93 MHz
   worst slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+- Type 20 Python and RTL decoders accept exactly all 32 conditional RTS/RTI
+  words. Twelve directed model checks, all assembler/disassembler forms, two
+  hand-derived fixtures, exhaustive 24-bit RTL decode, and 50,254 stateful
+  model/RTL cycles cover false/taken flow, valid PC/status pops, atomic RTI
+  status restoration, return NOT CE counter preservation, reset, invalid
+  context, and conflicts.
+- Quartus full compilation passes for the bounded Type 20 slice at its 20 ns
+  standalone constraint: 318 ALMs, 417 fitted registers, no RAM/DSP blocks,
+  +7.725 ns worst setup and +0.136 ns worst multicorner hold slack, 81.47 MHz
+  worst slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+- The expanded `make test` passes 368 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint,
+  sixteen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all 50,254 bounded Type 20 execution cycles.
 - The expanded `make test` passes 355 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   fifteen exhaustive 24-bit decode traversals, and every existing model/RTL
@@ -590,6 +611,12 @@ semantic versioning after its first release.
   stacking, authentic PC reset, and JUMP NOT CE counter transitions. CALL NOT
   CE remains explicitly fail-closed under OQ-012, and active-loop/fetch/
   interrupt/bus timing remains outside the bounded slice.
+- Closed original Type 20 field placement and bounded action semantics: false
+  returns advance PC+1 without stack actions, taken RTS pops PC, taken RTI
+  simultaneously pops PC/status and restores ASTAT/MSTAT/IMASK, and return
+  NOT CE never mutates CNTR/count-stack state. Physical empty-pop effects,
+  active-loop attachment, interrupt entry/vectoring, fetch, and bus timing
+  remain explicit gaps.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and
@@ -665,7 +692,7 @@ semantic versioning after its first release.
   execution are verified, but fetch/PC, automatic-flow, interrupt/RTI, and bus
   integration are not connected.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,
-  PC-register/decode-level sequencer connectivity, status-stack interrupt/RTI
+  integrated multi-class PC/fetch connectivity, status-stack interrupt-entry
   arbitration, architectural SSTAT reads, narrow status reads, and
   interrupt recognition/cycle integration are not implemented. Sequencer and
   MSTAT consumer wiring exists only in bounded integration slices, not a

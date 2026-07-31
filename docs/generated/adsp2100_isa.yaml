@@ -23,7 +23,8 @@
     "docs/generated/adsp2100_mode_control_slice.yaml",
     "docs/generated/adsp2100_modify_address_slice.yaml",
     "docs/generated/adsp2100_do_until_slice.yaml",
-    "docs/generated/adsp2100_indirect_jump_slice.yaml"
+    "docs/generated/adsp2100_indirect_jump_slice.yaml",
+    "docs/generated/adsp2100_conditional_return_slice.yaml"
   ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
@@ -706,6 +707,118 @@
         "OQ-012 excludes conditional CALL with NOT CE until original-device CNTR effects are independently closed.",
         "SC-007 records that MAME accepts original fixed bit 5; the clean-room decoder follows the primary diagram.",
         "Active-loop terminal precedence, interrupt abort, external fetch/cache waits, and eight-state PMA timing remain outside this slice."
+      ]
+    },
+    {
+      "id": "CONDITIONAL-RETURN-TYPE-20",
+      "mnemonic": "CONDITIONAL RTS/RTI",
+      "algebraic_assembly_syntax": "[IF condition] {RTS | RTI};",
+      "encoding_pattern": "0000101000000000000xxxxx",
+      "opcode_mask": "0xffffe0",
+      "opcode_value": "0x0a0000",
+      "fields": ["T", "COND"],
+      "condition_field": "COND",
+      "computation_field": null,
+      "source_register_selections": [
+        "CYCLE_START_ASTAT_OR_CNTR_FOR_CONDITION",
+        "CYCLE_START_PC_STACK_TOP_WHEN_TAKEN",
+        "CYCLE_START_STATUS_STACK_TOP_WHEN_TAKEN_RTI"
+      ],
+      "destination_register_selections": [
+        "PC",
+        "TAKEN_RTS_OR_RTI_PC_STACK_POP",
+        "TAKEN_RTI_STATUS_STACK_POP",
+        "TAKEN_RTI_ASTAT_MSTAT_IMASK_RESTORE"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": "PC_STACK_RETURN_ADDRESS",
+      "immediate_fields": [],
+      "branch_fields": ["T", "COND"],
+      "registers_read": [
+        "COND_SELECTED_ASTAT_OR_CNTR",
+        "PC_STACK_TOP_WHEN_TAKEN",
+        "STATUS_STACK_TOP_WHEN_TAKEN_RTI"
+      ],
+      "registers_written": [
+        "PC",
+        "PC_STACK_POINTER_WHEN_TAKEN",
+        "STATUS_STACK_POINTER_WHEN_TAKEN_RTI",
+        "ASTAT_MSTAT_IMASK_WHEN_TAKEN_RTI"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": ["COND_SELECTED_ASTAT_BITS_OR_NOT_CE"],
+      "status_flags_written": ["RTI_RESTORES_STACKED_ASTAT_MSTAT_IMASK"],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "A taken return selects the cycle-start PC-stack top as the next instruction address; a false return selects PC+1. No PM data read or write occurs.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "CONDITION_EVALUATION_AND_NEXT_PC_SELECTION",
+        "TAKEN_RTS_OR_RTI_PC_STACK_POP",
+        "TAKEN_RTI_STATUS_STACK_POP_AND_STATUS_RESTORE"
+      ],
+      "legal_multifunction_combinations": [
+        "This is a program-flow instruction, not a computational or data-move multifunction packet."
+      ],
+      "illegal_or_reserved_combinations": [],
+      "old_value_new_value_semantics": "COND, CNTR, PC-stack top, and status-stack top use cycle-start state. A taken RTS pops PC into PC. A taken RTI simultaneously pops PC and restores ASTAT, MSTAT, and IMASK from the status stack. A false return loads PC+1 and changes neither stack. Return NOT CE never decrements CNTR or pops the count stack.",
+      "write_conflict_rules": "A taken RTS requires one valid PC-stack entry. A taken RTI requires valid PC- and status-stack entries and commits both pops plus status restoration atomically. Missing required context fails closed under OQ-013.",
+      "condition_false_behavior": "PC advances to PC+1. PC, status, and count stacks and all status registers are preserved; no valid stack context is required.",
+      "loop_interaction": "The source-backed explicit-transfer precedence rule exists in the separate sequencer model, but active hardware-loop state is not connected in this Type 20 slice.",
+      "interrupt_interaction": "RTI restores stacked ASTAT/MSTAT/IMASK. Interrupt recognition, instruction abort, entry latency, and simultaneous recognition-versus-RTI arbitration remain outside this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "Taken and false conditional return forms occupy one processor cycle; following-fetch wait behavior remains outside this boundary."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "NEXT_INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "TAKEN_PC_STACK_TOP_OR_FALSE_SEQUENTIAL_PC"
+        }
+      ],
+      "wait_state_sensitivity": "No PM-data or DM transaction occurs. The following instruction fetch and physical PMA/PMS phases are not yet attached.",
+      "parallel_actions": [
+        {
+          "action": "CONDITION_AND_NEXT_PC",
+          "reads": ["ASTAT_OR_CNTR", "PC_STACK_TOP"],
+          "writes": ["PC", "PC_STACK_POINTER_WHEN_TAKEN"]
+        },
+        {
+          "action": "TAKEN_RTI_STATUS_RESTORE",
+          "reads": ["STATUS_STACK_TOP"],
+          "writes": [
+            "STATUS_STACK_POINTER",
+            "ASTAT",
+            "MSTAT",
+            "IMASK"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-3–4-4: PC-stack next-address source and return NOT CE without counter decrement"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. 4-7: taken explicit return precedence at an active loop terminal"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-9–4-10: RTI simultaneously pops PC and status stacks and restores ASTAT/MSTAT/IMASK"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. 6-14 and pp. A-4, A-8: conditional RTS/RTI syntax and T/COND encodings"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-013: taken empty-stack effects are undocumented and fail closed.",
+        "Active-loop terminal arbitration and interrupt recognition/abort are not connected in this slice.",
+        "External fetch/cache waits and eight-state logical PM timing remain outside this slice."
       ]
     },
     {

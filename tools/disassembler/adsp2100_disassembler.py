@@ -291,6 +291,21 @@ def _try_disassemble_indirect_jump(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_conditional_return(opcode: int) -> Disassembly | None:
+    if opcode & 0xFFFFE0 != 0x0A0000:
+        return None
+    interrupt_return = bool((opcode >> 4) & 1)
+    condition = opcode & 0xF
+    prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
+    operation = "RTI" if interrupt_return else "RTS"
+    return Disassembly(
+        opcode=opcode,
+        text=f"{prefix}{operation};",
+        classification="TYPE_20_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_do_until(opcode: int) -> Disassembly | None:
     if opcode & 0xFC0000 != 0x140000:
         return None
@@ -410,6 +425,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     indirect_jump = _try_disassemble_indirect_jump(opcode)
     if indirect_jump is not None:
         return indirect_jump
+    conditional_return = _try_disassemble_conditional_return(opcode)
+    if conditional_return is not None:
+        return conditional_return
     do_until = _try_disassemble_do_until(opcode)
     if do_until is not None:
         return do_until

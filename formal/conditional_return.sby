@@ -1,0 +1,27 @@
+[options]
+mode prove
+depth 2
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_condition_logic.sv
+read -formal -sv rtl/core/adsp2100_conditional_return_decode.sv
+read -formal -sv rtl/core/adsp2100_counter.sv
+read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
+read -formal -sv rtl/core/adsp2100_status_stack.sv
+read -formal -sv rtl/core/adsp2100_status_registers.sv
+read -formal -sv rtl/core/adsp2100_conditional_return_slice.sv
+read -formal -sv formal/harnesses/adsp2100_conditional_return_formal.sv
+prep -top adsp2100_conditional_return_formal
+
+[files]
+rtl/core/adsp2100_condition_logic.sv
+rtl/core/adsp2100_conditional_return_decode.sv
+rtl/core/adsp2100_counter.sv
+rtl/core/adsp2100_sequencer_stacks.sv
+rtl/core/adsp2100_status_stack.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_conditional_return_slice.sv
+formal/harnesses/adsp2100_conditional_return_formal.sv

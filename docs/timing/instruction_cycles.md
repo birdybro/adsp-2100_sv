@@ -17,6 +17,7 @@ Known cases:
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
 | Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
 | Type 19 indirect JUMP/CALL | one processor cycle for true or false supported conditions; a taken transfer makes DAG2 supply PMA/PC from I4-I7 without modifying I; no PM-data or DM data transfer |
+| Type 20 conditional RTS/RTI | one processor cycle whether true or false; a taken RTS pops PC, a taken RTI pops PC/status and restores status atomically; return NOT CE never post-decrements CNTR; no PM-data or DM data transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -123,6 +124,16 @@ instruction-boundary evidence: the subsequent instruction fetch, cache,
 active-loop arbitration, interrupt recognition, wait extension, and logical
 PMA/PMS phases remain open [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4,
 4-20, 6-13–6-14, A-3, A-6].
+
+The bounded Type 20 model/RTL slice verifies cycle-start condition, PC, CNTR,
+PC-stack, and status-stack sampling followed by one cycle-end state commit.
+All 32 words decode, and 50,254 stateful cycles verify false PC+1 flow, taken
+RTS PC pop, taken RTI simultaneous PC/status pops and status restore, and
+non-mutating return `NOT CE`. Missing taken-return context fails closed under
+OQ-013. This establishes one instruction boundary, not active-loop
+arbitration, interrupt entry/vector timing, redirected fetch, waits, or
+logical bus phases [ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10,
+6-14 Table 6.8, A-4, A-6].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

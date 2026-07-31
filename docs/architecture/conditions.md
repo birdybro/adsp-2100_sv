@@ -2,7 +2,7 @@
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer,
 Type 9 ALU/MAC, Type 10 direct-flow, Type 11 loop setup, Type 16 shifter, and
-Type 19 indirect-flow integrations pass**
+Type 19 indirect-flow, and Type 20 return integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -86,6 +86,16 @@ selected I value and otherwise fails closed. JUMP NOT CE post-updates CNTR;
 the four CALL NOT CE forms remain OQ-012. This distinction is covered in both
 directed tests and the 50,259-cycle model/RTL comparison
 [ADI-UM-1989, printed pp. 4-3–4-5, 4-20, 4-25, 6-13–6-14, A-3, A-6].
+
+The Type 20 conditional-return slice samples the same IF predicates at cycle
+start. False RTS and RTI advance PC+1 without requiring stack context. A true
+predicate requires a valid PC-stack top and RTI additionally requires a valid
+status-stack top; missing context fails closed under OQ-013. Return `NOT CE`
+samples a valid CNTR value but, unlike JUMP, never post-decrements CNTR or
+touches the count stack. All sixteen conditions and both return kinds are
+covered across the 50,254-cycle model/RTL comparison
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-9–4-10, 4-25, 6-14 Table 6.8,
+A-4, A-6].
 
 The Type 11 decoder accepts every inverse-sense DO termination field. Setup
 stores TERM without evaluating ASTAT or CNTR; `CE` therefore needs a valid

@@ -39,6 +39,24 @@
       "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
     },
     {
+      "id": "HAND-IF-EQ-RTS-0A0000",
+      "source": "IF EQ RTS;",
+      "opcode": "0x0a0000",
+      "program_word_bytes_big_endian": "0a0000",
+      "encoding_class": 20,
+      "source_citation": "ADI-UM-1989 printed pp. 4-3–4-4, 6-14, A-4, and A-8",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-UNCONDITIONAL-RTI-0A001F",
+      "source": "RTI;",
+      "opcode": "0x0a001f",
+      "program_word_bytes_big_endian": "0a001f",
+      "encoding_class": 20,
+      "source_citation": "ADI-UM-1989 printed pp. 4-9–4-10, 6-14, A-4, and A-8",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-DO-0123-UNTIL-CE-14123E",
       "source": "DO 0x0123 UNTIL CE;",
       "opcode": "0x14123e",

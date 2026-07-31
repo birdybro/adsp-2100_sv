@@ -26,6 +26,7 @@ immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
 DO UNTIL setup words, 124 source-closed Type 19 DAG2-indirect JUMP/CALL words,
+all 32 Type 20 conditional RTS/RTI words,
 parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
@@ -131,6 +132,24 @@ CALL stacking, CNTR transitions, overflow, reset, and conflicts
 [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4, 4-20, 6-13–6-14, A-3,
 A-6]. Active-loop arbitration, the following instruction fetch, interrupts,
 waits, and PMA pin phases remain outside the bounded slice.
+
+Type 20 encodes fixed prefix `0000101000000000000`, T `[4]`, and COND
+`[3:0]`; T selects RTS when zero and RTI when one. All 32 field combinations
+are documented. Both forms sample the predicate and stack tops at cycle start.
+A false predicate advances to wrapped PC+1 without touching either stack. A
+taken RTS loads PC from and pops the PC stack. A taken RTI performs that same
+PC action while simultaneously popping the 16-bit status stack and restoring
+ASTAT, MSTAT, and IMASK. Unlike conditional JUMP, `NOT CE` on a return only
+tests cycle-start CNTR and never decrements it or pops the count stack. A taken
+return with missing required stack context fails closed under OQ-013 rather
+than inventing empty-pop behavior. Two hand-derived fixtures, all 32 assembler/
+disassembler forms, exhaustive 24-bit RTL decode, twelve directed tests, and
+50,254 model/RTL cycles cover false/taken flow, RTS/RTI stack differences,
+atomic status restoration, NOT CE preservation, reset, and conflicts
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10, 6-14 Table 6.8,
+A-4, A-6]. Active-loop arbitration, interrupt recognition/vectoring, the
+following instruction fetch, waits, and external bus phases remain outside
+the bounded slice.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight

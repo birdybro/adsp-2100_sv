@@ -271,6 +271,13 @@ advance beyond research until a page-level primary citation is added.
   OQ-012. Two hand-derived fixtures, every supported syntax form, exhaustive
   24-bit RTL decode, and 50,259 stateful cycles pass. Bit-5-one words remain
   reserved under SC-007; active-loop/fetch/interrupt/bus phases remain open.
+  Type 20 is class-complete: all 32 conditional RTS/RTI words decode and
+  execute. Two hand-derived fixtures, every syntax form, exhaustive 24-bit
+  RTL decode, twelve model tests, and 50,254 stateful cycles cover false/taken
+  flow, valid PC/status pops, atomic RTI status restore, and non-mutating
+  return NOT CE. Missing taken-return context remains an explicit OQ-013
+  fail-closed boundary; active-loop/fetch/interrupt-entry/bus phases remain
+  open.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -372,6 +379,11 @@ advance beyond research until a page-level primary citation is added.
   A separate Type 19 model adds exact I4-I7 reset-validity state, reads a
   selected target only for taken flow, preserves I without modification,
   exposes PMA drive intent, and composes PC/CNTR/PC-stack/count-stack updates.
+  A separate Type 20 model composes exact PC, status, CNTR, PC/count/status
+  stack state; implements false PC+1, taken RTS PC pop, and taken RTI atomic
+  PC/status pop plus ASTAT/MSTAT/IMASK restore; and samples return NOT CE
+  without any counter transition. Missing taken-return context fails closed
+  under OQ-013.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -421,6 +433,8 @@ advance beyond research until a page-level primary citation is added.
   Type 19 round trips all 124 supported I4-I7 indirect JUMP/CALL forms and
   includes two independent hand-derived fixtures; bit-5-one and four CALL NOT
   CE words remain visibly fail-closed.
+  Type 20 round trips all 32 `[IF condition] RTS/RTI;` forms and includes two
+  independent hand-derived fixtures.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -582,11 +596,12 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
   `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
   `tests/test_direct_jump.py`, `tests/test_do_until.py`,
-  `tests/test_indirect_jump.py`,
+  `tests/test_indirect_jump.py`, `tests/test_conditional_return.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
   `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`,
-  `formal/direct_jump.sby`, `formal/do_until.sby`, `formal/indirect_jump.sby`
+  `formal/direct_jump.sby`, `formal/do_until.sby`, `formal/indirect_jump.sby`,
+  `formal/conditional_return.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -624,10 +639,16 @@ advance beyond research until a page-level primary citation is added.
   24-bit RTL decode, and 50,259 stateful cycles cover all 124 supported words;
   four CALL NOT CE words fail closed under OQ-012 and bit-5-one remains
   reserved under SC-007.
+  A bounded Type 20 instruction slice connects exact decode to conditional
+  PC-stack returns and RTI's simultaneous PC/status pops plus live status
+  restore. Twelve model tests, exhaustive 24-bit RTL decode, and 50,254
+  stateful cycles cover all 32 words, including return NOT CE without counter
+  mutation and OQ-013 missing-context rejection.
 - **Unresolved questions:** whole-core PC/fetch integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
-  (OQ-018), interrupts, delayed transfers, cache interaction, empty-pop
-  effects (OQ-013), pipeline visibility, and logical bus phases.
+  (OQ-018), interrupt recognition/entry, delayed transfers, cache interaction,
+  physical empty-pop effects (OQ-013), pipeline visibility, and logical bus
+  phases.
 - **Confidence:** CORROBORATED
 
 ## M16 — Register files and alternate register bank
@@ -842,7 +863,7 @@ advance beyond research until a page-level primary citation is added.
 
 ### RTL-IRQ-001 — Interrupt recognition, priority, entry, and return
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** RTL-SEQ-001, RTL-STATUS-001, TIME-001
 - **Acceptance criteria:** original pins/vectors, recognition boundary,
@@ -850,8 +871,14 @@ advance beyond research until a page-level primary citation is added.
   return timing pass directed, randomized, bus, and formal tests.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ADI-UM-1989 interrupt sections
-- **Relevant tests:** `make interrupt-tests`, `formal/interrupt.sby`
+- **Relevant tests:** `make interrupt-tests`, `tests/test_conditional_return.py`,
+  `formal/conditional_return.sby`, `formal/interrupt.sby`
 - **Implementation notes:** exclude later-device interrupt sources and vectors.
+  Status entry snapshot/mask transformation exists. The bounded Type 20 slice
+  now implements the valid-context RTI half: simultaneous PC/status pops and
+  ASTAT/MSTAT/IMASK restoration pass 50,254 model/RTL cycles. Recognition,
+  priority, vectoring, abort, entry-stack connectivity, and full latency do
+  not yet exist.
 - **Unresolved questions:** edge/level sensitivity and reset-release boundary.
 - **Confidence:** UNKNOWN
 
@@ -947,7 +974,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Thirty-three harnesses now pass strict assertion
+  result a complete proof. Thirty-four harnesses now pass strict assertion
   syntax lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
@@ -955,6 +982,7 @@ advance beyond research until a page-level primary citation is added.
   bounded Type 10 direct JUMP/CALL decode and state execution,
   bounded Type 11 DO UNTIL decode and state execution,
   bounded Type 19 indirect JUMP/CALL decode and state execution,
+  class-complete bounded Type 20 conditional RTS/RTI state execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -976,7 +1004,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
   the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type
-  10/11/19, Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
+  10/11/19/20, Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
   46 ALMs and four registers with positive multicorner setup/hold slack and
   zero unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly
   360 architectural DAG data/valid registers, no RAM/DSPs, positive
@@ -1022,6 +1050,10 @@ advance beyond research until a page-level primary citation is added.
   Worst setup is +7.520 ns, worst multicorner hold is +0.045 ns, worst
   slow-corner Fmax is 80.93 MHz, and no clocks, ports, or paths are
   unconstrained.
+  The bounded Type 20 return slice fits in 318 ALMs and 417 fitted registers
+  with no RAM or DSP blocks against a 20 ns standalone constraint. Worst
+  setup is +7.725 ns, worst multicorner hold is +0.136 ns, worst slow-corner
+  Fmax is 81.47 MHz, and no clocks, ports, or paths are unconstrained.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.

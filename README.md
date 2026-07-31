@@ -53,7 +53,8 @@ AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
 words with a decoder-connected PC register, CALL return stacking, and JUMP
 NOT CE counter transitions, all 262,144 Type 11 DO UNTIL setup words with
 simultaneous PC/loop-stack state, 124 source-closed Type 19 DAG2-indirect
-JUMP/CALL words with PMA target observation, all 1,792 source-backed Type 16 conditional
+JUMP/CALL words with PMA target observation, all 32 Type 20 conditional RTS/RTI
+words with valid-stack PC/status restoration, all 1,792 source-backed Type 16 conditional
 LSHIFT/ASHIFT/NORM/EXP/EXPADJ words with selected-bank and status writeback,
 and bounded Type 17 internal-MOVE execution across
 computational, DAG, status/control, PX, CNTR/count-stack, and SSTAT state.

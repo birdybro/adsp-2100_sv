@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "instruction": "CONDITIONAL-RETURN-TYPE-20",
+  "scope": "BOUNDED_RTS_RTI_EXECUTION",
+  "decode": {
+    "mask": "0xffffe0",
+    "value": "0x0a0000",
+    "field_defined_words": 32,
+    "supported_words": 32,
+    "return_type_bit": "opcode[4]: 0=RTS, 1=RTI",
+    "condition_bits": "opcode[3:0]"
+  },
+  "cycle_contract": {
+    "base_cycles": 1,
+    "cycle_start_reads": [
+      "PC",
+      "COND_SELECTED_ASTAT_OR_CNTR",
+      "PC_STACK_TOP_WHEN_TAKEN",
+      "STATUS_STACK_TOP_WHEN_TAKEN_RTI"
+    ],
+    "cycle_end_writes": [
+      "TAKEN_PC_STACK_TOP_OR_FALSE_PC_PLUS_ONE_TO_PC",
+      "TAKEN_RTS_OR_RTI_PC_STACK_POP",
+      "TAKEN_RTI_STATUS_STACK_POP_AND_ASTAT_MSTAT_IMASK_RESTORE"
+    ],
+    "return_not_ce_decrements_counter": false,
+    "pm_data_access": false,
+    "dm_access": false
+  },
+  "legality": {
+    "false_condition_with_empty_stacks": "SUPPORTED_SEQUENTIAL_FLOW",
+    "taken_rts_with_empty_pc_stack": "FAIL_CLOSED_OQ_013",
+    "taken_rti_with_empty_pc_or_status_stack": "FAIL_CLOSED_OQ_013",
+    "active_loop_terminal": "OUTSIDE_BOUNDED_SLICE",
+    "interrupt_recognition_collision": "OUTSIDE_BOUNDED_SLICE"
+  },
+  "verification": {
+    "python_decode_words": 32,
+    "rtl_exhaustive_opcode_space_words": 16777216,
+    "model_rtl_cycles": 50254,
+    "deterministic_seed": "0x210020"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-3–4-4",
+    "ADI-UM-1989 printed pp. 4-7 and 4-9–4-10",
+    "ADI-UM-1989 printed p. 6-14",
+    "ADI-UM-1989 printed pp. A-4 and A-6"
+  ],
+  "confidence": "CORROBORATED"
+}
