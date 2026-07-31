@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_CONDITION_FLOW_CNTR_AND_SEQUENCER_STACK_INTEGRATION",
+  "confidence": "CORROBORATED",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-3-4-7 (PC, CNTR, loop comparator, stacks, conditions, and loop-end precedence)",
+    "ADI-UM-1989 printed pp. 4-12-4-19 (jump, call, and DO UNTIL sequences)",
+    "ADI-UM-1989 printed pp. 4-25 and A-10-A-11 (IF and DO condition fields)"
+  ],
+  "loop_stack_internal_packing": "CONDITION_17_14__END_ADDRESS_13_0",
+  "cycle_boundary": {
+    "condition_and_stack_top_reads": "BEGINNING_OF_PROCESSOR_CYCLE",
+    "state_updates": "END_OF_PROCESSOR_CYCLE",
+    "accepted_updates_are_atomic": true,
+    "reset_clears_validity_pointers_and_overflow_not_array_data": true
+  },
+  "integrated_actions": [
+    "DO_UNTIL_PUSHES_PC_PLUS_ONE_AND_LOOP_DESCRIPTOR",
+    "CONDITIONAL_JUMP_CE_TESTS_AND_UPDATES_CNTR",
+    "CONDITIONAL_RETURN_CE_CHECKS_WITHOUT_CNTR_UPDATE",
+    "LOOP_END_EVALUATES_STORED_DO_CONDITION",
+    "TRUE_LOOP_CE_POPS_PC_LOOP_AND_COUNT_STACKS",
+    "FALSE_LOOP_CE_POST_DECREMENTS_AND_LOOPS_BACK",
+    "NESTED_CNTR_LOAD_PUSH_AND_TRUE_CE_RESTORE"
+  ],
+  "rejected_boundaries": {
+    "CONDITIONAL_CALL_CE": "OQ-012",
+    "EMPTY_STACK_DATA_AND_RESTORE_EFFECTS": "OQ-013",
+    "COMPETING_AUTOMATIC_MANUAL_ACTIONS": "OQ-018",
+    "DO_UNTIL_ON_ACTIVE_OUTER_LOOP_END": "OQ-018"
+  },
+  "not_implemented": [
+    "PC_REGISTER",
+    "INSTRUCTION_DECODE",
+    "INTERRUPT_ENTRY_OR_RETURN",
+    "STATUS_STACK_CONNECTIVITY",
+    "FETCH_CACHE_OR_PIPELINE",
+    "PHASE_LEVEL_OR_BUS_TIMING"
+  ]
+}

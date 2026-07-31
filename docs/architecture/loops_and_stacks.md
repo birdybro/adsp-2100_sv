@@ -1,7 +1,7 @@
 # Loops and stacks
 
-**Status: original depths and all four storage slices implemented;
-sequencer connectivity incomplete**
+**Status: original depths and storage implemented; PC/count/loop bounded
+sequencer connectivity verified**
 
 The original has four stack classes reported by SSTAT: PC, count, status, and
 loop [ADI-UM-1989, printed p. 4-22]. Depths are 16 for the 14-bit PC stack,
@@ -34,7 +34,6 @@ status-stack fragment. The separate CNTR controller now generates a count-stack
 push only when a load replaces a valid count, and generates a pop on true CE
 or manual pop. A true CE test restores a valid stack top or invalidates CNTR
 when the count stack is empty [ADI-UM-1989, printed pp. 4-4–4-5].
-CNTR and stack storage are not yet wired into one integrated sequencer.
 Same-stack simultaneous push/pop is suppressed globally with
 `write_conflict_o`; this is a fail-closed integration safeguard, not a claimed
 real-device illegal-encoding behavior.
@@ -51,8 +50,17 @@ The instruction-boundary flow block implements the sourced precedence rule:
 a taken jump, call, or return on the loop's final instruction performs only its
 explicit flow/PC-stack action and suppresses implicit loop, count-stack, and
 counter-test actions. A false explicit condition allows the normal loop back
-or exit path. The storage arrays exist but are not yet connected to that flow
-block. DO UNTIL setup, CNTR/condition/count-stack connectivity,
-instruction/manual stack controls, interrupt/RTI actions, conditional-CALL CE
-semantics (OQ-012), and every empty-pop architectural side effect remain
-outside the integrated sequencer.
+or exit path.
+
+The bounded sequencer slice connects that flow rule to PC/count/loop storage,
+CNTR, and IF/DO condition evaluation. DO UNTIL setup pushes PC+1 and a loop
+descriptor; loop back reads the current PC-stack top; loop exit atomically
+pops the PC and loop stacks and, for true CE, restores or invalidates CNTR
+while popping the count stack. Nested CE restoration and stack-depth
+transitions match the independent model across 50,011 cycles.
+
+Interrupt/RTI and status-stack actions, instruction decode, and every
+empty-pop architectural side effect remain outside this integration boundary.
+Conditional-CALL CE remains OQ-012. Competing automatic/manual actions and DO
+setup on an active outer loop's final instruction are rejected under OQ-018
+instead of receiving an invented priority.

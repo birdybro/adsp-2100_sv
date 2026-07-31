@@ -5,7 +5,8 @@
 - Verilator 5.048 parses and lints the three packages and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
-  PC/count/loop stack RTL with `-Wall` and no warnings.
+  PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
+  no warnings.
 - Yosys is not installed in this environment.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
@@ -50,6 +51,13 @@
   documented 5 ns registered-source assumption. Across four timing models,
   worst setup is +11.818 ns and worst hold is +0.171 ns against 20 ns, with
   zero unconstrained paths.
+- Quartus full compilation of the bounded sequencer-integration project
+  passes. It uses 388 ALMs, 383 fitted combinational ALUTs, exactly 381 design
+  registers plus fourteen fitter-created routing duplicates, no RAM, and no
+  DSPs. The 381 design registers are exactly the 366 PC/count/loop-stack bits
+  plus the 15 CNTR data/valid bits. Across four timing models, worst setup is
+  +6.776 ns and worst hold is +0.166 ns against 20 ns, with zero unconstrained
+  clocks, ports, or paths.
 - Quartus full compilation of the register-file smoke project passes with the
   DE10-Nano 50 MHz input constrained on `PIN_V11` and 356 virtual data/control
   pins. Analysis identifies exactly 554 design registers; deterministic
@@ -88,11 +96,12 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys is not installed. `make formal` strictly lints the twelve available
+- SymbiYosys is not installed. `make formal` strictly lints the thirteen available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded condition, ALU, MAC, shifter, DAG,
-sequencer-flow, CNTR, sequencer-stack, register-file, status-register, and
-status-stack block smoke projects plus the bounded MSTAT integration project.
+sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
+status-register, and status-stack block smoke projects plus the bounded MSTAT
+integration project.

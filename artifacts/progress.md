@@ -51,6 +51,9 @@ cycle-, or Hard Drivin'-complete
   push requests, cycle-start CE/NOT CE evaluation, false-CE post-decrement,
   true-CE count-stack restore or invalidation, and fail-closed unresolved
   empty-pop behavior;
+- bounded sequencer integration connecting IF/DO condition evaluation,
+  explicit flow, DO setup, CNTR, and PC/count/loop stack storage, with
+  unresolved CALL-CE and competing-action cases held and flagged;
 - bounded cycle-ordered MSTAT integration connecting alternate computational
   bank selection, DAG1 bit reversal, sticky AV, and AR saturation in both the
   independent model and portable RTL;
@@ -67,37 +70,36 @@ outstanding.
 ## Current evidence
 
 - 18 provenance records; 13 locally acquired and hash-verified;
-- 166 implemented Python unit checks plus manifest/hash verification;
+- 180 implemented Python unit checks plus manifest/hash verification;
 - Verilator strict lint passes for shared types, generated class decode,
-  condition RTL, ALU, MAC, shifter, DAG, sequencer-flow/CNTR/sequencer-stack,
-  register-file, status-register/status-stack, and MSTAT-consumer integration
-  RTL;
+  condition RTL, ALU, MAC, shifter, DAG,
+  sequencer-flow/CNTR/sequencer-stack/integration, register-file,
+  status-register/status-stack, and MSTAT-consumer integration RTL;
   all 2,048 condition/flag combinations, 51,472 ALU vectors, 21,760 MAC
   vectors, 644,368 shifter vectors, 204,864 DAG vectors, 636,512
-  sequencer-flow vectors, 50,022 CNTR cycles, 58,307 DREG cycles, and 50,120
-  full-bank/writeback cycles plus 50,287 status/control, 50,037 status-stack,
-  50,062 PC/count/loop stack, and 50,112 MSTAT-consumer integration cycles
-  pass simulation;
+  sequencer-flow vectors, 50,022 CNTR cycles, 50,011 sequencer-integration
+  cycles, 58,307 DREG cycles, and 50,120 full-bank/writeback cycles plus
+  50,287 status/control, 50,037 status-stack, 50,062 PC/count/loop stack, and
+  50,112 MSTAT-consumer integration cycles pass simulation;
 - constrained Quartus Cyclone V condition, ALU, MAC, shifter, DAG,
-  sequencer-flow, CNTR, sequencer-stack, register-file, status-register, and
-  status-stack block compilations plus the MSTAT integration-slice compilation
-  pass with no unconstrained paths;
+  sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
+  status-register, and status-stack block compilations plus the MSTAT
+  integration-slice compilation pass with no unconstrained paths;
 - condition, ALU, MAC, shifter, DAG, sequencer-flow, register-file, and
-  CNTR, sequencer-stack, status-register, status-stack, and MSTAT-integration
-  formal harnesses pass assertion syntax lint, but no formal proof ran because
-  SymbiYosys/Yosys are unavailable;
+  CNTR, sequencer-stack, sequencer-integration, status-register, status-stack,
+  and MSTAT-integration formal harnesses pass assertion syntax lint, but no
+  formal proof ran because SymbiYosys/Yosys are unavailable;
 - no architectural execution RTL, complete assembler, or whole-core synthesis
   top exists.
 
 ## Next highest-priority work
 
-1. Integrate CNTR, IF/DO conditions, count-stack storage, and source-backed
-   sequencer-flow action requests without inventing conditional-CALL CE or
-   empty-pop behavior.
-2. Locate the original Cross-Software/instruction reference and a separately
+1. Locate the original Cross-Software/instruction reference and a separately
    identifiable original data sheet.
-3. Extend the independently cross-checked class masks into field-level and
+2. Extend the independently cross-checked class masks into field-level and
    semantic instruction records.
+3. Add stateful PC/reset/enable integration only after the next-PC update and
+   stall boundaries are source-closed.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Compose the SSTAT fragments and connect status-stack entry/restore only
    after interrupt and RTI sequencing boundaries are source-closed.

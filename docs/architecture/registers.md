@@ -121,9 +121,11 @@ instruction-readable SSTAT path. A separate CNTR model/RTL boundary implements
 its 14-bit value, reset-invalid state, pre-decrement CE predicate,
 post-decrement, valid-load push request, and true-CE count restore
 [ADI-UM-1989, printed pp. 4-4–4-5]. How unused upper DMD bits read for narrow
-general-MOVE sources remains open as OQ-016. Stack action connectivity,
-counter/condition connectivity, interrupt recognition timing, DIVS/DIVQ
-execution, and instruction decode are not part of this increment.
+general-MOVE sources remains open as OQ-016. A bounded sequencer slice connects
+CNTR, IF/DO conditions, and PC/count/loop storage without adding decode or
+PC-register claims. Interrupt/status-stack action connectivity, interrupt
+recognition timing, DIVS/DIVQ execution, and instruction decode are not part
+of this increment.
 
 ## Accessibility
 

@@ -109,6 +109,13 @@ semantic versioning after its first release.
 - Twelve directed/model CNTR tests, a deterministic 50,022-cycle
   model-versus-RTL regression, a bounded formal harness, and a constrained
   Cyclone V synthesis project.
+- Machine-readable sequencer-integration boundaries, an independent composed
+  integration model, and portable RTL connecting IF/DO conditions, explicit
+  flow, DO setup, CNTR, and PC/count/loop stack storage without adding opcode
+  decode or PC-register claims.
+- Fourteen directed/random sequencer-integration tests, a deterministic
+  50,011-cycle model-versus-RTL regression, a bounded formal harness, and a
+  constrained Cyclone V synthesis project.
 
 ### Changed
 
@@ -147,6 +154,11 @@ semantic versioning after its first release.
   independent simultaneous actions, reset, and empty-pop invalidation, plus
   50,022 CNTR cycles covering validity, N-pass CE behavior, decrement, nested
   restore, and empty invalidation.
+- The further expanded `make test` passes 180 Python checks and adds 50,011
+  bounded sequencer-integration cycles covering DO setup, stored inverse-sense
+  termination, exact-N and nested CE loops, JUMP CE decrement/pop, RETURN CE
+  non-decrement, explicit-transfer precedence, and atomic fail-closed
+  collision handling.
 - Quartus 17.0.2 full compilation for Cyclone V `5CSEBA6U23I7` passes for the
   constrained condition block: 10 ALMs, no registers/RAM/DSPs, positive
   setup/hold slack, and zero unconstrained ports or paths.
@@ -194,10 +206,15 @@ semantic versioning after its first release.
   design combinational ALUTs, exactly 15 design registers plus seven
   fitter-created routing duplicates, no RAM/DSPs, +11.818 ns worst setup,
   +0.171 ns worst hold slack, and zero unconstrained ports or paths.
+- Quartus full compilation passes for the bounded sequencer integration slice:
+  388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
+  fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
+  setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
 - `make formal` passes strict assertion syntax lint for the condition, ALU,
   MAC, shifter, DAG, sequencer-flow, register-file, status-register, and
-  status-stack, sequencer-stack, CNTR, and MSTAT-integration harnesses; proof
-  execution remains explicitly skipped without SymbiYosys.
+  status-stack, sequencer-stack, CNTR, sequencer-integration, and
+  MSTAT-integration harnesses; proof execution remains explicitly skipped
+  without SymbiYosys.
 
 ### Documentation
 
@@ -253,13 +270,19 @@ semantic versioning after its first release.
 - Closed PC/count/loop stack storage dimensions and normal accepted-operation
   behavior from the original program-sequencer chapter, and applied the
   original global saturation/newest-loss/sticky-overflow rule to all three.
-  All SSTAT storage sources now exist, while CNTR/stack action connectivity,
-  SSTAT composition, and empty-pop effects remain explicit gaps.
+  All SSTAT storage sources now exist, while SSTAT composition, decode,
+  interrupt/status-stack connectivity, and empty-pop effects remain explicit
+  gaps.
 - Closed CNTR's separate validity state, cycle-start CE-at-one predicate,
   cycle-end post-decrement, valid-load push rule, and true-CE
   restore-or-invalidate behavior from the original program-control chapter.
   Conditional CALL remains OQ-012, empty manual pop remains OQ-013, and the
-  controller is not yet connected to condition or count-stack storage.
+  standalone controller remains independently testable.
+- Connected condition evaluation, DO setup/termination, explicit
+  jump/call/return flow, CNTR, and PC/count/loop storage at a bounded
+  instruction boundary. Conditional CALL CE remains rejected as OQ-012;
+  empty-pop effects remain OQ-013; and newly recorded OQ-018 covers competing
+  automatic/manual sequencer actions and DO setup at an outer loop end.
 
 ### Known Issues
 
@@ -268,11 +291,11 @@ semantic versioning after its first release.
 - No instruction, cycle, bus, interrupt, or Hard Drivin' compatibility claim is
   complete.
 - Register/status instruction-decode connectivity, ICNTL consumer wiring,
-  stack-action connectivity, CNTR condition/count-stack connectivity,
-  SSTAT-fragment composition, narrow status reads, and interrupt
-  recognition/cycle integration are not implemented. MSTAT consumer wiring
-  exists only in a bounded integration slice, not a whole instruction
-  execution core.
+  PC-register/decode-level sequencer connectivity, status-stack interrupt/RTI
+  connectivity, SSTAT-fragment composition, narrow status reads, and
+  interrupt recognition/cycle integration are not implemented. Sequencer and
+  MSTAT consumer wiring exists only in bounded integration slices, not a
+  whole instruction execution core.
 - Open-source synthesis and formal tools are not installed in this environment.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

@@ -150,6 +150,6 @@
     "same-cycle bank-switch visibility at interrupt recognition",
     "instruction-level legality and decode connectivity",
     "empty-pop data and architectural restore side effects (OQ-013)",
-    "instruction, interrupt, CNTR/count-stack, and stack-action connectivity"
+    "instruction, interrupt/status-stack, and SSTAT-composition connectivity"
   ]
 }

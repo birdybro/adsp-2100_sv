@@ -1,7 +1,7 @@
 # Program sequencer
 
-**Status: source-backed next-PC, CNTR, and stack-storage blocks;
-connectivity/timing incomplete**
+**Status: source-backed next-PC, CNTR, stack storage, and bounded integration;
+decode/PC-state/timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
 incrementer normally provides the next address [ADI-UM-1989, printed p. 4-3].
@@ -55,12 +55,23 @@ explicit valid qualifier so reset-invalid or post-empty CNTR state is not
 silently interpreted as a predicate. An empty manual pop is flagged and
 preserves state only as a fail-closed OQ-013 boundary, not as a device claim.
 
-This storage block accepts already-resolved push/pop requests; it does not
-claim that arbitrary same-stack push/pop collisions are architectural. Such a
-collision suppresses all storage changes and raises `write_conflict_o` as a
-fail-closed integration safeguard. Opcode decode, connection of flow,
-DO UNTIL, counter-load, interrupt, return, and manual-pop requests to the
-stacks, CNTR-to-count-stack/condition connectivity, status-stack connectivity,
-cache/fetch overlap, phase enables, reset integration, empty-pop
-architectural effects, and bus-cycle timing remain unimplemented. The
-discovered MAME ordering difference is recorded as SC-012.
+The bounded independent integration model and
+`rtl/core/adsp2100_sequencer_slice.sv` now connect the condition evaluators,
+flow selector, CNTR, and all three sequencer stacks. It pushes PC+1 and the
+loop descriptor for DO UNTIL, evaluates the stored DO condition at loop end,
+couples CE decrement/restore to count-stack storage, derives RETURN targets
+from the PC-stack top, and preserves the documented taken explicit-transfer
+precedence. Fourteen directed/random integration tests and 50,011
+model-versus-RTL stateful cycles pass, including exact-N and nested CE loops,
+conditional JUMP CE updates, and non-decrementing RETURN CE checks.
+
+The slice is not an instruction decoder or complete program sequencer. It
+fails closed for conditional CALL CE (OQ-012), missing required stack/CNTR
+context, DO UNTIL setup on an active outer loop's end instruction, and
+competing automatic/manual actions (OQ-018). Empty manual pop remains OQ-013.
+The internal loop descriptor packs condition in bits 17:14 and end address in
+bits 13:0 solely as an implementation interface; no externally readable
+register layout is claimed. A PC state register, opcode legality, interrupt
+and status-stack connectivity, cache/fetch overlap, phase enables, complete
+reset integration, and bus-cycle timing remain unimplemented. The discovered
+MAME ordering difference is recorded as SC-012.

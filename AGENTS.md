@@ -239,9 +239,12 @@ four-by-sixteen status stack and exact PC/count/loop stack-storage slice
 implement LIFO state, saturating depth, sticky overflow, and all eight SSTAT
 sources. A separate stateful CNTR slice implements reset validity,
 pre-decrement CE/NOT CE evaluation, post-decrement, and count-stack request
-generation. It is not connected to condition logic or count-stack storage;
-conditional-CALL CE behavior remains OQ-012. The stack slices are not
-connected to instruction, loop, interrupt, or return sequencing.
+generation. A bounded sequencer integration slice connects IF/DO condition
+evaluation, explicit flow, DO setup, CNTR, and PC/count/loop stack storage for
+source-backed cases. It rejects conditional-CALL CE (OQ-012), empty-pop
+effects remain OQ-013, and competing automatic/manual actions are held and
+flagged under OQ-018. No PC register, instruction decode, interrupt/status
+stack connection, or phase-level sequencer timing exists.
 Multifunction legality, ordering, and whole-core cycle integration remain
 incomplete. The executable
 instruction model establishes

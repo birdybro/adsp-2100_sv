@@ -1,7 +1,7 @@
 # Conditions and visibility
 
-**Status: original encodings, predicates, and CNTR source verified;
-sequencer integration pending**
+**Status: original encodings and predicates verified; bounded CNTR/sequencer
+integration passes**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -39,5 +39,10 @@ The reviewed condition-code source of record is
 evaluator and combinational RTL are exhaustively compared for all 2,048
 condition/flag combinations by `make compute-tests`. The independent CNTR
 model/RTL additionally supplies the source predicate and is compared across
-50,022 stateful cycles. The two blocks are not yet connected to instruction
-decode, loop-stack state, or phase-level timing.
+50,022 stateful cycles. The bounded sequencer integration slice connects this
+predicate to explicit IF flow and stored inverse-sense DO termination and
+passes 50,011 additional stateful model-versus-RTL cycles. Conditional JUMP
+with field `0xe` updates CNTR, conditional RETURN checks the same predicate
+without updating CNTR, and conditional CALL is rejected under OQ-012. Opcode
+decode, arithmetic/trap condition consumers, and phase-level timing remain
+unimplemented.

@@ -57,12 +57,13 @@ without assigning a documented value. A load pushes the old count only when
 valid; CE is sampled before the cycle-end decrement, and true CE restores the
 count-stack top or leaves CNTR invalid when the stack is empty
 [ADI-UM-1989, printed pp. 4-4–4-5]. The independent model and portable RTL
-implement this boundary, but instruction decode and physical count-stack
-connectivity are not yet present.
+implement this boundary. A bounded sequencer slice physically connects CNTR
+to count-stack storage and IF/DO flow for sourced cases, but instruction
+decode and a stateful PC remain absent.
 
 Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
 interrupt recognition and priority logic, stack action connectivity, CNTR
-instruction connectivity, empty-pop architectural effects, narrow
+decode connectivity, empty-pop architectural effects, narrow
 status-register DMD extension, full multifunction legality, and every
 instruction field using these paths still require machine-readable extraction
 and tests.

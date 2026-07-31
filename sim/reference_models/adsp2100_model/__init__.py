@@ -42,6 +42,12 @@ from .sequencer_stacks import (
     SequencerStacksState,
     apply_sequencer_stacks_cycle,
 )
+from .sequencer_slice import (
+    SequencerSliceInputs,
+    SequencerSliceResult,
+    SequencerSliceState,
+    apply_sequencer_slice_cycle,
+)
 from .status import (
     ALUStatusUpdate,
     ASTATBit,
@@ -140,6 +146,9 @@ __all__ = [
     "SequencerStacksCycleResult",
     "SequencerStacksInputs",
     "SequencerStacksState",
+    "SequencerSliceInputs",
+    "SequencerSliceResult",
+    "SequencerSliceState",
     "StatusCycleInputs",
     "StatusCycleResult",
     "StatusRegisters",
@@ -164,6 +173,7 @@ __all__ = [
     "apply_status_stack_cycle",
     "apply_mode_slice_cycle",
     "apply_sequencer_stacks_cycle",
+    "apply_sequencer_slice_cycle",
     "compute_alu",
     "compute_dag",
     "compute_mac",
