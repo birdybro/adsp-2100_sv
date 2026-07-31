@@ -319,6 +319,28 @@ def _try_disassemble_conditional_trap(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_divide_sign(opcode: int) -> Disassembly | None:
+    if opcode & 0xFFE0FF != 0x060000:
+        return None
+    yop = (opcode >> 11) & 0x3
+    xop = (opcode >> 8) & 0x7
+    upper = {1: "AY1", 2: "AF"}.get(yop)
+    if upper is None:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="UNSUPPORTED_TYPE_24_YOP",
+            implemented=False,
+        )
+    divisor = ("AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1")[xop]
+    return Disassembly(
+        opcode=opcode,
+        text=f"DIVS {upper}, {divisor};",
+        classification="TYPE_24_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_do_until(opcode: int) -> Disassembly | None:
     if opcode & 0xFC0000 != 0x140000:
         return None
@@ -444,6 +466,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     conditional_trap = _try_disassemble_conditional_trap(opcode)
     if conditional_trap is not None:
         return conditional_trap
+    divide_sign = _try_disassemble_divide_sign(opcode)
+    if divide_sign is not None:
+        return divide_sign
     do_until = _try_disassemble_do_until(opcode)
     if do_until is not None:
         return do_until

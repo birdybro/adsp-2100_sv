@@ -129,6 +129,12 @@ semantic versioning after its first release.
   model, exact decoder, portable stateful RTL, complete assembler/disassembler
   support, two hand-derived fixtures, deterministic phase-level differential
   vectors, a bounded formal recipe, and a constrained Cyclone V project.
+- A source-closed original Type 24 DIVS semantic entry covering sixteen legal
+  AY1/AF-by-ALU-X operand combinations; an independent unknown-preserving
+  model, exact 32-word partition decoder, portable selected-bank RTL with
+  atomic AF/AY0/AQ writeback, complete legal assembler/disassembler forms,
+  two hand-derived fixtures, deterministic differential vectors, a formal
+  harness/recipe, and a constrained Cyclone V project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -240,6 +246,9 @@ semantic versioning after its first release.
 
 ### Changed
 
+- Corrected the Type 23/24 machine-readable operand roles: XOP is the divisor
+  for both primitives, while Type 24 YOP is the upper dividend.
+
 - Expanded the initial README to state the exact ADSP-2100 scope and current
   non-complete status.
 - Factored the documented one-shot MR saturation transform into one shared
@@ -270,6 +279,21 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- Type 24 exhaustive RTL decode traverses all 16,777,216 program words and
+  identifies exactly 32 field words, partitioned into sixteen source-closed
+  actions and sixteen unsupported YOP words; 50,109 deterministic stateful
+  model/RTL cycles cover both banks, reset unknowns, all legal operands,
+  unsupported words, and integration conflicts.
+- Quartus full compilation passes for the bounded Type 24 DIVS slice at its
+  20 ns standalone constraint: 351 ALMs, 372 design registers plus nine
+  routing duplicates, no RAM/DSP blocks, +8.448 ns worst setup and +0.168 ns
+  worst multicorner hold slack, 86.81 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths.
+- The expanded `make test` passes 394 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint,
+  eighteen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all 50,109 bounded Type 24 DIVS cycles.
 
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
@@ -586,6 +610,10 @@ semantic versioning after its first release.
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
+
+- Closed the original Type 24 DIVS state transformation, operand set, one-cycle
+  boundary, and non-AQ status preservation with exact-device citations; added
+  SC-014 for the conflicting later-device flag description.
 
 - Established primary-source precedence, clean-room rules, clock/reset policy,
   signedness policy, verification expectations, and provenance requirements.

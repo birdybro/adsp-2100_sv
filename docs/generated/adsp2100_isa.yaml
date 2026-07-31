@@ -25,7 +25,8 @@
     "docs/generated/adsp2100_do_until_slice.yaml",
     "docs/generated/adsp2100_indirect_jump_slice.yaml",
     "docs/generated/adsp2100_conditional_return_slice.yaml",
-    "docs/generated/adsp2100_conditional_trap_slice.yaml"
+    "docs/generated/adsp2100_conditional_trap_slice.yaml",
+    "docs/generated/adsp2100_divide_sign_slice.yaml"
   ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
@@ -312,8 +313,8 @@
       "encoding_pattern": "00000110000xxxxx00000000",
       "opcode_mask": "0xffe0ff",
       "opcode_value": "0x060000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
+      "status": "PRIMARY_SEMANTICS_AND_ENCODING_VERIFIED",
+      "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed p. A-4 (scan PDF p. 143)"
     },
     {
@@ -1835,6 +1836,105 @@
         "Same-cycle direct DAG-register write ordering is not integrated.",
         "Behavior outside documented circular-buffer restrictions is conservatively invalidated, not claimed.",
         "Interrupt, fetch-phase, and wait-state timing are outside this bounded state slice."
+      ]
+    },
+    {
+      "id": "DIVIDE-SIGN-TYPE-24",
+      "mnemonic": "DIVS",
+      "algebraic_assembly_syntax": "DIVS upper_dividend, divisor;",
+      "encoding_pattern": "00000110000xxxxx00000000",
+      "opcode_mask": "0xffe0ff",
+      "opcode_value": "0x060000",
+      "fields": ["YOP", "XOP"],
+      "condition_field": null,
+      "computation_field": "FIXED_DIVS",
+      "source_register_selections": [
+        "YOP: AY1_OR_AF_UPPER_DIVIDEND",
+        "XOP: AX0_AX1_AR_MR0_MR1_MR2_SR0_SR1_DIVISOR",
+        "AY0_LOWER_DIVIDEND"
+      ],
+      "destination_register_selections": ["AF", "AY0", "ASTAT.AQ"],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_SELECTED_BANK_UPPER_DIVIDEND",
+        "CYCLE_START_SELECTED_BANK_XOP_DIVISOR",
+        "CYCLE_START_SELECTED_BANK_AY0"
+      ],
+      "registers_written": [
+        "CYCLE_END_SELECTED_BANK_AF",
+        "CYCLE_END_SELECTED_BANK_AY0",
+        "CYCLE_END_ASTAT.AQ"
+      ],
+      "computational_unit_used": "ALU_DIVIDE_PRIMITIVE",
+      "status_flags_read": [],
+      "status_flags_written": ["AQ"],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "SHIFT_UPPER_DIVIDEND_AND_AY0_LEFT_AS_ONE_32_BIT_PAIR",
+        "WRITE_QUOTIENT_SIGN_TO_AY0_BIT_0_AND_ASTAT_AQ"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [
+        "DIVS is unconditional and is not a multifunction instruction.",
+        "YOP code 0 (AY0) and code 3 (zero) are field-defined but are not listed as permissible upper-dividend operands; they fail closed."
+      ],
+      "old_value_new_value_semantics": "Read divisor, upper dividend, and AY0 from the cycle-start selected bank. Let qsign be divisor[15] XOR upper[15]. At cycle end AF receives {upper[14:0], old AY0[15]}, AY0 receives {old AY0[14:0], qsign}, and ASTAT.AQ receives qsign. All three results use old operands and the inactive bank is preserved.",
+      "write_conflict_rules": "AF, AY0, and AQ are one atomic DIVS action. Concurrent setup writes fail closed. Unknown source validity invalidates exactly these three destinations in the bounded model/RTL boundary.",
+      "condition_false_behavior": "Not applicable; DIVS is unconditional.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not integrated in this bounded computational slice.",
+      "interrupt_interaction": "Normal instruction-boundary recognition; exact interrupt-adjacent ordering remains OQ-015.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "DIVS is the first of sixteen one-cycle primitives in a signed 32-by-16 divide; instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Only the normal instruction fetch is wait-state sensitive; DIVS issues no PM-data or DM transaction.",
+      "parallel_actions": [
+        {
+          "action": "DIVIDE_SIGN_INITIALIZATION",
+          "reads": ["OLD_SELECTED_UPPER", "OLD_SELECTED_DIVISOR", "OLD_SELECTED_AY0"],
+          "writes": ["NEW_SELECTED_AF", "NEW_SELECTED_AY0", "NEW_ASTAT.AQ"]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-9–2-13: non-restoring divide sequence and exact DIVS state transformation"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. 4-21: DIVS/DIVQ preserve AZ, AN, AV, and AC while updating AQ"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-6–6-9 and Table 6.3: unconditional non-multifunction syntax and operand roles"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. A-4 and pp. B-1–B-8: Type 24 fields, divide algorithm, limits, and examples"
+        },
+        {
+          "reference_id": "ADI-2101-CROSS-1990",
+          "location": "printed pp. 9-17–9-18: all eight XOP divisors and AY1/AF permissible YOPs (later-device comparative corroboration only)"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "Electrical fetch/wait phases and interrupt-adjacent arbitration remain outside this bounded slice.",
+        "Later-family tool documentation describes non-AQ flags as meaningless after DIVS; the original-device manual explicitly exempts DIVS/DIVQ from updating AZ/AN/AV/AC, so the original-device implementation preserves them."
       ]
     },
     {

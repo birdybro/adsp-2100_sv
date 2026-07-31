@@ -28,6 +28,7 @@ ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 DO UNTIL setup words, 124 source-closed Type 19 DAG2-indirect JUMP/CALL words,
 all 32 Type 20 conditional RTS/RTI words,
 all 16 Type 22 conditional TRAP words,
+16 source-closed Type 24 DIVS words,
 parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
@@ -165,6 +166,20 @@ RTL decode, twelve directed model tests, and 50,168 model/RTL clocks pass
 A-4, A-6]. General HALT synchronization, BR/BG, interrupt arbitration, and
 complete PM bus controls remain open. SC-013 records MAME's lower-authority
 reserved classification.
+
+Type 24 encodes fixed `DIVS` with YOP `[12:11]` and XOP `[10:8]`. Original
+prose permits AY1 or AF as the upper dividend and all eight ALU-X sources as
+the divisor, defining sixteen source-closed actions inside the 32 field words.
+Each action reads the old selected-bank upper word, divisor, and AY0, then
+atomically writes shifted AF/AY0 and the sign XOR to AQ. No other ASTAT bit,
+the inactive bank, or PM/DM data state changes. The AY0 and zero upper-source
+codes fail closed. Two hand-derived fixtures, every legal algebraic form,
+exhaustive 24-bit RTL decode, eleven directed model tests, and 50,109 stateful
+model/RTL cycles provide bounded evidence [ADI-UM-1989, printed pp. 2-9–2-13,
+4-21, 6-6–6-9, A-4, B-1–B-8; ADI-2101-CROSS-1990, printed pp. 9-17–9-18,
+later-device operand corroboration only]. Fetch, PC, active-loop, interrupt,
+wait-state, and external bus phases remain outside this slice; Type 23 DIVQ
+sequence completion remains next.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight

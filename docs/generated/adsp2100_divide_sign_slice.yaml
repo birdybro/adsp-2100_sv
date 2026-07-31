@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "instruction": "DIVIDE-SIGN-TYPE-24",
+  "scope": "BOUNDED_TYPE_24_DIVS_STATE_EXECUTION",
+  "confidence": "VERIFIED_PRIMARY",
+  "decode": {
+    "mask": "0xffe0ff",
+    "value": "0x060000",
+    "field_defined_words": 32,
+    "source_closed_words": 16,
+    "unsupported_yop_words": 16,
+    "legal_upper_dividends": ["AY1", "AF"],
+    "legal_divisors": ["AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1"]
+  },
+  "cycle_contract": {
+    "source_reads": "CYCLE_START",
+    "state_commits": "CYCLE_END",
+    "bank_source": "CYCLE_START_MSTAT_SR",
+    "af_result": "{OLD_UPPER_DIVIDEND[14:0], OLD_AY0[15]}",
+    "ay0_result": "{OLD_AY0[14:0], QUOTIENT_SIGN}",
+    "quotient_sign_and_aq": "DIVISOR[15] XOR UPPER_DIVIDEND[15]",
+    "non_aq_astat_bits": "PRESERVED",
+    "inactive_register_bank": "PRESERVED",
+    "pm_data_access": false,
+    "dm_access": false,
+    "processor_cycles": 1
+  },
+  "authentic_unknown_policy": {
+    "computational_register_reset": "UNKNOWN",
+    "astat_reset": "UNKNOWN",
+    "validity_sideband_reset": "CLEAR",
+    "unknown_source_action": "INVALIDATE_AF_AY0_AQ_ONLY",
+    "validity_sideband_is_architectural_data": false
+  },
+  "fail_closed_boundaries": {
+    "NON_TYPE_24_OPCODE": "INVALID_AND_ACTION_FREE",
+    "YOP_AY0_OR_ZERO": "UNSUPPORTED_SUBENCODING_AND_ACTION_FREE",
+    "EXECUTE_WITH_SETUP_OR_MULTIPLE_SETUP_WRITES": "INTEGRATION_CONFLICT_AND_ACTION_FREE"
+  },
+  "verification": {
+    "python_directed_tests": 11,
+    "rtl_exhaustive_opcode_space_words": 16777216,
+    "field_defined_words_checked": 32,
+    "source_closed_actions_checked": 16,
+    "model_rtl_cycles": 50109,
+    "deterministic_seed": "0x210024",
+    "hand_derived_opcode_fixtures": ["0x060800", "0x061500"]
+  },
+  "not_implemented": [
+    "INSTRUCTION_FETCH_OR_PC_REGISTER",
+    "INTERRUPT_OR_ACTIVE_LOOP_ARBITRATION",
+    "PHASE_LEVEL_EXTERNAL_PM_FETCH_TIMING",
+    "DIVQ_SEQUENCE_COMPLETION"
+  ],
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 2-9–2-13",
+    "ADI-UM-1989 printed p. 4-21",
+    "ADI-UM-1989 printed pp. 6-6–6-9 and Table 6.3",
+    "ADI-UM-1989 printed p. A-4 and pp. B-1–B-8",
+    "ADI-2101-CROSS-1990 printed pp. 9-17–9-18 (later-device comparative operand corroboration only)"
+  ]
+}

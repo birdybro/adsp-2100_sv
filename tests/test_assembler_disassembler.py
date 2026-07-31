@@ -324,6 +324,32 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             self.assertEqual(decoded.text, statement)
             self.assertEqual(assemble_statement(decoded.text), assembled)
 
+    def test_all_source_closed_divide_sign_forms_round_trip(self) -> None:
+        x_names = ("AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1")
+        count = 0
+        for yop, upper in ((1, "AY1"), (2, "AF")):
+            for xop, divisor in enumerate(x_names):
+                statement = f"DIVS {upper}, {divisor};"
+                opcode = 0x060000 | (yop << 11) | (xop << 8)
+                assembled = assemble_statement(statement)
+                self.assertEqual(assembled.value, opcode)
+                decoded = disassemble_word(opcode)
+                self.assertTrue(decoded.implemented)
+                self.assertEqual(decoded.classification, "TYPE_24_BOUNDED_EXECUTION")
+                self.assertEqual(decoded.text, statement)
+                self.assertEqual(assemble_statement(decoded.text), assembled)
+                count += 1
+        self.assertEqual(count, 16)
+
+    def test_unsupported_divide_sign_y_operands_fail_closed(self) -> None:
+        for yop in (0, 3):
+            for xop in range(8):
+                opcode = 0x060000 | (yop << 11) | (xop << 8)
+                decoded = disassemble_word(opcode)
+                self.assertFalse(decoded.implemented)
+                self.assertEqual(decoded.classification, "UNSUPPORTED_TYPE_24_YOP")
+                self.assertEqual(decoded.text, f".WORD 0x{opcode:06x};")
+
     def test_all_type_11_do_until_forms_round_trip(self) -> None:
         count = 0
         for address in range(1 << 14):

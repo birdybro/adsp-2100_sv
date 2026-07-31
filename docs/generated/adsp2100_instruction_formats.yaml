@@ -246,15 +246,15 @@
     {
       "original_type": 23,
       "fields": [
-        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "DIVIDEND_INPUT"}
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "DIVISOR_INPUT"}
       ],
       "notes": ""
     },
     {
       "original_type": 24,
       "fields": [
-        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "DIVISOR_INPUT"},
-        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "DIVIDEND_INPUT"}
+        {"id": "YOP", "msb": 12, "lsb": 11, "code_table": "ISA_FIELDS:Y", "role": "UPPER_DIVIDEND_INPUT"},
+        {"id": "XOP", "msb": 10, "lsb": 8, "code_table": "ISA_FIELDS:X", "role": "DIVISOR_INPUT"}
       ],
       "notes": ""
     },

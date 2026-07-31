@@ -418,6 +418,21 @@ def _assemble_conditional_trap(statement: str) -> int | None:
     return 0x080000 | condition
 
 
+def _assemble_divide_sign(statement: str) -> int | None:
+    """Assemble a source-closed original Type 24 DIVS primitive."""
+
+    match = re.fullmatch(
+        r"DIVS\s+(AY1|AF)\s*,\s*(AX0|AX1|AR|MR0|MR1|MR2|SR0|SR1)",
+        statement,
+    )
+    if match is None:
+        return None
+    upper, divisor = match.groups()
+    yop = {"AY1": 1, "AF": 2}[upper]
+    xop = _ALU_XOP_NAMES.index(divisor)
+    return 0x060000 | (yop << 11) | (xop << 8)
+
+
 def _assemble_do_until(statement: str) -> int | None:
     """Assemble an original Type 11 hardware-loop setup instruction."""
 
@@ -629,6 +644,9 @@ def assemble_statement(source: str) -> AssembledWord:
     conditional_trap = _assemble_conditional_trap(statement)
     if conditional_trap is not None:
         return AssembledWord(conditional_trap)
+    divide_sign = _assemble_divide_sign(statement)
+    if divide_sign is not None:
+        return AssembledWord(divide_sign)
     do_until = _assemble_do_until(statement)
     if do_until is not None:
         return AssembledWord(do_until)

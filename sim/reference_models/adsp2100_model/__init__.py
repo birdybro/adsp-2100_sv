@@ -66,6 +66,18 @@ from .do_until import (
     decode_do_until,
     is_do_until_class,
 )
+from .divide_sign import (
+    DIVIDE_SIGN_CLASS_MASK,
+    DIVIDE_SIGN_CLASS_VALUE,
+    DIVIDE_X_DREG,
+    DivideSignAction,
+    DivideSignCycleResult,
+    DivideSignInputs,
+    DivideSignState,
+    apply_divide_sign_cycle,
+    decode_divide_sign,
+    is_divide_sign_class,
+)
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
 from .mr_saturation import MR_SATURATION_OPCODE, decode_mr_saturation
@@ -320,6 +332,13 @@ __all__ = [
     "DirectJumpCycleResult",
     "DirectJumpState",
     "DREGWriteConflict",
+    "DIVIDE_SIGN_CLASS_MASK",
+    "DIVIDE_SIGN_CLASS_VALUE",
+    "DIVIDE_X_DREG",
+    "DivideSignAction",
+    "DivideSignCycleResult",
+    "DivideSignInputs",
+    "DivideSignState",
     "ExplicitFlow",
     "ExactWord",
     "IF_CONDITION_MNEMONICS",
@@ -418,6 +437,7 @@ __all__ = [
     "apply_counter_cycle",
     "apply_computational_cycle",
     "apply_dreg_cycle",
+    "apply_divide_sign_cycle",
     "apply_direct_jump_cycle",
     "apply_status_cycle",
     "apply_status_stack_cycle",
@@ -425,6 +445,7 @@ __all__ = [
     "decode_conditional_shift",
     "decode_conditional_compute",
     "decode_direct_jump",
+    "decode_divide_sign",
     "decode_compute_move",
     "decode_mr_saturation",
     "decode_mode_control",
@@ -445,6 +466,7 @@ __all__ = [
     "is_conditional_compute_class",
     "is_compute_move_class",
     "is_direct_jump_class",
+    "is_divide_sign_class",
     "apply_modify_address_cycle",
     "apply_mr_saturation_slice_cycle",
     "apply_shift_move_cycle",

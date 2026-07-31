@@ -27,7 +27,7 @@
 | 21 | modify address register | `0000100100000000000xxxxx` | `0xffffe0` | `0x090000` | CORROBORATED |
 | 22 | conditional TRAP | `00001000000000000000xxxx` | `0xfffff0` | `0x080000` | CORROBORATED |
 | 23 | DIVQ | `0000011100010xxx00000000` | `0xfff8ff` | `0x071000` | CORROBORATED |
-| 24 | DIVS | `00000110000xxxxx00000000` | `0xffe0ff` | `0x060000` | CORROBORATED |
+| 24 | DIVS | `00000110000xxxxx00000000` | `0xffe0ff` | `0x060000` | VERIFIED_PRIMARY |
 | 25 | saturate MR | `000001010000000000000000` | `0xffffff` | `0x050000` | CORROBORATED |
 | 26 | stack control | `0000010000000000000xxxxx` | `0xffffe0` | `0x040000` | VERIFIED_PRIMARY |
 | 27 | reserved | `00000011xxxxxxxxxxxxxxxx` | `0xff0000` | `0x030000` | VERIFIED_PRIMARY |

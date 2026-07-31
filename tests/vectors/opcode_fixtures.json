@@ -246,6 +246,24 @@
       "review_status": "HAND_TRANSCRIBED_PRIMARY"
     },
     {
+      "id": "HAND-DIVS-AY1-AX0-060800",
+      "source": "DIVS AY1, AX0;",
+      "opcode": "0x060800",
+      "program_word_bytes_big_endian": "060800",
+      "encoding_class": 24,
+      "source_citation": "ADI-UM-1989 printed pp. 2-9–2-13, 6-9, A-4, and B-1–B-8",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-DIVS-AF-MR2-061500",
+      "source": "DIVS AF, MR2;",
+      "opcode": "0x061500",
+      "program_word_bytes_big_endian": "061500",
+      "encoding_class": 24,
+      "source_citation": "ADI-UM-1989 printed pp. 2-9–2-13, 6-9, A-4, and B-1–B-8",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-NOP-000000",
       "source": "NOP;",
       "opcode": "0x000000",

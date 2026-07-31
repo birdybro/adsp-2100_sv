@@ -162,3 +162,17 @@ a false condition continues to PC+1. MAME cannot serve as a Type 22 execution
 oracle unless its adapter is independently corrected. This does not establish
 whether Atari production software executes TRAP; OQ-010 retains that separate
 integration question.
+
+## SC-014 — Original and later-device DIVS flag descriptions differ
+
+The original ADSP-2100 ASTAT table states that ordinary ALU operations update
+AZ, AN, AV, and AC except for DIVS and DIVQ; only AQ is updated by those divide
+primitives [ADI-UM-1989, printed p. 4-21]. The contemporary ADSP-2101 Cross
+Software instruction page instead warns that AC, AV, AN, and AZ may change and
+are meaningless after DIVS [ADI-2101-CROSS-1990, printed pp. 9-17–9-18].
+
+This is a cross-device documentation conflict, not permission to import the
+later behavior. The default core follows the explicit exact-device table and
+preserves every non-AQ ASTAT bit. Directed model/RTL tests assert that
+preservation. Later-family parameterization, if ever added, must resolve its
+own flag contract independently.
