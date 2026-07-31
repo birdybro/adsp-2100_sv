@@ -68,6 +68,11 @@ semantic versioning after its first release.
   assembler/disassembler support, two hand-transcribed opcode fixtures,
   exhaustive class decode, deterministic stateful differential vectors,
   formal harness/recipe, and constrained Cyclone V synthesis project.
+- A primary-backed bounded Type 15 immediate LSHIFT/ASHIFT semantic entry,
+  independent selected-bank state model, exact fail-closed decoder, portable
+  execution RTL, original-syntax assembler/disassembler support, two manual
+  opcode fixtures, deterministic differential vectors, formal harness/recipe,
+  and constrained Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -314,6 +319,20 @@ semantic versioning after its first release.
   ALMs, 484 registers, no RAM/DSPs, +8.167 ns worst setup and +0.133 ns worst
   hold slack across four timing models, with zero unconstrained clocks, ports,
   or paths.
+- Type 15 Python and RTL decoders exhaustively partition all 32,768 class
+  words into 14,336 source-closed actions and 18,432 unsupported
+  subencodings. Eight directed/model checks, 280 syntax forms, two manual
+  fixtures, and 58,709 stateful model-versus-RTL cycles cover every supported
+  word in both banks, all signed exponents, PASS/OR feedback, invalid words,
+  reset unknowns, and setup collisions.
+- Quartus full compilation passes for the bounded Type 15 immediate-shift
+  slice: 774 ALMs and 501 fitted registers, no RAM/DSPs, +3.728 ns worst setup
+  and +0.057 ns worst hold slack across four timing models, with zero
+  unconstrained clocks, ports, or paths against the 20 ns constraint.
+- The expanded `make test` passes 265 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, eight
+  exhaustive 24-bit decode traversals, and every existing model/RTL vector
+  regression including bounded Type 15 execution.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -368,7 +387,7 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 25 harnesses,
+- `make formal` passes strict assertion syntax lint for all 26 harnesses,
   including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 17/Type 21 state execution;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
@@ -397,6 +416,11 @@ semantic versioning after its first release.
   immediate semantics, one-cycle selected-bank writeback, no PM/DM data
   transfer, exact SE/MR2 storage behavior, and MR1-to-MR2 sign-fill side effect
   from the original manual.
+- Closed the source-supported Type 15 LSHIFT/ASHIFT immediate subset: SF/XOP/
+  exponent placement, signed count, seven X operands, old-SR OR feedback,
+  cycle-end selected-bank SR writeback, SE/status preservation, and no PM/DM
+  data transfer. SF 8–15 and unavailable XOP `001` remain explicitly
+  unsupported pending original-tool or hardware evidence.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

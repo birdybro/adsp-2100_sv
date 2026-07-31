@@ -67,6 +67,13 @@ with the MR1 sign bit
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 6-12–6-13,
 A-2, and A-9]. The bounded reset path clears MSTAT without assigning either
 bank a fabricated value.
+The bounded Type 15 immediate-shift path likewise samples MSTAT and its X
+operand at cycle start and commits SR0/SR1 together at cycle end. PASS forms
+replace SR, OR forms also consume the old selected-bank SR, and the signed
+instruction exponent leaves SE unchanged. Only the seven documented shifter
+X operands and SF codes 0–7 execute; the remaining class subencodings fail
+closed pending stronger evidence
+[ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
 The exact Type 18 boundary independently applies all AS/OL/BR/SR fields to
 cycle-start MSTAT and commits one four-bit result at cycle end. Both
 documented no-change encodings preserve their raw decode identity, while

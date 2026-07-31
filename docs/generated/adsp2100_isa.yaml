@@ -375,6 +375,109 @@
   ],
   "instructions": [
     {
+      "id": "IMMEDIATE-SHIFT-TYPE-15",
+      "mnemonic": "LSHIFT/ASHIFT IMMEDIATE",
+      "algebraic_assembly_syntax": "SR = [SR OR] {LSHIFT|ASHIFT} xop BY <exponent> ({HI|LO});",
+      "encoding_pattern": "000011110xxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff8000",
+      "opcode_value": "0x0f0000",
+      "fields": [
+        "SF",
+        "XOP",
+        "EXPONENT"
+      ],
+      "condition_field": null,
+      "computation_field": "SF",
+      "source_register_selections": [
+        "XOP"
+      ],
+      "destination_register_selections": [
+        "SR"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": "SIGNED_8_BIT_IMMEDIATE_SHIFT",
+      "immediate_fields": [
+        "EXPONENT[7:0]"
+      ],
+      "branch_fields": [],
+      "registers_read": [
+        "SELECTED_BANK_XOP",
+        "SELECTED_BANK_SR_WHEN_OR",
+        "MSTAT.BANK_SELECT"
+      ],
+      "registers_written": [
+        "SELECTED_BANK_SR"
+      ],
+      "computational_unit_used": "BARREL_SHIFTER",
+      "status_flags_read": [],
+      "status_flags_written": [],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "SIGNED_IMMEDIATE_SHIFT_TO_SELECTED_BANK_SR"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [
+        "XOP=001 is unavailable to the shifter.",
+        "SF=1000 through 1111 have no immediate-shift syntax in the original instruction summary and remain unexecuted pending original-tool or hardware evidence."
+      ],
+      "old_value_new_value_semantics": "Sample the selected-bank X operand and, for OR forms, selected-bank SR at cycle start; commit the 32-bit SR result at cycle end. The signed eight-bit instruction exponent is used directly and SE is neither read nor written.",
+      "write_conflict_rules": "Type 15 writes only SR. Collision with an external setup or other write is outside this bounded instruction slice and fails closed.",
+      "condition_false_behavior": "Unconditional instruction; not applicable.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Interrupt recognition and precedence are not integrated or claimed by this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "The immediate shift occupies one instruction cycle; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; no PM-data or DM transaction is issued.",
+      "parallel_actions": [
+        {
+          "action": "IMMEDIATE_SHIFT_TO_SELECTED_BANK_SR",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_SELECT",
+            "CYCLE_START_SELECTED_BANK_XOP",
+            "CYCLE_START_SELECTED_BANK_SR_FOR_OR",
+            "INSTRUCTION_EXPONENT_FIELD"
+          ],
+          "writes": [
+            "CYCLE_END_SELECTED_BANK_SR"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-23–2-30: shifter array, PASS/OR, HI/LO, source/result registers, immediate signed exponent, arithmetic/logical fill, and SE preservation"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed p. 6-11, Table 6.5: original immediate LSHIFT/ASHIFT algebraic forms"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-3 and A-7: Type 15 SF/XOP/exponent field placement and shifter X-operand mapping"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-019: original-tool or physical behavior for Type 15 SF=8–15 and XOP=001 subencodings is unverified and fails closed.",
+        "Fetch, interrupt-abort, PC, and external wait-state phases remain outside the bounded state slice."
+      ]
+    },
+    {
       "id": "LOAD-DREG-IMMEDIATE-TYPE-6",
       "mnemonic": "LOAD DREG IMMEDIATE",
       "algebraic_assembly_syntax": "dreg = <data>;",

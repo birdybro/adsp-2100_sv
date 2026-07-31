@@ -150,6 +150,52 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement("AX0 = 0x10000;")
 
+    def test_all_verified_type_15_forms_round_trip(self) -> None:
+        sources = {0: "SI", 2: "AR", 3: "MR0", 4: "MR1", 5: "MR2", 6: "SR0", 7: "SR1"}
+        count = 0
+        for sf in range(8):
+            operation = "ASHIFT" if sf & 4 else "LSHIFT"
+            reference = "LO" if sf & 2 else "HI"
+            combine_or = "SR OR " if sf & 1 else ""
+            for xop, source in sources.items():
+                for exponent in (-128, -1, 0, 1, 127):
+                    statement = (
+                        f"SR = {combine_or}{operation} {source} BY "
+                        f"{exponent} ({reference});"
+                    )
+                    opcode = (
+                        0x0F0000
+                        | (sf << 11)
+                        | (xop << 8)
+                        | (exponent & 0xFF)
+                    )
+                    self.assertEqual(assemble_statement(statement).value, opcode)
+                    decoded = disassemble_word(opcode)
+                    self.assertTrue(decoded.implemented)
+                    self.assertEqual(
+                        decoded.classification,
+                        "TYPE_15_BOUNDED_EXECUTION",
+                    )
+                    self.assertEqual(decoded.text, statement)
+                    count += 1
+        self.assertEqual(count, 280)
+        self.assertEqual(
+            assemble_statement("SR = LSHIFT SI BY H#ff (HI);").value,
+            0x0F00FF,
+        )
+
+    def test_unverified_type_15_subencodings_fail_closed(self) -> None:
+        unavailable_xop = disassemble_word(0x0F0100)
+        self.assertFalse(unavailable_xop.implemented)
+        self.assertEqual(
+            unavailable_xop.classification,
+            "UNVERIFIED_TYPE_15_SUBENCODING",
+        )
+        non_immediate_sf = disassemble_word(0x0F4000)
+        self.assertFalse(non_immediate_sf.implemented)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI BY 128 (HI);")
+
     def test_unsupported_assembly_fails_closed(self) -> None:
         with self.assertRaises(AssemblyError):
             assemble_statement("IDLE;")

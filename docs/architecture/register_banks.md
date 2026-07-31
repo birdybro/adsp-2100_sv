@@ -87,6 +87,15 @@ both banks, boundary values, invalid words, and atomic setup-conflict
 suppression [ADI-UM-1989, printed pp. 1-2, 2-6–2-7, 2-15, 2-18,
 6-12–6-13, A-2, and A-9].
 
+`adsp2100_immediate_shift_slice` connects the Type 15 immediate LSHIFT/ASHIFT
+subset to the same bank boundary. It reads SI, AR, MR0, MR1, MR2, SR0, or SR1
+from the bank selected by cycle-start MSTAT and atomically writes the 32-bit SR
+result at cycle end. OR forms use the pre-instruction SR value, the immediate
+exponent does not modify SE, and the inactive bank remains untouched. The
+58,709-cycle comparison covers every supported opcode in both banks plus
+deterministic invalid/conflict sequences
+[ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -119,6 +128,8 @@ therefore remains `IMPLEMENTING`.
 - `make register-tests` also adds six Type 6 model tests and 50,204 stateful
   model-versus-RTL cycles, including every destination in both banks and exact
   SE/MR2/MR1 storage side effects.
+- `make compute-tests` adds eight directed Type 15 tests and 58,709 stateful
+  model-versus-RTL cycles, including all 14,336 supported words in each bank.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

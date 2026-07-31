@@ -80,6 +80,45 @@ def _disassemble_dreg_immediate(opcode: int) -> str:
     return f"{register} = 0x{data:04x};"
 
 
+_SHIFTER_XOP_NAMES = {
+    0: "SI",
+    2: "AR",
+    3: "MR0",
+    4: "MR1",
+    5: "MR2",
+    6: "SR0",
+    7: "SR1",
+}
+
+
+def _try_disassemble_immediate_shift(opcode: int) -> Disassembly | None:
+    if opcode & 0xFF8000 != 0x0F0000:
+        return None
+    sf = (opcode >> 11) & 0xF
+    xop = (opcode >> 8) & 0x7
+    if sf > 7 or xop not in _SHIFTER_XOP_NAMES:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="UNVERIFIED_TYPE_15_SUBENCODING",
+            implemented=False,
+        )
+    operation = "ASHIFT" if sf & 4 else "LSHIFT"
+    reference = "LO" if sf & 2 else "HI"
+    combine_or = "SR OR " if sf & 1 else ""
+    exponent = opcode & 0xFF
+    signed_exponent = exponent - 256 if exponent & 0x80 else exponent
+    return Disassembly(
+        opcode=opcode,
+        text=(
+            f"SR = {combine_or}{operation} {_SHIFTER_XOP_NAMES[xop]} "
+            f"BY {signed_exponent} ({reference});"
+        ),
+        classification="TYPE_15_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _disassemble_mode_control(opcode: int) -> str:
     database = load_mode_control_database()
     validate_mode_control_database(database)
@@ -126,6 +165,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     internal_move = _try_disassemble_internal_move(opcode)
     if internal_move is not None:
         return internal_move
+    immediate_shift = _try_disassemble_immediate_shift(opcode)
+    if immediate_shift is not None:
+        return immediate_shift
     for instruction in database["instructions"]:
         mask = int(instruction["opcode_mask"], 16)
         value = int(instruction["opcode_value"], 16)

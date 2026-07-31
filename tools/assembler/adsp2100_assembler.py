@@ -105,6 +105,53 @@ def _assemble_dreg_immediate(statement: str) -> int | None:
     return 0x400000 | ((value & 0xFFFF) << 4) | registers[destination]
 
 
+_SHIFTER_XOP_CODES = {
+    "SI": 0,
+    "AR": 2,
+    "MR0": 3,
+    "MR1": 4,
+    "MR2": 5,
+    "SR0": 6,
+    "SR1": 7,
+}
+
+
+def _assemble_immediate_shift(statement: str) -> int | None:
+    match = re.fullmatch(
+        r"SR\s*=\s*(SR OR\s+)?(A|L)SHIFT\s+"
+        r"([A-Z][A-Z0-9]*)\s+BY\s+"
+        r"(?:(?:0X|H#)([0-9A-F]+)|(-?[0-9]+))\s+"
+        r"\((HI|LO)\)",
+        statement,
+    )
+    if match is None:
+        return None
+    combine_or, operation, source, hexadecimal, decimal, reference = (
+        match.groups()
+    )
+    if source not in _SHIFTER_XOP_CODES:
+        return None
+    if hexadecimal is not None:
+        exponent = int(hexadecimal, 16)
+        if not 0 <= exponent <= 0xFF:
+            raise AssemblyError("Type 15 hexadecimal exponent must fit 8 bits")
+    else:
+        exponent = int(decimal, 10)
+        if not -128 <= exponent <= 127:
+            raise AssemblyError("Type 15 decimal exponent must be signed 8-bit")
+    sf = 4 if operation == "A" else 0
+    if reference == "LO":
+        sf |= 2
+    if combine_or is not None:
+        sf |= 1
+    return (
+        0x0F0000
+        | (sf << 11)
+        | (_SHIFTER_XOP_CODES[source] << 8)
+        | (exponent & 0xFF)
+    )
+
+
 @lru_cache(maxsize=1)
 def _internal_move_tables() -> tuple[int, dict[str, int], dict[str, int]]:
     database = load_internal_move_database()
@@ -205,6 +252,9 @@ def assemble_statement(source: str) -> AssembledWord:
     dreg_immediate = _assemble_dreg_immediate(statement)
     if dreg_immediate is not None:
         return AssembledWord(dreg_immediate)
+    immediate_shift = _assemble_immediate_shift(statement)
+    if immediate_shift is not None:
+        return AssembledWord(immediate_shift)
     internal_move = _assemble_internal_move(statement)
     if internal_move is not None:
         return AssembledWord(internal_move)

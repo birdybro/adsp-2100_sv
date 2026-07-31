@@ -227,14 +227,20 @@ A commit message must state the engineering change and its verification.
 No integrated fetch/decode/execute instruction core exists. Bounded
 source-backed RTL execution slices now implement all original Type 18 mode
 controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
-MR saturation, all Type 6 immediate-to-DREG loads, and all Type 26
-stack-control actions, but they do not establish
+MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
+Type 15 immediate LSHIFT/ASHIFT words, and all Type 26 stack-control actions,
+but they do not establish
 whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
 excludes later timer, GO, and multiplier-placement fields and exhaustively
 covers all 256 original words. Type 21 uses an exact-width I/M/L register file
 with authentic reset-invalid state and cycle-start-read/cycle-end-write
 ordering; ordinary data transfers and multifunction DAG updates are not yet
 attached.
+Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
+remain explicit unsupported subencodings rather than receiving invented
+behavior. Its bounded state slice samples the selected bank and OR feedback at
+cycle start, commits SR at cycle end, and leaves SE/status unchanged; other
+shifter instruction classes remain unintegrated.
 A generated
 synthesizable class decoder recognizes all 30 original Appendix A format
 classes and fails closed for unshown words; it has exhaustive 24-bit membership

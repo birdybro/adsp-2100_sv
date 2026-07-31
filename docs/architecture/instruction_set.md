@@ -20,8 +20,9 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 `docs/generated/adsp2100_isa.yaml` is the source for generated class decode
 and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
-MR saturation, all Type 6 immediate DREG loads, parameterized Type 18 mode
-control, and all 32 Type 21 MODIFY selections. The companion
+MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
+immediate-shift subset, parameterized Type 18 mode control, and all 32 Type 21
+MODIFY selections. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
 fields across the 30 diagrams, including every one of their 393 variable bit
 positions [ADI-UM-1989, printed pp. A-1–A-5, scan PDF pp. 140–144].
@@ -45,6 +46,21 @@ exhaustive Python and RTL field decode, assembler/disassembler round trips,
 and 50,204 stateful model-versus-RTL cycles provide the bounded execution
 evidence. Fetch, interrupts, stalls, and external bus phases remain outside
 this slice.
+
+Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
+exponent in bits `[7:0]`. The original instruction summary permits the eight
+LSHIFT/ASHIFT PASS/OR HI/LO functions and the Appendix A X-operand table
+permits SI, AR, MR0, MR1, MR2, SR0, and SR1 as shifter sources. These fields
+define 14,336 executable words. They sample the selected-bank source and,
+for OR forms, SR at cycle start, write selected-bank SR at cycle end, leave
+SE and status unchanged, and issue no PM-data or DM transaction
+[ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
+The other 18,432 Type 15 class words—XOP `001` or SF `1000` through `1111`—
+remain explicitly unsupported rather than being assigned invented behavior.
+Two hand-transcribed manual examples, exhaustive Python/RTL partitioning, 280
+assembler/disassembler forms, and 58,709 deterministic model-versus-RTL
+cycles provide bounded evidence. Fetch, interrupt, loop-terminal, and
+external wait-state timing remain outside this slice.
 
 Type 17 internal data MOVE now has a bounded action-decode record. Its twelve
 payload bits select independent destination/source RGP and REG fields. The
@@ -118,7 +134,8 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 6, Type 18, Type 21, and Type 25 are the only full semantic entries in the main
-instruction table; most legal combinations, register effects, parallel
-ordering, cycle counts, and bus transactions still require primary-backed
-entries.
+Type 6, Type 18, Type 21, and Type 25 are the only class-complete semantic
+entries in the main instruction table. Type 15 has a bounded semantic entry
+for its 14,336 source-closed words while 18,432 subencodings fail closed; most
+other legal combinations, register effects, parallel ordering, cycle counts,
+and bus transactions still require primary-backed entries.

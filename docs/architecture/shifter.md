@@ -1,7 +1,7 @@
 # Barrel shifter
 
-**Status: function block implemented and independently cross-checked;
-instruction integration incomplete**
+**Status: function block implemented and independently cross-checked; Type 15
+immediate LSHIFT/ASHIFT subset integrated**
 
 The original shifter maps a 16-bit input into a 32-bit result with 49
 placements from off-scale right through off-scale left. SR is split into
@@ -81,3 +81,22 @@ cycle/bus timing remain outside this block. The separate register file now
 accepts the explicit result enables for selected-bank SR, SE, or SB
 writeback, and the separate status block accepts EXP's explicit SS update;
 instruction connectivity remains to be verified during core integration.
+
+The separate `adsp2100_immediate_shift_slice` now connects source-backed Type
+15 immediate LSHIFT/ASHIFT decode to selected-bank operand reads and SR
+writeback. It supports SF codes 0–7 and the seven Appendix A X operands
+available to the shifter, for 14,336 executable words. The signed instruction
+exponent is used directly; SE is neither read nor written. OR forms read the
+old SR and all writes become visible at the cycle-end edge
+[ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
+
+The complete 32,768-word Type 15 class is exhaustively partitioned. XOP code
+`001` and SF codes 8–15 do not have a source-backed original immediate-shift
+action in the current corpus, so those 18,432 words assert the unsupported
+classification and preserve state. The supported words pass both-bank
+model/RTL comparison over 58,709 cycles, including the manual's logical and
+arithmetic negative-five examples, PASS/OR feedback, every exponent, reset
+unknowns and warm-reset bank retention, invalid words, and collision
+suppression. Conditional and
+multifunction shifter instructions, fetch phases, and interrupt timing remain
+unintegrated.

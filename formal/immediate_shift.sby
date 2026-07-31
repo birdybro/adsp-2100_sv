@@ -1,0 +1,25 @@
+[options]
+mode prove
+depth 2
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/packages/adsp2100_register_pkg.sv
+read -formal -sv rtl/core/adsp2100_immediate_shift_decode.sv
+read -formal -sv rtl/core/adsp2100_shifter.sv
+read -formal -sv rtl/core/adsp2100_register_file.sv
+read -formal -sv rtl/core/adsp2100_status_registers.sv
+read -formal -sv rtl/core/adsp2100_immediate_shift_slice.sv
+read -formal -sv formal/harnesses/adsp2100_immediate_shift_formal.sv
+prep -top adsp2100_immediate_shift_formal
+
+[files]
+rtl/packages/adsp2100_register_pkg.sv
+rtl/core/adsp2100_immediate_shift_decode.sv
+rtl/core/adsp2100_shifter.sv
+rtl/core/adsp2100_register_file.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_immediate_shift_slice.sv
+formal/harnesses/adsp2100_immediate_shift_formal.sv
