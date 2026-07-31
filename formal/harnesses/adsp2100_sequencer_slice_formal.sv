@@ -30,6 +30,7 @@ module adsp2100_sequencer_slice_formal (
     logic        invalid_loop_context;
     logic        invalid_return_context;
     logic        unsupported_do_at_loop_end;
+    logic        unsupported_nested_same_end;
     logic        explicit_condition_true;
     logic        loop_termination_true;
     logic        explicit_transfer;
@@ -98,6 +99,7 @@ module adsp2100_sequencer_slice_formal (
         .invalid_loop_context_o(invalid_loop_context),
         .invalid_return_context_o(invalid_return_context),
         .unsupported_do_at_loop_end_o(unsupported_do_at_loop_end),
+        .unsupported_nested_same_end_o(unsupported_nested_same_end),
         .explicit_condition_true_o(explicit_condition_true),
         .loop_termination_true_o(loop_termination_true),
         .explicit_transfer_o(explicit_transfer),
@@ -227,6 +229,7 @@ module adsp2100_sequencer_slice_formal (
             assert (!invalid_loop_context);
             assert (!invalid_return_context);
             assert (!unsupported_do_at_loop_end);
+            assert (!unsupported_nested_same_end);
         end
 
         cover (explicit_condition_true);
@@ -240,6 +243,7 @@ module adsp2100_sequencer_slice_formal (
         cover (stack_overflow_event != 3'b000);
         cover (stack_empty_pop != 3'b000);
         cover (do_end == explicit_target);
+        cover (unsupported_nested_same_end);
     end
 
     always_ff @(posedge clk) begin

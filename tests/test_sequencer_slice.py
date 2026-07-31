@@ -41,6 +41,12 @@ class SequencerSliceMetadataTests(unittest.TestCase):
             ],
             "OQ-018",
         )
+        self.assertEqual(
+            metadata["rejected_boundaries"][
+                "NESTED_LOOPS_ENDING_ON_SAME_INSTRUCTION"
+            ],
+            "DOCUMENTED_RESTRICTION_ADI_UM_1989_P4_8",
+        )
 
 
 class SequencerSliceModelTests(unittest.TestCase):
@@ -92,6 +98,29 @@ class SequencerSliceModelTests(unittest.TestCase):
         )
         self.assertTrue(result.pc_stack_push)
         self.assertTrue(result.loop_stack_push)
+
+    def test_nested_loops_with_same_end_are_rejected_atomically(self) -> None:
+        outer = apply_sequencer_slice_cycle(
+            SequencerSliceState(),
+            SequencerSliceInputs(
+                pc=0x0100,
+                do_until=True,
+                do_end=0x0110,
+                do_condition=15,
+            ),
+        )
+        nested = apply_sequencer_slice_cycle(
+            outer.state,
+            SequencerSliceInputs(
+                pc=0x0102,
+                do_until=True,
+                do_end=0x0110,
+                do_condition=0,
+            ),
+        )
+        self.assertFalse(nested.boundary_valid)
+        self.assertTrue(nested.unsupported_nested_same_end)
+        self.assertEqual(nested.state, outer.state)
 
     def test_forever_loop_uses_pc_stack_top_without_popping(self) -> None:
         setup = apply_sequencer_slice_cycle(

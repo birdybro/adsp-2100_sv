@@ -4,7 +4,7 @@
 module tb_adsp2100_sequencer_slice;
     logic         clk;
     logic [77:0]  stimulus;
-    logic [140:0] expected;
+    logic [141:0] expected;
 
     logic        reset;
     logic [13:0] pc;
@@ -34,6 +34,7 @@ module tb_adsp2100_sequencer_slice;
     logic        invalid_loop_context;
     logic        invalid_return_context;
     logic        unsupported_do_at_loop_end;
+    logic        unsupported_nested_same_end;
     logic        explicit_condition_true;
     logic        loop_termination_true;
     logic        explicit_transfer;
@@ -94,6 +95,7 @@ module tb_adsp2100_sequencer_slice;
     logic        expected_invalid_loop_context;
     logic        expected_invalid_return_context;
     logic        expected_unsupported_do_at_loop_end;
+    logic        expected_unsupported_nested_same_end;
     logic        expected_explicit_condition_true;
     logic        expected_loop_termination_true;
     logic        expected_explicit_transfer;
@@ -169,6 +171,7 @@ module tb_adsp2100_sequencer_slice;
         expected_invalid_loop_context,
         expected_invalid_return_context,
         expected_unsupported_do_at_loop_end,
+        expected_unsupported_nested_same_end,
         expected_explicit_condition_true,
         expected_loop_termination_true,
         expected_explicit_transfer,
@@ -225,6 +228,7 @@ module tb_adsp2100_sequencer_slice;
         .invalid_loop_context_o(invalid_loop_context),
         .invalid_return_context_o(invalid_return_context),
         .unsupported_do_at_loop_end_o(unsupported_do_at_loop_end),
+        .unsupported_nested_same_end_o(unsupported_nested_same_end),
         .explicit_condition_true_o(explicit_condition_true),
         .loop_termination_true_o(loop_termination_true),
         .explicit_transfer_o(explicit_transfer),
@@ -383,6 +387,7 @@ module tb_adsp2100_sequencer_slice;
                         invalid_loop_context,
                         invalid_return_context,
                         unsupported_do_at_loop_end,
+                        unsupported_nested_same_end,
                         explicit_condition_true,
                         loop_termination_true,
                         explicit_transfer,
@@ -419,6 +424,7 @@ module tb_adsp2100_sequencer_slice;
                         expected_invalid_loop_context,
                         expected_invalid_return_context,
                         expected_unsupported_do_at_loop_end,
+                        expected_unsupported_nested_same_end,
                         expected_explicit_condition_true,
                         expected_loop_termination_true,
                         expected_explicit_transfer,

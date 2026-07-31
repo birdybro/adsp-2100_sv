@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "instruction": "DO-UNTIL-TYPE-11",
+  "scope": "BOUNDED_LOOP_SETUP_EXECUTION",
+  "decode": {
+    "mask": "0xfc0000",
+    "value": "0x140000",
+    "field_defined_words": 262144,
+    "supported_words": 262144,
+    "address_bits": "opcode[17:4]",
+    "termination_bits": "opcode[3:0]"
+  },
+  "cycle_contract": {
+    "base_cycles": 1,
+    "cycle_start_reads": [
+      "PC",
+      "ACTIVE_PC_STACK_VALID",
+      "ACTIVE_LOOP_STACK_TOP",
+      "CNTR_VALID_WHEN_ACTIVE_OUTER_TERM_IS_CE"
+    ],
+    "cycle_end_writes": [
+      "PC_PLUS_ONE_TO_PC",
+      "PC_PLUS_ONE_TO_PC_STACK",
+      "TERM_AND_ADDR_TO_LOOP_STACK"
+    ],
+    "pm_data_access": false,
+    "dm_access": false
+  },
+  "legality": {
+    "nested_distinct_terminal": "SUPPORTED",
+    "nested_same_terminal": "DOCUMENTED_ILLEGAL_ADI_UM_1989_P4_8",
+    "do_on_active_outer_terminal": "FAIL_CLOSED_OQ_018",
+    "invalid_active_loop_context": "FAIL_CLOSED",
+    "all_termination_codes": "SUPPORTED_INCLUDING_FOREVER"
+  },
+  "verification": {
+    "python_decode_words": 262144,
+    "rtl_exhaustive_opcode_space_words": 16777216,
+    "model_rtl_cycles": 554309,
+    "deterministic_seed": "0x210011"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-5–4-8",
+    "ADI-UM-1989 printed pp. 4-16–4-19",
+    "ADI-UM-1989 printed pp. 6-1 and 6-13–6-14",
+    "ADI-UM-1989 printed pp. A-2 and A-10"
+  ],
+  "confidence": "CORROBORATED"
+}

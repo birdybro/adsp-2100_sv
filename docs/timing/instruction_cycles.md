@@ -15,6 +15,7 @@ Known cases:
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
+| Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -101,6 +102,15 @@ transitions. This is instruction-boundary evidence only; fetch redirection,
 cache invalidation, loop-terminal arbitration, interrupt recognition, waits,
 and external logical bus phases remain open
 [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 6-13–6-14, A-2, A-6].
+
+The bounded Type 11 model/RTL slice verifies cycle-start PC and active-loop
+context followed by simultaneous cycle-end PC, PC-stack, and loop-stack
+updates. Exhaustive decode covers all 262,144 class words and 554,309
+stateful cycles execute every word while also exercising nesting restrictions,
+CE-context validity, overflow, reset, and conflicts. This establishes the
+one-cycle setup boundary, not subsequent loop-terminal, interrupt, wait, or
+external logical bus timing [ADI-UM-1989, printed pp. 4-5–4-8,
+4-16–4-19, 6-1, 6-13–6-14, A-2, A-10].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

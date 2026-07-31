@@ -90,6 +90,7 @@ class SequencerSliceResult:
     invalid_loop_context: bool
     invalid_return_context: bool
     unsupported_do_at_loop_end: bool
+    unsupported_nested_same_end: bool
     explicit_condition_true: bool
     loop_termination_true: bool
     explicit_transfer: bool
@@ -192,6 +193,11 @@ def apply_sequencer_slice_cycle(
         and loop_active
         and inputs.pc == loop_end
     )
+    unsupported_nested_same_end = bool(
+        inputs.do_until
+        and loop_active
+        and inputs.do_end == loop_end
+    )
     instruction_class_conflict = bool(
         inputs.do_until
         and flow_kind is not ExplicitFlow.NONE
@@ -217,6 +223,7 @@ def apply_sequencer_slice_cycle(
         or invalid_counter_condition
         or invalid_loop_context
         or unsupported_do_at_loop_end
+        or unsupported_nested_same_end
         or instruction_class_conflict
         or manual_control_conflict
         or empty_taken_return
@@ -304,6 +311,7 @@ def apply_sequencer_slice_cycle(
             invalid_loop_context=invalid_loop_context,
             invalid_return_context=empty_taken_return,
             unsupported_do_at_loop_end=unsupported_do_at_loop_end,
+            unsupported_nested_same_end=unsupported_nested_same_end,
             explicit_condition_true=explicit_condition_true,
             loop_termination_true=loop_termination_true,
             explicit_transfer=False,
@@ -367,6 +375,7 @@ def apply_sequencer_slice_cycle(
         invalid_loop_context=False,
         invalid_return_context=False,
         unsupported_do_at_loop_end=False,
+        unsupported_nested_same_end=False,
         explicit_condition_true=explicit_condition_true,
         loop_termination_true=loop_termination_true,
         explicit_transfer=raw_flow.explicit_transfer,

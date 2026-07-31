@@ -30,6 +30,7 @@ module adsp2100_sequencer_slice (
     output logic        invalid_loop_context_o,
     output logic        invalid_return_context_o,
     output logic        unsupported_do_at_loop_end_o,
+    output logic        unsupported_nested_same_end_o,
     output logic        explicit_condition_true_o,
     output logic        loop_termination_true_o,
     output logic        explicit_transfer_o,
@@ -192,6 +193,11 @@ module adsp2100_sequencer_slice (
         && loop_active
         && (pc_i == loop_end)
     );
+    assign unsupported_nested_same_end_o = (
+        do_until_i
+        && loop_active
+        && (do_end_i == loop_end)
+    );
     assign instruction_class_conflict = (
         do_until_i
         && (explicit_flow_i != FLOW_NONE)
@@ -218,6 +224,7 @@ module adsp2100_sequencer_slice (
         || invalid_counter_condition_o
         || invalid_loop_context_o
         || unsupported_do_at_loop_end_o
+        || unsupported_nested_same_end_o
         || instruction_class_conflict
         || manual_control_conflict
         || empty_taken_return

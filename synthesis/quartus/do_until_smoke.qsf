@@ -1,0 +1,56 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_do_until_slice
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_do_until
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_do_until_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_counter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer_stacks.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_do_until_slice.sv
+set_global_assignment -name SDC_FILE do_until_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to execute_i
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to counter_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to class_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to action_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to end_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to termination_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to boundary_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_opcode_o
+set_instance_assignment -name VIRTUAL_PIN ON -to integration_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_loop_context_o
+set_instance_assignment -name VIRTUAL_PIN ON -to unsupported_do_at_loop_end_o
+set_instance_assignment -name VIRTUAL_PIN ON -to unsupported_nested_same_end_o
+set_instance_assignment -name VIRTUAL_PIN ON -to internal_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_write_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_push_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_push_accepted_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_overflow_event_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_top_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_top_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pc_stack_overflow_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_push_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_push_accepted_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_overflow_event_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_top_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_top_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to loop_stack_overflow_o
+set_instance_assignment -name VIRTUAL_PIN ON -to cntr_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to cntr_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_push_o
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_top_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_top_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_depth_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to count_stack_overflow_o
+set_instance_assignment -name VIRTUAL_PIN ON -to sstat_fragment_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pm_data_access_o
+set_instance_assignment -name VIRTUAL_PIN ON -to dm_access_o

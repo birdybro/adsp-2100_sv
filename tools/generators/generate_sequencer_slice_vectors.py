@@ -161,6 +161,7 @@ def _pack_expected(
         (result.invalid_loop_context, 1),
         (result.invalid_return_context, 1),
         (result.unsupported_do_at_loop_end, 1),
+        (result.unsupported_nested_same_end, 1),
         (result.explicit_condition_true, 1),
         (result.loop_termination_true, 1),
         (result.explicit_transfer, 1),
@@ -257,9 +258,26 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
     emit(SequencerSliceInputs(pc=4))
     emit(SequencerSliceInputs(pc=4))
     emit(SequencerSliceInputs(pc=4))
+    emit(SequencerSliceInputs(reset=True, pc=5), compare_state=False)
     emit(
         SequencerSliceInputs(
             pc=5,
+            do_until=True,
+            do_end=8,
+            do_condition=15,
+        )
+    )
+    emit(
+        SequencerSliceInputs(
+            pc=6,
+            do_until=True,
+            do_end=8,
+            do_condition=15,
+        )
+    )
+    emit(
+        SequencerSliceInputs(
+            pc=7,
             explicit_flow=ExplicitFlow.CALL,
             explicit_condition=14,
             explicit_target=0x1000,
@@ -267,7 +285,7 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
     )
     emit(
         SequencerSliceInputs(
-            pc=6,
+            pc=8,
             explicit_flow=ExplicitFlow.CALL,
             explicit_condition=15,
             explicit_target=0x1000,

@@ -51,7 +51,8 @@ ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
 AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
 words with a decoder-connected PC register, CALL return stacking, and JUMP
-NOT CE counter transitions, all 1,792 source-backed Type 16 conditional
+NOT CE counter transitions, all 262,144 Type 11 DO UNTIL setup words with
+simultaneous PC/loop-stack state, all 1,792 source-backed Type 16 conditional
 LSHIFT/ASHIFT/NORM/EXP/EXPADJ words with selected-bank and status writeback,
 and bounded Type 17 internal-MOVE execution across
 computational, DAG, status/control, PX, CNTR/count-stack, and SSTAT state.

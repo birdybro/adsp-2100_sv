@@ -52,6 +52,13 @@ does not yet connect the fetch address, instruction register, cache, active
 loop, interrupt, or bus-phase machinery
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-12–4-13, 5-13].
 
+The bounded Type 11 slice uses the same exact-width PC and sequencer-stack
+storage. DO captures cycle-start PC+1 as the 14-bit loop start, stores the
+14-bit terminal address and four-bit termination code as one 18-bit loop-stack
+entry, and advances PC on the same edge. Reset clears stack pointers and
+restores PC without assigning stored stack-array data a fabricated reset value
+[ADI-UM-1989, printed pp. 4-5–4-8, 5-13, A-2, A-10].
+
 The independent model and RTL retain MR0/MR1/MR2 and SR0/SR1 as separate
 exact-width segments so a partial preload does not initialize untouched
 segments. They have no computational-register reset assignment and implement

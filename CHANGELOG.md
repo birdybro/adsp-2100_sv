@@ -104,6 +104,12 @@ semantic versioning after its first release.
   disassembler support, two hand-derived fixtures, deterministic exhaustive
   differential vectors, a formal harness/recipe, and a constrained Cyclone V
   synthesis project. The 16,384 CALL NOT CE words remain OQ-012.
+- A class-complete original Type 11 DO UNTIL setup entry covering all 262,144
+  address/termination words; independent exact-width model, exact decoder,
+  portable PC/CNTR/PC-stack/loop-stack RTL slice, complete numeric-target
+  assembler/disassembler support, two hand-derived fixtures, deterministic
+  exhaustive differential vectors, a formal harness/recipe, and a constrained
+  Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -237,6 +243,9 @@ semantic versioning after its first release.
   transcription accidentally excluded sixteen documented class words.
 - Promoted legal Type 17 disassembly from the stale action-decode-only marker
   to its verified bounded-execution classification.
+- The generic sequencer boundary now rejects nested loops sharing the active
+  loop's terminal instruction, matching the original documented restriction;
+  a directed model/RTL vector prevents regression.
 
 ### Verified
 
@@ -436,10 +445,25 @@ semantic versioning after its first release.
   slice at its 20 ns standalone constraint: 284 ALMs, 334 fitted registers,
   no RAM/DSP blocks, +8.138 ns worst setup and +0.167 ns worst multicorner
   hold slack, 84.3 MHz worst slow-corner Fmax, and zero unconstrained paths.
+- Type 11 Python and RTL decoders accept all 262,144 class words and preserve
+  exact ADDR/TERM fields. Twelve directed model checks, every assembler/
+  disassembler form, two hand-derived fixtures, and 554,309 stateful
+  model-versus-RTL cycles cover simultaneous PC+1/descriptor pushes, all
+  TERM codes, legal and illegal nesting, CE context, OQ-018, overflow, reset,
+  invalid opcodes, and setup conflicts.
+- Quartus full compilation passes for the bounded Type 11 setup slice at its
+  20 ns standalone constraint: 308 ALMs, 402 fitted registers, no RAM/DSP
+  blocks, +7.263 ns worst setup and +0.074 ns worst multicorner hold slack,
+  78.51 MHz worst slow-corner Fmax, and zero unconstrained paths.
+- The expanded `make test` passes 341 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint,
+  fourteen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all 554,309 bounded Type 11 execution cycles.
 - The expanded `make test` passes 327 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   thirteen exhaustive 24-bit decode traversals, and every existing model/RTL
   vector regression including all 554,412 bounded Type 10 execution cycles.
+
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.

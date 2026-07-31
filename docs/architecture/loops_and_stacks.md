@@ -78,7 +78,10 @@ CNTR, and IF/DO condition evaluation. DO UNTIL setup pushes PC+1 and a loop
 descriptor; loop back reads the current PC-stack top; loop exit atomically
 pops the PC and loop stacks and, for true CE, restores or invalidates CNTR
 while popping the count stack. Nested CE restoration and stack-depth
-transitions match the independent model across 50,011 cycles.
+transitions match the independent model across 50,014 cycles. The boundary
+also rejects nested DO requests whose end address equals the active loop end,
+implementing the original restriction rather than allowing an unrepresentable
+comparator state.
 
 Interrupt/RTI connectivity and arbitration between Type 26 and automatic
 sequencer/interrupt actions remain outside this integration boundary. Every
@@ -95,3 +98,12 @@ excludes an active loop descriptor: it cannot yet prove the documented
 explicit-transfer precedence on a loop-final instruction. All CALL NOT CE
 encodings remain action-free under OQ-012 rather than assigning an unsupported
 counter-stack interaction [ADI-UM-1989, printed pp. 4-3–4-7, 4-22].
+
+The bounded Type 11 setup slice independently verifies the simultaneous
+PC-stack and loop-stack pushes for all 262,144 encodings. Distinct-end nesting
+through four loop-stack entries is accepted; a fifth push raises sticky loop
+overflow and discards the newest loop descriptor under the existing sourced
+stack contract. The associated PC-stack push remains an independent hardware
+action. The exact full-chip recovery behavior after deliberately overflowing
+only one of the two stacks is not claimed [ADI-UM-1989, printed pp. 4-5–4-8,
+4-22, A-2, A-10].

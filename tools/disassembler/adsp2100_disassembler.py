@@ -106,6 +106,16 @@ def _if_condition_names() -> dict[int, str]:
     }
 
 
+@lru_cache(maxsize=1)
+def _do_termination_names() -> dict[int, str]:
+    database = load_condition_database()
+    validate_condition_database(database)
+    return {
+        entry["code"]: entry["mnemonic"]
+        for entry in database["do_until_termination_conditions"]
+    }
+
+
 def _format_register_shifter(sf: int, xop: int) -> str:
     source = _SHIFTER_XOP_NAMES[xop]
     if sf <= 0xB:
@@ -258,6 +268,24 @@ def _try_disassemble_direct_jump(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_do_until(opcode: int) -> Disassembly | None:
+    if opcode & 0xFC0000 != 0x140000:
+        return None
+    address = (opcode >> 4) & 0x3FFF
+    termination = opcode & 0xF
+    suffix = (
+        ""
+        if termination == 15
+        else f" UNTIL {_do_termination_names()[termination]}"
+    )
+    return Disassembly(
+        opcode=opcode,
+        text=f"DO 0x{address:04x}{suffix};",
+        classification="TYPE_11_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
     if opcode & 0xFF80F0 != 0x0E0000:
         return None
@@ -356,6 +384,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     direct_jump = _try_disassemble_direct_jump(opcode)
     if direct_jump is not None:
         return direct_jump
+    do_until = _try_disassemble_do_until(opcode)
+    if do_until is not None:
+        return do_until
     compute_move = _try_disassemble_compute_move(opcode)
     if compute_move is not None:
         return compute_move

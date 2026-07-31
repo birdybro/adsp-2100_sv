@@ -85,6 +85,12 @@ lint:
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_direct_jump_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_do_until_slice \
+			rtl/core/adsp2100_do_until_decode.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_do_until_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_mr_saturation_decode.sv; \
@@ -209,7 +215,8 @@ decode-tests:
 		tests.test_internal_move tests.test_load_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_compute_move \
-		tests.test_conditional_compute tests.test_direct_jump
+		tests.test_conditional_compute tests.test_direct_jump \
+		tests.test_do_until
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -269,6 +276,13 @@ decode-tests:
 			rtl/core/adsp2100_direct_jump_decode.sv \
 			sim/unit/tb_adsp2100_direct_jump_decode.sv; \
 		build/obj_direct_jump_decode/Vtb_adsp2100_direct_jump_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_do_until_decode \
+			--top-module tb_adsp2100_do_until_decode \
+			rtl/core/adsp2100_do_until_decode.sv \
+			sim/unit/tb_adsp2100_do_until_decode.sv; \
+		build/obj_do_until_decode/Vtb_adsp2100_do_until_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			--Mdir build/obj_stack_control_decode \
 			--top-module tb_adsp2100_stack_control_decode \
@@ -483,7 +497,7 @@ sequencer-tests:
 	$(PYTHON) -m unittest -v tests.test_sequencer_flow \
 		tests.test_counter tests.test_sequencer_stacks \
 		tests.test_sequencer_slice tests.test_stack_control_slice \
-		tests.test_direct_jump
+		tests.test_direct_jump tests.test_do_until
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_sequencer_vectors.py \
@@ -539,6 +553,18 @@ sequencer-tests:
 			rtl/core/adsp2100_direct_jump_slice.sv \
 			sim/unit/tb_adsp2100_direct_jump_slice.sv; \
 		build/obj_direct_jump_slice/Vtb_adsp2100_direct_jump_slice; \
+		$(PYTHON) tools/generators/generate_do_until_vectors.py \
+			--output build/do_until_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_do_until_slice \
+			--top-module tb_adsp2100_do_until_slice \
+			rtl/core/adsp2100_do_until_decode.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_do_until_slice.sv \
+			sim/unit/tb_adsp2100_do_until_slice.sv; \
+		build/obj_do_until_slice/Vtb_adsp2100_do_until_slice; \
 		$(PYTHON) tools/generators/generate_stack_control_slice_vectors.py \
 			--output build/stack_control_slice_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -872,6 +898,13 @@ formal:
 			rtl/core/adsp2100_direct_jump_slice.sv \
 			formal/harnesses/adsp2100_direct_jump_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_do_until_formal \
+			rtl/core/adsp2100_do_until_decode.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_do_until_slice.sv \
+			formal/harnesses/adsp2100_do_until_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_register_file_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_register_file.sv \
@@ -939,6 +972,7 @@ formal:
 		sby -f -d build/formal_sequencer_stacks formal/sequencer_stacks.sby; \
 		sby -f -d build/formal_sequencer_slice formal/sequencer_slice.sby; \
 		sby -f -d build/formal_direct_jump formal/direct_jump.sby; \
+		sby -f -d build/formal_do_until formal/do_until.sby; \
 		sby -f -d build/formal_registers formal/registers.sby; \
 		sby -f -d build/formal_status formal/status_registers.sby; \
 		sby -f -d build/formal_status_stack formal/status_stack.sby; \
@@ -972,6 +1006,8 @@ synth-quartus:
 			synthesis/quartus/conditional_compute_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/direct_jump_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/do_until_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile \
@@ -1038,6 +1074,7 @@ clean:
 	@find build -maxdepth 1 -type f -name compute_move_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_compute_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name direct_jump_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name do_until_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
 	@if [ -d build/obj_stack_control_decode ]; then \
 		find build/obj_stack_control_decode -depth -delete; \
@@ -1118,6 +1155,12 @@ clean:
 	@if [ -d build/obj_direct_jump_slice ]; then \
 		find build/obj_direct_jump_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_do_until_decode ]; then \
+		find build/obj_do_until_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_do_until_slice ]; then \
+		find build/obj_do_until_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -1174,6 +1217,9 @@ clean:
 	@if [ -d build/quartus_direct_jump ]; then \
 		find build/quartus_direct_jump -depth -delete; \
 	fi
+	@if [ -d build/quartus_do_until ]; then \
+		find build/quartus_do_until -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -1210,6 +1256,7 @@ clean:
 		build/formal_compute_move \
 		build/formal_conditional_compute \
 		build/formal_direct_jump \
+		build/formal_do_until \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \

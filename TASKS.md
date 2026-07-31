@@ -261,6 +261,11 @@ advance beyond research until a page-level primary citation is added.
   assembler/disassembler form, every supported word in stateful execution,
   and 554,412 model/RTL cycles pass. Active-loop, fetch/cache, interrupt,
   wait-state, bus, and phase integration remain open.
+  Type 11 is class-complete for setup: all 262,144 ADDR/TERM words decode and
+  execute with simultaneous PC+1/descriptor pushes. Two hand-derived
+  fixtures, every assembler/disassembler form, exhaustive RTL decode, and
+  554,309 stateful cycles pass. Same-terminal nesting is rejected per the
+  original restriction; DO on an active terminal remains OQ-018.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -356,6 +361,9 @@ advance beyond research until a page-level primary citation is added.
   state, applies the sourced direct JUMP/CALL target and return-address rules,
   and executes JUMP NOT CE post-decrement/restore. It fails closed for CALL
   NOT CE and for missing condition/counter context rather than inventing state.
+  A separate Type 11 model stores exact-width PC/CNTR/PC-stack/loop-stack
+  state, executes all loop-setup words, and makes same-terminal and OQ-018
+  rejection explicit.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -398,8 +406,10 @@ advance beyond research until a page-level primary citation is added.
   computations, preserves every field-valid alias with raw `.WORD` syntax,
   and includes two hand-derived primary examples. Type 10 accepts all 507,904
   supported direct numeric-target JUMP/CALL forms, includes two independent
-  fixtures, and rejects CALL NOT CE with an OQ-012 diagnostic. Research
-  surviving lawful assemblers first; do not execute legacy tools on the host.
+  fixtures, and rejects CALL NOT CE with an OQ-012 diagnostic.
+  Type 11 round trips all 262,144 address/termination forms and includes two
+  independent hand-derived fixtures. Research surviving lawful assemblers
+  first; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -557,11 +567,11 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make sequencer-tests`, `tests/test_counter.py`,
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
   `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
-  `tests/test_direct_jump.py`,
+  `tests/test_direct_jump.py`, `tests/test_do_until.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
   `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`,
-  `formal/direct_jump.sby`
+  `formal/direct_jump.sby`, `formal/do_until.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -576,7 +586,7 @@ advance beyond research until a page-level primary citation is added.
   invalidation, and valid manual restore. Twelve directed/model tests and
   50,022 model-versus-RTL counter cycles pass. A bounded integration model/RTL
   now connects conditions, DO setup, explicit flow, CNTR, and all three
-  sequencer stacks. Fourteen directed/random tests and 50,011 stateful
+  sequencer stacks. Fifteen directed/random tests and 50,014 stateful
   model-versus-RTL cycles cover exact-N/nested CE loops, JUMP/RETURN CE
   distinctions, loop-stack descriptors, and atomic rejection of unresolved
   collisions. A separate source-backed Type 26 model/RTL boundary now
@@ -589,6 +599,10 @@ advance beyond research until a page-level primary citation is added.
   and JUMP NOT CE CNTR/count-stack transitions. Twelve model tests, exhaustive
   RTL decode, and 554,412 stateful cycles cover all 507,904 supported words;
   the 16,384 CALL NOT CE words fail closed under OQ-012.
+  A bounded Type 11 instruction slice connects exact DO decode to PC and
+  PC/loop stacks. Twelve model tests, exhaustive 24-bit RTL decode, and
+  554,309 stateful cycles cover every word, sourced nesting legality, CE
+  context, OQ-018, reset, overflow, invalid opcodes, and conflicts.
 - **Unresolved questions:** whole-core PC/fetch integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
   (OQ-018), interrupts, delayed transfers, cache interaction, empty-pop
@@ -789,7 +803,7 @@ advance beyond research until a page-level primary citation is added.
   separate CNTR boundary generates the documented load/true-CE/manual-pop
   count-stack requests and passes 50,022 model/RTL cycles. A bounded
   integration slice physically connects those requests to count storage and
-  couples DO setup/termination with PC and loop storage across 50,011
+  couples DO setup/termination with PC and loop storage across 50,014
   additional model/RTL cycles. The Type 26 action decoder now maps every
   original manual encoding to status/count/PC/loop requests, retains both
   status no-change aliases, and is exhaustive over the 24-bit input space. A
@@ -912,12 +926,13 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Thirty-one harnesses now pass strict assertion syntax
+  result complete proof. Thirty-two harnesses now pass strict assertion syntax
   lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
+  bounded Type 11 DO UNTIL decode and state execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -938,7 +953,7 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
-  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 10,
+  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 10/11,
   Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
   46 ALMs and four registers with positive multicorner setup/hold slack and
   zero unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly
@@ -976,6 +991,10 @@ advance beyond research until a page-level primary citation is added.
   Worst setup is +8.138 ns, worst multicorner hold is +0.167 ns, worst
   slow-corner Fmax is 84.3 MHz, and no clocks, ports, or paths are
   unconstrained. This is not whole-core or MiSTer timing closure.
+  The bounded Type 11 setup slice fits in 308 ALMs and 402 fitted registers
+  with no RAM or DSP blocks against a 20 ns standalone constraint. Worst
+  setup is +7.263 ns, worst multicorner hold is +0.074 ns, worst slow-corner
+  Fmax is 78.51 MHz, and no clocks, ports, or paths are unconstrained.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.

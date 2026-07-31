@@ -1,7 +1,8 @@
 # Conditions and visibility
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer,
-Type 9 ALU/MAC, Type 10 direct-flow, and Type 16 shifter integrations pass**
+Type 9 ALU/MAC, Type 10 direct-flow, Type 11 loop setup, and Type 16 shifter
+integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -41,7 +42,7 @@ condition/flag combinations by `make compute-tests`. The independent CNTR
 model/RTL additionally supplies the source predicate and is compared across
 50,022 stateful cycles. The bounded sequencer integration slice connects this
 predicate to explicit IF flow and stored inverse-sense DO termination and
-passes 50,011 additional stateful model-versus-RTL cycles. Conditional JUMP
+passes 50,014 additional stateful model-versus-RTL cycles. Conditional JUMP
 with field `0xe` updates CNTR, conditional RETURN checks the same predicate
 without updating CNTR, and conditional CALL is rejected under OQ-012. Opcode
 decode for remaining arithmetic/TRAP consumers and phase-level timing remain
@@ -77,3 +78,10 @@ therefore holds state and reports an invalid boundary instead of inventing a
 predicate [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 4-25, 6-13–6-14,
 A-2, A-6; ADI-2101-CROSS-1990, printed instruction-reference CALL syntax,
 later-device evidence only].
+
+The Type 11 decoder accepts every inverse-sense DO termination field. Setup
+stores TERM without evaluating ASTAT or CNTR; `CE` therefore needs a valid
+counter only when that descriptor later becomes the active outer loop context,
+not when the first DO is issued. Every one of the 262,144 address/termination
+forms round-trips through the tools and executes in the bounded differential
+regression [ADI-UM-1989, printed pp. 4-5–4-8, A-2, A-10].

@@ -254,6 +254,16 @@ def _if_condition_codes() -> dict[str, int]:
     }
 
 
+@lru_cache(maxsize=1)
+def _do_termination_codes() -> dict[str, int]:
+    database = load_condition_database()
+    validate_condition_database(database)
+    return {
+        entry["mnemonic"]: entry["code"]
+        for entry in database["do_until_termination_conditions"]
+    }
+
+
 def _split_if_prefix(statement: str) -> tuple[int, str] | None:
     for mnemonic, code in sorted(
         _if_condition_codes().items(),
@@ -364,6 +374,30 @@ def _assemble_direct_jump(statement: str) -> int | None:
     if call and condition == 0xE:
         raise AssemblyError("conditional CALL NOT CE remains unresolved under OQ-012")
     return 0x180000 | (int(call) << 18) | (address << 4) | condition
+
+
+def _assemble_do_until(statement: str) -> int | None:
+    """Assemble an original Type 11 hardware-loop setup instruction."""
+
+    match = re.fullmatch(
+        r"DO\s+(?:(?:0X|H#)([0-9A-F]+)|([0-9]+))"
+        r"(?:\s+UNTIL\s+(.+))?",
+        statement,
+    )
+    if match is None:
+        return None
+    hexadecimal, decimal, mnemonic = match.groups()
+    address = int(hexadecimal, 16) if hexadecimal is not None else int(decimal, 10)
+    if not 0 <= address <= 0x3FFF:
+        raise AssemblyError("DO terminal program address must fit 14 bits")
+    if mnemonic is None:
+        termination = 15
+    else:
+        terminations = _do_termination_codes()
+        if mnemonic not in terminations:
+            raise AssemblyError(f"unknown DO UNTIL termination condition: {mnemonic}")
+        termination = terminations[mnemonic]
+    return 0x140000 | (address << 4) | termination
 
 
 def _shift_move_destination_collision(sf: int, destination: int) -> bool:
@@ -544,6 +578,9 @@ def assemble_statement(source: str) -> AssembledWord:
     direct_jump = _assemble_direct_jump(statement)
     if direct_jump is not None:
         return AssembledWord(direct_jump)
+    do_until = _assemble_do_until(statement)
+    if do_until is not None:
+        return AssembledWord(do_until)
     dreg_immediate = _assemble_dreg_immediate(statement)
     if dreg_immediate is not None:
         return AssembledWord(dreg_immediate)

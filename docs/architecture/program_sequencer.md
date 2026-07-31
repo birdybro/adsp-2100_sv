@@ -1,6 +1,6 @@
 # Program sequencer
 
-**Status: source-backed next-PC, CNTR, stack storage, and bounded Type 10
+**Status: source-backed next-PC, CNTR, stack storage, and bounded Type 10/11
 PC-state integration; whole-core timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
@@ -61,7 +61,7 @@ flow selector, CNTR, and all three sequencer stacks. It pushes PC+1 and the
 loop descriptor for DO UNTIL, evaluates the stored DO condition at loop end,
 couples CE decrement/restore to count-stack storage, derives RETURN targets
 from the PC-stack top, and preserves the documented taken explicit-transfer
-precedence. Fourteen directed/random integration tests and 50,011
+precedence. Fifteen directed/random integration tests and 50,014
 model-versus-RTL stateful cycles pass, including exact-N and nested CE loops,
 conditional JUMP CE updates, and non-decrementing RETURN CE checks.
 
@@ -99,3 +99,15 @@ stack overflow, counter restore, unknown predicates, and integration conflicts
 A-6]. The slice intentionally has no active-loop descriptor, fetch/cache,
 interrupt, wait-state, bus, or eight-state phase input, so it is not a complete
 program sequencer.
+
+The bounded Type 11 slice connects exact DO decode to PC, PC-stack,
+loop-stack, and CNTR-valid state. Every accepted word samples cycle-start PC,
+then simultaneously commits PC+1 to PC and the PC stack and `{TERM,ADDR}` to
+the loop stack. It accepts distinct-end nesting, rejects the original
+same-terminal prohibition atomically, validates active outer CE context, and
+holds DO-on-outer-terminal under OQ-018. Exhaustive RTL classification covers
+the full 24-bit opcode space, and 554,309 model/RTL cycles execute every one
+of the 262,144 Type 11 words plus directed invalid, nesting, and overflow
+boundaries [ADI-UM-1989, printed pp. 4-5–4-8, 4-16–4-19, 6-13–6-14,
+A-2, A-10]. Loop-end evaluation remains in the separate generic sequencer
+slice; fetch, interrupt, wait, and bus phases are not yet unified.

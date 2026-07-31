@@ -21,7 +21,8 @@
     "docs/generated/adsp2100_stack_control_slice.yaml",
     "docs/generated/adsp2100_mr_saturation_slice.yaml",
     "docs/generated/adsp2100_mode_control_slice.yaml",
-    "docs/generated/adsp2100_modify_address_slice.yaml"
+    "docs/generated/adsp2100_modify_address_slice.yaml",
+    "docs/generated/adsp2100_do_until_slice.yaml"
   ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
@@ -483,6 +484,112 @@
         "OQ-012 excludes conditional CALL with NOT CE until original-device CNTR effects are independently closed.",
         "Active hardware-loop terminal interaction is verified in a separate flow slice but not connected to this decoder/PC boundary.",
         "Fetch/cache overlap, interrupt abort, external waits, and eight-state logical timing remain outside this slice."
+      ]
+    },
+    {
+      "id": "DO-UNTIL-TYPE-11",
+      "mnemonic": "DO UNTIL",
+      "algebraic_assembly_syntax": "DO direct_program_address [UNTIL termination_condition];",
+      "encoding_pattern": "000101xxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xfc0000",
+      "opcode_value": "0x140000",
+      "fields": ["ADDR", "TERM"],
+      "condition_field": "TERM",
+      "computation_field": null,
+      "source_register_selections": [
+        "CYCLE_START_PC",
+        "ACTIVE_LOOP_STACK_TOP_FOR_NESTING_LEGALITY",
+        "ACTIVE_PC_STACK_TOP_VALIDITY",
+        "ACTIVE_CNTR_VALIDITY_FOR_OUTER_CE_LOOP"
+      ],
+      "destination_register_selections": [
+        "PC",
+        "PC_STACK",
+        "LOOP_STACK"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": "DIRECT_14_BIT_LOOP_TERMINAL_ADDRESS",
+      "immediate_fields": ["ADDR", "TERM"],
+      "branch_fields": ["ADDR", "TERM"],
+      "registers_read": [
+        "PC",
+        "ACTIVE_PC_STACK_TOP_VALID",
+        "ACTIVE_LOOP_STACK_TOP",
+        "CNTR_VALID_FOR_ACTIVE_CE_LOOP"
+      ],
+      "registers_written": [
+        "PC",
+        "PC_STACK",
+        "LOOP_STACK"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": [],
+      "status_flags_written": [],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "The setup instruction advances to PC+1, the first loop instruction; no PM data transfer occurs.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "PUSH_PC_PLUS_ONE_ON_PC_STACK",
+        "PUSH_TERM_AND_ADDR_ON_LOOP_STACK",
+        "ADVANCE_PC_TO_PC_PLUS_ONE"
+      ],
+      "legal_multifunction_combinations": [
+        "DO is a dedicated program-sequencer instruction and performs no computation or data move.",
+        "Nested loops are legal through four loop-stack levels when terminal addresses differ."
+      ],
+      "illegal_or_reserved_combinations": [
+        "Nested loops may not terminate on the same instruction.",
+        "All sixteen TERM field values are defined; TERM=1111 is FOREVER."
+      ],
+      "old_value_new_value_semantics": "Cycle-start PC+1 becomes both the next PC and the PC-stack loop-start entry. In the same cycle, {TERM,ADDR} is pushed on the loop stack. The setup instruction executes once and is outside the loop body.",
+      "write_conflict_rules": "The PC-stack and loop-stack pushes are independent simultaneous writes. External setup collision fails closed. A fifth nested DO reports the documented stack overflow state through the existing bounded stack contract; its full-chip recovery behavior remains outside this slice.",
+      "condition_false_behavior": "Not applicable during setup: TERM is stored and is not evaluated until execution reaches the terminal loop instruction.",
+      "loop_interaction": "An active outer loop permits a distinct-end nested DO. Same-terminal nesting is rejected by a documented restriction. Executing DO itself on an outer terminal instruction remains fail closed under OQ-018 until precedence is independently established.",
+      "interrupt_interaction": "Interrupt recognition and loop-stack context timing are outside this bounded setup slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "DO setup pushes both descriptors and advances to the first loop instruction in one processor cycle; fetch wait phases remain outside this boundary."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Only the instruction fetch is externally visible for DO; PM-data and DM transactions are absent.",
+      "parallel_actions": [
+        {
+          "action": "DO_LOOP_SETUP",
+          "reads": ["PC", "ADDR", "TERM"],
+          "writes": ["PC", "PC_STACK", "LOOP_STACK"]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-5–4-8: loop-stack contents, simultaneous PC+1 push, first loop address, four-level nesting, and same-terminal restriction"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-16–4-19: DO setup occurs once and performs no computation while stack pushes occur in the setup cycle"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-1 and 6-13–6-14: one-cycle instruction rule and DO algebraic syntax"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-2 and A-10: Type 11 ADDR/TERM encoding and all sixteen termination codes"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-018: precedence when a DO instruction occupies an active outer loop terminal address is unresolved and fails closed.",
+        "Loop-terminal execution is verified in the separate sequencer slice but not yet unified with the Type 11 decoder/PC boundary.",
+        "Interrupt abort, external fetch waits, and eight-state logical timing remain outside this bounded slice."
       ]
     },
     {

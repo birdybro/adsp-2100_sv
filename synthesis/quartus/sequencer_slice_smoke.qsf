@@ -41,6 +41,7 @@ set_instance_assignment -name VIRTUAL_PIN ON -to invalid_counter_condition_o
 set_instance_assignment -name VIRTUAL_PIN ON -to invalid_loop_context_o
 set_instance_assignment -name VIRTUAL_PIN ON -to invalid_return_context_o
 set_instance_assignment -name VIRTUAL_PIN ON -to unsupported_do_at_loop_end_o
+set_instance_assignment -name VIRTUAL_PIN ON -to unsupported_nested_same_end_o
 set_instance_assignment -name VIRTUAL_PIN ON -to explicit_condition_true_o
 set_instance_assignment -name VIRTUAL_PIN ON -to loop_termination_true_o
 set_instance_assignment -name VIRTUAL_PIN ON -to explicit_transfer_o

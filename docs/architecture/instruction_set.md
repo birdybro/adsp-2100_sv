@@ -24,7 +24,8 @@ MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
 immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
-507,904 source-closed Type 10 direct JUMP/CALL words,
+507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
+DO UNTIL setup words,
 parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
@@ -51,6 +52,21 @@ exhaustive Python and RTL field decode, assembler/disassembler round trips,
 and 50,204 stateful model-versus-RTL cycles provide the bounded execution
 evidence. Fetch, interrupts, stalls, and external bus phases remain outside
 this slice.
+
+Type 11 encodes `000101 ADDR[13:0] TERM[3:0]`. All 262,144 field
+combinations are defined because the original termination table assigns all
+sixteen TERM codes, including `CE` and `FOREVER`. In one cycle the instruction
+pushes wrapped PC+1 on the PC stack, pushes `{TERM, ADDR}` on the loop stack,
+and advances PC to that same first-loop address. The setup instruction itself
+is not part of the loop body and performs no computation or data move. Nested
+loops with distinct terminal addresses are accepted; the documented
+same-terminal restriction fails closed. Executing a nested DO on the active
+outer terminal remains OQ-018. Two hand-derived fixtures, every numeric-target
+assembler/disassembler form, exhaustive 24-bit RTL decode, twelve directed
+model tests, and 554,309 model-versus-RTL cycles cover the bounded setup state
+[ADI-UM-1989, printed pp. 4-5–4-8, 4-16–4-19, 6-1, 6-13–6-14, A-2,
+A-10]. Loop-terminal execution is verified separately; fetch overlap,
+interrupts, waits, and external bus phases remain outside this slice.
 
 Type 8 encodes Z `[18]`, AMF `[17:13]`, YOP `[12:11]`, XOP `[10:8]`, and
 two four-bit DREG move selectors. The model and RTL execute all 476,672

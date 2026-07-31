@@ -238,6 +238,27 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             "UNVERIFIED_TYPE_10_CALL_NOT_CE_OQ_012",
         )
         self.assertEqual(assemble_statement(decoded.text).value, opcode)
+
+    def test_all_type_11_do_until_forms_round_trip(self) -> None:
+        count = 0
+        for address in range(1 << 14):
+            for termination in range(16):
+                opcode = 0x140000 | (address << 4) | termination
+                decoded = disassemble_word(opcode)
+                self.assertTrue(decoded.implemented)
+                self.assertEqual(decoded.classification, "TYPE_11_BOUNDED_EXECUTION")
+                self.assertEqual(assemble_statement(decoded.text).value, opcode)
+                count += 1
+        self.assertEqual(count, 262_144)
+        self.assertEqual(assemble_statement("DO 0x0008;").value, 0x14008F)
+        self.assertEqual(
+            assemble_statement("DO H#0123 UNTIL CE;").value,
+            0x14123E,
+        )
+        with self.assertRaises(AssemblyError):
+            assemble_statement("DO 0x4000;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("DO 8 UNTIL MAYBE;")
         with self.assertRaises(AssemblyError):
             assemble_statement("IF NOT CE CALL 0x0000;")
         with self.assertRaises(AssemblyError):

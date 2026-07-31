@@ -56,6 +56,16 @@ from .direct_jump import (
     decode_direct_jump,
     is_direct_jump_class,
 )
+from .do_until import (
+    DO_UNTIL_CLASS_MASK,
+    DO_UNTIL_CLASS_VALUE,
+    DoUntilAction,
+    DoUntilCycleResult,
+    DoUntilState,
+    apply_do_until_cycle,
+    decode_do_until,
+    is_do_until_class,
+)
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
 from .mr_saturation import MR_SATURATION_OPCODE, decode_mr_saturation
