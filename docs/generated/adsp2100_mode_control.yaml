@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_18_ACTION_DECODE",
+  "confidence": "VERIFIED_PRIMARY",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "status_database": "docs/generated/adsp2100_status_registers.yaml",
+  "instruction": {
+    "original_type": 18,
+    "name": "mode control",
+    "opcode_mask": "0xfff00f",
+    "opcode_value": "0x0c0000",
+    "encoding_pattern": "000011000000xxxxxxxx0000",
+    "field_defined_encoding_count": 256,
+    "distinct_action_bundles": 81,
+    "actionless_alias_count": 16,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "memory_spaces_accessed": [
+      "PROGRAM_INSTRUCTION_FETCH"
+    ],
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "NONE",
+    "combination_rule": "SR, BR, OL, and AS are independent fields in one instruction. Every field-defined combination applies in the same instruction cycle.",
+    "source_value_rule": "Each no-change code retains the corresponding cycle-start MSTAT bit. Deactivate writes zero and activate writes one at cycle end.",
+    "later_device_exclusion": "Bits 15:12 and 3:0 remain fixed zero. Timer, GO, and alternate multiplier-placement controls from later family members are not original ADSP-2100 features.",
+    "wait_state_sensitivity": "Normal PM instruction fetch only."
+  },
+  "fields": [
+    {
+      "id": "AS_MCC",
+      "mstat_bit": 3,
+      "msb": 11,
+      "lsb": 10,
+      "target": "AR_SATURATE"
+    },
+    {
+      "id": "OL_MCC",
+      "mstat_bit": 2,
+      "msb": 9,
+      "lsb": 8,
+      "target": "OVERFLOW_LATCH"
+    },
+    {
+      "id": "BR_MCC",
+      "mstat_bit": 1,
+      "msb": 7,
+      "lsb": 6,
+      "target": "BIT_REVERSE"
+    },
+    {
+      "id": "SR_MCC",
+      "mstat_bit": 0,
+      "msb": 5,
+      "lsb": 4,
+      "target": "SECONDARY_REGISTER_BANK"
+    }
+  ],
+  "control_codes": {
+    "0": "NO_CHANGE_ZERO",
+    "1": "NO_CHANGE_ONE",
+    "2": "DEACTIVATE",
+    "3": "ACTIVATE"
+  },
+  "assembly": {
+    "clause_order": [
+      "BIT_REV",
+      "AV_LATCH",
+      "AR_SAT",
+      "SEC_REG"
+    ],
+    "target_to_field": {
+      "BIT_REV": "BR_MCC",
+      "AV_LATCH": "OL_MCC",
+      "AR_SAT": "AS_MCC",
+      "SEC_REG": "SR_MCC"
+    },
+    "action_keywords": {
+      "DEACTIVATE": "DIS",
+      "ACTIVATE": "ENA"
+    },
+    "omitted_field_encoding": 0,
+    "alias_policy": "Algebraic assembly emits MCC=00 for omitted targets. Disassembly uses a raw .WORD form whenever any MCC=01 alias must be preserved exactly."
+  },
+  "parallel_actions": [
+    {
+      "action": "UPDATE_MSTAT_BITS",
+      "reads": [
+        "CYCLE_START_MSTAT"
+      ],
+      "writes": [
+        "CYCLE_END_MSTAT"
+      ],
+      "notes": "All four controls read the same cycle-start MSTAT value and commit one combined MSTAT result."
+    }
+  ],
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 4-22–4-23",
+      "supports": "four-bit MSTAT map, MODE CONTROL write path, reset-disabled modes, and mode effects"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 6-14–6-15, Table 6.9",
+      "supports": "original ENA/DIS target names and combined instruction syntax"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. A-3 and A-8 (scan PDF pp. 142 and 147)",
+      "supports": "Type 18 field positions and all four MCC code meanings"
+    },
+    {
+      "reference_id": "ADI-2101-CROSS-1990",
+      "authority": "LATER_DEVICE_CORROBORATION_ONLY",
+      "location": "printed pp. 9-63–9-64",
+      "supports": "comma-separated combined controls and one-cycle execution; later-only modes are explicitly excluded"
+    }
+  ],
+  "unresolved_issues": [
+    "OQ-015: exact interrupt-adjacent visibility of the new MSTAT value.",
+    "External fetch-phase and wait-state timing remain outside this bounded instruction boundary."
+  ]
+}

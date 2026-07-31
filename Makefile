@@ -29,6 +29,13 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_mr_saturation_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_mode_control_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mode_control_slice \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_mode_control_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			rtl/core/adsp2100_counter.sv \
@@ -108,6 +115,7 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_instruction_formats.py
 	$(PYTHON) tools/generators/validate_stack_control.py
 	$(PYTHON) tools/generators/validate_mr_saturation.py
+	$(PYTHON) tools/generators/validate_mode_control.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
@@ -138,6 +146,13 @@ decode-tests:
 			rtl/core/adsp2100_mr_saturation_decode.sv \
 			sim/unit/tb_adsp2100_mr_saturation_decode.sv; \
 		build/obj_mr_saturation_decode/Vtb_adsp2100_mr_saturation_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_mode_control_decode \
+			--top-module tb_adsp2100_mode_control_decode \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			sim/unit/tb_adsp2100_mode_control_decode.sv; \
+		build/obj_mode_control_decode/Vtb_adsp2100_mode_control_decode; \
 	else \
 		echo "SKIP exhaustive RTL decode: Verilator is not installed"; \
 	fi
@@ -341,7 +356,8 @@ status-tests:
 	fi
 
 mode-tests:
-	$(PYTHON) -m unittest -v tests.test_mode_integration
+	$(PYTHON) -m unittest -v tests.test_mode_integration \
+		tests.test_mode_control
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_mode_slice_vectors.py \
@@ -358,6 +374,17 @@ mode-tests:
 			rtl/core/adsp2100_mode_slice.sv \
 			sim/unit/tb_adsp2100_mode_slice.sv; \
 		build/obj_mode_slice/Vtb_adsp2100_mode_slice; \
+		$(PYTHON) tools/generators/generate_mode_control_vectors.py \
+			--output build/mode_control_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_mode_control_slice \
+			--top-module tb_adsp2100_mode_control_slice \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_mode_control_slice.sv \
+			sim/unit/tb_adsp2100_mode_control_slice.sv; \
+		build/obj_mode_control_slice/Vtb_adsp2100_mode_control_slice; \
 	else \
 		echo "SKIP MSTAT-consumer RTL test: Verilator is not installed"; \
 	fi
@@ -395,6 +422,10 @@ formal:
 			rtl/core/adsp2100_mr_saturation_decode.sv \
 			formal/harnesses/adsp2100_mr_saturation_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mode_control_decode_formal \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			formal/harnesses/adsp2100_mode_control_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice_formal \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			rtl/core/adsp2100_counter.sv \
@@ -425,6 +456,12 @@ formal:
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_mr_saturation_slice.sv \
 			formal/harnesses/adsp2100_mr_saturation_slice_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_mode_control_slice_formal \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_mode_control_slice.sv \
+			formal/harnesses/adsp2100_mode_control_slice_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_formal \
 			rtl/core/adsp2100_shifter.sv \
@@ -485,6 +522,8 @@ formal:
 			formal/stack_control_decode.sby; \
 		sby -f -d build/formal_mr_saturation_decode \
 			formal/mr_saturation_decode.sby; \
+		sby -f -d build/formal_mode_control_decode \
+			formal/mode_control_decode.sby; \
 		sby -f -d build/formal_stack_control_slice \
 			formal/stack_control_slice.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
@@ -492,6 +531,8 @@ formal:
 		sby -f -d build/formal_mac formal/mac.sby; \
 		sby -f -d build/formal_mr_saturation_slice \
 			formal/mr_saturation_slice.sby; \
+		sby -f -d build/formal_mode_control_slice \
+			formal/mode_control_slice.sby; \
 		sby -f -d build/formal_shifter formal/shifter.sby; \
 		sby -f -d build/formal_dag formal/dag.sby; \
 		sby -f -d build/formal_sequencer formal/sequencer_flow.sby; \
@@ -523,6 +564,8 @@ synth-quartus:
 			synthesis/quartus/stack_control_slice_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/mr_saturation_slice_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/mode_control_slice_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mac_smoke; \
@@ -553,6 +596,7 @@ clean:
 	@find build -maxdepth 1 -type f -name alu_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mac_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mr_saturation_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name mode_control_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_vectors.txt -delete
@@ -591,6 +635,12 @@ clean:
 	@if [ -d build/obj_mr_saturation_slice ]; then \
 		find build/obj_mr_saturation_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_mode_control_decode ]; then \
+		find build/obj_mode_control_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_mode_control_slice ]; then \
+		find build/obj_mode_control_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_register ]; then find build/obj_register -depth -delete; fi
 	@if [ -d build/obj_register_writeback ]; then \
 		find build/obj_register_writeback -depth -delete; \
@@ -610,6 +660,9 @@ clean:
 	@if [ -d build/quartus_mac ]; then find build/quartus_mac -depth -delete; fi
 	@if [ -d build/quartus_mr_saturation_slice ]; then \
 		find build/quartus_mr_saturation_slice -depth -delete; \
+	fi
+	@if [ -d build/quartus_mode_control_slice ]; then \
+		find build/quartus_mode_control_slice -depth -delete; \
 	fi
 	@if [ -d build/quartus_shifter ]; then find build/quartus_shifter -depth -delete; fi
 	@if [ -d build/quartus_dag ]; then find build/quartus_dag -depth -delete; fi
@@ -633,6 +686,8 @@ clean:
 		build/formal_stack_control_slice \
 		build/formal_mr_saturation_decode \
 		build/formal_mr_saturation_slice \
+		build/formal_mode_control_decode \
+		build/formal_mode_control_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
 		build/formal_counter build/formal_sequencer_stacks \

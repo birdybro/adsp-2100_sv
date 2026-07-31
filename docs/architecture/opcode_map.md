@@ -82,3 +82,12 @@ selected-bank MR source/destination, two saturation limits, status
 preservation, and one-cycle action [ADI-UM-1989, printed pp. 2-18–2-19 and
 A-4]. An independent exhaustive RTL decoder proves that this word alone
 activates the Type 25 execution slice.
+
+Type 18 has mask/value `0xfff00f`/`0x0c0000`, leaving exactly four two-bit
+MCC fields. AS, OL, BR, and SR occupy bits `[11:10]`, `[9:8]`, `[7:6]`, and
+`[5:4]`, respectively. Each independently selects no-change (`00` or `01`),
+deactivate (`10`), or activate (`11`) for MSTAT bits 3 through 0
+[ADI-UM-1989, printed pp. A-3 and A-8]. The semantic validator accounts for
+all 256 words, 81 distinct action bundles, and 16 actionless aliases. An
+exhaustive RTL traversal proves that no other 24-bit word emits a Type 18
+action.

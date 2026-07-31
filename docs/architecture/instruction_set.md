@@ -19,8 +19,8 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 
 `docs/generated/adsp2100_isa.yaml` is the source for generated class decode
 and tool tables. It contains all 30 original Appendix A class masks plus
-independently reviewed semantic entries for all-zero NOP and exact Type 25
-MR saturation. The companion
+independently reviewed semantic entries for all-zero NOP, exact Type 25
+MR saturation, and parameterized Type 18 mode control. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
 fields across the 30 diagrams, including every one of their 393 variable bit
 positions [ADI-UM-1989, printed pp. A-1–A-5, scan PDF pp. 140–144].
@@ -50,6 +50,16 @@ and retains the instruction's one-cycle boundary when MV is clear
 pp. 3-47 and A-4]. The hand fixture also drives the database-based
 assembler/disassembler round trip.
 
+A primary-backed Type 18 record closes all 256 field-defined mode-control
+words. The four independent two-bit fields are AS `[11:10]`, OL `[9:8]`,
+BR `[7:6]`, and SR `[5:4]`; `00` and `01` preserve the corresponding
+cycle-start MSTAT bit, `10` clears it, and `11` sets it at cycle end. This
+produces 81 distinct action bundles and 16 actionless aliases
+[ADI-UM-1989, printed pp. 4-22–4-23, 6-14–6-15, A-3, A-8]. The bounded
+model/RTL slice exhausts all 4,096 opcode/initial-MSTAT transforms and adds
+seeded state sequences. Later timer, GO, and multiplier-placement fields are
+fixed zero and excluded from the original-device decoder.
+
 A bounded stateful execution slice now connects Type 26 to all four stack
 classes, live CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT. It samples all
 sources at cycle start and atomically commits selected actions at cycle end;
@@ -58,7 +68,8 @@ under valid, empty, full, reset, invalid-opcode, and conflicting-request
 conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
-assembler/disassembler syntax, and logical bus phases remain open. NOP and
-Type 25 are the only full semantic entries in the main instruction table;
-most legal combinations, register effects, parallel ordering, cycle counts,
-and bus transactions still require primary-backed entries.
+assembler/disassembler syntax, and logical bus phases remain open. NOP,
+Type 18, and Type 25 are the only full semantic entries in the main
+instruction table; most legal combinations, register effects, parallel
+ordering, cycle counts, and bus transactions still require primary-backed
+entries.

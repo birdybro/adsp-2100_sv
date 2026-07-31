@@ -12,11 +12,13 @@
   "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
   "semantic_databases": [
     "docs/generated/adsp2100_stack_control.yaml",
-    "docs/generated/adsp2100_mr_saturation.yaml"
+    "docs/generated/adsp2100_mr_saturation.yaml",
+    "docs/generated/adsp2100_mode_control.yaml"
   ],
   "integration_databases": [
     "docs/generated/adsp2100_stack_control_slice.yaml",
-    "docs/generated/adsp2100_mr_saturation_slice.yaml"
+    "docs/generated/adsp2100_mr_saturation_slice.yaml",
+    "docs/generated/adsp2100_mode_control_slice.yaml"
   ],
   "unshown_encoding_policy": {
     "classification": "RESERVED_UNSHOWN",
@@ -369,6 +371,100 @@
     }
   ],
   "instructions": [
+    {
+      "id": "MODE-CONTROL-TYPE-18",
+      "mnemonic": "ENA/DIS",
+      "algebraic_assembly_syntax": "{ENA|DIS} mode [, {ENA|DIS} mode ...];",
+      "encoding_pattern": "000011000000xxxxxxxx0000",
+      "opcode_mask": "0xfff00f",
+      "opcode_value": "0x0c0000",
+      "fields": [
+        "AS_MCC",
+        "OL_MCC",
+        "BR_MCC",
+        "SR_MCC"
+      ],
+      "condition_field": null,
+      "computation_field": null,
+      "source_register_selections": [],
+      "destination_register_selections": [
+        "MSTAT.FIELD_SELECTED_BITS"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": null,
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "MSTAT"
+      ],
+      "registers_written": [
+        "MSTAT.FIELD_SELECTED_BITS"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": [],
+      "status_flags_written": [],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "INDEPENDENT_SR_BR_OL_AS_MODE_CONTROLS"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [
+        "LATER_DEVICE_TIMER_GO_AND_MULTIPLIER_MODE_FIELDS_ARE_FIXED_ZERO"
+      ],
+      "old_value_new_value_semantics": "Read cycle-start MSTAT. Each MCC=00 or MCC=01 field preserves its corresponding bit, MCC=10 clears it, and MCC=11 sets it. Commit the combined four-bit result at cycle end.",
+      "write_conflict_rules": "Type 18 has one combined MSTAT destination. Collision with an external setup/direct MSTAT write is outside this bounded instruction slice and fails closed.",
+      "condition_false_behavior": "Unconditional instruction; not applicable.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Normal instruction-boundary recognition; exact new-MSTAT visibility at adjacent interrupt entry remains OQ-015.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "All selected mode changes occur in one instruction cycle; external fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; no PM or DM data transfer is issued.",
+      "parallel_actions": [
+        {
+          "action": "COMBINED_MSTAT_FIELD_UPDATE",
+          "reads": [
+            "CYCLE_START_MSTAT"
+          ],
+          "writes": [
+            "CYCLE_END_MSTAT"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-22–4-23, MSTAT fields and MODE CONTROL write path"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-14–6-15, original ENA/DIS syntax and four targets"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-3 and A-8, exact Type 18 field positions and MCC meanings"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "OQ-015: interrupt-adjacent MSTAT visibility is not integrated.",
+        "External fetch phase and wait-state timing are outside this bounded state slice."
+      ]
+    },
     {
       "id": "SAT-MR-050000",
       "mnemonic": "SAT MR",

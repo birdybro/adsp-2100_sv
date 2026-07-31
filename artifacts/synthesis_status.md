@@ -35,6 +35,12 @@
   unconstrained clocks, ports, or paths. Quartus reports
   `internal_conflict_o` as constant low; the bounded exclusive execution mux
   makes that signal an asserted invariant rather than an untested output.
+- Quartus 17.0.2 full compilation of the bounded Type 18 mode-control slice
+  passes. It uses 46 ALMs, 30 combinational ALUTs, exactly four MSTAT
+  registers, no RAM, and no DSPs. Across four timing models, worst setup slack
+  is +12.168 ns and worst hold slack is +0.173 ns against the 20 ns virtual
+  I/O constraint, with zero unconstrained clocks, ports, or paths. Quartus
+  reports `internal_conflict_o` constant low, matching its asserted invariant.
 - Quartus 17.0.2 full compilation of the condition-logic smoke project passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 10 ALMs,
   6 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks.
@@ -123,13 +129,14 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys is not installed. `make formal` strictly lints the eighteen available
+- SymbiYosys is not installed. `make formal` strictly lints the twenty available
   assertion harnesses before reporting that proof execution is skipped.
 
 There is no whole-core utilization, latch-count, Fmax, critical-path, or
 timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded class-decode,
-stack-control-decode, stack-control-integration, Type-25 integration,
+stack-control-decode, stack-control-integration, Type-18 integration,
+Type-25 integration,
 condition, ALU, MAC, shifter, DAG, sequencer-flow, CNTR, sequencer-stack,
 sequencer-integration, register-file, status-register, and status-stack block
 smoke projects plus the bounded MSTAT integration project.

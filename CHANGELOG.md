@@ -44,6 +44,10 @@ semantic versioning after its first release.
   selected-bank state model, portable bounded execution RTL, exhaustive
   24-bit decoder test, formal recipes, assembler/disassembler round trip, and
   constrained Cyclone V synthesis project.
+- A primary-backed parameterized Type 18 MODE CONTROL semantic record covering
+  all 256 original field-defined words, 81 distinct action bundles, and both
+  no-change aliases; an independent model, exact decoder, bounded stateful RTL
+  slice, exhaustive decode, formal recipes, and constrained Cyclone V project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -53,6 +57,9 @@ semantic versioning after its first release.
   verified NOP execution slice.
 - Partial database-driven assembler/disassembler that round-trips the
   independent NOP fixture and fails closed for unimplemented/reserved words.
+- Original Type 18 algebraic ENA/DIS assembly and disassembly, including
+  deterministic omitted-field encoding and raw `.WORD` preservation for
+  otherwise indistinguishable MCC=01 binary aliases.
 - Shared SystemVerilog width/phase/type package and GitHub Actions foundation
   regression.
 - Complete primary-backed 4-bit IF and inverse-sense DO UNTIL condition
@@ -223,14 +230,22 @@ semantic versioning after its first release.
   tests plus 50,112 stateful model-versus-RTL cycles. Both MR signs and banks,
   false MV, status preservation, invalid opcodes, reset unknowns, and atomic
   fail-closed setup collisions are covered.
-- The expanded `make test` passes 211 distinct Python checks, 14 local
-  reference hashes, all generated-data checks, strict Verilator lint, three
+- The expanded `make test` passes 221 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, four
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
-  regression including the new Type 25 stateful comparison.
+  regression including the Type 18 and Type 25 stateful comparisons.
 - Quartus full compilation passes for the bounded Type 25 integration slice:
   144 ALMs, 92 registers, no RAM/DSPs, +11.443 ns worst setup and +0.246 ns
   worst hold slack across four timing models, with zero unconstrained clocks,
   ports, or paths against the 20 ns constraint.
+- The Type 18 regression checks all 256 field-defined encodings, all 4,096
+  opcode/initial-MSTAT transforms, both no-change codes, algebraic and raw-word
+  round trips, invalid-word suppression, reset/setup conflicts, and 58,248
+  stateful model-versus-RTL cycles.
+- Quartus full compilation passes for the bounded Type 18 integration slice:
+  46 ALMs, 30 combinational ALUTs, exactly four MSTAT registers, no RAM/DSPs,
+  +12.168 ns worst setup and +0.173 ns worst hold slack across four timing
+  models, with zero unconstrained clocks, ports, or paths.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -301,6 +316,8 @@ semantic versioning after its first release.
   with explicit confidence boundaries.
 - Closed the condition-field encoding and predicate table while leaving
   counter update, loop-stack, and instruction timing explicitly open.
+- Closed original Type 18 AS/OL/BR/SR bit placement and action semantics,
+  explicitly excluding later timer, GO, and multiplier-placement controls.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

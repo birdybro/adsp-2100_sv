@@ -69,6 +69,15 @@ MOVE replaces all four stored bits. MODE CONTROL has one two-bit field per
 MSTAT bit in that order: `00` and `01` preserve the bit, `10` clears it, and
 `11` sets it [ADI-UM-1989, printed pp. 4-22–4-23, A-8].
 
+Original Type 18 places those fields in the reverse visual bit order:
+AS `[11:10]`, OL `[9:8]`, BR `[7:6]`, and SR `[5:4]`; bits 15:12 and 3:0
+remain fixed zero [ADI-UM-1989, printed p. A-3]. The exact decoder and bounded
+state slice now drive the existing status-storage controls for all 256 words.
+Every field reads the same cycle-start MSTAT and the combined result becomes
+visible at cycle end. A setup/direct-MSTAT write colliding with bounded
+instruction execution is suppressed and flagged rather than assigned an
+unsupported priority.
+
 ICNTL bits 0 through 3 independently select level (`0`) or edge (`1`)
 sensitivity for IRQ0 through IRQ3, and bit 4 enables interrupt nesting. IMASK
 bits 0 through 3 independently enable those four interrupt levels. On
@@ -99,7 +108,7 @@ MSTAT value throughout a cycle and exposes a direct MOVE or MODE CONTROL
 change to consumers on the following cycle [ADI-UM-1989, printed pp. 2-6–2-7,
 2-9, 3-5, 4-22–4-23]. This closes ordinary cycle-to-cycle visibility only;
 interrupt-adjacent selection remains OQ-015 and whole-instruction decode does
-not exist.
+not exist beyond the bounded Type 18 execution slice.
 
 Interrupt entry has priority over ordinary cycle-end writes because the
 interrupted instruction is aborted. The status block exposes the status-stack

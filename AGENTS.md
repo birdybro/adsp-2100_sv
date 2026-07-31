@@ -225,9 +225,12 @@ A commit message must state the engineering change and its verification.
 ## Current architectural status and risk
 
 No integrated fetch/decode/execute instruction core exists. Bounded
-source-backed RTL execution slices now implement exact Type 25 conditional MR
-saturation and all Type 26 stack-control actions, but they do not establish
-whole-core PC, pipeline, bus, interrupt, or wait-state behavior. A generated
+source-backed RTL execution slices now implement all original Type 18 mode
+controls, exact Type 25 conditional MR saturation, and all Type 26
+stack-control actions, but they do not establish whole-core PC, pipeline, bus,
+interrupt, or wait-state behavior. Type 18 excludes later timer, GO, and
+multiplier-placement fields and exhaustively covers all 256 original words.
+A generated
 synthesizable class decoder recognizes all 30 original Appendix A format
 classes and fails closed for unshown words; it has exhaustive 24-bit membership
 comparison. Source-backed condition,
@@ -236,7 +239,7 @@ sequencer-flow combinational blocks exist with independent model comparison,
 and a stateful two-bank storage slice exists for the complete computational
 bank, including AF/MF/SB and unit-specific ALU/MAC/shifter writeback. A
 stateful status/control slice also implements original ASTAT/MSTAT/ICNTL/IMASK
-fields, reset classifications, MODE CONTROL, computational flag writes,
+fields, reset classifications, exact Type 18 MODE CONTROL, computational flag writes,
 interrupt-entry snapshot/masking, and status restore. MSTAT consumer
 integration now covers its four original outputs at an ordinary
 cycle-start/cycle-end boundary; ICNTL consumer wiring, interrupt recognition,

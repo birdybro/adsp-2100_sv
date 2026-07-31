@@ -1,0 +1,19 @@
+[options]
+mode prove
+depth 8
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_mode_control_decode.sv
+read -formal -sv rtl/core/adsp2100_status_registers.sv
+read -formal -sv rtl/core/adsp2100_mode_control_slice.sv
+read -formal -sv formal/harnesses/adsp2100_mode_control_slice_formal.sv
+prep -top adsp2100_mode_control_slice_formal
+
+[files]
+rtl/core/adsp2100_mode_control_decode.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_mode_control_slice.sv
+formal/harnesses/adsp2100_mode_control_slice_formal.sv

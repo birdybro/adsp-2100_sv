@@ -132,12 +132,13 @@ advance beyond research until a page-level primary citation is added.
   ADI-UM-1989 instruction chapters and Appendix A
 - **Relevant tests:** `tests/test_isa_database.py`,
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
-  `tests/test_mr_saturation.py`,
+  `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
+  `sim/unit/tb_adsp2100_mode_control_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
-  `formal/mr_saturation_decode.sby`,
+  `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -156,13 +157,18 @@ advance beyond research until a page-level primary citation is added.
   Cyclone V fit. A separate machine-readable execution boundary connects
   those actions to all four stack classes, CNTR, ASTAT/MSTAT/IMASK, and SSTAT
   with nine model checks and 50,015 stateful RTL comparison cycles. Only the
-  all-zero NOP and exact Type 25 `IF MV SAT MR;` words are hand-verified full
-  semantic instruction entries in the main ISA table. Type 25 has primary-
+  all-zero NOP, parameterized Type 18 MODE CONTROL, and exact Type 25
+  `IF MV SAT MR;` words are hand-verified full semantic instruction entries
+  in the main ISA table. Type 25 has primary-
   backed cycle-start MV/bank/MR semantics, an independent state model, exact
   decoder, bounded execution RTL, exhaustive 24-bit decode, nine model tests,
   and 50,112 stateful differential cycles. Generated assembler/
   disassembler artifacts must derive from these databases as instruction
-  entries are independently verified.
+  entries are independently verified. Type 18 covers all 256 field-defined
+  words, 81 distinct action bundles, both no-change aliases, exact algebraic
+  assembly, exhaustive decode, every opcode/initial-MSTAT transform, and
+  58,248 stateful model/RTL cycles. Later timer, GO, and
+  multiplier-placement controls remain excluded.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -208,7 +214,9 @@ advance beyond research until a page-level primary citation is added.
   live status at cycle end. Interrupt/RTI arbitration and fetch/bus timing
   remain outside this bounded execution slice. A separate Type 25 model reads
   cycle-start MV, MSTAT bank selection, and MR, conservatively retains unknown
-  reset state, and commits conditional MR saturation at cycle end.
+  reset state, and commits conditional MR saturation at cycle end. A separate
+  Type 18 model retains all raw MCC aliases, atomically transforms cycle-start
+  MSTAT, and fails closed on invalid opcodes or setup collisions.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -226,10 +234,12 @@ advance beyond research until a page-level primary citation is added.
   contemporary original-versus-2101 tool selection only
 - **Relevant tests:** `make assembler-tests`, `make decode-tests`
 - **Implementation notes:** a fail-closed database-driven seed round-trips the
-  independent NOP and exact Type 25 `IF MV SAT MR;` fixtures and distinguishes
-  legal-unimplemented, original reserved, and unshown-reserved words. First
-  research surviving lawful assemblers; do not execute legacy tools on the
-  host.
+  independent NOP, exact Type 25 `IF MV SAT MR;`, and original Type 18
+  algebraic fixtures and distinguishes legal-unimplemented, original
+  reserved, and unshown-reserved words. Type 18 accepts unique comma-separated
+  ENA/DIS clauses and emits raw `.WORD` syntax when an MCC=01 alias must be
+  preserved exactly. First research surviving lawful assemblers; do not
+  execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -434,8 +444,10 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make status-tests`, `make mode-tests`,
   `make sequencer-tests`,
   `tests/test_status_registers.py`, `tests/test_mode_integration.py`,
+  `tests/test_mode_control.py`,
   `tests/test_sequencer_stacks.py`, `formal/status_registers.sby`,
-  `formal/mode_slice.sby`, `formal/sequencer_stacks.sby`
+  `formal/mode_slice.sby`, `formal/mode_control_slice.sby`,
+  `formal/sequencer_stacks.sby`
 - **Implementation notes:** the machine-readable register map, independent
   model, and portable RTL now implement exact eight-bit ASTAT, four-bit MSTAT,
   five-bit ICNTL, and four-bit IMASK storage; authentic ASTAT/ICNTL reset
@@ -453,7 +465,10 @@ advance beyond research until a page-level primary citation is added.
   default. A bounded integration slice now wires all four MSTAT bits to the
   computational bank, DAG1 bit reverse, sticky AV, and AR saturation using
   the documented start-read/end-write cycle boundary. Five directed tests and
-  50,112 model-versus-RTL integration cycles pass.
+  50,112 model-versus-RTL integration cycles pass. The exact Type 18 decoder
+  and bounded state slice connect every original MCC combination to live
+  MSTAT. Eight directed/schema/random tests, exhaustive 24-bit decode, all
+  4,096 opcode/initial-state transforms, and 58,248 model/RTL cycles pass.
 - **Unresolved questions:** architectural SSTAT instruction reads, interrupt
   recognition/RTI/status-stack arbitration, empty-pop effects (OQ-013), narrow
   DMD read extension (OQ-016), competing-write behavior (OQ-017), and
@@ -686,9 +701,11 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
-  the condition, ALU, MAC, shifter, DAG, and sequencer-flow combinational
-  blocks. Whole-core clocks, utilization, and timing remain unavailable;
-  Yosys is not installed.
+  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 18,
+  Type 25, and Type 26 execution blocks. The Type 18 slice fits in 46 ALMs
+  and four registers with positive multicorner setup/hold slack and zero
+  unconstrained paths. Whole-core clocks, utilization, and timing remain
+  unavailable; Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.
 - **Confidence:** UNKNOWN
 

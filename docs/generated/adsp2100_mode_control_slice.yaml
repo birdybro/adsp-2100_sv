@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_ORIGINAL_TYPE_18_STATEFUL_MODE_CONTROL_INTEGRATION",
+  "confidence": "CORROBORATED",
+  "action_database": "docs/generated/adsp2100_mode_control.yaml",
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 4-22–4-23 (MSTAT storage and mode effects)",
+    "ADI-UM-1989 printed pp. 6-14–6-15, A-3, and A-8 (syntax, exact field positions, and codes)"
+  ],
+  "cycle_boundary": {
+    "source_reads": "CYCLE_START_MSTAT",
+    "state_commits": "CYCLE_END_MSTAT",
+    "parallel_actions_are_atomic": true,
+    "no_change_aliases_preserve_state": true
+  },
+  "integrated_state": [
+    "MSTAT"
+  ],
+  "accepted_instruction_actions": [
+    "SET_OR_CLEAR_SECONDARY_REGISTER_BANK",
+    "SET_OR_CLEAR_BIT_REVERSE",
+    "SET_OR_CLEAR_OVERFLOW_LATCH",
+    "SET_OR_CLEAR_AR_SATURATE",
+    "ALL_FIELD_DEFINED_PARALLEL_COMBINATIONS"
+  ],
+  "fail_closed_boundaries": {
+    "NON_TYPE_18_OPCODE": "INVALID_AND_ACTION_FREE",
+    "TYPE_18_WITH_SETUP_WRITE": "INTEGRATION_CONFLICT_AND_STATE_PRESERVATION"
+  },
+  "not_implemented": [
+    "INSTRUCTION_FETCH_OR_PC_REGISTER",
+    "INTERRUPT_RECOGNITION_OR_STATUS_STACK_ARBITRATION",
+    "PHASE_LEVEL_OR_EXTERNAL_BUS_TIMING",
+    "LATER_DEVICE_TIMER_GO_OR_MULTIPLIER_MODE_FIELDS"
+  ]
+}

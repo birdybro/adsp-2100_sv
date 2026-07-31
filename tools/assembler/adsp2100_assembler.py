@@ -5,6 +5,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 
+from tools.generators.validate_mode_control import (
+    load_database as load_mode_control_database,
+    validate_database as validate_mode_control_database,
+)
 from tools.generators.validate_isa import load_database, validate_database
 
 
@@ -52,8 +56,51 @@ def exact_mnemonics() -> dict[str, int]:
     return result
 
 
+def _assemble_raw_word(statement: str) -> int | None:
+    match = re.fullmatch(r"\.WORD\s+(?:0X([0-9A-F]+)|H#([0-9A-F]+))", statement)
+    if match is None:
+        return None
+    value = int(match.group(1) or match.group(2), 16)
+    if not 0 <= value <= 0xFFFFFF:
+        raise AssemblyError(".WORD value must fit one 24-bit program word")
+    return value
+
+
+def _assemble_mode_control(statement: str) -> int | None:
+    clauses = [clause.strip() for clause in statement.split(",")]
+    parsed: list[tuple[str, str]] = []
+    for clause in clauses:
+        match = re.fullmatch(r"(ENA|DIS)\s+([A-Z_]+)", clause)
+        if match is None:
+            return None
+        parsed.append((match.group(1), match.group(2)))
+
+    database = load_mode_control_database()
+    validate_mode_control_database(database)
+    target_to_field = database["assembly"]["target_to_field"]
+    if any(target not in target_to_field for _, target in parsed):
+        return None
+    targets = [target for _, target in parsed]
+    if len(set(targets)) != len(targets):
+        raise AssemblyError("MODE CONTROL target may appear only once")
+
+    fields = {field["id"]: field for field in database["fields"]}
+    opcode = int(database["instruction"]["opcode_value"], 16)
+    action_code = {"DIS": 2, "ENA": 3}
+    for action, target in parsed:
+        field = fields[target_to_field[target]]
+        opcode |= action_code[action] << field["lsb"]
+    return opcode
+
+
 def assemble_statement(source: str) -> AssembledWord:
     statement = _normalize_statement(source)
+    raw_word = _assemble_raw_word(statement)
+    if raw_word is not None:
+        return AssembledWord(raw_word)
+    mode_control = _assemble_mode_control(statement)
+    if mode_control is not None:
+        return AssembledWord(mode_control)
     mnemonics = exact_mnemonics()
     if statement not in mnemonics:
         raise AssemblyError(

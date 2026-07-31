@@ -3,6 +3,24 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-MODE-SEC-REG-0C0030",
+      "source": "ENA SEC_REG;",
+      "opcode": "0x0c0030",
+      "program_word_bytes_big_endian": "0c0030",
+      "encoding_class": 18,
+      "source_citation": "ADI-UM-1989 printed pp. 6-15, A-3, and A-8",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
+      "id": "HAND-MODE-ALL-0C0BB0",
+      "source": "DIS BIT_REV, ENA AV_LATCH, DIS AR_SAT, ENA SEC_REG;",
+      "opcode": "0x0c0bb0",
+      "program_word_bytes_big_endian": "0c0bb0",
+      "encoding_class": 18,
+      "source_citation": "ADI-UM-1989 printed pp. 6-15, A-3, and A-8",
+      "review_status": "HAND_TRANSCRIBED_PRIMARY"
+    },
+    {
       "id": "HAND-SAT-MR-050000",
       "source": "IF MV SAT MR;",
       "opcode": "0x050000",

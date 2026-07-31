@@ -49,6 +49,11 @@ The exact Type 25 saturation boundary now uses cycle-start MSTAT bit 0 to
 select primary or alternate MR and writes only that bank at cycle end when
 cycle-start ASTAT.MV is set; it does not alter ASTAT
 [ADI-UM-1989, printed pp. 2-5–2-7, 2-18–2-19, A-4].
+The exact Type 18 boundary independently applies all AS/OL/BR/SR fields to
+cycle-start MSTAT and commits one four-bit result at cycle end. Both
+documented no-change encodings preserve their raw decode identity, while
+later-family Type 18 controls remain excluded
+[ADI-UM-1989, printed pp. 4-22–4-23, 6-14–6-15, A-3, A-8].
 A separate exact four-by-sixteen status stack and a combined exact
 16-by-14 PC/four-by-14 count/four-by-18 loop-stack boundary implement LIFO
 storage, pointer saturation, loss of the newest overflowing push, sticky

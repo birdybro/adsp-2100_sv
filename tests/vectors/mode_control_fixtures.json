@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "source": "ADI-UM-1989 printed pp. 6-14–6-15, A-3, and A-8",
+  "hand_checked_cases": [
+    {
+      "id": "ALL_MCC_ZERO",
+      "source": ".WORD 0x0c0000;",
+      "opcode": "0x0c0000",
+      "sr": "NO_CHANGE_ZERO",
+      "br": "NO_CHANGE_ZERO",
+      "ol": "NO_CHANGE_ZERO",
+      "ar": "NO_CHANGE_ZERO",
+      "input_mstat": "0xa",
+      "expected_mstat": "0xa"
+    },
+    {
+      "id": "ENABLE_SECONDARY_BANK",
+      "source": "ENA SEC_REG;",
+      "opcode": "0x0c0030",
+      "sr": "ACTIVATE",
+      "br": "NO_CHANGE_ZERO",
+      "ol": "NO_CHANGE_ZERO",
+      "ar": "NO_CHANGE_ZERO",
+      "input_mstat": "0x0",
+      "expected_mstat": "0x1"
+    },
+    {
+      "id": "DISABLE_BIT_REVERSE",
+      "source": "DIS BIT_REV;",
+      "opcode": "0x0c0080",
+      "sr": "NO_CHANGE_ZERO",
+      "br": "DEACTIVATE",
+      "ol": "NO_CHANGE_ZERO",
+      "ar": "NO_CHANGE_ZERO",
+      "input_mstat": "0xf",
+      "expected_mstat": "0xd"
+    },
+    {
+      "id": "ALL_TARGETS_EXPLICIT",
+      "source": "DIS BIT_REV, ENA AV_LATCH, DIS AR_SAT, ENA SEC_REG;",
+      "opcode": "0x0c0bb0",
+      "sr": "ACTIVATE",
+      "br": "DEACTIVATE",
+      "ol": "ACTIVATE",
+      "ar": "DEACTIVATE",
+      "input_mstat": "0xa",
+      "expected_mstat": "0x5"
+    },
+    {
+      "id": "ALL_MCC_ONE_ALIASES",
+      "source": ".WORD 0x0c0550;",
+      "opcode": "0x0c0550",
+      "sr": "NO_CHANGE_ONE",
+      "br": "NO_CHANGE_ONE",
+      "ol": "NO_CHANGE_ONE",
+      "ar": "NO_CHANGE_ONE",
+      "input_mstat": "0x5",
+      "expected_mstat": "0x5"
+    }
+  ]
+}

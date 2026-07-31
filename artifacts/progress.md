@@ -27,6 +27,9 @@ cycle-, or Hard Drivin'-complete
 - exact Type 25 MR-saturation semantic entry, hand-reviewed assembler fixture,
   independent action/state model, shared saturation primitive, portable
   selected-bank execution RTL, and exhaustive fail-closed decode;
+- parameterized original Type 18 MODE CONTROL semantics, algebraic
+  assembler/disassembler support, independent state model, portable execution
+  RTL, and exhaustive fail-closed decode for all 256 field-defined words;
 - bounded stateful Type 26 model/RTL execution connecting all four stack
   classes, CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT with cycle-start reads
   and atomic cycle-end commits;
@@ -70,7 +73,7 @@ cycle-, or Hard Drivin'-complete
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
-- partial NOP and Type 25 assembler/disassembler round trip;
+- partial NOP, Type 18, and Type 25 assembler/disassembler round trip;
 - dependency-free regression, Verilator package lint, and CI workflow.
 
 No TASKS.md milestone is marked complete yet. The foundation is under
@@ -80,7 +83,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 211 implemented Python unit checks plus manifest/hash verification;
+- 221 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -88,6 +91,9 @@ outstanding.
   simulation;
 - exact Type 25 word `0x050000` is the sole MR-saturation action across an
   exhaustive 16,777,216-word RTL traversal;
+- exactly 256 Type 18 words decode as original MODE CONTROL across an
+  exhaustive 16,777,216-word traversal; all 4,096 opcode/initial-MSTAT
+  transforms and 58,248 stateful model/RTL cycles pass;
 - Verilator strict lint passes for shared types, generated class decode,
   condition RTL, ALU, MAC, shifter, DAG,
   sequencer-flow/CNTR/sequencer-stack/integration, register-file,
@@ -99,18 +105,21 @@ outstanding.
   50,287 status/control, 50,037 status-stack, 50,062 PC/count/loop stack, and
   50,112 MSTAT-consumer integration cycles plus 50,015 stateful Type 26
   execution cycles and 50,112 stateful Type 25 cycles pass simulation;
+  the Type 18 state slice adds 58,248 passing cycles;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
   sequencer-flow, CNTR, sequencer-stack, sequencer-integration, register-file,
   status-register, and status-stack block compilations plus the MSTAT and
   stateful Type 26 integration-slice compilations pass with no unconstrained
   paths; the Type 25 slice separately fits in 144 ALMs and 92 registers with
-  positive setup/hold slack and no unconstrained paths;
+  positive setup/hold slack and no unconstrained paths; the Type 18 slice fits
+  in 46 ALMs and four registers with positive setup/hold slack and no
+  unconstrained paths;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
-  MSTAT-integration, Type 25 decode, and Type 25 execution formal harnesses
-  pass assertion syntax lint, but no
+  MSTAT-integration, Type 18 decode/execution, and Type 25 decode/execution
+  formal harnesses pass assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
   synthesis top exists.
@@ -119,8 +128,8 @@ outstanding.
 
 1. Locate the exact original Cross-Software/instruction reference and a
    separately identifiable original data sheet.
-2. Continue exact/small instruction semantics with original Type 18 MODE
-   CONTROL, preserving both no-change encodings and cycle-start mode effects.
+2. Continue exact/small instruction semantics with original Type 21 MODIFY,
+   preserving old-I address observation and cycle-end DAG update ordering.
 3. Add stateful PC/reset/enable integration only after the next-PC update and
    stall boundaries are source-closed.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.

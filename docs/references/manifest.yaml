@@ -28,7 +28,10 @@
         "system_interface"
       ],
       "cited_pages_or_sections": [
-        "To be indexed after local extraction."
+        "Printed pp. 4-22–4-23: original four-bit MSTAT and mode effects",
+        "Printed pp. 6-14–6-15, Table 6.9: original MODE CONTROL syntax and targets",
+        "Appendix A printed pp. A-3 and A-8: Type 18 field positions and MCC codes",
+        "Additional architecture sections are cited at point of use and remain to be consolidated here"
       ],
       "may_commit": false,
       "acquisition_status": "acquired",
@@ -70,6 +73,7 @@
       "cited_pages_or_sections": [
         "Front matter: First Edition and 1989 copyright",
         "Section 2.5.3, printed p. 2-6: the System Builder requires .ADSP2101 to distinguish a 2101 system and otherwise assumes ADSP-2100",
+        "Printed pp. 9-63–9-64: combined MODE CONTROL clauses and one-cycle description, used only as later-device corroboration",
         "Chapter 9 and Appendix A are explicitly ADSP-2101-specific and are comparative material only"
       ],
       "may_commit": false,

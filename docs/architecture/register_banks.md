@@ -62,6 +62,13 @@ start-read/end-write rule
 [ADI-UM-1989, printed pp. 2-6–2-7] but does not settle the exact
 interrupt-recognition boundary tracked by OQ-015.
 
+The separate bounded `adsp2100_mode_control_slice` now supplies that MSTAT
+write from exact original Type 18 decode. It verifies that SR changes bank
+selection only after the cycle-end commit, including instructions that also
+change BR, OL, or AS. It does not yet connect a same-instruction
+computational-register access or interrupt recognition, so OQ-015 and full
+multifunction legality remain unchanged.
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -85,7 +92,8 @@ therefore remains `IMPLEMENTING`.
 - `make mode-tests` adds five directed integration checks and 50,112
   deterministic model-versus-RTL cycles. It initializes every DREG in both
   banks, traverses all 16 MSTAT values, and checks that selection changes only
-  after the writing cycle.
+  after the writing cycle. The exact Type 18 slice adds 58,248 cycles,
+  including every one of the 4,096 opcode/initial-MSTAT transforms.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

@@ -31,6 +31,26 @@ class AssemblerDisassemblerTests(unittest.TestCase):
     def test_normalization_is_deterministic(self) -> None:
         self.assertEqual(assemble_statement("  nop ; // comment").value, 0)
         self.assertEqual(assemble_statement("NOP").value, 0)
+        self.assertEqual(
+            assemble_statement(" ena sec_reg,  dis bit_rev ;").value,
+            0x0C00B0,
+        )
+
+    def test_mode_control_aliases_preserve_binary_round_trip(self) -> None:
+        for opcode in (0x0C0000, 0x0C0010, 0x0C0550, 0x0C0DF0):
+            disassembly = disassemble_word(opcode)
+            self.assertTrue(disassembly.implemented)
+            self.assertEqual(disassembly.classification, "TYPE_18")
+            self.assertTrue(disassembly.text.startswith(".WORD"))
+            self.assertEqual(assemble_statement(disassembly.text).value, opcode)
+
+    def test_mode_control_rejects_duplicate_or_later_targets(self) -> None:
+        with self.assertRaises(AssemblyError):
+            assemble_statement("ENA SEC_REG, DIS SEC_REG;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("ENA TIMER;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement(".WORD 0x1000000;")
 
     def test_unsupported_assembly_fails_closed(self) -> None:
         with self.assertRaises(AssemblyError):

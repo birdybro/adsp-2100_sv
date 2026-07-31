@@ -12,6 +12,7 @@ Known cases:
 | Case | Current sourced timing |
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
+| Type 18 combined MODE CONTROL | one processor cycle for all selected original mode fields |
 | Type 25 `IF MV SAT MR;` | one processor cycle whether MV is true or false |
 | Type 26 combined stack control | one processor cycle for any field-defined action combination |
 | PM data access, next instruction valid in cache | no fetch overhead |
@@ -30,6 +31,15 @@ bank, and MR determine a single cycle-end MR write, while false MV preserves
 state without changing the one-cycle boundary, across 50,112 stateful cycles.
 This is instruction-boundary evidence, not external fetch-phase evidence
 [ADI-UM-1989, printed pp. 2-18–2-19 and A-4].
+
+The bounded Type 18 model/RTL slice verifies that all four fields read
+cycle-start MSTAT and atomically commit one cycle-end result across every
+field combination and initial MSTAT value. The contemporary Cross-Software
+reference corroborates that any number of comma-separated controls execute in
+one cycle, but it is used only for that shared behavior; its later-device
+timer, GO, and multiplier controls are excluded
+[ADI-UM-1989, printed pp. 4-22–4-23, 6-14–6-15, A-3, A-8;
+ADI-2101-CROSS-1990, printed pp. 9-63–9-64].
 
 The bounded Type 26 model/RTL execution slice verifies that every selected
 status/count/loop/PC action reads cycle-start state and commits on the same
