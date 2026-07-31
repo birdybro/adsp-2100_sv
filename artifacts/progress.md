@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `2feafe1`
+**Latest verified engineering commit:** `53b2c6a`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
