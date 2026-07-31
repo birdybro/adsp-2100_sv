@@ -1,7 +1,7 @@
 # Conditions and visibility
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer,
-Type 9 ALU/MAC, and Type 16 shifter integrations pass**
+Type 9 ALU/MAC, Type 10 direct-flow, and Type 16 shifter integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
 AV/NOT AV, MV/NOT MV, NEG/POS, and NOT CE/TRUE for `IF`
@@ -65,3 +65,15 @@ true predicates commit the result and unit-selected status together. The
 All 32,768 Type 9 words execute in both banks in 283,996 stateful comparison
 cycles, with both outcomes for every nonconstant condition
 [ADI-UM-1989, printed pp. 4-21, 4-25, 6-8–6-10, A-2, A-6].
+
+The bounded Type 10 direct-flow slice consumes all sixteen condition codes at
+cycle start. A false predicate advances PC without pushing; a true predicate
+selects the direct target and a true CALL pushes the return address. JUMP with
+field `0xe` additionally performs the sourced post-test CNTR transition. CALL
+with field `0xe` remains unsupported under OQ-012 because only a later-device
+Cross manual explicitly permits the syntax and the original ADSP-2100 source
+does not close its counter side effect. Unknown ASTAT or invalid CNTR context
+therefore holds state and reports an invalid boundary instead of inventing a
+predicate [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 4-25, 6-13–6-14,
+A-2, A-6; ADI-2101-CROSS-1990, printed instruction-reference CALL syntax,
+later-device evidence only].

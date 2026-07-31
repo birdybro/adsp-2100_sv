@@ -235,6 +235,29 @@ def _try_disassemble_conditional_compute(opcode: int) -> Disassembly | None:
     )
 
 
+def _try_disassemble_direct_jump(opcode: int) -> Disassembly | None:
+    if opcode & 0xF80000 != 0x180000:
+        return None
+    call = bool((opcode >> 18) & 1)
+    address = (opcode >> 4) & 0x3FFF
+    condition = opcode & 0xF
+    if call and condition == 0xE:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification="UNVERIFIED_TYPE_10_CALL_NOT_CE_OQ_012",
+            implemented=False,
+        )
+    prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
+    operation = "CALL" if call else "JUMP"
+    return Disassembly(
+        opcode=opcode,
+        text=f"{prefix}{operation} 0x{address:04x};",
+        classification="TYPE_10_BOUNDED_EXECUTION",
+        implemented=True,
+    )
+
+
 def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
     if opcode & 0xFF80F0 != 0x0E0000:
         return None
@@ -327,11 +350,12 @@ def _disassemble_modify_address(opcode: int) -> str:
 def disassemble_word(opcode: int) -> Disassembly:
     if not 0 <= opcode <= 0xFFFFFF:
         raise ValueError("opcode must fit 24 bits")
-    database = load_database()
-    validate_database(database)
     conditional_compute = _try_disassemble_conditional_compute(opcode)
     if conditional_compute is not None:
         return conditional_compute
+    direct_jump = _try_disassemble_direct_jump(opcode)
+    if direct_jump is not None:
+        return direct_jump
     compute_move = _try_disassemble_compute_move(opcode)
     if compute_move is not None:
         return compute_move
@@ -347,6 +371,8 @@ def disassemble_word(opcode: int) -> Disassembly:
     conditional_shift = _try_disassemble_conditional_shift(opcode)
     if conditional_shift is not None:
         return conditional_shift
+    database = load_database()
+    validate_database(database)
     for instruction in database["instructions"]:
         mask = int(instruction["opcode_mask"], 16)
         value = int(instruction["opcode_value"], 16)

@@ -98,6 +98,12 @@ semantic versioning after its first release.
   assembler/disassembler support with lossless raw aliases, two hand-derived
   fixtures, deterministic exhaustive differential vectors, a formal
   harness/recipe, and a constrained Cyclone V synthesis project.
+- A bounded original Type 10 direct JUMP/CALL semantic entry covering 507,904
+  source-closed words; an independent exact-width PC/CNTR/stack model, exact
+  fail-closed decoder, portable stateful RTL slice, numeric-target assembler/
+  disassembler support, two hand-derived fixtures, deterministic exhaustive
+  differential vectors, a formal harness/recipe, and a constrained Cyclone V
+  synthesis project. The 16,384 CALL NOT CE words remain OQ-012.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -420,6 +426,20 @@ semantic versioning after its first release.
   reference hashes, all generated-data checks, strict Verilator lint, twelve
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
   regression including all 283,996 bounded Type 9 execution cycles.
+- Type 10 Python and RTL decoders partition all 524,288 class words into
+  507,904 supported direct transfers and 16,384 OQ-012 CALL NOT CE words.
+  Twelve directed model checks, all supported assembler/disassembler forms,
+  two hand-derived fixtures, and 554,412 stateful model-versus-RTL cycles
+  cover every supported word, predicate outcomes, PC wrap/targets, CALL stack
+  effects, JUMP NOT CE counter transitions, reset unknowns, and conflicts.
+- Quartus full compilation passes for the bounded Type 10 direct-transfer
+  slice at its 20 ns standalone constraint: 284 ALMs, 334 fitted registers,
+  no RAM/DSP blocks, +8.138 ns worst setup and +0.167 ns worst multicorner
+  hold slack, 84.3 MHz worst slow-corner Fmax, and zero unconstrained paths.
+- The expanded `make test` passes 327 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint,
+  thirteen exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including all 554,412 bounded Type 10 execution cycles.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -520,6 +540,11 @@ semantic versioning after its first release.
   one ALU/MAC result plus selected ASTAT fields at cycle end, false words
   preserve state for the same one-cycle boundary, AMF zero is a documented
   no-operation, and the format performs no PM-data or DM transfer.
+- Closed the source-backed Type 10 direct-transfer boundary: exact field
+  placement, 14-bit direct targets, condition-false PC+1, taken CALL PC+1
+  stacking, authentic PC reset, and JUMP NOT CE counter transitions. CALL NOT
+  CE remains explicitly fail-closed under OQ-012, and active-loop/fetch/
+  interrupt/bus timing remains outside the bounded slice.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

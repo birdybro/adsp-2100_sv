@@ -231,7 +231,8 @@ MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, all 1,792 source-backed Type 16 conditional shifter
 words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
-conditional ALU/MAC words, and all Type 26 stack-control actions,
+conditional ALU/MAC words, 507,904 source-closed Type 10 direct JUMP/CALL
+words, and all Type 26 stack-control actions,
 but they do not establish
 whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
 excludes later timer, GO, and multiplier-placement fields and exhaustively
@@ -293,15 +294,20 @@ source-backed cases. It rejects conditional-CALL CE (OQ-012), empty-pop
 effects remain OQ-013, and competing automatic/manual actions are held and
 flagged under OQ-018. Type 26 now connects manual status-stack push/restore to
 live ASTAT/MSTAT/IMASK in its bounded slice; interrupt/RTI arbitration remains
-absent. No PC register, integrated semantic instruction decode, interrupt
-recognition, or phase-level sequencer timing exists.
+absent. A bounded Type 10 slice is the first semantic decoder connected to a
+14-bit PC register, CALL PC-stack pushes, and JUMP NOT CE counter-stack
+transitions. It fails closed for all 16,384 CALL NOT CE encodings under
+OQ-012 and excludes active-loop, fetch/cache, interrupt, bus, and phase
+integration. No whole-core PC/fetch path, integrated multi-class semantic
+decode, interrupt recognition, or phase-level sequencer timing exists.
 Multifunction legality, ordering, and whole-core cycle integration remain
 incomplete. The executable
 instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP in its top-level step
 method. Independent bounded models cover Type 17 action/state selection and
-Type 6, Type 8, Type 14, Type 15, Type 16, Type 18, Type 21, Type 25, and
+Type 6, Type 8, Type 9, Type 10, Type 14, Type 15, Type 16, Type 18, Type 21,
+Type 25, and
 Type 26 state/action behavior outside that
 top-level step path; all other opcodes still fail closed. Architectural
 documents marked partial or provisional remain research inputs until their

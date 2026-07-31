@@ -159,7 +159,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
-  `tests/test_compute_move.py`,
+  `tests/test_compute_move.py`, `tests/test_direct_jump.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
@@ -171,13 +171,14 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_conditional_shift_decode.sv`,
   `sim/unit/tb_adsp2100_shift_move_decode.sv`,
   `sim/unit/tb_adsp2100_compute_move_decode.sv`,
+  `sim/unit/tb_adsp2100_direct_jump_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
   `formal/shift_move.sby`,
-  `formal/compute_move.sby`,
+  `formal/compute_move.sby`, `formal/direct_jump.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -254,6 +255,12 @@ advance beyond research until a page-level primary citation is added.
   hand-derived fixtures, all 21,920 uniquely spellable forms plus raw aliases,
   every word in both banks, and 283,996 stateful model/RTL cycles pass; fetch,
   counter/loop, interrupt, and bus timing remain open.
+  Type 10 exhaustively partitions all 524,288 direct-transfer words into
+  507,904 source-closed JUMP/CALL actions and 16,384 CALL NOT CE words held
+  under OQ-012. Two hand-derived fixtures, every supported numeric-target
+  assembler/disassembler form, every supported word in stateful execution,
+  and 554,412 model/RTL cycles pass. Active-loop, fetch/cache, interrupt,
+  wait-state, bus, and phase integration remain open.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -345,6 +352,10 @@ advance beyond research until a page-level primary citation is added.
   A separate Type 9 model evaluates every condition from cycle-start status,
   independently selects ALU/MAC operands and feedback, preserves state for
   false and AMF-zero actions, and atomically commits true result/status writes.
+  A separate Type 10 model stores exact-width PC/CNTR/PC-stack/count-stack
+  state, applies the sourced direct JUMP/CALL target and return-address rules,
+  and executes JUMP NOT CE post-decrement/restore. It fails closed for CALL
+  NOT CE and for missing condition/counter context rather than inventing state.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -385,8 +396,10 @@ advance beyond research until a page-level primary citation is added.
   Type 8 fixtures and 20,513 representative canonical packets round trip.
   Type 9 round trips all 21,920 uniquely spellable conditional/unconditional
   computations, preserves every field-valid alias with raw `.WORD` syntax,
-  and includes two hand-derived primary examples. Research surviving lawful
-  assemblers first; do not execute legacy tools on the host.
+  and includes two hand-derived primary examples. Type 10 accepts all 507,904
+  supported direct numeric-target JUMP/CALL forms, includes two independent
+  fixtures, and rejects CALL NOT CE with an OQ-012 diagnostic. Research
+  surviving lawful assemblers first; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
 - **Confidence:** UNKNOWN
@@ -544,9 +557,11 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make sequencer-tests`, `tests/test_counter.py`,
   `tests/test_sequencer_stacks.py`, `tests/test_sequencer_slice.py`,
   `tests/test_stack_control.py`, `tests/test_stack_control_slice.py`,
+  `tests/test_direct_jump.py`,
   `formal/sequencer_flow.sby`, `formal/counter.sby`,
   `formal/sequencer_stacks.sby`, `formal/sequencer_slice.sby`,
-  `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`
+  `formal/stack_control_decode.sby`, `formal/stack_control_slice.sby`,
+  `formal/direct_jump.sby`
 - **Implementation notes:** an independent instruction-boundary model and
   portable combinational RTL select sequential, jump, call, return, loop-back,
   and loop-exit flow. All 636,512 model-versus-RTL vectors pass, including
@@ -569,7 +584,12 @@ advance beyond research until a page-level primary citation is added.
   live CNTR/status, and composed SSTAT. Nine directed/schema/random checks and
   50,015 stateful comparison cycles pass; automatic sequencer and interrupt
   arbitration remain deliberately unconnected.
-- **Unresolved questions:** opcode and PC-register integration,
+  A bounded Type 10 instruction slice now connects exact decode to an authentic
+  reset-valued 14-bit PC, conditional direct targets, CALL return stacking,
+  and JUMP NOT CE CNTR/count-stack transitions. Twelve model tests, exhaustive
+  RTL decode, and 554,412 stateful cycles cover all 507,904 supported words;
+  the 16,384 CALL NOT CE words fail closed under OQ-012.
+- **Unresolved questions:** whole-core PC/fetch integration,
   conditional-CALL CE semantics (OQ-012), competing automatic/manual actions
   (OQ-018), interrupts, delayed transfers, cache interaction, empty-pop
   effects (OQ-013), pipeline visibility, and logical bus phases.
@@ -892,11 +912,12 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Thirty harnesses now pass strict assertion syntax
+  result complete proof. Thirty-one harnesses now pass strict assertion syntax
   lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
+  bounded Type 10 direct JUMP/CALL decode and state execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -917,8 +938,8 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** Intel Cyclone V/TimeQuest documentation; RTL specs
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
-  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 18,
-  Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
+  the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 10,
+  Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
   46 ALMs and four registers with positive multicorner setup/hold slack and
   zero unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly
   360 architectural DAG data/valid registers, no RAM/DSPs, positive
@@ -950,6 +971,11 @@ advance beyond research until a page-level primary citation is added.
   ns, worst hold is +0.165 ns, worst slow-corner Fmax is 47.94 MHz, and no
   clocks, ports, or paths are unconstrained. Its initial 20 ns fit missed
   setup by 1.735 ns; this likewise is not whole-core or MiSTer closure.
+  The bounded Type 10 direct-transfer slice fits in 284 ALMs and 334 fitted
+  registers with no RAM or DSP blocks against a 20 ns standalone constraint.
+  Worst setup is +8.138 ns, worst multicorner hold is +0.167 ns, worst
+  slow-corner Fmax is 84.3 MHz, and no clocks, ports, or paths are
+  unconstrained. This is not whole-core or MiSTer timing closure.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.

@@ -44,6 +44,14 @@ listed among the initialized state and remains architecturally unknown
 computational or DAG registers reset to zero, so the authentic model keeps them
 unknown until written.
 
+The bounded Type 10 slice now stores a 14-bit PC and applies that documented
+`0x0004` reset value. Accepted direct JUMP/CALL words sample the old PC, use
+wrapped PC+1 for the sequential or CALL-return value, and commit the next PC at
+cycle end. This is the first instruction decoder connected to PC state, but it
+does not yet connect the fetch address, instruction register, cache, active
+loop, interrupt, or bus-phase machinery
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-12–4-13, 5-13].
+
 The independent model and RTL retain MR0/MR1/MR2 and SR0/SR1 as separate
 exact-width segments so a partial preload does not initialize untouched
 segments. They have no computational-register reset assignment and implement

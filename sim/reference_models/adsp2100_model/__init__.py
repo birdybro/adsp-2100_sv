@@ -46,6 +46,16 @@ from .counter import (
     CounterState,
     apply_counter_cycle,
 )
+from .direct_jump import (
+    DIRECT_JUMP_CLASS_MASK,
+    DIRECT_JUMP_CLASS_VALUE,
+    DirectJumpAction,
+    DirectJumpCycleResult,
+    DirectJumpState,
+    apply_direct_jump_cycle,
+    decode_direct_jump,
+    is_direct_jump_class,
+)
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
 from .mac import MACResult, compute_mac, saturate_mr
 from .mr_saturation import MR_SATURATION_OPCODE, decode_mr_saturation
@@ -258,6 +268,11 @@ __all__ = [
     "DREG",
     "DREGCycleResult",
     "DREGWrite",
+    "DIRECT_JUMP_CLASS_MASK",
+    "DIRECT_JUMP_CLASS_VALUE",
+    "DirectJumpAction",
+    "DirectJumpCycleResult",
+    "DirectJumpState",
     "DREGWriteConflict",
     "ExplicitFlow",
     "ExactWord",
@@ -351,11 +366,13 @@ __all__ = [
     "apply_counter_cycle",
     "apply_computational_cycle",
     "apply_dreg_cycle",
+    "apply_direct_jump_cycle",
     "apply_status_cycle",
     "apply_status_stack_cycle",
     "decode_stack_control",
     "decode_conditional_shift",
     "decode_conditional_compute",
+    "decode_direct_jump",
     "decode_compute_move",
     "decode_mr_saturation",
     "decode_mode_control",
@@ -373,6 +390,7 @@ __all__ = [
     "is_conditional_shift_class",
     "is_conditional_compute_class",
     "is_compute_move_class",
+    "is_direct_jump_class",
     "apply_modify_address_cycle",
     "apply_mr_saturation_slice_cycle",
     "apply_shift_move_cycle",

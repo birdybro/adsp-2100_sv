@@ -36,6 +36,11 @@ cycle-, or Hard Drivin'-complete
   aliases, exhaustive 24-bit decode, cycle-start condition/bank/operand reads,
   true-only atomic result/status writeback, and documented AMF-zero
   no-operation behavior for all 32,768 class words;
+- bounded Type 10 direct JUMP/CALL semantics, two hand-derived fixtures, every
+  supported numeric-target assembler/disassembler form, exhaustive class
+  partitioning, a decoder-connected 14-bit PC, CALL return stacking, JUMP NOT
+  CE counter transitions, and explicit fail-closed OQ-012 handling for all
+  16,384 CALL NOT CE words;
 - bounded canonical Type 14 shifter-plus-internal-MOVE semantics, two manual
   fixtures, all 25,648 algebraic forms, exhaustive four-way class
   partitioning, cycle-start selected-bank operand reads, atomic cycle-end
@@ -120,7 +125,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 313 implemented Python unit checks plus manifest/hash verification;
+- 327 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -142,6 +147,11 @@ outstanding.
   31,744 conditional computations and 1,024 documented no-operation aliases;
   283,996 model/RTL cycles execute every word in both banks and both outcomes
   for every nonconstant condition;
+- all 524,288 Type 10 words partition into exactly 507,904 supported direct
+  JUMP/CALL actions and 16,384 OQ-012 CALL NOT CE words in Python and
+  exhaustive RTL; 554,412 model/RTL cycles execute every supported word plus
+  deterministic reset, predicate, counter restore, stack overflow, invalid,
+  and conflict cases;
 - all 65,536 Type 14 class words partition into exactly 25,648 canonical
   supported actions, 32,768 unverified bit-15 words, 4,096 unavailable-XOP
   words, and 3,024 same-destination conflicts in Python and exhaustive RTL;
@@ -176,7 +186,7 @@ outstanding.
   the Type 18 state slice adds 58,248 passing cycles and the Type 21 slice adds
   50,124, while the Type 17 state slice adds 59,430 and the Type 6 slice adds
   50,204; the Type 8 state slice adds 983,386, the Type 9 state slice adds
-  283,996, the Type 14 state slice adds
+  283,996, the Type 10 state slice adds 554,412, the Type 14 state slice adds
   82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
@@ -209,13 +219,17 @@ outstanding.
   no RAM, +1.140 ns setup, +0.165 ns hold, 47.94 MHz worst slow-corner Fmax,
   and no unconstrained paths against its 22 ns standalone constraint; its
   initial 20 ns fit missed setup by 1.735 ns;
+- the Type 10 slice fits in 284 ALMs and 334 fitted registers with no RAM or
+  DSP blocks, +8.138 ns setup, +0.167 ns worst multicorner hold, 84.3 MHz
+  worst slow-corner Fmax, and no unconstrained paths against its 20 ns
+  standalone constraint;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
-  formal harnesses plus Type 6, Type 8, Type 9, Type 14, Type 15, and Type 16
-  decode/execution (30 total) pass
+  formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 14, Type 15, and
+  Type 16 decode/execution (31 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -227,8 +241,9 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Add stateful PC/reset/enable integration only after the next-PC update and
-   stall boundaries are source-closed.
+3. Add exact Type 11 DO UNTIL instruction decode and connect it to the
+   source-backed loop setup/storage boundary without inventing active-loop
+   collision priority.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt/RTI sequencing to the now-composed SSTAT and
    status-stack boundary without inventing arbitration priorities.

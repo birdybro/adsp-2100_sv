@@ -14,6 +14,7 @@ Known cases:
 | ordinary instruction | one eight-state processor cycle |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
+| Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -89,6 +90,17 @@ the one-cycle boundary. Exhaustive decode covers all 32,768 class words, and
 condition outcomes. Fetch overlap, counter-valid integration, loop-terminal
 handling, interrupts, waits, and pin-level phases remain open
 [ADI-UM-1989, printed pp. 2-6–2-20, 4-21, 4-25, 6-8–6-10, A-2, A-5–A-7].
+
+The bounded Type 10 model/RTL slice verifies cycle-start condition, PC, CNTR,
+and stack-top sampling followed by one cycle-end PC/counter/stack commit.
+Exhaustive decode covers all 524,288 class words: 507,904 source-closed words
+execute, while 16,384 CALL NOT CE words fail closed under OQ-012. The 554,412
+stateful comparison cycles cover true/false predicates, sequential 14-bit
+wrap, direct target selection, CALL return pushes, and JUMP NOT CE counter
+transitions. This is instruction-boundary evidence only; fetch redirection,
+cache invalidation, loop-terminal arbitration, interrupt recognition, waits,
+and external logical bus phases remain open
+[ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 6-13–6-14, A-2, A-6].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

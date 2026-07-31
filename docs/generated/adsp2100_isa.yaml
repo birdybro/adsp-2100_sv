@@ -375,6 +375,117 @@
   ],
   "instructions": [
     {
+      "id": "DIRECT-JUMP-CALL-TYPE-10",
+      "mnemonic": "CONDITIONAL DIRECT JUMP/CALL",
+      "algebraic_assembly_syntax": "[IF condition] {JUMP | CALL} direct_program_address;",
+      "encoding_pattern": "00011xxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf80000",
+      "opcode_value": "0x180000",
+      "fields": ["S", "ADDR", "COND"],
+      "condition_field": "COND",
+      "computation_field": null,
+      "source_register_selections": [
+        "CYCLE_START_ASTAT_OR_CNTR_FOR_CONDITION",
+        "CYCLE_START_PC_FOR_SEQUENTIAL_AND_CALL_RETURN_ADDRESS"
+      ],
+      "destination_register_selections": [
+        "PC",
+        "TAKEN_CALL_PC_STACK_PUSH",
+        "JUMP_NOT_CE_CNTR_AND_OPTIONAL_COUNT_STACK_UPDATE"
+      ],
+      "data_move_fields": [],
+      "dag_selection": null,
+      "addressing_mode": "DIRECT_14_BIT_PROGRAM_ADDRESS",
+      "immediate_fields": ["ADDR"],
+      "branch_fields": ["S", "ADDR", "COND"],
+      "registers_read": [
+        "PC",
+        "COND_SELECTED_ASTAT_OR_CNTR",
+        "COUNT_STACK_TOP_FOR_EXPIRED_JUMP_NOT_CE"
+      ],
+      "registers_written": [
+        "PC",
+        "TAKEN_CALL_PC_STACK",
+        "JUMP_NOT_CE_CNTR_AND_OPTIONAL_COUNT_STACK"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": ["COND_SELECTED_ASTAT_BITS_OR_NOT_CE"],
+      "status_flags_written": [],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "The next instruction fetch uses ADDR when taken and PC+1 when false; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "CONDITION_EVALUATION_AND_NEXT_PC_SELECTION",
+        "TAKEN_CALL_PUSHES_PC_PLUS_ONE",
+        "JUMP_NOT_CE_TESTS_AND_POST_UPDATES_CNTR"
+      ],
+      "legal_multifunction_combinations": [
+        "This is a program-flow instruction, not a computational or data-move multifunction packet."
+      ],
+      "illegal_or_reserved_combinations": [
+        "S=CALL with COND=NOT_CE is recognized but held outside bounded execution under OQ-012; original sources do not unambiguously close its CNTR side effect."
+      ],
+      "old_value_new_value_semantics": "COND, PC, ASTAT, CNTR, and stack tops use cycle-start state. At cycle end PC receives ADDR when true or PC+1 when false; a taken CALL also pushes cycle-start PC+1. A JUMP NOT CE test post-updates CNTR and may pop the count stack.",
+      "write_conflict_rules": "A taken CALL requests one PC-stack push. A JUMP NOT CE may request one count-stack pop; these actions do not collide in the supported bounded set.",
+      "condition_false_behavior": "No explicit transfer occurs; PC advances to PC+1. JUMP NOT CE still performs the documented counter test and post-update associated with checking CE.",
+      "loop_interaction": "The source-backed explicit-transfer precedence rule exists in the separate sequencer model, but active hardware-loop state is not connected in this Type 10 slice.",
+      "interrupt_interaction": "Interrupt abort/recognition and status-stack effects are outside this bounded instruction slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "Taken and false direct JUMP/CALL forms occupy one processor cycle; instruction-fetch wait behavior remains outside this boundary."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "TAKEN_ADDR_OR_SEQUENTIAL_PC"
+        }
+      ],
+      "wait_state_sensitivity": "Only instruction fetch is exposed by this instruction; fetch/cache/wait phases are not yet attached.",
+      "parallel_actions": [
+        {
+          "action": "CONDITION_AND_NEXT_PC",
+          "reads": ["PC", "ASTAT_OR_CNTR", "ADDR"],
+          "writes": ["PC"]
+        },
+        {
+          "action": "TAKEN_CALL_RETURN_SAVE",
+          "reads": ["PC_PLUS_ONE"],
+          "writes": ["PC_STACK"]
+        },
+        {
+          "action": "JUMP_NOT_CE_COUNTER_UPDATE",
+          "reads": ["CNTR", "COUNT_STACK_TOP"],
+          "writes": ["CNTR", "COUNT_STACK_WHEN_EXPIRED"]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-3–4-4: PC+1 CALL push, conditional JUMP CE post-decrement, and non-decrementing excluded contexts"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-12–4-13, Figures 4.3–4.4: direct JUMP target and CALL return-address sequence"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-13–6-14: conditional direct JUMP/CALL syntax and CNTR initialization requirement"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-2 and A-6: Type 10 S/ADDR/COND fields and condition codes"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-012 excludes conditional CALL with NOT CE until original-device CNTR effects are independently closed.",
+        "Active hardware-loop terminal interaction is verified in a separate flow slice but not connected to this decoder/PC boundary.",
+        "Fetch/cache overlap, interrupt abort, external waits, and eight-state logical timing remain outside this slice."
+      ]
+    },
+    {
       "id": "CONDITIONAL-COMPUTE-TYPE-9",
       "mnemonic": "CONDITIONAL ALU/MAC",
       "algebraic_assembly_syntax": "[IF condition] {ALU_COMPUTATION | MAC_COMPUTATION};",

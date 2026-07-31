@@ -24,6 +24,7 @@ MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
 immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
+507,904 source-closed Type 10 direct JUMP/CALL words,
 parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
@@ -79,6 +80,24 @@ every Type 9 word in both banks and both outcomes for every nonconstant
 condition [ADI-UM-1989, printed pp. 2-6–2-20, 4-3–4-5, 4-25, 6-8–6-10,
 A-2, A-5–A-7]. Fetch, PC, counter-valid integration, loop-terminal,
 interrupt-abort, wait, and external bus phases remain outside the slice.
+
+Type 10 encodes `00011 S ADDR[13:0] COND[3:0]`, where `S=0` selects a
+direct JUMP and `S=1` selects a direct CALL. The target is the complete
+14-bit instruction address. Every supported instruction reads its predicate
+and PC at cycle start. A false predicate selects wrapped PC+1 without a stack
+action; a true JUMP selects ADDR; and a true CALL selects ADDR while pushing
+wrapped PC+1 on the 16-entry PC stack. JUMP with `COND=0xe` tests cycle-start
+NOT CE and performs the documented CNTR post-decrement/restore transition.
+The original manual does not unambiguously establish whether CALL with that
+condition mutates CNTR, so all 16,384 `S=1, COND=0xe` words remain explicitly
+unsupported under OQ-012. This partitions the 524,288-word class into 507,904
+source-closed actions and 16,384 fail-closed words. Two hand-derived fixtures,
+all supported numeric-target assembler/disassembler forms, exhaustive 24-bit
+RTL decode, twelve directed model tests, and 554,412 model-versus-RTL cycles
+cover the bounded execution state [ADI-UM-1989, printed pp. 4-3–4-5,
+4-12–4-13, 6-13–6-14, A-2, and A-6]. Active-loop terminal arbitration,
+fetch overlap, interrupts, wait states, and external bus phases remain outside
+this slice.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight

@@ -205,6 +205,44 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             self.assertTrue(decoded.text.startswith(".WORD"))
             self.assertEqual(assemble_statement(decoded.text).value, opcode)
 
+    def test_all_bounded_direct_jump_call_forms_round_trip(self) -> None:
+        count = 0
+        for call in (False, True):
+            operation = "CALL" if call else "JUMP"
+            for address in range(1 << 14):
+                for condition, mnemonic in enumerate(EXPECTED_IF_MNEMONICS):
+                    if call and condition == 14:
+                        continue
+                    prefix = "" if condition == 15 else f"IF {mnemonic} "
+                    statement = f"{prefix}{operation} 0x{address:04x};"
+                    opcode = (
+                        0x180000 | (int(call) << 18)
+                        | (address << 4) | condition
+                    )
+                    assembled = assemble_statement(statement)
+                    self.assertEqual(assembled.value, opcode)
+                    decoded = disassemble_word(opcode)
+                    self.assertTrue(decoded.implemented)
+                    self.assertEqual(decoded.classification, "TYPE_10_BOUNDED_EXECUTION")
+                    self.assertEqual(decoded.text, statement)
+                    self.assertEqual(assemble_statement(decoded.text), assembled)
+                    count += 1
+        self.assertEqual(count, 507_904)
+
+    def test_direct_call_not_ce_remains_fail_closed(self) -> None:
+        opcode = 0x1C000E
+        decoded = disassemble_word(opcode)
+        self.assertFalse(decoded.implemented)
+        self.assertEqual(
+            decoded.classification,
+            "UNVERIFIED_TYPE_10_CALL_NOT_CE_OQ_012",
+        )
+        self.assertEqual(assemble_statement(decoded.text).value, opcode)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("IF NOT CE CALL 0x0000;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("JUMP 0x4000;")
+
     def test_compute_move_aliases_and_unsupported_forms_fail_closed(self) -> None:
         alias = disassemble_word(0x2A010D)
         self.assertTrue(alias.implemented)

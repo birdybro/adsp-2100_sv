@@ -86,3 +86,12 @@ empty-pop architectural side effect remains OQ-013. Conditional-CALL CE
 remains OQ-012. Competing automatic/manual actions and DO setup on an active
 outer loop's final instruction are rejected under OQ-018 instead of receiving
 an invented priority.
+
+The bounded Type 10 direct-transfer slice connects CALL pushes and JUMP NOT CE
+counter restoration to the same PC/count stack rules. A stack-full CALL still
+takes its target while the newest return address is lost and overflow sticks,
+matching the sourced global stack-overflow behavior. This boundary deliberately
+excludes an active loop descriptor: it cannot yet prove the documented
+explicit-transfer precedence on a loop-final instruction. All CALL NOT CE
+encodings remain action-free under OQ-012 rather than assigning an unsupported
+counter-stack interaction [ADI-UM-1989, printed pp. 4-3–4-7, 4-22].

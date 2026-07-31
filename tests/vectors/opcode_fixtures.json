@@ -3,6 +3,24 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-IF-EQ-DIRECT-JUMP-192340",
+      "source": "IF EQ JUMP 0x1234;",
+      "opcode": "0x192340",
+      "program_word_bytes_big_endian": "192340",
+      "encoding_class": 10,
+      "source_citation": "ADI-UM-1989 printed pp. 4-12, 6-13, A-2",
+      "review_status": "HAND_DERIVED_PRIMARY_EXAMPLE"
+    },
+    {
+      "id": "HAND-UNCONDITIONAL-DIRECT-CALL-1C008F",
+      "source": "CALL 0x0008;",
+      "opcode": "0x1c008f",
+      "program_word_bytes_big_endian": "1c008f",
+      "encoding_class": 10,
+      "source_citation": "ADI-UM-1989 printed pp. 4-3, 4-13, 6-14, A-2",
+      "review_status": "HAND_DERIVED_PRIMARY_EXAMPLE"
+    },
+    {
       "id": "HAND-IF-AC-ALU-ADD-CARRY-224008",
       "source": "IF AC AR = AX0 + AY0 + C;",
       "opcode": "0x224008",

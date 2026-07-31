@@ -343,6 +343,29 @@ def _assemble_conditional_compute(statement: str) -> int | None:
     )
 
 
+def _assemble_direct_jump(statement: str) -> int | None:
+    """Assemble a bounded original Type 10 direct JUMP or CALL."""
+
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+    match = re.fullmatch(
+        r"(JUMP|CALL)\s+(?:(?:0X|H#)([0-9A-F]+)|([0-9]+))",
+        body,
+    )
+    if match is None:
+        return None
+    operation, hexadecimal, decimal = match.groups()
+    address = int(hexadecimal, 16) if hexadecimal is not None else int(decimal, 10)
+    if not 0 <= address <= 0x3FFF:
+        raise AssemblyError("direct program address must fit 14 bits")
+    call = operation == "CALL"
+    if call and condition == 0xE:
+        raise AssemblyError("conditional CALL NOT CE remains unresolved under OQ-012")
+    return 0x180000 | (int(call) << 18) | (address << 4) | condition
+
+
 def _shift_move_destination_collision(sf: int, destination: int) -> bool:
     if sf <= 0xB:
         return destination in (14, 15)
@@ -518,6 +541,9 @@ def assemble_statement(source: str) -> AssembledWord:
     conditional_compute = _assemble_conditional_compute(statement)
     if conditional_compute is not None:
         return AssembledWord(conditional_compute)
+    direct_jump = _assemble_direct_jump(statement)
+    if direct_jump is not None:
+        return AssembledWord(direct_jump)
     dreg_immediate = _assemble_dreg_immediate(statement)
     if dreg_immediate is not None:
         return AssembledWord(dreg_immediate)

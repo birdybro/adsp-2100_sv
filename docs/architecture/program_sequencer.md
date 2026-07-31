@@ -1,7 +1,7 @@
 # Program sequencer
 
-**Status: source-backed next-PC, CNTR, stack storage, and bounded integration;
-decode/PC-state/timing incomplete**
+**Status: source-backed next-PC, CNTR, stack storage, and bounded Type 10
+PC-state integration; whole-core timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
 incrementer normally provides the next address [ADI-UM-1989, printed p. 4-3].
@@ -71,10 +71,10 @@ context, DO UNTIL setup on an active outer loop's end instruction, and
 competing automatic/manual actions (OQ-018). Empty manual pop remains OQ-013.
 The internal loop descriptor packs condition in bits 17:14 and end address in
 bits 13:0 solely as an implementation interface; no externally readable
-register layout is claimed. A PC state register, opcode legality, interrupt
-and status-stack connectivity, cache/fetch overlap, phase enables, complete
-reset integration, and bus-cycle timing remain unimplemented. The discovered
-MAME ordering difference is recorded as SC-012.
+register layout is claimed. That generic integration slice has no PC register
+or opcode input. Interrupt and status-stack connectivity, cache/fetch overlap,
+phase enables, complete reset integration, and bus-cycle timing remain
+unimplemented. The discovered MAME ordering difference is recorded as SC-012.
 
 A separate bounded Type 26 execution slice now connects all original manual
 stack-control fields to the status/count/loop/PC stacks, live CNTR, and
@@ -85,3 +85,17 @@ words and simultaneous setup/automatic requests are action-free, the latter
 flagged as OQ-018 integration conflicts. This slice is not yet arbitrated with
 the automatic flow slice, interrupts, or RTI, and preserves the explicit
 OQ-013 empty-pop boundary.
+
+The bounded Type 10 direct-transfer slice is the first decoder-connected PC
+register boundary. Its authentic reset path sets PC to `0x0004`, then every
+accepted instruction commits exactly one of wrapped PC+1 or the 14-bit direct
+target. Taken CALL also pushes cycle-start PC+1; false CALL does not push.
+JUMP NOT CE connects to live CNTR/count-stack state and applies the sourced
+test-before-post-decrement rule, including outer-count restoration. Exhaustive
+decode classifies 507,904 supported words and 16,384 OQ-012 CALL NOT CE words;
+554,412 deterministic model/RTL cycles cover every supported word plus reset,
+stack overflow, counter restore, unknown predicates, and integration conflicts
+[ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 5-13, 6-13–6-14, A-2,
+A-6]. The slice intentionally has no active-loop descriptor, fetch/cache,
+interrupt, wait-state, bus, or eight-state phase input, so it is not a complete
+program sequencer.
