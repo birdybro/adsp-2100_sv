@@ -105,6 +105,58 @@ def _if_condition_names() -> dict[int, str]:
     }
 
 
+def _format_register_shifter(sf: int, xop: int) -> str:
+    source = _SHIFTER_XOP_NAMES[xop]
+    if sf <= 0xB:
+        operation = ("LSHIFT", "ASHIFT", "NORM")[sf >> 2]
+        reference = "LO" if sf & 2 else "HI"
+        combine_or = "SR OR " if sf & 1 else ""
+        return f"SR = {combine_or}{operation} {source} ({reference})"
+    if sf <= 0xE:
+        reference = ("HI", "HIX", "LO")[sf - 0xC]
+        return f"SE = EXP {source} ({reference})"
+    return f"SB = EXPADJ {source}"
+
+
+def _shift_move_destination_collision(sf: int, destination: int) -> bool:
+    if sf <= 0xB:
+        return destination in (14, 15)
+    return sf <= 0xE and destination == 9
+
+
+def _try_disassemble_shift_move(opcode: int) -> Disassembly | None:
+    if opcode & 0xFF0000 != 0x100000:
+        return None
+    if opcode & 0x008000:
+        classification = "UNVERIFIED_TYPE_14_UNUSED_X"
+    else:
+        sf = (opcode >> 11) & 0xF
+        xop = (opcode >> 8) & 0x7
+        destination = (opcode >> 4) & 0xF
+        if xop not in _SHIFTER_XOP_NAMES:
+            classification = "UNVERIFIED_TYPE_14_XOP"
+        elif _shift_move_destination_collision(sf, destination):
+            classification = "UNSUPPORTED_TYPE_14_DESTINATION_COLLISION"
+        else:
+            names = _dreg_code_to_name()
+            text = (
+                f"{_format_register_shifter(sf, xop)}, "
+                f"{names[destination]} = {names[opcode & 0xF]};"
+            )
+            return Disassembly(
+                opcode=opcode,
+                text=text,
+                classification="TYPE_14_BOUNDED_EXECUTION",
+                implemented=True,
+            )
+    return Disassembly(
+        opcode=opcode,
+        text=f".WORD 0x{opcode:06x};",
+        classification=classification,
+        implemented=False,
+    )
+
+
 def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
     if opcode & 0xFF80F0 != 0x0E0000:
         return None
@@ -119,17 +171,7 @@ def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
             implemented=False,
         )
     prefix = "" if condition == 15 else f"IF {_if_condition_names()[condition]} "
-    source = _SHIFTER_XOP_NAMES[xop]
-    if sf <= 0xB:
-        operation = ("LSHIFT", "ASHIFT", "NORM")[sf >> 2]
-        reference = "LO" if sf & 2 else "HI"
-        combine_or = "SR OR " if sf & 1 else ""
-        text = f"{prefix}SR = {combine_or}{operation} {source} ({reference});"
-    elif sf <= 0xE:
-        reference = ("HI", "HIX", "LO")[sf - 0xC]
-        text = f"{prefix}SE = EXP {source} ({reference});"
-    else:
-        text = f"{prefix}SB = EXPADJ {source};"
+    text = f"{prefix}{_format_register_shifter(sf, xop)};"
     return Disassembly(
         opcode=opcode,
         text=text,
@@ -209,6 +251,9 @@ def disassemble_word(opcode: int) -> Disassembly:
         raise ValueError("opcode must fit 24 bits")
     database = load_database()
     validate_database(database)
+    shift_move = _try_disassemble_shift_move(opcode)
+    if shift_move is not None:
+        return shift_move
     internal_move = _try_disassemble_internal_move(opcode)
     if internal_move is not None:
         return internal_move

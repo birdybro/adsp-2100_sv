@@ -3,6 +3,24 @@
   "device": "ADSP-2100",
   "fixtures": [
     {
+      "id": "HAND-SHIFT-MOVE-LSHIFT-SI-AX0-MR2-10000D",
+      "source": "SR = LSHIFT SI (HI), AX0 = MR2;",
+      "opcode": "0x10000d",
+      "program_word_bytes_big_endian": "10000d",
+      "encoding_class": 14,
+      "source_citation": "ADI-UM-1989 printed pp. 6-4–6-7, A-3, and A-7",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
+      "id": "HAND-SHIFT-MOVE-EXP-HIX-AR-MR0-SR1-106ABF",
+      "source": "SE = EXP AR (HIX), MR0 = SR1;",
+      "opcode": "0x106abf",
+      "program_word_bytes_big_endian": "106abf",
+      "encoding_class": 14,
+      "source_citation": "ADI-UM-1989 printed pp. 2-24, 6-6–6-7, A-3, and A-7",
+      "review_status": "HAND_DERIVED_PRIMARY_FIELDS"
+    },
+    {
       "id": "HAND-IF-EQ-LSHIFT-SI-HI-0E0000",
       "source": "IF EQ SR = LSHIFT SI (HI);",
       "opcode": "0x0e0000",

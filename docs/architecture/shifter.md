@@ -1,7 +1,7 @@
 # Barrel shifter
 
-**Status: function block implemented and independently cross-checked; Type 15
-immediate and complete source-backed Type 16 conditional forms integrated**
+**Status: function block implemented and independently cross-checked; bounded
+Type 14, Type 15, and Type 16 instruction forms integrated**
 
 The original shifter maps a 16-bit input into a 32-bit result with 49
 placements from off-scale right through off-scale left. SR is split into
@@ -75,8 +75,8 @@ operands, all 256 signed counts for every shift/NORM code, the complete 16-bit
 operand space for every exponent mode, all flag combinations, and
 deterministic random values.
 
-This is not yet a complete shifter-instruction implementation. Type 12–14
-multifunction operand/move ordering and whole-core cycle/bus timing remain
+This is not yet a complete shifter-instruction implementation. Type 12–13
+memory multifunction behavior and whole-core cycle/bus timing remain
 outside the implemented boundaries. The separate register file now
 accepts the explicit result enables for selected-bank SR, SE, or SB
 writeback, and the separate status block accepts EXP's explicit SS update;
@@ -122,3 +122,13 @@ status patterns plus randomized reset/conflict cases. Fetch overlap,
 loop-terminal behavior, interrupt abort, waits, and external bus phases remain
 outside the bounded slice
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
+
+The bounded `adsp2100_shift_move_slice` implements the canonical Type 14
+shifter-plus-internal-DREG form. Both the shifter X operand and move source are
+sampled from the cycle-start selected bank. The move may overwrite a shifter
+source or read a shifter result register because neither write becomes visible
+until cycle end. Noncolliding DREG, SR/SE/SB, and SS results commit together.
+The slice executes 25,648 bit-15-zero words and fails closed for all unresolved
+bit-15-one, unavailable-XOP, and same-destination words. Its exhaustive decode
+and 82,597 stateful comparison cycles cover every supported word in both banks
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].

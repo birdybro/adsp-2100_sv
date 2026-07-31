@@ -375,6 +375,149 @@
   ],
   "instructions": [
     {
+      "id": "SHIFT-INTERNAL-MOVE-TYPE-14",
+      "mnemonic": "SHIFTER WITH INTERNAL DATA REGISTER MOVE",
+      "algebraic_assembly_syntax": "{SR = [SR OR] {LSHIFT|ASHIFT|NORM} xop ({HI|LO}) | SE = EXP xop ({HI|HIX|LO}) | SB = EXPADJ xop}, destination_dreg = source_dreg;",
+      "encoding_pattern": "00010000xxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xff0000",
+      "opcode_value": "0x100000",
+      "fields": [
+        "UNUSED_X",
+        "SF",
+        "XOP",
+        "DEST_DREG",
+        "SOURCE_DREG"
+      ],
+      "condition_field": null,
+      "computation_field": "SF",
+      "source_register_selections": [
+        "XOP",
+        "SOURCE_DREG"
+      ],
+      "destination_register_selections": [
+        "SF_SELECTED_SR_SE_SB_AND_OPTIONAL_ASTAT_SS",
+        "DEST_DREG"
+      ],
+      "data_move_fields": [
+        "DEST_DREG",
+        "SOURCE_DREG"
+      ],
+      "dag_selection": null,
+      "addressing_mode": "INTERNAL_DATA_REGISTER_MOVE",
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_MSTAT_BANK_SELECT",
+        "CYCLE_START_SELECTED_BANK_XOP",
+        "CYCLE_START_SELECTED_BANK_SOURCE_DREG",
+        "CYCLE_START_SELECTED_BANK_SE_FOR_SHIFT_NORM_EXP_LO",
+        "CYCLE_START_SELECTED_BANK_SR_FOR_OR",
+        "CYCLE_START_SELECTED_BANK_SB_FOR_EXPADJ",
+        "CYCLE_START_ASTAT_AV_AC_SS"
+      ],
+      "registers_written": [
+        "CYCLE_END_SELECTED_BANK_DEST_DREG",
+        "CYCLE_END_SELECTED_BANK_SR_FOR_SF_0_THROUGH_11",
+        "CYCLE_END_SELECTED_BANK_SE_FOR_SF_12_THROUGH_14_WHEN_ENABLED",
+        "CYCLE_END_SELECTED_BANK_SB_FOR_SF_15_WHEN_ENABLED",
+        "CYCLE_END_ASTAT_SS_FOR_SF_12_OR_13"
+      ],
+      "computational_unit_used": "BARREL_SHIFTER",
+      "status_flags_read": [
+        "AV",
+        "AC",
+        "SS"
+      ],
+      "status_flags_written": [
+        "SS_FOR_EXP_HI_OR_HIX"
+      ],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "ONE_UNCONDITIONAL_SHIFTER_ACTION",
+        "ONE_INTERNAL_DREG_TO_DREG_MOVE"
+      ],
+      "legal_multifunction_combinations": [
+        "Any non-immediate shifter function with one DREG-to-DREG move when the two clauses do not write the same architectural destination."
+      ],
+      "illegal_or_reserved_combinations": [
+        "XOP=001 is explicitly unavailable to the shifter.",
+        "A move destination of SR0 or SR1 collides with SF 0 through 11 SR writeback.",
+        "A move destination of SE collides with SF 12 through 14 SE writeback.",
+        "Original bit 15 is printed as an unnamed x; only the later-corroborated canonical zero form executes pending OQ-021."
+      ],
+      "old_value_new_value_semantics": "Both shifter and move clauses sample the selected bank at cycle start. The shifter therefore consumes an old operand even when the move overwrites it, and the move reads an old shifter destination even when the computation replaces it. Noncolliding move, shifter, and SS results commit together at cycle end.",
+      "write_conflict_rules": "Source overlap is legal. Same-destination writes are unsupported and fail closed before execution; no hardware priority is invented.",
+      "condition_false_behavior": "Not conditional.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Interrupt recognition, instruction-abort precedence, and status visibility at the state-7 boundary are not integrated or claimed by this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "The unconditional computation and internal move execute in one instruction cycle; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; the instruction itself issues no PM-data or DM transaction.",
+      "parallel_actions": [
+        {
+          "action": "UNCONDITIONAL_SHIFTER_ACTION",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_SELECT",
+            "CYCLE_START_SELECTED_BANK_XOP",
+            "CYCLE_START_FUNCTION_DEPENDENT_SE_SR_SB",
+            "CYCLE_START_FUNCTION_DEPENDENT_ASTAT_AV_AC_SS"
+          ],
+          "writes": [
+            "CYCLE_END_FUNCTION_SELECTED_SR_SE_SB_SS"
+          ]
+        },
+        {
+          "action": "INTERNAL_DREG_MOVE",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_SELECT",
+            "CYCLE_START_SELECTED_BANK_SOURCE_DREG"
+          ],
+          "writes": [
+            "CYCLE_END_SELECTED_BANK_DEST_DREG"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-6–2-7 and 2-18: computational registers are read at cycle start and written at cycle end"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-4–6-7, especially section 6.2.1.5 and Table 6.1: unconditional non-immediate shifter plus DREG move and old-value ordering"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-3 and A-7: Type 14 placement, all SF values, DREG values, and seven legal shifter X operands"
+        },
+        {
+          "reference_id": "ADI-2101-CROSS-1990",
+          "location": "printed pp. 9-71–9-73: later-device corroboration of read-first/write-second ordering, source overlap legality, unsupported same-destination writes, and fixed-zero bit 15; not original-device authority"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-011: NORM with SE=0x80 uses the documented model's provisional mathematical +128 interpretation.",
+        "OQ-021: original Type 14 bit 15 is an unnamed x; canonical zero executes and bit-one forms fail closed pending original-tool or hardware evidence.",
+        "Actual device behavior for explicitly unavailable XOP=001 and unsupported same-destination writes is not assigned.",
+        "Fetch, interrupt-abort, PC, loop-terminal, and external wait-state phases remain outside the bounded state slice."
+      ]
+    },
+    {
       "id": "CONDITIONAL-SHIFT-TYPE-16",
       "mnemonic": "CONDITIONAL SHIFTER",
       "algebraic_assembly_syntax": "[IF condition] {SR = [SR OR] {LSHIFT|ASHIFT|NORM} xop ({HI|LO}) | SE = EXP xop ({HI|HIX|LO}) | SB = EXPADJ xop};",

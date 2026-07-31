@@ -79,6 +79,12 @@ semantic versioning after its first release.
   execution RTL, complete algebraic assembler/disassembler support, two hand
   fixtures, deterministic differential vectors, formal harness/recipe, and
   constrained Cyclone V synthesis project.
+- A bounded Type 14 shifter-plus-internal-DREG semantic entry covering 25,648
+  canonical noncolliding words; an independent unknown-preserving parallel
+  state model, exact fail-closed decoder, portable execution RTL, complete
+  algebraic assembler/disassembler support, two hand fixtures, deterministic
+  differential vectors, formal harness/recipe, and constrained Cyclone V
+  synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -353,6 +359,21 @@ semantic versioning after its first release.
   reference hashes, all generated-data checks, strict Verilator lint, nine
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
   regression including bounded Type 16 execution.
+- Type 14 Python and RTL decoders exhaustively partition all 65,536 class words
+  into 25,648 supported canonical actions, 32,768 unresolved bit-15 forms,
+  4,096 unavailable-XOP forms, and 3,024 same-destination forms. Ten directed
+  model checks, all 25,648 syntax forms, two hand fixtures, and 82,597 stateful
+  model-versus-RTL cycles cover every supported word in both banks, old-value
+  ordering in both parallel clauses, all shifter side effects, reset unknowns,
+  invalid words, and setup collisions.
+- Quartus full compilation passes for the bounded Type 14 shift-move slice:
+  1,032 ALMs and 565 fitted registers, no RAM/DSPs, +3.041 ns worst setup and
+  +0.171 ns worst hold slack across four timing models, with zero unconstrained
+  clocks, ports, or paths against the 20 ns constraint.
+- The expanded `make test` passes 289 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, ten
+  exhaustive 24-bit decode traversals, and every existing model/RTL vector
+  regression including all 82,597 bounded Type 14 execution cycles.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -407,8 +428,9 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 27 harnesses,
-  including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 17/Type 21 state execution;
+- `make formal` passes strict assertion syntax lint for all 28 harnesses,
+  including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 14/
+  Type 17/Type 21 state execution;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation

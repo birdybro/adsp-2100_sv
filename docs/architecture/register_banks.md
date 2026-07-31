@@ -104,6 +104,16 @@ updates the unbanked ASTAT.SS on the same cycle-end edge. The inactive bank is
 unchanged across all 54,403 model/RTL cycles
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-11, A-3, A-6–A-7].
 
+`adsp2100_shift_move_slice` is the first bounded instruction slice to exercise
+two ordinary writes to the selected computational bank in parallel. The
+shifter and move source each read cycle-start state. Source overlap is legal;
+the DREG move may replace the X operand after it has been consumed or read the
+old SR/SE value before shifter writeback. The decoder excludes every
+same-destination request, and the register file atomically commits the
+remaining DREG plus SR/SE/SB writeback. The inactive bank is preserved across
+all 82,597 comparison cycles
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -141,6 +151,9 @@ therefore remains `IMPLEMENTING`.
 - `make compute-tests` adds ten directed Type 16 tests and 54,403 stateful
   model-versus-RTL cycles, including all 1,792 supported words in both banks
   under true and false condition patterns.
+- `make compute-tests` adds ten directed Type 14 tests and 82,597 stateful
+  model-versus-RTL cycles, including all 25,648 supported words in both banks
+  and directed old-value hazards in both parallel clauses.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

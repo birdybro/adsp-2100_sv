@@ -21,8 +21,9 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
-immediate-shift subset, all 1,792 source-backed Type 16 conditional shifter
-words, parameterized Type 18 mode control, and all 32 Type 21
+immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
+1,792 source-backed Type 16 conditional shifter words, parameterized Type 18
+mode control, and all 32 Type 21
 MODIFY selections. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
 fields across the 30 diagrams, including every one of their 393 variable bit
@@ -62,6 +63,19 @@ Two hand-transcribed manual examples, exhaustive Python/RTL partitioning, 280
 assembler/disassembler forms, and 58,709 deterministic model-versus-RTL
 cycles provide bounded evidence. Fetch, interrupt, loop-terminal, and
 external wait-state timing remain outside this slice.
+
+Type 14 encodes an unconditional shifter computation in parallel with one
+internal DREG move. The canonical bit-15-zero subset accepts all sixteen SF
+functions, seven documented X operands, and all move source/destination pairs
+that do not request two writes to SR or SE. Both clauses read cycle-start
+selected-bank state and commit together at cycle end. This defines 25,648
+executable words; 32,768 unresolved bit-15-one words, 4,096 XOP `001` words,
+and 3,024 same-destination words fail closed. Two hand fixtures, all supported
+syntax forms, exhaustive Python/RTL partitioning, and 82,597 stateful cycles
+provide bounded evidence
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7]. Fetch,
+loop-terminal, interrupt-abort, wait, and external bus phases remain outside
+the slice; bit 15 remains OQ-021.
 
 Type 16 encodes SF `[14:11]`, XOP `[10:8]`, fixed-zero bits `[7:4]`, and COND
 `[3:0]`. All sixteen SF functions are legal: LSHIFT, ASHIFT, and NORM
@@ -153,7 +167,8 @@ assembler/disassembler syntax, and logical bus phases remain open. NOP,
 Type 6, Type 18, Type 21, and Type 25 are the only class-complete source-backed
 semantic entries in the main instruction table. Type 16 has a bounded semantic
 entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
-closed. Type 15 has a bounded semantic entry
+closed. Type 14 has a bounded semantic entry for 25,648 canonical words while
+39,888 unresolved or unsupported words fail closed. Type 15 has a bounded semantic entry
 for its 14,336 source-closed words while 18,432 subencodings fail closed; most
 other legal combinations, register effects, parallel ordering, cycle counts,
 and bus transactions still require primary-backed entries.

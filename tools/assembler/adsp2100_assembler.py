@@ -144,12 +144,7 @@ def _split_if_prefix(statement: str) -> tuple[int, str] | None:
     return 15, statement
 
 
-def _assemble_conditional_shift(statement: str) -> int | None:
-    prefixed = _split_if_prefix(statement)
-    if prefixed is None:
-        return None
-    condition, body = prefixed
-
+def _parse_register_shifter(body: str) -> tuple[int, int] | None:
     shift = re.fullmatch(
         r"SR\s*=\s*(SR OR\s+)?(ASHIFT|LSHIFT|NORM)\s+"
         r"([A-Z][A-Z0-9]*)\s+\((HI|LO)\)",
@@ -164,12 +159,7 @@ def _assemble_conditional_shift(statement: str) -> int | None:
             sf |= 2
         if combine_or is not None:
             sf |= 1
-        return (
-            0x0E0000
-            | (sf << 11)
-            | (_SHIFTER_XOP_CODES[source] << 8)
-            | condition
-        )
+        return sf, _SHIFTER_XOP_CODES[source]
 
     exponent = re.fullmatch(
         r"SE\s*=\s*EXP\s+([A-Z][A-Z0-9]*)\s+\((HI|HIX|LO)\)",
@@ -180,12 +170,7 @@ def _assemble_conditional_shift(statement: str) -> int | None:
         if source not in _SHIFTER_XOP_CODES:
             return None
         sf = {"HI": 0xC, "HIX": 0xD, "LO": 0xE}[reference]
-        return (
-            0x0E0000
-            | (sf << 11)
-            | (_SHIFTER_XOP_CODES[source] << 8)
-            | condition
-        )
+        return sf, _SHIFTER_XOP_CODES[source]
 
     expadj = re.fullmatch(
         r"SB\s*=\s*EXPADJ\s+([A-Z][A-Z0-9]*)",
@@ -195,13 +180,57 @@ def _assemble_conditional_shift(statement: str) -> int | None:
         source = expadj.group(1)
         if source not in _SHIFTER_XOP_CODES:
             return None
-        return (
-            0x0E0000
-            | (0xF << 11)
-            | (_SHIFTER_XOP_CODES[source] << 8)
-            | condition
-        )
+        return 0xF, _SHIFTER_XOP_CODES[source]
     return None
+
+
+def _assemble_conditional_shift(statement: str) -> int | None:
+    prefixed = _split_if_prefix(statement)
+    if prefixed is None:
+        return None
+    condition, body = prefixed
+    parsed = _parse_register_shifter(body)
+    if parsed is None:
+        return None
+    sf, xop = parsed
+    return 0x0E0000 | (sf << 11) | (xop << 8) | condition
+
+
+def _shift_move_destination_collision(sf: int, destination: int) -> bool:
+    if sf <= 0xB:
+        return destination in (14, 15)
+    return sf <= 0xE and destination == 9
+
+
+def _assemble_shift_move(statement: str) -> int | None:
+    if statement.count(",") != 1:
+        return None
+    computation, move = (clause.strip() for clause in statement.split(","))
+    parsed_shifter = _parse_register_shifter(computation)
+    parsed_move = re.fullmatch(
+        r"([A-Z][A-Z0-9]*)\s*=\s*([A-Z][A-Z0-9]*)",
+        move,
+    )
+    if parsed_shifter is None or parsed_move is None:
+        return None
+    destination_name, source_name = parsed_move.groups()
+    registers = _dreg_name_to_code()
+    if destination_name not in registers or source_name not in registers:
+        return None
+    sf, xop = parsed_shifter
+    destination = registers[destination_name]
+    source = registers[source_name]
+    if _shift_move_destination_collision(sf, destination):
+        raise AssemblyError(
+            "Type 14 move destination collides with shifter destination"
+        )
+    return (
+        0x100000
+        | (sf << 11)
+        | (xop << 8)
+        | (destination << 4)
+        | source
+    )
 
 
 def _assemble_immediate_shift(statement: str) -> int | None:
@@ -346,6 +375,9 @@ def assemble_statement(source: str) -> AssembledWord:
     conditional_shift = _assemble_conditional_shift(statement)
     if conditional_shift is not None:
         return AssembledWord(conditional_shift)
+    shift_move = _assemble_shift_move(statement)
+    if shift_move is not None:
+        return AssembledWord(shift_move)
     internal_move = _assemble_internal_move(statement)
     if internal_move is not None:
         return AssembledWord(internal_move)

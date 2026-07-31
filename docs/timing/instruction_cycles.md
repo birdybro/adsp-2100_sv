@@ -13,6 +13,7 @@ Known cases:
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
+| Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
 | Type 16 conditional shifter | one processor cycle whether true or false; no PM-data or DM transfer |
 | Type 17 internal data MOVE | one processor cycle; no PM-data or DM transfer |
@@ -61,6 +62,14 @@ supported words in both banks. This is still an instruction-boundary result;
 fetch overlap, loop termination, interrupt recognition/abort, wait extension,
 and pin-level phase sequencing remain open
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
+
+The bounded Type 14 model/RTL slice verifies simultaneous cycle-start shifter
+and move reads followed by noncolliding cycle-end DREG, SR/SE/SB, and SS
+writes. Its exhaustive decoder partitions all 65,536 class words, and 82,597
+model/RTL cycles cover every one of the 25,648 supported canonical words in
+both banks. This remains an instruction-boundary result; fetch overlap,
+loop-terminal handling, interrupts, waits, and pin-level phases remain open
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

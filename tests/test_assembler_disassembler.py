@@ -69,6 +69,72 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                     count += 1
         self.assertEqual(count, 1_792)
 
+    def test_all_bounded_shift_move_forms_round_trip(self) -> None:
+        xops = {0: "SI", 2: "AR", 3: "MR0", 4: "MR1", 5: "MR2", 6: "SR0", 7: "SR1"}
+        dregs = [
+            "AX0", "AX1", "MX0", "MX1", "AY0", "AY1", "MY0", "MY1",
+            "SI", "SE", "AR", "MR0", "MR1", "MR2", "SR0", "SR1",
+        ]
+        count = 0
+        for sf in range(16):
+            for xop, shifter_source in xops.items():
+                for destination, destination_name in enumerate(dregs):
+                    if (sf <= 0xB and destination >= 14) or (
+                        0xC <= sf <= 0xE and destination == 9
+                    ):
+                        continue
+                    for move_source, move_source_name in enumerate(dregs):
+                        if sf <= 0xB:
+                            operation = ("LSHIFT", "ASHIFT", "NORM")[sf >> 2]
+                            reference = "LO" if sf & 2 else "HI"
+                            combine = "SR OR " if sf & 1 else ""
+                            computation = (
+                                f"SR = {combine}{operation} {shifter_source} "
+                                f"({reference})"
+                            )
+                        elif sf <= 0xE:
+                            reference = ("HI", "HIX", "LO")[sf - 0xC]
+                            computation = f"SE = EXP {shifter_source} ({reference})"
+                        else:
+                            computation = f"SB = EXPADJ {shifter_source}"
+                        statement = (
+                            f"{computation}, {destination_name} = "
+                            f"{move_source_name};"
+                        )
+                        opcode = (
+                            0x100000
+                            | (sf << 11)
+                            | (xop << 8)
+                            | (destination << 4)
+                            | move_source
+                        )
+                        self.assertEqual(assemble_statement(statement).value, opcode)
+                        decoded = disassemble_word(opcode)
+                        self.assertTrue(decoded.implemented)
+                        self.assertEqual(
+                            decoded.classification,
+                            "TYPE_14_BOUNDED_EXECUTION",
+                        )
+                        self.assertEqual(decoded.text, statement)
+                        count += 1
+        self.assertEqual(count, 25_648)
+
+    def test_shift_move_unsupported_forms_fail_closed(self) -> None:
+        cases = {
+            0x108000: "UNVERIFIED_TYPE_14_UNUSED_X",
+            0x100100: "UNVERIFIED_TYPE_14_XOP",
+            0x1000E0: "UNSUPPORTED_TYPE_14_DESTINATION_COLLISION",
+            0x106890: "UNSUPPORTED_TYPE_14_DESTINATION_COLLISION",
+        }
+        for opcode, classification in cases.items():
+            decoded = disassemble_word(opcode)
+            self.assertFalse(decoded.implemented)
+            self.assertEqual(decoded.classification, classification)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI (HI), SR0 = AX0;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SE = EXP SI (HI), SE = AX0;")
+
     def test_conditional_shifter_rejects_unavailable_xop_and_bad_condition(self) -> None:
         unavailable = disassemble_word(0x0E010F)
         self.assertFalse(unavailable.implemented)

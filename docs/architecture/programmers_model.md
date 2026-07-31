@@ -80,6 +80,12 @@ preserves both banks. Condition-true writes only the SF-selected SR, SE, or SB
 destination at cycle end, while EXP HI/HIX update unbanked ASTAT.SS on that
 same edge. Unknown reset ASTAT remains unknown in the independent model
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-11, A-3, A-6–A-7].
+The bounded Type 14 path reads both its shifter X operand and DREG-move source
+from that same cycle-start bank. A move may replace a computational source or
+read an old shifter result, and the noncolliding DREG plus SR/SE/SB/SS results
+become visible together at cycle end. Same-destination requests never execute
+in the bounded slice
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 The exact Type 18 boundary independently applies all AS/OL/BR/SR fields to
 cycle-start MSTAT and commits one four-bit result at cycle end. Both
 documented no-change encodings preserve their raw decode identity, while
