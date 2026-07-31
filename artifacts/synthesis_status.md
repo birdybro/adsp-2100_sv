@@ -3,7 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 6, Type 14, Type 15, Type 16, and Type 17 decoders/integration slices, stack-control
+  Type 6, Type 8, Type 14, Type 15, Type 16, and Type 17 decoders/integration slices, stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
@@ -11,6 +11,15 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 8 ALU/MAC-plus-MOVE
+  slice passes for Cyclone V `5CSEBA6U23I7` at its documented 22 ns
+  standalone constraint. It uses 983 ALMs, 693 fitted registers, one DSP
+  block, and no RAM. Across four timing models, worst setup slack is +1.131
+  ns, worst hold slack is +0.177 ns, and worst slow-corner Fmax is 47.92 MHz,
+  with zero unconstrained clocks, ports, or paths. A 20 ns run missed setup by
+  1.721 ns; the relaxed unit constraint is explicit evidence that this
+  monolithic execution slice needs phase scheduling before any 50 MHz or
+  MiSTer timing claim.
 - Quartus 17.0.2 full compilation of the bounded Type 14 shifter-plus-MOVE
   slice passes for Cyclone V `5CSEBA6U23I7`. It uses 1,032 ALMs and 565
   fitted registers (502 design registers plus 63 fitter-created routing
@@ -176,7 +185,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 28
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 29
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -185,6 +194,7 @@ timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded class-decode,
 internal-move-decode, stack-control-decode, stack-control-integration,
 Type-6 integration,
+Type-8 integration,
 Type-14 integration,
 Type-15 integration,
 Type-16 integration,

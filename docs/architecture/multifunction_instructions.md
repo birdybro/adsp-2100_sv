@@ -1,7 +1,8 @@
 # Multifunction execution semantics
 
-**Status: key ordering rule verified; bounded Type 14 shifter-plus-DREG move
-integrated; remaining multifunction classes pending**
+**Status: key ordering rule verified; bounded Type 8 ALU/MAC-plus-DREG and
+Type 14 shifter-plus-DREG moves integrated; memory multifunction classes
+pending**
 
 All computational register reads take their values at the beginning of a cycle
 and all writes become visible at the end. Therefore a simultaneous memory load
@@ -24,6 +25,34 @@ The original explicitly supports:
 - compute plus an internal data-register move.
 
 [ADI-UM-1989, printed pp. 6-3–6-7 and Appendix A types 1, 4, 5, 8, 12–14.]
+
+## Bounded Type 8 execution
+
+Original Type 8 combines one unconditional standard ALU or MAC computation
+with one internal DREG-to-DREG move. Its exact fields are fixed `00101`, Z,
+AMF, YOP, XOP, move destination, and move source. Both clauses sample the
+MSTAT-selected bank at cycle start. The move may replace a computation input,
+or read the old AR/MR segment while computation replaces that result; all
+noncolliding register and ASTAT effects commit together at cycle end. The
+instruction issues no PM-data or DM transaction
+[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+
+The bounded decoder executes 476,672 of the 524,288 class words: every
+source-backed AMF `00001` through `11111`, all X/Y/Z selections, and every
+move pair except a second write to AR for a Z=0 ALU operation or MR0/MR1/MR2
+for a Z=0 MAC operation. It fails closed for 31,232 such collisions. The
+remaining 16,384 `AMF=00000` words fail closed under OQ-022 because the
+instruction chapter requires a computation while Appendix A names that AMF
+no operation; neither move-only behavior nor result priority is invented.
+
+Two hand-derived fixtures, 20,513 representative field-exact canonical
+assembly packets, raw-word preservation for algebraically ambiguous aliases,
+an exhaustive 24-bit RTL traversal, ten directed/model checks, and 983,386
+stateful model-versus-RTL cycles cover every supported word in both banks.
+The later ADSP-2101 Cross-Software reference explicitly corroborates the
+old-value and unsupported-collision rules, but does not override the original
+manual [ADI-2101-CROSS-1990, printed pp. 9-71–9-73]. Fetch overlap, terminal
+loops, interrupt aborts, wait extension, and external bus phases remain open.
 
 ## Bounded Type 14 execution
 
@@ -63,11 +92,11 @@ single-cycle.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap for ALU/MAC and memory multifunction groups;
+- source/destination overlap for memory multifunction groups;
 - old store value versus new computation result;
 - dual PM/DM loads and independent DAG post-modifies;
 - status from the computation visible only to the next cycle;
 - condition-false preservation and cycle/bus activity;
 - PM cache hit/miss, branch, loop-end, interrupt, wait, HALT, and BR boundaries;
 - illegal destination collisions and reserved field combinations beyond the
-  bounded Type 14 partition.
+  bounded Type 8 and Type 14 partitions.

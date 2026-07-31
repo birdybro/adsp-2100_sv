@@ -114,6 +114,16 @@ remaining DREG plus SR/SE/SB writeback. The inactive bank is preserved across
 all 82,597 comparison cycles
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 
+`adsp2100_compute_move_slice` extends that parallel boundary through all
+source-backed Type 8 ALU and MAC functions. X, Y, optional MR feedback, and
+the DREG move source all come from cycle-start selected-bank state. The
+noncolliding AR/AF or MR/MF computation result, status, and DREG move commit
+together at cycle end while the inactive bank remains unchanged. The decoder
+rejects move writes to AR alongside a Z=0 ALU result and MR0/MR1/MR2 alongside
+a Z=0 MAC result. Every one of the 476,672 supported words executes in both
+banks in the 983,386-cycle comparison
+[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+
 Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
@@ -154,6 +164,9 @@ therefore remains `IMPLEMENTING`.
 - `make compute-tests` adds ten directed Type 14 tests and 82,597 stateful
   model-versus-RTL cycles, including all 25,648 supported words in both banks
   and directed old-value hazards in both parallel clauses.
+- `make compute-tests` adds ten directed Type 8 tests and 983,386 stateful
+  model-versus-RTL cycles, executing all 476,672 supported words in both banks
+  plus invalid, collision, reset-unknown, and setup-conflict boundaries.
 - Quartus 17.0.2 fits exactly 554 design registers in the Cyclone V smoke
   project. Seed 2 closes the fully constrained 20 ns multicorner check at
   +9.985 ns worst setup and +0.109 ns worst hold slack.

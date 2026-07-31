@@ -1,7 +1,7 @@
 # Multiplier/accumulator
 
 **Status: standard fractional compute model and RTL implemented; exact Type 25
-saturation integrated; general MAC instruction integration pending**
+saturation and bounded Type 8 integration complete**
 
 The multiplier has two 16-bit inputs and a 32-bit product. A 40-bit
 adder/subtractor accumulates into MR, segmented as 16-bit MR0, 16-bit MR1, and
@@ -53,9 +53,9 @@ collisions. Exact interrupt-adjacent ordering remains OQ-015.
 The separate register file accepts a full MAC result for atomic MR or
 MF-middle-word writeback in the selected bank.
 The separate status block accepts MV at the documented cycle-end boundary.
-The compute block still does not select architectural operands, suppress a
-false condition for general Type 1/4/5/8/9 computations, or implement complete
-multifunction legality/timing.
+The combinational compute block alone does not select architectural operands.
+Outside the bounded Type 8 slice, false-condition handling and Type 1/4/5/9
+selection plus complete multifunction legality/timing remain unimplemented.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the
@@ -64,3 +64,12 @@ that disagreement is tracked as SC-008 in `docs/research/source_conflicts.md`.
 The same register also tracks MAME's omission of MV updates for MF
 destinations as SC-009; instruction integration will follow the original
 ASTAT table and update MV for every non-saturation MAC operation.
+
+The bounded `adsp2100_compute_move_slice` selects every original standard MAC
+AMF `0x01`–`0x0f`, all documented X/Y/Z fields, cycle-start MR feedback,
+selected-bank MR/MF writeback, ASTAT.MV, and a simultaneous old-value DREG
+move. Z=0 packets whose move also targets MR0/MR1/MR2 fail closed. All
+476,672 supported Type 8 ALU/MAC words execute in both banks in the combined
+983,386-cycle comparison. AMF zero remains unassigned under OQ-022, and Types
+1/4/5/9 plus memory bus timing remain open
+[ADI-UM-1989, printed pp. 2-13–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].

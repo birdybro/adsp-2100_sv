@@ -110,7 +110,8 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_register_metadata.py`, `tests/test_counter.py`,
   `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
-  `tests/test_conditional_shift.py`, `tests/test_shift_move.py`
+  `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
+  `tests/test_compute_move.py`
 - **Implementation notes:** initial register map and reset-state
   classifications exist; the original 2-bit RGP/4-bit REG table accounts for
   48 codes and every blank code. CNTR now has machine-readable 14-bit,
@@ -128,6 +129,9 @@ advance beyond research until a page-level primary citation is added.
   cycle-start selected-bank and ASTAT inputs plus cycle-end SR/SE/SB/SS
   writeback. Bounded Type 14 execution now samples two parallel selected-bank
   sources and commits noncolliding DREG plus SR/SE/SB/SS results at cycle end.
+  Bounded Type 8 execution samples ALU/MAC operands, feedback, ASTAT, and the
+  simultaneous DREG source from cycle-start selected-bank state and atomically
+  commits noncolliding computational, status, and DREG writes at cycle end.
   Emulator variable
   names are discovery aids only.
 - **Unresolved questions:** hidden sequencer state, undefined reset fields, and
@@ -152,6 +156,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
+  `tests/test_compute_move.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
@@ -162,12 +167,14 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_immediate_shift_decode.sv`,
   `sim/unit/tb_adsp2100_conditional_shift_decode.sv`,
   `sim/unit/tb_adsp2100_shift_move_decode.sv`,
+  `sim/unit/tb_adsp2100_compute_move_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
   `formal/shift_move.sby`,
+  `formal/compute_move.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -233,6 +240,12 @@ advance beyond research until a page-level primary citation is added.
   and 3,024 same-destination forms. Two hand fixtures, every supported syntax
   form, every supported word in both banks, and 82,597 stateful model/RTL
   cycles pass; whole-core timing remains open.
+  Type 8 exhaustively partitions all 524,288 class words into 476,672
+  source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
+  same-destination collision words held under OQ-014. Two hand-derived
+  fixtures, 20,513 representative canonical syntax packets, every supported
+  word in both banks, and 983,386 stateful model/RTL cycles pass; conditional,
+  fetch, interrupt, and bus timing remain open.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -250,7 +263,10 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989, ADI-UM-FAMILY-1995,
   ADI-ASM-1994
 - **Relevant tests:** `make compute-tests`, `tests/test_shift_move.py`,
-  `sim/unit/tb_adsp2100_shift_move_slice.sv`, `formal/shift_move.sby`
+  `tests/test_compute_move.py`,
+  `sim/unit/tb_adsp2100_shift_move_slice.sv`,
+  `sim/unit/tb_adsp2100_compute_move_slice.sv`, `formal/shift_move.sby`,
+  `formal/compute_move.sby`
 - **Implementation notes:** the bounded Type 14 action graph implements the
   first complete source-backed parallel execution boundary. Shifter X and
   DREG-move source read cycle-start selected-bank state; noncolliding DREG,
@@ -258,10 +274,15 @@ advance beyond research until a page-level primary citation is added.
   legal. The decoder fails closed for all same-destination requests and for
   source-unclosed bit-15/XOP forms. Ten directed checks and 82,597 stateful
   RTL/model cycles cover every supported canonical word in both banks. Type
-  1, 4, 5, 8, 12, and 13 action graphs, PM/DM concurrency, and wait effects
-  remain.
-- **Unresolved questions:** result forwarding and illegal destination
-  collisions are high-risk.
+  The bounded Type 8 action graph independently extends that rule to every
+  source-closed ALU/MAC computation and DREG move: all operands and status are
+  sampled at cycle start and noncolliding result, feedback, ASTAT, and move
+  writes commit together at cycle end. Its exhaustive partition and 983,386
+  stateful cycles cover both banks. Type 1, 4, 5, 12, and 13 action graphs,
+  PM/DM concurrency, and wait effects remain.
+- **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
+  Type 8 legality, and result forwarding outside the bounded old-value rule
+  remain high-risk.
 - **Confidence:** UNKNOWN
 
 ## M8 — Executable architectural model
@@ -309,6 +330,10 @@ advance beyond research until a page-level primary citation is added.
   independently reads both parallel sources from cycle-start state, commits
   the legal write set atomically, propagates unknown operands only to affected
   destinations, and rejects source-unclosed or colliding encodings.
+  A separate Type 8 model independently selects ALU/MAC operands and feedback,
+  evaluates compute and move sources from one cycle-start bank snapshot,
+  atomically commits result/feedback/status/move writes, preserves unknowns,
+  and rejects AMF-zero or same-destination encodings.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -343,7 +368,10 @@ advance beyond research until a page-level primary citation is added.
   and EXPADJ forms; XOP `001` remains unassembled and visibly unverified. Type
   14 round trips all 25,648 canonical noncolliding shifter-plus-DREG forms;
   bit-15-one, unavailable-XOP, and same-destination words remain visibly
-  fail-closed. First
+  fail-closed. Type 8 accepts canonical source-closed ALU/MAC-plus-DREG
+  packets, preserves non-unique supported aliases as raw `.WORD` encodings,
+  and visibly rejects AMF-zero and same-destination words. Two hand-derived
+  Type 8 fixtures and 20,513 representative canonical packets round trip. First
   research
   surviving lawful assemblers; do not execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
@@ -361,11 +389,14 @@ advance beyond research until a page-level primary citation is added.
   condition-false, and bank interactions match cited behavior in model and RTL;
   directed boundary/differential/formal tests pass; synthesis is warning-clean.
 - **Source references:** ADI-UM-1989 computational-unit and instruction chapters
-- **Relevant tests:** `make compute-tests`, `formal/alu.sby`
+- **Relevant tests:** `make compute-tests`, `tests/test_compute_move.py`,
+  `formal/alu.sby`, `formal/compute_move.sby`
 - **Implementation notes:** the source-backed standard AMF `0x10`–`0x1f`
   compute block, flags, sticky AV, and AR saturation exist in independent
-  model and RTL. Instruction operand selection/writeback, condition-false,
-  banking, and DIVS/DIVQ remain.
+  model and RTL. Type 8 now connects every source-closed standard ALU field to
+  selected-bank operand/feedback selection, atomic AR/AF/ASTAT and parallel
+  DREG writeback, and 983,386 ALU/MAC model/RTL packet cycles. Conditional
+  computation, memory multifunction classes, and DIVS/DIVQ remain.
 - **Unresolved questions:** DIVS/DIVQ iteration semantics and instruction-level
   old/new value visibility remain open.
 - **Confidence:** CORROBORATED
@@ -381,15 +412,19 @@ advance beyond research until a page-level primary citation is added.
   rounding, accumulation, saturation, overflow, segmentation, and feedback are
   source-backed and pass boundary, randomized, differential, and formal tests.
 - **Source references:** ADI-UM-1989 MAC and instruction chapters
-- **Relevant tests:** `make compute-tests`, `formal/mac.sby`
+- **Relevant tests:** `make compute-tests`, `tests/test_compute_move.py`,
+  `formal/mac.sby`, `formal/compute_move.sby`
 - **Implementation notes:** the source-backed fixed-fractional AMF `0x01`–`0x0f`
   compute block, four signedness modes, unbiased rounding, MF extraction, MV,
   and SAT MR transform exist in independent model and RTL. The exact Type 25
   saturation instruction now has a machine-readable semantic entry,
   assembler/disassembler fixture, exact decoder, independent state model,
   selected-bank execution RTL, formal recipes, exhaustive decode, nine model
-  tests, and 50,112 model/RTL cycles. General MAC instruction operand
-  selection/writeback and multifunction timing remain.
+  tests, and 50,112 model/RTL cycles. Type 8 now connects every source-closed
+  fractional MAC field to selected-bank operand/feedback selection and atomic
+  MR/MF/MV plus parallel DREG writeback; all supported Type 8 words execute in
+  both banks within the 983,386-cycle differential run. Conditional and
+  memory-access multifunction timing remain.
 - **Unresolved questions:** original-device multiplier visibility within
   multifunction instructions and the recorded MAME rounding conflict SC-008.
 - **Confidence:** CORROBORATED
@@ -539,9 +574,11 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`,
   `tests/test_shift_move.py`,
+  `tests/test_compute_move.py`,
   `formal/mode_slice.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
-  `formal/conditional_shift.sby`, `formal/shift_move.sby`
+  `formal/conditional_shift.sby`, `formal/shift_move.sby`,
+  `formal/compute_move.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
   independent model and portable RTL implement both banks for all 16 DREG
   codes plus AF, MF, and SB; exact SE/MR2/SB widths; three cycle-start reads;
@@ -566,6 +603,10 @@ advance beyond research until a page-level primary citation is added.
   The bounded Type 14 slice exercises simultaneous DREG and shifter writeback,
   preserves old-value reads in both clauses, and passes 82,597 cycles over all
   25,648 supported canonical words in both banks.
+  The bounded Type 8 slice adds simultaneous selected-bank ALU/MAC result,
+  feedback/status, and DREG writeback with cycle-start old-value reads. Its
+  exhaustive both-bank differential run passes 983,386 cycles over all
+  476,672 source-closed words plus deterministic setup/error cases.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -829,9 +870,10 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Twenty-eight harnesses now pass strict assertion syntax
+  result complete proof. Twenty-nine harnesses now pass strict assertion syntax
   lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
+  bounded Type 8 ALU/MAC-plus-DREG execution,
   Type 17 action decode/state execution, Type 21 decode, and bounded Type 21
   state execution.
   Proof execution awaits an installed
@@ -874,6 +916,12 @@ advance beyond research until a page-level primary citation is added.
   The bounded Type 14 slice fits in 1,032 ALMs and 565 fitted registers with no
   RAM/DSPs, +3.041 ns worst setup, +0.171 ns worst hold, and zero unconstrained
   clocks, ports, or paths.
+  The bounded Type 8 slice fits in 983 ALMs and 693 fitted registers with one
+  DSP and no RAM against a 22 ns standalone-slice constraint. Worst setup is
+  +1.131 ns, worst hold is +0.177 ns, worst slow-corner Fmax is 47.92 MHz, and
+  all clocks, ports, and paths are constrained. The same monolithic slice
+  missed a 20 ns constraint by 1.721 ns; this is not whole-core or MiSTer
+  timing closure and phase scheduling remains an integration task.
   Whole-core clocks,
   utilization, and timing remain
   unavailable; Yosys is not installed.

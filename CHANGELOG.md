@@ -85,6 +85,12 @@ semantic versioning after its first release.
   algebraic assembler/disassembler support, two hand fixtures, deterministic
   differential vectors, formal harness/recipe, and constrained Cyclone V
   synthesis project.
+- A bounded Type 8 ALU/MAC-plus-internal-DREG semantic entry covering 476,672
+  source-closed noncolliding words; an independent unknown-preserving parallel
+  state model, exact fail-closed decoder, portable execution RTL, canonical
+  algebraic assembler/disassembler support with raw-word alias preservation,
+  two hand-derived fixtures, exhaustive deterministic differential vectors,
+  a formal harness/recipe, and a constrained Cyclone V synthesis project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -374,6 +380,23 @@ semantic versioning after its first release.
   reference hashes, all generated-data checks, strict Verilator lint, ten
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
   regression including all 82,597 bounded Type 14 execution cycles.
+- Type 8 Python and RTL decoders exhaustively partition all 524,288 class
+  words into 476,672 supported actions, 16,384 AMF-zero words held under
+  OQ-022, and 31,232 same-destination collision words held under OQ-014. Ten
+  directed model checks, 20,513 representative canonical syntax packets, two
+  hand-derived fixtures, and 983,386 stateful model-versus-RTL cycles cover
+  every supported word in both banks, old-value source ordering, ALU/MAC
+  result and status writeback, reset unknowns, invalid words, and conflicts.
+- Quartus full compilation passes for the bounded Type 8 compute-move slice at
+  its documented 22 ns standalone constraint: 983 ALMs, 693 fitted registers,
+  one DSP block, no RAM, +1.131 ns worst setup and +0.177 ns worst hold slack,
+  47.92 MHz worst slow-corner Fmax, and zero unconstrained paths. The same
+  monolithic slice missed a 20 ns constraint by 1.721 ns; no whole-core or
+  MiSTer timing claim is made.
+- The expanded `make test` passes 301 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, eleven
+  exhaustive 24-bit decode traversals, and every existing model/RTL vector
+  regression including all 983,386 bounded Type 8 execution cycles.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
   +0.407 ns worst hold slack, and zero unconstrained clocks, ports, or paths.
@@ -428,9 +451,9 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 28 harnesses,
-  including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 14/
-  Type 17/Type 21 state execution;
+- `make formal` passes strict assertion syntax lint for all 29 harnesses,
+  including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 8/
+  Type 14/Type 17/Type 21 state execution;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
@@ -463,6 +486,12 @@ semantic versioning after its first release.
   cycle-end selected-bank SR writeback, SE/status preservation, and no PM/DM
   data transfer. SF 8–15 and unavailable XOP `001` remain explicitly
   unsupported pending original-tool or hardware evidence.
+- Closed the source-supported Type 8 ALU/MAC-plus-DREG packet boundary: exact
+  field placement, one-cycle unconditional execution, cycle-start reads,
+  cycle-end atomic writes, ALU/MAC operand and feedback maps, and no PM/DM data
+  transfer. Same-destination writes remain fail-closed under OQ-014, and the
+  AMF-zero mismatch between the Type 8 requirement and the Appendix A no-op
+  table remains fail-closed under OQ-022.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and
@@ -544,5 +573,9 @@ semantic versioning after its first release.
   MSTAT consumer wiring exists only in bounded integration slices, not a
   whole instruction execution core.
 - Open-source synthesis and formal tools are not installed in this environment.
+- Type 8 AMF-zero legality and same-destination results are unresolved and are
+  rejected rather than assigned invented behavior. Its standalone combined
+  compute/register slice also does not meet 50 MHz without internal phase
+  scheduling; the successful 45.45 MHz unit constraint is not target closure.
 
 [Unreleased]: https://github.com/birdybro/adsp-2100_sv/compare/HEAD...HEAD

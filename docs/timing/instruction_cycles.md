@@ -12,6 +12,7 @@ Known cases:
 | Case | Current sourced timing |
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
+| Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
@@ -70,6 +71,14 @@ model/RTL cycles cover every one of the 25,648 supported canonical words in
 both banks. This remains an instruction-boundary result; fetch overlap,
 loop-terminal handling, interrupts, waits, and pin-level phases remain open
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
+
+The bounded Type 8 model/RTL slice verifies simultaneous cycle-start ALU/MAC
+and DREG-move reads followed by atomic noncolliding computation, status, and
+move writes. Exhaustive decode partitions all 524,288 class words and 983,386
+model/RTL cycles execute every one of the 476,672 supported words in both
+banks. This remains instruction-boundary evidence; fetch overlap,
+loop-terminal handling, interrupts, waits, and pin-level phases remain open
+[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
 
 The bounded Type 18 model/RTL slice verifies that all four fields read
 cycle-start MSTAT and atomically commit one cycle-end result across every

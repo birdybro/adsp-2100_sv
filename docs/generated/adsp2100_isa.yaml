@@ -375,6 +375,139 @@
   ],
   "instructions": [
     {
+      "id": "COMPUTE-INTERNAL-MOVE-TYPE-8",
+      "mnemonic": "ALU/MAC WITH INTERNAL DATA REGISTER MOVE",
+      "algebraic_assembly_syntax": "{ALU_COMPUTATION | MAC_COMPUTATION}, destination_dreg = source_dreg;",
+      "encoding_pattern": "00101xxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf80000",
+      "opcode_value": "0x280000",
+      "fields": ["Z", "AMF", "YOP", "XOP", "DEST_DREG", "SOURCE_DREG"],
+      "condition_field": null,
+      "computation_field": "AMF",
+      "source_register_selections": [
+        "UNIT_DEPENDENT_XOP",
+        "UNIT_DEPENDENT_YOP",
+        "SOURCE_DREG",
+        "MR_FOR_ACCUMULATE_OR_SUBTRACT",
+        "ASTAT_AC_FOR_CARRY_OR_BORROW",
+        "ASTAT_AV_WHEN_OVERFLOW_LATCH_MODE_IS_ENABLED",
+        "MSTAT_OL_AS_SR"
+      ],
+      "destination_register_selections": [
+        "Z_SELECTED_AR_AF_OR_MR_MF",
+        "DEST_DREG"
+      ],
+      "data_move_fields": ["DEST_DREG", "SOURCE_DREG"],
+      "dag_selection": null,
+      "addressing_mode": "INTERNAL_DATA_REGISTER_MOVE",
+      "immediate_fields": [],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_MSTAT_BANK_SELECT_AND_ALU_MODES",
+        "CYCLE_START_SELECTED_BANK_XOP",
+        "CYCLE_START_SELECTED_BANK_YOP_OR_ZERO",
+        "CYCLE_START_SELECTED_BANK_MR_FOR_MAC_ACCUMULATE_OR_SUBTRACT",
+        "CYCLE_START_SELECTED_BANK_SOURCE_DREG",
+        "CYCLE_START_ASTAT_AC_AV"
+      ],
+      "registers_written": [
+        "CYCLE_END_SELECTED_BANK_AR_OR_AF_FOR_ALU",
+        "CYCLE_END_SELECTED_BANK_MR_OR_MF_FOR_MAC",
+        "CYCLE_END_SELECTED_BANK_DEST_DREG",
+        "CYCLE_END_ASTAT_AZ_AN_AV_AC_AND_ABS_ONLY_AS_FOR_ALU",
+        "CYCLE_END_ASTAT_MV_FOR_MAC"
+      ],
+      "computational_unit_used": "AMF_SELECTED_ALU_OR_MAC",
+      "status_flags_read": [
+        "AC_FOR_CARRY_OR_BORROW",
+        "AV_WHEN_OVERFLOW_LATCH_MODE_IS_ENABLED"
+      ],
+      "status_flags_written": [
+        "AZ_AN_AV_AC_AND_ABS_ONLY_AS_FOR_ALU",
+        "MV_FOR_MAC"
+      ],
+      "memory_spaces_accessed": ["PROGRAM_INSTRUCTION_FETCH"],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "ONE_UNCONDITIONAL_ALU_OR_MAC_COMPUTATION",
+        "ONE_INTERNAL_DREG_TO_DREG_MOVE"
+      ],
+      "legal_multifunction_combinations": [
+        "Any sourced standard ALU function except DIVS/DIVQ, or any sourced standard MAC function, with one DREG-to-DREG move when the two clauses do not write the same architectural destination."
+      ],
+      "illegal_or_reserved_combinations": [
+        "AMF=00000 remains unverified under OQ-022 because the instruction requires an unconditional computation while Appendix A calls that AMF no operation.",
+        "A move destination of AR collides with an ALU result-register write when Z=0.",
+        "A move destination of MR0, MR1, or MR2 collides with a MAC result-register write when Z=0."
+      ],
+      "old_value_new_value_semantics": "The computation and move sample all selected-bank sources at cycle start. A move may overwrite a computation source and may read the old computation destination. Noncolliding computation, status, and move results commit atomically at cycle end.",
+      "write_conflict_rules": "Source overlap is legal. Same-destination writes are unsupported and fail closed before execution; no hardware priority is invented.",
+      "condition_false_behavior": "Not conditional; the documented computation is unconditional.",
+      "loop_interaction": "Normal sequencer handling; terminal-loop timing is not yet integrated.",
+      "interrupt_interaction": "Interrupt recognition, instruction-abort precedence, and exact phase visibility are not integrated or claimed by this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "The unconditional computation and internal move execute in one instruction cycle; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; the instruction itself issues no PM-data or DM transaction.",
+      "parallel_actions": [
+        {
+          "action": "UNCONDITIONAL_ALU_OR_MAC_COMPUTATION",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_AND_MODES",
+            "CYCLE_START_SELECTED_BANK_XOP_YOP_AND_OPTIONAL_MR",
+            "CYCLE_START_FUNCTION_DEPENDENT_ASTAT"
+          ],
+          "writes": [
+            "CYCLE_END_SELECTED_BANK_Z_SELECTED_RESULT",
+            "CYCLE_END_FUNCTION_SELECTED_ASTAT"
+          ]
+        },
+        {
+          "action": "INTERNAL_DREG_MOVE",
+          "reads": [
+            "CYCLE_START_MSTAT_BANK_SELECT",
+            "CYCLE_START_SELECTED_BANK_SOURCE_DREG"
+          ],
+          "writes": ["CYCLE_END_SELECTED_BANK_DEST_DREG"]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 2-6–2-20: ALU/MAC registers, functions, status, bank selection, and cycle-start read/cycle-end write behavior"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-1–6-10, especially section 6.2.1.5 and Table 6.1: unconditional ALU/MAC plus internal DREG move in one cycle"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-2, A-5–A-7, and A-11: Type 8 placement plus AMF, DREG, X, Y, and Z fields"
+        },
+        {
+          "reference_id": "ADI-2101-CROSS-1990",
+          "location": "printed pp. 9-71–9-73: later-device corroboration of read-first/write-second ordering, source overlap legality, and unsupported same-destination writes; not original-device authority"
+        }
+      ],
+      "confidence": "CORROBORATED",
+      "unresolved_issues": [
+        "OQ-022: AMF=00000 behavior is unassigned; all 16,384 words fail closed.",
+        "Actual device behavior for unsupported same-destination writes is not assigned.",
+        "Some field-valid encodings have no unique original algebraic spelling and are preserved as raw words by the partial disassembler.",
+        "Fetch, interrupt-abort, PC, loop-terminal, and external wait-state phases remain outside the bounded state slice."
+      ]
+    },
+    {
       "id": "SHIFT-INTERNAL-MOVE-TYPE-14",
       "mnemonic": "SHIFTER WITH INTERNAL DATA REGISTER MOVE",
       "algebraic_assembly_syntax": "{SR = [SR OR] {LSHIFT|ASHIFT|NORM} xop ({HI|LO}) | SE = EXP xop ({HI|HIX|LO}) | SB = EXPADJ xop}, destination_dreg = source_dreg;",

@@ -119,6 +119,130 @@ _SHIFTER_XOP_CODES = {
     "SR1": 7,
 }
 
+_ALU_XOP_NAMES = (
+    "AX0", "AX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1",
+)
+_MAC_XOP_NAMES = (
+    "MX0", "MX1", "AR", "MR0", "MR1", "MR2", "SR0", "SR1",
+)
+_ALU_YOP_NAMES = ("AY0", "AY1", "AF", "0")
+_MAC_YOP_NAMES = ("MY0", "MY1", "MF", "0")
+
+
+def _format_compute_operation(z: int, amf: int, yop: int, xop: int) -> str | None:
+    """Return the field-exact canonical algebraic form for a sourced AMF."""
+
+    if not (0 <= z <= 1 and 1 <= amf <= 0x1F):
+        return None
+    if amf < 0x10:
+        destination = "MF" if z else "MR"
+        x = _MAC_XOP_NAMES[xop]
+        y = _MAC_YOP_NAMES[yop]
+        if yop == 3:
+            if amf == 4 and xop == 0:
+                return f"{destination} = 0"
+            return None
+        if amf <= 3:
+            operation = ("", "", "MR + ", "MR - ")[amf]
+            return f"{destination} = {operation}{x} * {y} (RND)"
+        mode = ("SS", "SU", "US", "UU")[(amf - 4) & 3]
+        if amf < 8:
+            operation = ""
+        elif amf < 12:
+            operation = "MR + "
+        else:
+            operation = "MR - "
+        return f"{destination} = {operation}{x} * {y} ({mode})"
+
+    destination = "AF" if z else "AR"
+    x = _ALU_XOP_NAMES[xop]
+    y = _ALU_YOP_NAMES[yop]
+    if amf in (0x10, 0x11, 0x14, 0x15, 0x18) and xop != 0:
+        return None
+    if amf in (0x1B, 0x1F) and yop != 0:
+        return None
+    expressions = {
+        0x10: f"PASS {y}",
+        0x11: f"{y} + 1",
+        0x12: f"{x} + {y} + C",
+        0x13: f"PASS {x}" if yop == 3 else f"{x} + {y}",
+        0x14: f"NOT {y}",
+        0x15: f"-{y}",
+        0x16: f"{x} - {y} + C - 1",
+        0x17: f"{x} - {y}",
+        0x18: f"{y} - 1",
+        0x19: f"-{x}" if yop == 3 else f"{y} - {x}",
+        0x1A: f"{y} - {x} + C - 1",
+        0x1B: f"NOT {x}",
+        0x1C: f"{x} AND {y}",
+        0x1D: f"{x} OR {y}",
+        0x1E: f"{x} XOR {y}",
+        0x1F: f"ABS {x}",
+    }
+    return f"{destination} = {expressions[amf]}"
+
+
+@lru_cache(maxsize=1)
+def _compute_operation_codes() -> dict[str, tuple[int, int, int, int]]:
+    result: dict[str, tuple[int, int, int, int]] = {}
+    for z in range(2):
+        for amf in range(1, 0x20):
+            for yop in range(4):
+                for xop in range(8):
+                    operation = _format_compute_operation(z, amf, yop, xop)
+                    if operation is None:
+                        continue
+                    if operation in result:
+                        raise AssemblyError(
+                            f"ambiguous canonical computation: {operation}"
+                        )
+                    result[operation] = (z, amf, yop, xop)
+    return result
+
+
+def _compute_move_destination_collision(
+    z: int,
+    amf: int,
+    destination: int,
+) -> bool:
+    if z:
+        return False
+    if amf >= 0x10:
+        return destination == 0xA
+    return destination in (0xB, 0xC, 0xD)
+
+
+def _assemble_compute_move(statement: str) -> int | None:
+    if statement.count(",") != 1:
+        return None
+    computation, move = (clause.strip() for clause in statement.split(","))
+    computation_fields = _compute_operation_codes().get(computation)
+    parsed_move = re.fullmatch(
+        r"([A-Z][A-Z0-9]*)\s*=\s*([A-Z][A-Z0-9]*)",
+        move,
+    )
+    if computation_fields is None or parsed_move is None:
+        return None
+    destination_name, source_name = parsed_move.groups()
+    registers = _dreg_name_to_code()
+    if destination_name not in registers or source_name not in registers:
+        return None
+    z, amf, yop, xop = computation_fields
+    destination = registers[destination_name]
+    if _compute_move_destination_collision(z, amf, destination):
+        raise AssemblyError(
+            "Type 8 move destination collides with computation destination"
+        )
+    return (
+        0x280000
+        | (z << 18)
+        | (amf << 13)
+        | (yop << 11)
+        | (xop << 8)
+        | (destination << 4)
+        | registers[source_name]
+    )
+
 
 @lru_cache(maxsize=1)
 def _if_condition_codes() -> dict[str, int]:
@@ -375,6 +499,9 @@ def assemble_statement(source: str) -> AssembledWord:
     conditional_shift = _assemble_conditional_shift(statement)
     if conditional_shift is not None:
         return AssembledWord(conditional_shift)
+    compute_move = _assemble_compute_move(statement)
+    if compute_move is not None:
+        return AssembledWord(compute_move)
     shift_move = _assemble_shift_move(statement)
     if shift_move is not None:
         return AssembledWord(shift_move)

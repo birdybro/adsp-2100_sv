@@ -22,7 +22,8 @@ and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
 immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
-1,792 source-backed Type 16 conditional shifter words, parameterized Type 18
+1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
+ALU/MAC-plus-DREG words, parameterized Type 18
 mode control, and all 32 Type 21
 MODIFY selections. The companion
 `docs/generated/adsp2100_instruction_formats.yaml` records all 106 named
@@ -48,6 +49,19 @@ exhaustive Python and RTL field decode, assembler/disassembler round trips,
 and 50,204 stateful model-versus-RTL cycles provide the bounded execution
 evidence. Fetch, interrupts, stalls, and external bus phases remain outside
 this slice.
+
+Type 8 encodes Z `[18]`, AMF `[17:13]`, YOP `[12:11]`, XOP `[10:8]`, and
+two four-bit DREG move selectors. The model and RTL execute all 476,672
+noncolliding words with AMF `0x01`–`0x1f`: ALU/MAC operands and the move
+source use cycle-start selected-bank state, while computation result, status,
+and move destination commit atomically at cycle end. The other 47,616 words
+remain action-free: 16,384 `AMF=0` aliases are OQ-022 and 31,232 request two
+writes to the same AR or segmented MR destination. Two hand fixtures,
+exhaustive Python/RTL partitioning, canonical algebraic assembly plus raw
+alias preservation, and 983,386 model-versus-RTL cycles provide bounded
+evidence [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7,
+A-11]. Fetch, PC, loop, interrupt, wait, and external bus phases remain
+outside the slice.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight
@@ -169,6 +183,8 @@ semantic entries in the main instruction table. Type 16 has a bounded semantic
 entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
 closed. Type 14 has a bounded semantic entry for 25,648 canonical words while
 39,888 unresolved or unsupported words fail closed. Type 15 has a bounded semantic entry
-for its 14,336 source-closed words while 18,432 subencodings fail closed; most
+for its 14,336 source-closed words while 18,432 subencodings fail closed.
+Type 8 has a bounded semantic entry for 476,672 words while 47,616 unresolved
+or unsupported words fail closed; most
 other legal combinations, register effects, parallel ordering, cycle counts,
 and bus transactions still require primary-backed entries.

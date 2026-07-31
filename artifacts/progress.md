@@ -25,6 +25,12 @@ cycle-, or Hard Drivin'-complete
 - exact Type 6 immediate-to-DREG semantics, assembler/disassembler support,
   exhaustive Python/RTL field decode, both-bank independent state execution,
   and exact SE/MR2/MR1 storage side effects;
+- bounded Type 8 ALU/MAC-plus-internal-MOVE semantics, two hand-derived
+  fixtures, representative canonical assembler/disassembler coverage,
+  exhaustive three-way class partitioning, cycle-start selected-bank operand,
+  feedback, status, and move-source reads, atomic cycle-end noncolliding
+  writeback, and explicit fail-closed handling for AMF zero and destination
+  collisions under OQ-022/OQ-014;
 - bounded canonical Type 14 shifter-plus-internal-MOVE semantics, two manual
   fixtures, all 25,648 algebraic forms, exhaustive four-way class
   partitioning, cycle-start selected-bank operand reads, atomic cycle-end
@@ -98,7 +104,7 @@ cycle-, or Hard Drivin'-complete
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
-- partial NOP, Type 6, Type 14, Type 15, Type 16, Type 17, Type 18, Type 21, and Type 25
+- partial NOP, Type 6, Type 8, Type 14, Type 15, Type 16, Type 17, Type 18, Type 21, and Type 25
   assembler/disassembler round trip;
 - dependency-free regression, Verilator package lint, and CI workflow.
 
@@ -109,7 +115,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 289 implemented Python unit checks plus manifest/hash verification;
+- 301 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -122,6 +128,11 @@ outstanding.
 - all 1,048,576 Type 6 words decode to exact immediate/DREG fields in both
   Python and exhaustive RTL traversal; 50,204 selected-bank model/RTL cycles
   pass with no PM-data or DM activity;
+- all 524,288 Type 8 words partition into exactly 476,672 supported actions,
+  16,384 unresolved AMF-zero words, and 31,232 same-destination conflicts in
+  Python and exhaustive RTL; 983,386 model/RTL cycles execute every supported
+  word in both banks plus deterministic setup, unknown, invalid, and conflict
+  cases;
 - all 65,536 Type 14 class words partition into exactly 25,648 canonical
   supported actions, 32,768 unverified bit-15 words, 4,096 unavailable-XOP
   words, and 3,024 same-destination conflicts in Python and exhaustive RTL;
@@ -155,7 +166,8 @@ outstanding.
   execution cycles and 50,112 stateful Type 25 cycles pass simulation;
   the Type 18 state slice adds 58,248 passing cycles and the Type 21 slice adds
   50,124, while the Type 17 state slice adds 59,430 and the Type 6 slice adds
-  50,204; the Type 14 state slice adds 82,597, the Type 15 state slice adds
+  50,204; the Type 8 state slice adds 983,386, the Type 14 state slice adds
+  82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
 - constrained Quartus Cyclone V class-decode, stack-control decode, condition,
   ALU, MAC, shifter, DAG,
@@ -179,12 +191,17 @@ outstanding.
   unconstrained paths;
   the Type 16 slice fits in 840 ALMs and 520 fitted registers with +2.304 ns
   setup, +0.173 ns hold, and no unconstrained paths;
+  the Type 8 slice fits in 983 ALMs and 693 fitted registers with one DSP and
+  no RAM, +1.131 ns setup, +0.177 ns hold, 47.92 MHz worst slow-corner Fmax,
+  and no unconstrained paths against its 22 ns standalone constraint; it
+  missed a 20 ns constraint by 1.721 ns and is not a whole-core timing claim;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
   MSTAT-integration, Type 18 decode/execution, Type 21 decode/execution, and
   Type 25 decode/execution plus Type 17 action/state execution
-  formal harnesses plus Type 6, Type 14, Type 15, and Type 16 decode/execution (28 total) pass
+  formal harnesses plus Type 6, Type 8, Type 14, Type 15, and Type 16
+  decode/execution (29 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core

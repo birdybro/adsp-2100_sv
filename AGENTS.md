@@ -230,7 +230,8 @@ controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
 MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, all 1,792 source-backed Type 16 conditional shifter
-words, and all Type 26 stack-control actions,
+words, 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, and all Type 26
+stack-control actions,
 but they do not establish
 whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
 excludes later timer, GO, and multiplier-placement fields and exhaustively
@@ -255,6 +256,13 @@ canonical bit-15-zero subset contains 25,648 supported words. The remaining
 32,768 bit-15-one, 4,096 unavailable-XOP, and 3,024 same-destination words fail
 closed; OQ-021 tracks the original diagram's unnamed bit 15. Type 12–13 memory
 multifunction classes remain unintegrated.
+The bounded Type 8 slice executes documented ALU and fractional-MAC
+computations in parallel with one internal DREG move. Both clauses sample the
+cycle-start selected bank; noncolliding DREG/AR/AF/MR/MF and ASTAT writes
+commit atomically at cycle end. The exact 524,288-word class partitions into
+476,672 supported words, 16,384 AMF-zero words held under OQ-022, and 31,232
+same-destination collision words held under OQ-014. It does not establish
+conditional-computation, PM/DM-data, fetch, interrupt, or bus timing.
 A generated
 synthesizable class decoder recognizes all 30 original Appendix A format
 classes and fails closed for unshown words; it has exhaustive 24-bit membership
@@ -293,7 +301,8 @@ instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP in its top-level step
 method. Independent bounded models cover Type 17 action/state selection and
-Type 6, Type 14, Type 15, Type 16, Type 18, Type 21, Type 25, and Type 26 state/action behavior outside that
+Type 6, Type 8, Type 14, Type 15, Type 16, Type 18, Type 21, Type 25, and
+Type 26 state/action behavior outside that
 top-level step path; all other opcodes still fail closed. Architectural
 documents marked partial or provisional remain research inputs until their
 named evidence gates pass.

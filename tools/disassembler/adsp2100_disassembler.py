@@ -29,6 +29,7 @@ from tools.generators.validate_isa_fields import (
     load_database as load_isa_fields_database,
     validate_database as validate_isa_fields_database,
 )
+from tools.assembler.adsp2100_assembler import _format_compute_operation
 
 
 @dataclass(frozen=True)
@@ -157,6 +158,51 @@ def _try_disassemble_shift_move(opcode: int) -> Disassembly | None:
     )
 
 
+def _compute_move_destination_collision(
+    z: int,
+    amf: int,
+    destination: int,
+) -> bool:
+    if z:
+        return False
+    if amf >= 0x10:
+        return destination == 0xA
+    return destination in (0xB, 0xC, 0xD)
+
+
+def _try_disassemble_compute_move(opcode: int) -> Disassembly | None:
+    if opcode & 0xF80000 != 0x280000:
+        return None
+    z = (opcode >> 18) & 1
+    amf = (opcode >> 13) & 0x1F
+    yop = (opcode >> 11) & 3
+    xop = (opcode >> 8) & 7
+    destination = (opcode >> 4) & 0xF
+    if amf == 0:
+        classification = "UNVERIFIED_TYPE_08_AMF_ZERO"
+        implemented = False
+        text = f".WORD 0x{opcode:06x};"
+    elif _compute_move_destination_collision(z, amf, destination):
+        classification = "UNSUPPORTED_TYPE_08_DESTINATION_COLLISION"
+        implemented = False
+        text = f".WORD 0x{opcode:06x};"
+    else:
+        computation = _format_compute_operation(z, amf, yop, xop)
+        if computation is None:
+            classification = "TYPE_08_BOUNDED_ALIAS"
+            implemented = True
+            text = f".WORD 0x{opcode:06x};"
+        else:
+            names = _dreg_code_to_name()
+            classification = "TYPE_08_BOUNDED_EXECUTION"
+            implemented = True
+            text = (
+                f"{computation}, {names[destination]} = "
+                f"{names[opcode & 0xF]};"
+            )
+    return Disassembly(opcode, text, classification, implemented)
+
+
 def _try_disassemble_conditional_shift(opcode: int) -> Disassembly | None:
     if opcode & 0xFF80F0 != 0x0E0000:
         return None
@@ -251,6 +297,9 @@ def disassemble_word(opcode: int) -> Disassembly:
         raise ValueError("opcode must fit 24 bits")
     database = load_database()
     validate_database(database)
+    compute_move = _try_disassemble_compute_move(opcode)
+    if compute_move is not None:
+        return compute_move
     shift_move = _try_disassemble_shift_move(opcode)
     if shift_move is not None:
         return shift_move

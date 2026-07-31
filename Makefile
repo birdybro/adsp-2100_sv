@@ -57,6 +57,16 @@ lint:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_shift_move_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_move_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_move_decode.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_move_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_stack_control_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_mr_saturation_decode.sv; \
@@ -180,7 +190,7 @@ decode-tests:
 		tests.test_stack_control tests.test_mr_saturation \
 		tests.test_internal_move tests.test_load_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
-		tests.test_shift_move
+		tests.test_shift_move tests.test_compute_move
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -219,6 +229,13 @@ decode-tests:
 			rtl/core/adsp2100_shift_move_decode.sv \
 			sim/unit/tb_adsp2100_shift_move_decode.sv; \
 		build/obj_shift_move_decode/Vtb_adsp2100_shift_move_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_move_decode \
+			--top-module tb_adsp2100_compute_move_decode \
+			rtl/core/adsp2100_compute_move_decode.sv \
+			sim/unit/tb_adsp2100_compute_move_decode.sv; \
+		build/obj_compute_move_decode/Vtb_adsp2100_compute_move_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			--Mdir build/obj_stack_control_decode \
 			--top-module tb_adsp2100_stack_control_decode \
@@ -264,7 +281,7 @@ compute-tests:
 	$(PYTHON) -m unittest -v tests.test_condition_logic tests.test_alu_model \
 		tests.test_mac_model tests.test_shifter_model tests.test_mr_saturation \
 		tests.test_immediate_shift tests.test_conditional_shift \
-		tests.test_shift_move
+		tests.test_shift_move tests.test_compute_move
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_condition_vectors.py \
@@ -361,6 +378,22 @@ compute-tests:
 			rtl/core/adsp2100_shift_move_slice.sv \
 			sim/unit/tb_adsp2100_shift_move_slice.sv; \
 		build/obj_shift_move_slice/Vtb_adsp2100_shift_move_slice; \
+		$(PYTHON) tools/generators/generate_compute_move_vectors.py \
+			--output build/compute_move_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_move_slice \
+			--top-module tb_adsp2100_compute_move_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_move_decode.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_move_slice.sv \
+			sim/unit/tb_adsp2100_compute_move_slice.sv; \
+		build/obj_compute_move_slice/Vtb_adsp2100_compute_move_slice; \
 	else \
 		echo "SKIP condition RTL test: Verilator executable not available"; \
 	fi
@@ -643,6 +676,17 @@ formal:
 			rtl/core/adsp2100_shift_move_slice.sv \
 			formal/harnesses/adsp2100_shift_move_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_move_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_move_decode.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_move_slice.sv \
+			formal/harnesses/adsp2100_compute_move_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_mr_saturation_decode_formal \
 			rtl/core/adsp2100_mr_saturation_decode.sv \
 			formal/harnesses/adsp2100_mr_saturation_decode_formal.sv; \
@@ -777,6 +821,7 @@ formal:
 		sby -f -d build/formal_conditional_shift \
 			formal/conditional_shift.sby; \
 		sby -f -d build/formal_shift_move formal/shift_move.sby; \
+		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_stack_control_decode \
 			formal/stack_control_decode.sby; \
 		sby -f -d build/formal_mr_saturation_decode \
@@ -833,6 +878,8 @@ synth-quartus:
 			synthesis/quartus/conditional_shift_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/shift_move_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/compute_move_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/stack_control_decode_smoke; \
 		quartus_sh --flow compile \
@@ -896,6 +943,7 @@ clean:
 	@find build -maxdepth 1 -type f -name immediate_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shift_move_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name compute_move_vectors.txt -delete
 	@if [ -d build/obj_decode ]; then find build/obj_decode -depth -delete; fi
 	@if [ -d build/obj_stack_control_decode ]; then \
 		find build/obj_stack_control_decode -depth -delete; \
@@ -958,6 +1006,12 @@ clean:
 	@if [ -d build/obj_shift_move_slice ]; then \
 		find build/obj_shift_move_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_compute_move_decode ]; then \
+		find build/obj_compute_move_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_compute_move_slice ]; then \
+		find build/obj_compute_move_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
@@ -1005,6 +1059,9 @@ clean:
 	@if [ -d build/quartus_shift_move ]; then \
 		find build/quartus_shift_move -depth -delete; \
 	fi
+	@if [ -d build/quartus_compute_move ]; then \
+		find build/quartus_compute_move -depth -delete; \
+	fi
 	@if [ -d build/quartus_modify_address_slice ]; then \
 		find build/quartus_modify_address_slice -depth -delete; \
 	fi
@@ -1038,6 +1095,7 @@ clean:
 		build/formal_immediate_shift \
 		build/formal_conditional_shift \
 		build/formal_shift_move \
+		build/formal_compute_move \
 		build/formal_modify_address_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \

@@ -119,6 +119,68 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                         count += 1
         self.assertEqual(count, 25_648)
 
+    def test_all_canonical_compute_operations_round_trip(self) -> None:
+        from tools.assembler.adsp2100_assembler import _format_compute_operation
+
+        dregs = [
+            "AX0", "AX1", "MX0", "MX1", "AY0", "AY1", "MY0", "MY1",
+            "SI", "SE", "AR", "MR0", "MR1", "MR2", "SR0", "SR1",
+        ]
+        count = 0
+        for z in range(2):
+            for amf in range(1, 32):
+                for yop in range(4):
+                    for xop in range(8):
+                        computation = _format_compute_operation(z, amf, yop, xop)
+                        if computation is None:
+                            continue
+                        for destination, destination_name in enumerate(dregs):
+                            collision = not z and (
+                                (amf >= 0x10 and destination == 0xA)
+                                or (amf < 0x10 and destination in (0xB, 0xC, 0xD))
+                            )
+                            if collision:
+                                continue
+                            source = (z + amf + yop + xop + destination) & 0xF
+                            statement = (
+                                f"{computation}, {destination_name} = "
+                                f"{dregs[source]};"
+                            )
+                            opcode = (
+                                0x280000 | (z << 18) | (amf << 13)
+                                | (yop << 11) | (xop << 8)
+                                | (destination << 4) | source
+                            )
+                            self.assertEqual(assemble_statement(statement).value, opcode)
+                            decoded = disassemble_word(opcode)
+                            self.assertTrue(decoded.implemented)
+                            self.assertEqual(
+                                decoded.classification,
+                                "TYPE_08_BOUNDED_EXECUTION",
+                            )
+                            self.assertEqual(decoded.text, statement)
+                            count += 1
+        self.assertEqual(count, 20_513)
+
+    def test_compute_move_aliases_and_unsupported_forms_fail_closed(self) -> None:
+        alias = disassemble_word(0x2A010D)
+        self.assertTrue(alias.implemented)
+        self.assertEqual(alias.classification, "TYPE_08_BOUNDED_ALIAS")
+        self.assertEqual(assemble_statement(alias.text).value, alias.opcode)
+        cases = {
+            0x280000: "UNVERIFIED_TYPE_08_AMF_ZERO",
+            0x2A60A0: "UNSUPPORTED_TYPE_08_DESTINATION_COLLISION",
+            0x2880B0: "UNSUPPORTED_TYPE_08_DESTINATION_COLLISION",
+        }
+        for opcode, classification in cases.items():
+            decoded = disassemble_word(opcode)
+            self.assertFalse(decoded.implemented)
+            self.assertEqual(decoded.classification, classification)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AR = AX0 + AY0, AR = AX0;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("MR = MX0 * MY0 (SS), MR0 = AX0;")
+
     def test_shift_move_unsupported_forms_fail_closed(self) -> None:
         cases = {
             0x108000: "UNVERIFIED_TYPE_14_UNUSED_X",

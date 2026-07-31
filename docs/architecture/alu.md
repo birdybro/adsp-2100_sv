@@ -1,7 +1,7 @@
 # Arithmetic/logic unit
 
-**Status: standard non-division function model and RTL implemented; instruction
-integration pending**
+**Status: standard non-division function model and RTL implemented; bounded
+Type 8 instruction integration complete**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
 from ASTAT.AC. It generates AZ, AN, AV, AC, AS, and AQ
@@ -31,18 +31,27 @@ ABS-only AS update, sticky AV, and AR-only saturation. Saturation is driven by
 overflow generated on the current operation, not an already-sticky AV bit
 [ADI-UM-1989, printed pp. 2-8–2-9, Table 2.2].
 
-This block is not yet an instruction implementation. The bounded
+This combinational block alone is not an instruction implementation. The bounded
 `adsp2100_mode_slice` integration connects current MSTAT bits 2/3 to sticky AV
 and AR saturation, routes a valid result to cycle-end AR/AF writeback in the
 MSTAT-selected bank, and commits AZ/AN/AV/AC plus the ABS-only AS update at the
 same boundary. A mode change becomes effective for ALU behavior on the next
 cycle, consistent with cycle-start operand use and cycle-end register writes
-[ADI-UM-1989, printed pp. 2-6–2-9]. Operand selection, decode connectivity,
-conditional suppression, complete multifunction legality, and DIVS/DIVQ
-remain excluded.
+[ADI-UM-1989, printed pp. 2-6–2-9]. Outside the bounded Type 8 slice, operand
+selection, decode connectivity, conditional suppression, complete
+multifunction legality, and DIVS/DIVQ remain excluded.
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover
 `0`, `1`, `-1`, `0x7fff`, `0x8000`, carry/borrow, both overflow directions,
 ABS minimum, saturation, sticky AV, and every condition. DIVS/DIVQ exact
 iteration state and exception handling remain unimplemented.
+
+The separate `adsp2100_compute_move_slice` connects every standard ALU AMF
+to original Type 8 X/Y/Z selection, selected-bank AR/AF writeback, ASTAT
+updates, and one simultaneous old-value DREG move. The fail-closed boundary
+rejects Z=0 packets whose move also targets AR and retains AMF zero as OQ-022.
+All supported operand and move combinations execute in the exhaustive
+983,386-cycle Type 8 comparison; conditional Type 9 and memory multifunction
+classes remain unintegrated [ADI-UM-1989, printed pp. 6-4–6-10, A-2,
+A-5–A-7, A-11].
