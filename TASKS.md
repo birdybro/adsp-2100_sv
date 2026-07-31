@@ -133,12 +133,15 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `tests/test_isa_database.py`,
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
+  `tests/test_modify_address.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
   `sim/unit/tb_adsp2100_mode_control_decode.sv`,
+  `sim/unit/tb_adsp2100_modify_address_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
+  `formal/modify_address_decode.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -157,8 +160,9 @@ advance beyond research until a page-level primary citation is added.
   Cyclone V fit. A separate machine-readable execution boundary connects
   those actions to all four stack classes, CNTR, ASTAT/MSTAT/IMASK, and SSTAT
   with nine model checks and 50,015 stateful RTL comparison cycles. Only the
-  all-zero NOP, parameterized Type 18 MODE CONTROL, and exact Type 25
-  `IF MV SAT MR;` words are hand-verified full semantic instruction entries
+  all-zero NOP, parameterized Type 18 MODE CONTROL, parameterized Type 21
+  MODIFY, and exact Type 25 `IF MV SAT MR;` words are hand-verified full
+  semantic instruction entries
   in the main ISA table. Type 25 has primary-
   backed cycle-start MV/bank/MR semantics, an independent state model, exact
   decoder, bounded execution RTL, exhaustive 24-bit decode, nine model tests,
@@ -168,7 +172,11 @@ advance beyond research until a page-level primary citation is added.
   words, 81 distinct action bundles, both no-change aliases, exact algebraic
   assembly, exhaustive decode, every opcode/initial-MSTAT transform, and
   58,248 stateful model/RTL cycles. Later timer, GO, and
-  multiplier-placement controls remain excluded.
+  multiplier-placement controls remain excluded. Type 21 covers all 32
+  same-DAG I/M selections, corresponding-L use, exact assembly syntax,
+  exhaustive decode, authentic reset-invalid I/M/L storage, and 50,124
+  stateful model/RTL cycles; PM/DM transfer attachment remains outside this
+  bounded no-memory-access instruction.
 - **Unresolved questions:** earliest-tool opcode differences and undocumented
   encoding behavior.
 - **Confidence:** UNKNOWN
@@ -216,7 +224,11 @@ advance beyond research until a page-level primary citation is added.
   cycle-start MV, MSTAT bank selection, and MR, conservatively retains unknown
   reset state, and commits conditional MR saturation at cycle end. A separate
   Type 18 model retains all raw MCC aliases, atomically transforms cycle-start
-  MSTAT, and fails closed on invalid opcodes or setup collisions.
+  MSTAT, and fails closed on invalid opcodes or setup collisions. A separate
+  Type 21 state model stores all 24 exact-width DAG registers with independent
+  validity, applies original linear/circular post-modification to the selected
+  I, and invalidates rather than inventing results for unknown or unsupported
+  configurations.
 - **Unresolved questions:** model cycle granularity awaits ADR-0003 evidence.
 - **Confidence:** PROVISIONAL
 
@@ -238,7 +250,9 @@ advance beyond research until a page-level primary citation is added.
   algebraic fixtures and distinguishes legal-unimplemented, original
   reserved, and unshown-reserved words. Type 18 accepts unique comma-separated
   ENA/DIS clauses and emits raw `.WORD` syntax when an MCC=01 alias must be
-  preserved exactly. First research surviving lawful assemblers; do not
+  preserved exactly. All 32 original `MODIFY (Ix, My);` same-DAG combinations
+  also round trip; cross-DAG selections fail closed. First research surviving
+  lawful assemblers; do not
   execute legacy tools on the host.
 - **Unresolved questions:** scope of macros/object/linker compatibility needed
   for ROM qualification.
@@ -322,15 +336,18 @@ advance beyond research until a page-level primary citation is added.
   applicable bit-reversed behavior, signed modifies, zero/non-power-of-two
   lengths, update order, waits, loops, and interrupts pass model/RTL tests.
 - **Source references:** ADI-UM-1989 DAG and data-move chapters
-- **Relevant tests:** `make dag-tests`, `formal/dag.sby`
+- **Relevant tests:** `make dag-tests`, `formal/dag.sby`,
+  `formal/modify_address_slice.sby`
 - **Implementation notes:** an independent function model and portable
   combinational RTL implement old-I output, signed post-modify, L=0 linear
   wrap, circular wrap, original power-of-two alignment, and all-14-bit DAG1
   reversal. Ten directed/random model tests and 204,864 model-versus-RTL
   vectors pass, including all reversed addresses. Invalid circular
   configurations are exposed diagnostically, not assigned invented semantics.
-- **Unresolved questions:** register-file integration, writeback and stall
-  enables, same-cycle register writes, alternate banking, multifunction
+  A bounded Type 21 slice adds exact I/M/L storage, all DAG1 selections,
+  selected-I cycle-end writeback, and 50,124 stateful model/RTL cycles.
+- **Unresolved questions:** ordinary data-transfer writeback and stall enables,
+  same-cycle external register writes, alternate banking, multifunction
   ordering, loops, interrupts, and externally visible timing.
 - **Confidence:** CORROBORATED
 
@@ -344,11 +361,13 @@ advance beyond research until a page-level primary citation is added.
 - **Acceptance criteria:** DAG2's documented PM/DM roles and every legal
   I/M/L/update case pass independently and concurrently with DAG1.
 - **Source references:** ADI-UM-1989 DAG and data-move chapters
-- **Relevant tests:** `make dag-tests`, `formal/dag.sby`
+- **Relevant tests:** `make dag-tests`, `formal/dag.sby`,
+  `formal/modify_address_slice.sby`
 - **Implementation notes:** the common source-backed post-modify/modulus block
   has a DAG2 configuration in which bit-reverse is structurally ineffective;
-  all vectors compare DAG1/DAG2 arithmetic. PM/DM attachment and register
-  selection do not yet exist.
+  all vectors compare DAG1/DAG2 arithmetic. The bounded Type 21 slice adds all
+  DAG2 register selections, exact I/M/L storage, selected-I writeback, and
+  stateful comparison. PM/DM and indirect-control attachment do not yet exist.
 - **Unresolved questions:** differing register group restrictions and
   simultaneous PM/DM semantics.
 - **Confidence:** CORROBORATED
@@ -683,7 +702,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result complete proof. Proof execution awaits an installed
+  result complete proof. Twenty-two harnesses now pass strict assertion syntax
+  lint, including exact Type 21 decode and bounded state execution. Proof
+  execution awaits an installed
   SymbiYosys/Yosys/SMT toolchain.
 - **Unresolved questions:** solver/tool version and tractable whole-core bounds.
 - **Confidence:** UNKNOWN
@@ -702,9 +723,12 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
   the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type 18,
-  Type 25, and Type 26 execution blocks. The Type 18 slice fits in 46 ALMs
+  Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in 46 ALMs
   and four registers with positive multicorner setup/hold slack and zero
-  unconstrained paths. Whole-core clocks, utilization, and timing remain
+  unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly 360
+  architectural DAG data/valid registers, no RAM/DSPs, positive multicorner
+  setup/hold slack, and zero unconstrained paths. Whole-core clocks,
+  utilization, and timing remain
   unavailable; Yosys is not installed.
 - **Unresolved questions:** exact DE10-Nano device support in installed edition.
 - **Confidence:** UNKNOWN

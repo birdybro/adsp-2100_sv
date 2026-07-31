@@ -226,10 +226,14 @@ A commit message must state the engineering change and its verification.
 
 No integrated fetch/decode/execute instruction core exists. Bounded
 source-backed RTL execution slices now implement all original Type 18 mode
-controls, exact Type 25 conditional MR saturation, and all Type 26
-stack-control actions, but they do not establish whole-core PC, pipeline, bus,
-interrupt, or wait-state behavior. Type 18 excludes later timer, GO, and
-multiplier-placement fields and exhaustively covers all 256 original words.
+controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
+MR saturation, and all Type 26 stack-control actions, but they do not establish
+whole-core PC, pipeline, bus, interrupt, or wait-state behavior. Type 18
+excludes later timer, GO, and multiplier-placement fields and exhaustively
+covers all 256 original words. Type 21 uses an exact-width I/M/L register file
+with authentic reset-invalid state and cycle-start-read/cycle-end-write
+ordering; ordinary data transfers and multifunction DAG updates are not yet
+attached.
 A generated
 synthesizable class decoder recognizes all 30 original Appendix A format
 classes and fails closed for unshown words; it has exhaustive 24-bit membership
@@ -261,8 +265,9 @@ incomplete. The executable
 instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
 transactions, and only the hand-verified all-zero NOP in its top-level step
-method. Independent bounded models cover Type 25 and Type 26 outside that
-top-level step path; all other opcodes still fail closed. Architectural
+method. Independent bounded models cover Type 18, Type 21, Type 25, and
+Type 26 outside that top-level step path; all other opcodes still fail closed.
+Architectural
 documents marked partial or provisional remain research inputs until their
 named evidence gates pass.
 

@@ -1,0 +1,51 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_modify_address_slice
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_modify_address_slice
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_modify_address_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag_register_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_modify_address_slice.sv
+set_global_assignment -name SDC_FILE modify_address_slice_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to execute_i
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to setup_kind_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to setup_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_address_i[*]
+
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_i_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_i_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_m_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_m_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_l_data_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_l_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to boundary_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_opcode_o
+set_instance_assignment -name VIRTUAL_PIN ON -to integration_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to invalid_setup_kind_o
+set_instance_assignment -name VIRTUAL_PIN ON -to internal_conflict_o
+set_instance_assignment -name VIRTUAL_PIN ON -to operands_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to configuration_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to writeback_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_dag2_o
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_i_local_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_m_local_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_i_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_m_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_old_i_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_m_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to selected_l_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to next_i_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pm_data_access_o
+set_instance_assignment -name VIRTUAL_PIN ON -to dm_access_o
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_global_assignment -name SEED 2

@@ -52,6 +52,36 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement(".WORD 0x1000000;")
 
+    def test_all_modify_selections_round_trip(self) -> None:
+        for dag in range(2):
+            for i_local in range(4):
+                for m_local in range(4):
+                    i_address = dag * 4 + i_local
+                    m_address = dag * 4 + m_local
+                    source = f"MODIFY (I{i_address}, M{m_address});"
+                    opcode = (
+                        0x090000
+                        | (dag << 4)
+                        | (i_local << 2)
+                        | m_local
+                    )
+                    self.assertEqual(
+                        assemble_statement(source).value,
+                        opcode,
+                    )
+                    self.assertEqual(
+                        disassemble_word(opcode).text,
+                        source,
+                    )
+
+    def test_modify_rejects_cross_dag_or_out_of_range_registers(self) -> None:
+        with self.assertRaises(AssemblyError):
+            assemble_statement("MODIFY (I3, M4);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("MODIFY (I4, M3);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("MODIFY (I8, M0);")
+
     def test_unsupported_assembly_fails_closed(self) -> None:
         with self.assertRaises(AssemblyError):
             assemble_statement("IDLE;")

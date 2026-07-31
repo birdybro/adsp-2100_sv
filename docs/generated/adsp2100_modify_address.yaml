@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_21_ACTION_DECODE",
+  "confidence": "CORROBORATED",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "isa_field_database": "docs/generated/adsp2100_isa_fields.yaml",
+  "instruction": {
+    "original_type": 21,
+    "name": "modify address register",
+    "opcode_mask": "0xffffe0",
+    "opcode_value": "0x090000",
+    "encoding_pattern": "0000100100000000000xxxxx",
+    "field_defined_encoding_count": 32,
+    "dag_count": 2,
+    "index_choices_per_dag": 4,
+    "modify_choices_per_dag": 4,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "memory_spaces_accessed": [
+      "PROGRAM_INSTRUCTION_FETCH"
+    ],
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "NONE",
+    "status_generated": "NONE",
+    "source_value_rule": "Read the selected cycle-start I and M registers and the L register corresponding to I. Commit the modified I at cycle end.",
+    "address_output_rule": "No PM or DM data address or transfer is produced by MODIFY.",
+    "wait_state_sensitivity": "Normal PM instruction fetch only."
+  },
+  "fields": [
+    {
+      "id": "G",
+      "msb": 4,
+      "lsb": 4,
+      "role": "DAG_SELECTOR"
+    },
+    {
+      "id": "I",
+      "msb": 3,
+      "lsb": 2,
+      "role": "INDEX_SELECTOR_WITH_G"
+    },
+    {
+      "id": "M",
+      "msb": 1,
+      "lsb": 0,
+      "role": "MODIFY_SELECTOR_WITH_G"
+    }
+  ],
+  "register_selection": {
+    "G_0": {
+      "dag": "DAG1",
+      "index_registers": [
+        "I0",
+        "I1",
+        "I2",
+        "I3"
+      ],
+      "modify_registers": [
+        "M0",
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "length_registers_following_I": [
+        "L0",
+        "L1",
+        "L2",
+        "L3"
+      ]
+    },
+    "G_1": {
+      "dag": "DAG2",
+      "index_registers": [
+        "I4",
+        "I5",
+        "I6",
+        "I7"
+      ],
+      "modify_registers": [
+        "M4",
+        "M5",
+        "M6",
+        "M7"
+      ],
+      "length_registers_following_I": [
+        "L4",
+        "L5",
+        "L6",
+        "L7"
+      ]
+    }
+  },
+  "execution_semantics": {
+    "linear": "When selected L is zero, next I is the low fourteen bits of unsigned I plus signed fourteen-bit M.",
+    "circular": "When selected L is nonzero, next I is (I + M - base) modulo L + base using the original ADSP-2100 base-alignment rule.",
+    "bit_reverse": "DAG1 bit-reverse mode does not alter stored I and is irrelevant because MODIFY performs no memory-address output.",
+    "same_dag_legality": "The G field selects both register groups, so every field-defined encoding selects I and M from the same DAG.",
+    "status_effect": "No ASTAT, MSTAT, SSTAT, IMASK, or ICNTL field is changed.",
+    "configuration_policy": "The bounded model and RTL invalidate selected-I result validity rather than claim a value when circular-buffer placement or modify magnitude violates the documented programming restrictions."
+  },
+  "assembly": {
+    "syntax": "MODIFY (Ix, My);",
+    "same_dag_required": true,
+    "canonical_spacing": "MODIFY (Ix, My);"
+  },
+  "parallel_actions": [
+    {
+      "action": "MODIFY_SELECTED_I",
+      "reads": [
+        "CYCLE_START_SELECTED_I",
+        "CYCLE_START_SELECTED_M",
+        "CYCLE_START_L_CORRESPONDING_TO_I"
+      ],
+      "writes": [
+        "CYCLE_END_SELECTED_I"
+      ],
+      "memory_transaction": "NONE",
+      "status_transaction": "NONE"
+    }
+  ],
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 3-1–3-5",
+      "supports": "DAG ownership, current-I and signed-M inputs, corresponding-L selection, original circular arithmetic, and normal-order stored I"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 6-14–6-15, Table 6.9",
+      "supports": "MODIFY operation, no memory access, same-DAG legality, and original algebraic syntax"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. A-4, A-7–A-8 (scan PDF pp. 143 and 146–147)",
+      "supports": "Type 21 field positions and G/I/M register-selection tables"
+    },
+    {
+      "reference_id": "ADI-2101-CROSS-1990",
+      "authority": "LATER_DEVICE_CORROBORATION_ONLY",
+      "location": "printed p. 9-65",
+      "supports": "explicit corresponding-L modulus/writeback description and no-status/no-memory effects"
+    }
+  ],
+  "unresolved_issues": [
+    "Same-cycle direct DAG-register writes and MODIFY ordering remain outside this bounded execution slice.",
+    "Interrupt-adjacent, instruction-fetch, phase-level, and wait-state timing remain unintegrated.",
+    "Behavior outside documented circular-buffer placement and modify restrictions is not claimed."
+  ]
+}

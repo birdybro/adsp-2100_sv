@@ -48,6 +48,10 @@ semantic versioning after its first release.
   all 256 original field-defined words, 81 distinct action bundles, and both
   no-change aliases; an independent model, exact decoder, bounded stateful RTL
   slice, exhaustive decode, formal recipes, and constrained Cyclone V project.
+- A primary-backed Type 21 MODIFY semantic record covering all 32 same-DAG
+  I/M selections, an exact decoder, independent state model, exact-width
+  I/M/L register file with reset validity, bounded stateful RTL execution,
+  exhaustive decode, formal recipes, and constrained Cyclone V project.
 - Original RGP/REG general-MOVE table accounting for 48 register encodings,
   reserved holes, storage widths, and verified narrow-register extension
   behavior.
@@ -60,6 +64,9 @@ semantic versioning after its first release.
 - Original Type 18 algebraic ENA/DIS assembly and disassembly, including
   deterministic omitted-field encoding and raw `.WORD` preservation for
   otherwise indistinguishable MCC=01 binary aliases.
+- Original Type 21 `MODIFY (Ix, My);` assembly and disassembly for all 32 legal
+  same-DAG register combinations, with cross-DAG and out-of-range operands
+  rejected.
 - Shared SystemVerilog width/phase/type package and GitHub Actions foundation
   regression.
 - Complete primary-backed 4-bit IF and inverse-sense DO UNTIL condition
@@ -82,6 +89,9 @@ semantic versioning after its first release.
 - Independent DAG arithmetic model and portable RTL for old-I addressing,
   signed post-modification, linear and circular wrap, original-device base
   alignment, DAG1 bit reversal, and DAG2's non-reversed output.
+- Exact-width stateful storage for all eight I, eight M, and eight L registers,
+  with per-register validity rather than invented reset data and a fail-closed
+  bounded setup/writeback collision boundary.
 - Independent model and portable RTL for instruction-boundary sequential,
   jump, call, return, loop-back, and loop-exit arbitration, including explicit
   control-transfer precedence at a loop end.
@@ -230,10 +240,10 @@ semantic versioning after its first release.
   tests plus 50,112 stateful model-versus-RTL cycles. Both MR signs and banks,
   false MV, status preservation, invalid opcodes, reset unknowns, and atomic
   fail-closed setup collisions are covered.
-- The expanded `make test` passes 221 distinct Python checks, 14 local
-  reference hashes, all generated-data checks, strict Verilator lint, four
+- The expanded `make test` passes 233 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint, five
   exhaustive 24-bit decode traversals, and every existing model/RTL vector
-  regression including the Type 18 and Type 25 stateful comparisons.
+  regression including the Type 18, Type 21, and Type 25 stateful comparisons.
 - Quartus full compilation passes for the bounded Type 25 integration slice:
   144 ALMs, 92 registers, no RAM/DSPs, +11.443 ns worst setup and +0.246 ns
   worst hold slack across four timing models, with zero unconstrained clocks,
@@ -245,6 +255,17 @@ semantic versioning after its first release.
 - Quartus full compilation passes for the bounded Type 18 integration slice:
   46 ALMs, 30 combinational ALUTs, exactly four MSTAT registers, no RAM/DSPs,
   +12.168 ns worst setup and +0.173 ns worst hold slack across four timing
+  models, with zero unconstrained clocks, ports, or paths.
+- The Type 21 regression proves that exactly 32 words activate MODIFY across
+  all 16,777,216 program words, checks every I/M selection from independent
+  fixtures, passes ten directed/schema/random model tests, and compares 50,124
+  stateful model/RTL cycles covering linear and circular updates, both modify
+  signs, reset-invalid state, unsupported configurations, invalid words, and
+  atomic collision suppression.
+- Quartus full compilation passes for the bounded Type 21 integration slice:
+  526 ALMs, 543 design combinational ALUTs, exactly 360 architectural
+  data/valid registers plus fourteen fitted routing duplicates, no RAM/DSPs,
+  +2.361 ns worst setup and +0.185 ns worst hold slack across four timing
   models, with zero unconstrained clocks, ports, or paths.
 - Quartus full compilation passes for the constrained class-decoder block: 55
   ALMs, 63 combinational ALUTs, no registers/RAM/DSPs, +14.723 ns worst setup,
@@ -300,12 +321,9 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for class decode,
-  condition, ALU,
-  MAC, shifter, DAG, sequencer-flow, register-file, status-register, and
-  status-stack, sequencer-stack, CNTR, sequencer-integration, and
-  MSTAT-integration harnesses; proof execution remains explicitly skipped
-  without SymbiYosys.
+- `make formal` passes strict assertion syntax lint for all 22 harnesses,
+  including exact Type 21 decode and bounded state execution; proof execution
+  remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
 
@@ -318,6 +336,11 @@ semantic versioning after its first release.
   counter update, loop-stack, and instruction timing explicitly open.
 - Closed original Type 18 AS/OL/BR/SR bit placement and action semantics,
   explicitly excluding later timer, GO, and multiplier-placement controls.
+- Closed original Type 21 G/I/M bit placement, all same-DAG selector mappings,
+  corresponding-L selection, no-memory-access behavior, and cycle-end
+  selected-I writeback. The later Cross-Software wording is retained only as
+  corroboration, and unsupported circular configurations remain explicitly
+  unclaimed.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and

@@ -9,6 +9,10 @@ from tools.generators.validate_mode_control import (
     load_database as load_mode_control_database,
     validate_database as validate_mode_control_database,
 )
+from tools.generators.validate_modify_address import (
+    load_database as load_modify_address_database,
+    validate_database as validate_modify_address_database,
+)
 from tools.generators.validate_isa import load_database, validate_database
 
 
@@ -93,6 +97,30 @@ def _assemble_mode_control(statement: str) -> int | None:
     return opcode
 
 
+def _assemble_modify_address(statement: str) -> int | None:
+    match = re.fullmatch(
+        r"MODIFY\s*\(\s*I([0-7])\s*,\s*M([0-7])\s*\)",
+        statement,
+    )
+    if match is None:
+        return None
+    i_address = int(match.group(1))
+    m_address = int(match.group(2))
+    if i_address // 4 != m_address // 4:
+        raise AssemblyError("MODIFY I and M registers must use the same DAG")
+
+    database = load_modify_address_database()
+    validate_modify_address_database(database)
+    opcode = int(database["instruction"]["opcode_value"], 16)
+    dag = i_address // 4
+    return (
+        opcode
+        | (dag << 4)
+        | ((i_address & 0x3) << 2)
+        | (m_address & 0x3)
+    )
+
+
 def assemble_statement(source: str) -> AssembledWord:
     statement = _normalize_statement(source)
     raw_word = _assemble_raw_word(statement)
@@ -101,6 +129,9 @@ def assemble_statement(source: str) -> AssembledWord:
     mode_control = _assemble_mode_control(statement)
     if mode_control is not None:
         return AssembledWord(mode_control)
+    modify_address = _assemble_modify_address(statement)
+    if modify_address is not None:
+        return AssembledWord(modify_address)
     mnemonics = exact_mnemonics()
     if statement not in mnemonics:
         raise AssemblyError(

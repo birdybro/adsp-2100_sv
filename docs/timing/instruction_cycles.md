@@ -13,6 +13,7 @@ Known cases:
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
 | Type 18 combined MODE CONTROL | one processor cycle for all selected original mode fields |
+| Type 21 `MODIFY (Ix, My);` | one processor cycle; no PM-data or DM transfer |
 | Type 25 `IF MV SAT MR;` | one processor cycle whether MV is true or false |
 | Type 26 combined stack control | one processor cycle for any field-defined action combination |
 | PM data access, next instruction valid in cache | no fetch overhead |
@@ -40,6 +41,17 @@ one cycle, but it is used only for that shared behavior; its later-device
 timer, GO, and multiplier controls are excluded
 [ADI-UM-1989, printed pp. 4-22–4-23, 6-14–6-15, A-3, A-8;
 ADI-2101-CROSS-1990, printed pp. 9-63–9-64].
+
+The bounded Type 21 model/RTL slice verifies that selected I, M, and
+corresponding L are sampled at cycle start and that only the selected I is
+committed at cycle end. Its 50,124-cycle stateful comparison covers all 32
+selections plus seeded linear, circular, invalid, reset, and conflict cases.
+The original manual establishes that MODIFY performs address arithmetic
+without an actual memory access; the later Cross-Software manual is used only
+to corroborate the explicit corresponding-L and writeback wording
+[ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4;
+ADI-2101-CROSS-1990, printed p. 9-65]. This is instruction-boundary evidence,
+not fetch-phase or external-pin timing evidence.
 
 The bounded Type 26 model/RTL execution slice verifies that every selected
 status/count/loop/PC action reads cycle-start state and commits on the same

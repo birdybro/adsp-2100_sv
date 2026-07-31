@@ -54,6 +54,14 @@ cycle-start MSTAT and commits one four-bit result at cycle end. Both
 documented no-change encodings preserve their raw decode identity, while
 later-family Type 18 controls remain excluded
 [ADI-UM-1989, printed pp. 4-22–4-23, 6-14–6-15, A-3, A-8].
+A separate DAG register-file boundary stores all eight I, eight M, and eight L
+registers at their exact 14-bit widths and tracks per-register validity because
+their reset data is not documented. Exact Type 21 execution reads the selected
+I and M plus the I-corresponding L from cycle-start state and writes only the
+selected I at cycle end. Unknown inputs or inputs outside the documented
+circular-placement and `abs(M) <= L` restrictions invalidate that destination
+instead of silently inventing a value
+[ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 A separate exact four-by-sixteen status stack and a combined exact
 16-by-14 PC/four-by-14 count/four-by-18 loop-stack boundary implement LIFO
 storage, pointer saturation, loss of the newest overflowing push, sticky
@@ -73,6 +81,7 @@ decode and a stateful PC remain absent.
 Direction-specific restrictions outside DREG, MSTAT bank-switch visibility,
 interrupt recognition and priority logic, stack action connectivity, CNTR
 decode connectivity, empty-pop architectural effects, narrow
-status-register DMD extension, full multifunction legality, and every
+status-register DMD extension, general MOVE access to DAG storage, full
+multifunction legality, and every
 instruction field using these paths still require machine-readable extraction
 and tests.

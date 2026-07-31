@@ -91,3 +91,11 @@ deactivate (`10`), or activate (`11`) for MSTAT bits 3 through 0
 all 256 words, 81 distinct action bundles, and 16 actionless aliases. An
 exhaustive RTL traversal proves that no other 24-bit word emits a Type 18
 action.
+
+Type 21 has mask/value `0xffffe0`/`0x090000`. Its five payload bits are
+`G[4]`, `I[3:2]`, and `M[1:0]`, giving exactly 32 same-DAG address-modify
+selections. `G=0` maps the two-bit selectors to I0–I3 and M0–M3; `G=1` maps
+them to I4–I7 and M4–M7. The corresponding L register is selected by I.
+The semantic validator and exhaustive RTL traversal prove that all 32 words
+decode exactly and that every other 24-bit word emits no Type 21 action
+[ADI-UM-1989, printed pp. A-4 and A-7–A-8].

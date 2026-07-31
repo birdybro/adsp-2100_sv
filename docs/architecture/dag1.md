@@ -48,3 +48,11 @@ regression adds all 16 MSTAT values and 50,112 mixed stateful cycles.
 Register selection, I writeback gating, simultaneous data transfers,
 multifunction ordering, alternate-bank interactions, stalls, loops, interrupts,
 and external transaction timing remain outside this function block.
+
+The bounded Type 21 integration slice now supplies the missing stored-register
+selection and writeback path for standalone MODIFY. With `G=0`, it maps the
+two-bit I and M fields to I0–I3 and M0–M3, selects the L corresponding to I,
+uses normal-order I arithmetic even when MSTAT bit-reverse mode is active, and
+writes only the selected I at cycle end. This does not yet attach DAG1 to
+ordinary DM transfers or multifunction instructions
+[ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].

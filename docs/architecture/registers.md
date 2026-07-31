@@ -36,6 +36,15 @@ DMD bits zero; M reads sign-extended [ADI-UM-1989, printed pp. 3-1–3-3]. PX is
 8 bits and supplies/receives the low eight PMD bits during 24-bit transfers
 [ADI-UM-1989, printed pp. 3-6–3-8].
 
+The implemented DAG register-file boundary stores all 24 registers and tracks
+24 independent validity bits. Architectural reset invalidates the registers
+without assigning undocumented zero values. Its Type 21 path selects one
+same-DAG I/M pair and the L corresponding to I, samples those values at cycle
+start, and writes only that I at cycle end. A separate setup interface exists
+for bounded verification; conflicting setup/instruction writes are suppressed
+and reported rather than assigned an unsupported priority
+[ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
+
 ## Status registers
 
 - ASTAT[7:0] = SS, MV, AQ, AS, AC, AV, AN, AZ

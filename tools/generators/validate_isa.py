@@ -99,6 +99,7 @@ def validate_database(data: dict[str, Any]) -> None:
         "docs/generated/adsp2100_stack_control.yaml",
         "docs/generated/adsp2100_mr_saturation.yaml",
         "docs/generated/adsp2100_mode_control.yaml",
+        "docs/generated/adsp2100_modify_address.yaml",
     ]:
         raise ISAValidationError(
             "ISA semantic database links are incomplete"
@@ -107,6 +108,7 @@ def validate_database(data: dict[str, Any]) -> None:
         "docs/generated/adsp2100_stack_control_slice.yaml",
         "docs/generated/adsp2100_mr_saturation_slice.yaml",
         "docs/generated/adsp2100_mode_control_slice.yaml",
+        "docs/generated/adsp2100_modify_address_slice.yaml",
     ]:
         raise ISAValidationError(
             "ISA integration database links are incomplete"

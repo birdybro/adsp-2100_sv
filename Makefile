@@ -63,6 +63,14 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_dag.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_modify_address_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_modify_address_slice \
+			rtl/core/adsp2100_modify_address_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_modify_address_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_sequencer_flow.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_counter.sv; \
@@ -116,6 +124,7 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_stack_control.py
 	$(PYTHON) tools/generators/validate_mr_saturation.py
 	$(PYTHON) tools/generators/validate_mode_control.py
+	$(PYTHON) tools/generators/validate_modify_address.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
@@ -153,6 +162,13 @@ decode-tests:
 			rtl/core/adsp2100_mode_control_decode.sv \
 			sim/unit/tb_adsp2100_mode_control_decode.sv; \
 		build/obj_mode_control_decode/Vtb_adsp2100_mode_control_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_modify_address_decode \
+			--top-module tb_adsp2100_modify_address_decode \
+			rtl/core/adsp2100_modify_address_decode.sv \
+			sim/unit/tb_adsp2100_modify_address_decode.sv; \
+		build/obj_modify_address_decode/Vtb_adsp2100_modify_address_decode; \
 	else \
 		echo "SKIP exhaustive RTL decode: Verilator is not installed"; \
 	fi
@@ -221,7 +237,8 @@ compute-tests:
 	fi
 
 dag-tests:
-	$(PYTHON) -m unittest -v tests.test_dag_model
+	$(PYTHON) -m unittest -v tests.test_dag_model \
+		tests.test_modify_address
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_dag_vectors.py \
@@ -233,6 +250,18 @@ dag-tests:
 			rtl/core/adsp2100_dag.sv \
 			sim/unit/tb_adsp2100_dag.sv; \
 		build/obj_dag/Vtb_adsp2100_dag; \
+		$(PYTHON) tools/generators/generate_modify_address_vectors.py \
+			--output build/modify_address_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_modify_address_slice \
+			--top-module tb_adsp2100_modify_address_slice \
+			rtl/core/adsp2100_modify_address_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_modify_address_slice.sv \
+			sim/unit/tb_adsp2100_modify_address_slice.sv; \
+		build/obj_modify_address_slice/Vtb_adsp2100_modify_address_slice; \
 	else \
 		echo "SKIP DAG RTL test: Verilator executable not available"; \
 	fi
@@ -426,6 +455,10 @@ formal:
 			rtl/core/adsp2100_mode_control_decode.sv \
 			formal/harnesses/adsp2100_mode_control_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_modify_address_decode_formal \
+			rtl/core/adsp2100_modify_address_decode.sv \
+			formal/harnesses/adsp2100_modify_address_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice_formal \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			rtl/core/adsp2100_counter.sv \
@@ -470,6 +503,13 @@ formal:
 			--top-module adsp2100_dag_formal \
 			rtl/core/adsp2100_dag.sv \
 			formal/harnesses/adsp2100_dag_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_modify_address_slice_formal \
+			rtl/core/adsp2100_modify_address_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_modify_address_slice.sv \
+			formal/harnesses/adsp2100_modify_address_slice_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_sequencer_flow_formal \
 			rtl/core/adsp2100_sequencer_flow.sv \
@@ -524,6 +564,8 @@ formal:
 			formal/mr_saturation_decode.sby; \
 		sby -f -d build/formal_mode_control_decode \
 			formal/mode_control_decode.sby; \
+		sby -f -d build/formal_modify_address_decode \
+			formal/modify_address_decode.sby; \
 		sby -f -d build/formal_stack_control_slice \
 			formal/stack_control_slice.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
@@ -535,6 +577,8 @@ formal:
 			formal/mode_control_slice.sby; \
 		sby -f -d build/formal_shifter formal/shifter.sby; \
 		sby -f -d build/formal_dag formal/dag.sby; \
+		sby -f -d build/formal_modify_address_slice \
+			formal/modify_address_slice.sby; \
 		sby -f -d build/formal_sequencer formal/sequencer_flow.sby; \
 		sby -f -d build/formal_counter formal/counter.sby; \
 		sby -f -d build/formal_sequencer_stacks formal/sequencer_stacks.sby; \
@@ -566,6 +610,8 @@ synth-quartus:
 			synthesis/quartus/mr_saturation_slice_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/mode_control_slice_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/modify_address_slice_smoke; \
 		quartus_sh --flow compile synthesis/quartus/condition_smoke; \
 		quartus_sh --flow compile synthesis/quartus/alu_smoke; \
 		quartus_sh --flow compile synthesis/quartus/mac_smoke; \
@@ -597,6 +643,7 @@ clean:
 	@find build -maxdepth 1 -type f -name mac_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mr_saturation_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mode_control_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name modify_address_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dag_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name sequencer_vectors.txt -delete
@@ -641,6 +688,12 @@ clean:
 	@if [ -d build/obj_mode_control_slice ]; then \
 		find build/obj_mode_control_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_modify_address_decode ]; then \
+		find build/obj_modify_address_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_modify_address_slice ]; then \
+		find build/obj_modify_address_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_register ]; then find build/obj_register -depth -delete; fi
 	@if [ -d build/obj_register_writeback ]; then \
 		find build/obj_register_writeback -depth -delete; \
@@ -663,6 +716,9 @@ clean:
 	fi
 	@if [ -d build/quartus_mode_control_slice ]; then \
 		find build/quartus_mode_control_slice -depth -delete; \
+	fi
+	@if [ -d build/quartus_modify_address_slice ]; then \
+		find build/quartus_modify_address_slice -depth -delete; \
 	fi
 	@if [ -d build/quartus_shifter ]; then find build/quartus_shifter -depth -delete; fi
 	@if [ -d build/quartus_dag ]; then find build/quartus_dag -depth -delete; fi
@@ -688,6 +744,8 @@ clean:
 		build/formal_mr_saturation_slice \
 		build/formal_mode_control_decode \
 		build/formal_mode_control_slice \
+		build/formal_modify_address_decode \
+		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \
 		build/formal_counter build/formal_sequencer_stacks \

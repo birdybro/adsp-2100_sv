@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_ORIGINAL_TYPE_21_STATEFUL_DAG_INTEGRATION",
+  "confidence": "CORROBORATED",
+  "action_database": "docs/generated/adsp2100_modify_address.yaml",
+  "cycle_boundary": {
+    "source_reads": "CYCLE_START_SELECTED_I_M_AND_CORRESPONDING_L",
+    "state_commits": "CYCLE_END_SELECTED_I",
+    "unselected_registers_preserved": true,
+    "no_data_memory_transaction": true,
+    "no_program_data_transaction": true
+  },
+  "integrated_state": [
+    "I0-I7",
+    "M0-M7",
+    "L0-L7",
+    "PER_REGISTER_RESET_VALIDITY"
+  ],
+  "accepted_instruction_actions": [
+    "ALL_32_TYPE_21_G_I_M_SELECTIONS",
+    "SIGNED_LINEAR_MODIFY",
+    "ORIGINAL_ADSP2100_CIRCULAR_MODIFY",
+    "SELECTED_I_ONLY_WRITEBACK"
+  ],
+  "fail_closed_boundaries": {
+    "NON_TYPE_21_OPCODE": "INVALID_AND_ACTION_FREE",
+    "TYPE_21_WITH_SETUP_WRITE": "INTEGRATION_CONFLICT_AND_STATE_PRESERVATION",
+    "UNKNOWN_SELECTED_DAG_OPERAND": "SELECTED_I_RESULT_BECOMES_INVALID",
+    "UNDOCUMENTED_CIRCULAR_CONFIGURATION": "SELECTED_I_RESULT_BECOMES_INVALID",
+    "INVALID_SETUP_KIND": "SETUP_REJECTED"
+  },
+  "not_implemented": [
+    "GENERAL_MOVE_DAG_REGISTER_ACCESS",
+    "MEMORY_DATA_TRANSFER_OR_BUS_PHASES",
+    "INSTRUCTION_FETCH_OR_PC_REGISTER",
+    "INTERRUPT_RECOGNITION_OR_ABORT",
+    "SAME_CYCLE_EXTERNAL_DAG_WRITE_ORDERING"
+  ]
+}

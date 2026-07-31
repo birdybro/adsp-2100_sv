@@ -9,6 +9,11 @@ from tools.generators.validate_mode_control import (
     load_database as load_mode_control_database,
     validate_database as validate_mode_control_database,
 )
+from tools.generators.validate_modify_address import (
+    decode_selection as decode_modify_address_selection,
+    load_database as load_modify_address_database,
+    validate_database as validate_modify_address_database,
+)
 from tools.generators.validate_isa import classify_opcode, load_database, validate_database
 
 
@@ -46,6 +51,18 @@ def _disassemble_mode_control(opcode: int) -> str:
     return ", ".join(components) + ";"
 
 
+def _disassemble_modify_address(opcode: int) -> str:
+    database = load_modify_address_database()
+    validate_modify_address_database(database)
+    selection = decode_modify_address_selection(database, opcode)
+    if selection is None:
+        raise ValueError("opcode is not original Type 21")
+    return (
+        f"MODIFY (I{selection['i_address']}, "
+        f"M{selection['m_address']});"
+    )
+
+
 def disassemble_word(opcode: int) -> Disassembly:
     if not 0 <= opcode <= 0xFFFFFF:
         raise ValueError("opcode must fit 24 bits")
@@ -58,6 +75,8 @@ def disassemble_word(opcode: int) -> Disassembly:
             text = instruction["algebraic_assembly_syntax"]
             if instruction["id"] == "MODE-CONTROL-TYPE-18":
                 text = _disassemble_mode_control(opcode)
+            elif instruction["id"] == "MODIFY-ADDRESS-TYPE-21":
+                text = _disassemble_modify_address(opcode)
             return Disassembly(
                 opcode=opcode,
                 text=text,
