@@ -67,6 +67,7 @@ module adsp2100_internal_move_slice (
     logic       saturate_ar_unused;
     logic       not_counter_expired_unused;
     logic [15:0] dreg_read_unused;
+    logic [15:0] dreg_read_2_unused;
     logic [15:0] af_unused;
     logic [15:0] mf_unused;
     logic [39:0] mr_unused;
@@ -147,6 +148,8 @@ module adsp2100_internal_move_slice (
         .probe_data_o(probe_data_o),
         .dreg_read_address_i(4'h0),
         .dreg_read_data_o(dreg_read_unused),
+        .dreg_read_address_2_i(4'h0),
+        .dreg_read_data_2_o(dreg_read_2_unused),
         .dreg_write_enable_1_i(1'b0),
         .dreg_write_address_1_i(4'h0),
         .dreg_write_data_1_i(16'h0000),
@@ -219,7 +222,7 @@ module adsp2100_internal_move_slice (
         unused_source_selector_valid, state_invalid_move_write,
         alternate_bank_unused, bit_reverse_unused, overflow_latch_unused,
         saturate_ar_unused, not_counter_expired_unused,
-        dreg_read_unused, af_unused, mf_unused,
+        dreg_read_unused, dreg_read_2_unused, af_unused, mf_unused,
         mr_unused, se_unused, sb_unused, sr_unused
     };
 

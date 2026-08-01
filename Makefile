@@ -4,6 +4,8 @@ LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_conditional_compute_decode.sv \
 	rtl/core/adsp2100_divide_quotient_decode.sv \
 	rtl/core/adsp2100_divide_quotient_action.sv \
+	rtl/core/adsp2100_divide_sign_decode.sv \
+	rtl/core/adsp2100_divide_sign_action.sv \
 	rtl/core/adsp2100_alu.sv rtl/core/adsp2100_mr_saturation_decode.sv \
 	rtl/core/adsp2100_mr_saturate.sv \
 	rtl/core/adsp2100_mr_saturation_action.sv \

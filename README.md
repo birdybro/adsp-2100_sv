@@ -50,14 +50,15 @@ register words with exact-width state, selected-bank SB, and CNTR/count-stack
 effects, and bounded independent-model/native-RTL integration in which NOP,
 legal Type 6/7, all Type 9 conditional ALU/MAC words, all 2,256 legal Type 17
 internal MOVE source/destination pairs, all 25,648 canonical Type 14 shifter-
-plus-DREG packets, all eight Type 23 DIVQ words, the exact Type 25 conditional
+plus-DREG packets, all eight Type 23 DIVQ words, all sixteen source-closed
+Type 24 DIVS words, the exact Type 25 conditional
 MR-saturation word, all
 14,336 supported Type 15 immediate
 shift words, all 1,792 supported Type 16 conditional shift words, and all Type
 18 MODE CONTROL words
 execute at the current PC while the
 following word is fetched at PC+1 across the sourced state-8 issue/state-7
-retire phases, with 443,740 model/RTL phase clocks and an explicit OQ-016
+retire phases, with 443,607 model/RTL phase clocks and an explicit OQ-016
 provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
 50,003 clocks and 86 complete current-fetch/inhibit/grant/restart handshakes,
 and a separate bounded active-low HALT attachment adds 50,003 clocks and 788
@@ -131,8 +132,9 @@ interrupt arbitration, and complete PM strobes remain outside the bounded
 Type 22 controller. Pinned MAME's
 conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
-division-flag conflict is recorded as SC-014. Division exists as bounded
-instruction slices, not yet in the top-level fetch/decode/execute model.
+division-flag conflict is recorded as SC-014. Both division primitives now
+execute in the bounded ordinary-fetch owner, but active control flow,
+interrupts, reset-first-fetch, and unified PM/cache ownership remain open.
 Type 2, Type 3, Type 4, and Type 12 supply logical DM transaction boundaries, and a separate
 native controller reproduces the original active-low DM phases and full-cycle
 DMACK extension. All four clients attach at state 8-to-1 and defer every

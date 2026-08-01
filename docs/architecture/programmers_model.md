@@ -80,6 +80,11 @@ writes selected-bank AF/AY0 and ASTAT.AQ at cycle end, leaving the inactive
 bank and every non-AQ status bit unchanged. Consecutive fetched DIVQ
 instructions demonstrate that the next cycle observes all three retired
 destinations [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4].
+Fetched Type 24 uses three simultaneous selected-bank reads: the XOP divisor,
+AY0, and the YOP-selected AY1 or AF upper dividend. State-7 retirement
+atomically writes AF, AY0, and ASTAT.AQ. Every legal source combination is
+covered in both banks, and a following fetched DIVQ observes the retired DIVS
+seed state [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-6–6-9, A-4].
 The exact Type 6 boundary similarly samples MSTAT at cycle start and writes
 the selected computational bank at cycle end for every DREG code. Its full
 16-bit immediate is truncated only at the authentic SE/MR2 eight-bit storage
@@ -115,7 +120,7 @@ from that same cycle-start bank. A move may replace a computational source or
 read an old shifter result, and the noncolliding DREG plus SR/SE/SB/SS results
 become visible together at cycle end. Same-destination requests never execute
 in the bounded slice. The shared fetched owner now retires every canonical
-packet through native PC+1 overlap in its 443,740-clock comparison
+packet through native PC+1 overlap in its 443,607-clock comparison
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 The bounded Type 8 path applies the same bank and timing rule to ALU/MAC X/Y,
 optional MR feedback, and the DREG move source. Noncolliding AR/AF or MR/MF,

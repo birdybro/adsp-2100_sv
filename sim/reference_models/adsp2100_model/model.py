@@ -3,8 +3,9 @@
 The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
 Type 14 shifter-plus-move packets, Type 15 immediate shifts, Type 16
-conditional shifts, original Type 18 mode control, Type 23 DIVQ, exact Type 25
-MR saturation, and legal Type 17 internal moves from known sources.
+conditional shifts, original Type 18 mode control, Type 23 DIVQ, the
+source-closed Type 24 DIVS forms, exact Type 25 MR saturation, and legal Type
+17 internal moves from known sources.
 Unsupported behavior fails closed instead of becoming an accidental no-op.
 """
 
@@ -427,6 +428,52 @@ class ADSP2100Model:
                 mstat=computed.state.status.mstat,
                 icntl=computed.state.status.icntl,
                 imask=computed.state.status.imask,
+            )
+        elif instruction.value & 0xFFE0FF == 0x060000:
+            from .divide_sign import (
+                DivideSignInputs,
+                DivideSignState,
+                apply_divide_sign_cycle,
+                decode_divide_sign,
+            )
+            from .status import ASTATState, StatusRegisters
+
+            action = decode_divide_sign(instruction.value)
+            assert action is not None
+            if not action.supported:
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} has unsupported Type 24 YOP"
+                )
+            sign = apply_divide_sign_cycle(
+                DivideSignState(
+                    primary=self.state.primary,
+                    alternate=self.state.alternate,
+                    status=StatusRegisters(
+                        astat=(
+                            ASTATState()
+                            if self.state.astat is UNKNOWN
+                            else ASTATState.from_word(self.state.astat)
+                        ),
+                        mstat=self.state.mstat,
+                        icntl=self.state.icntl,
+                        imask=self.state.imask,
+                    ),
+                ),
+                DivideSignInputs(execute=True, opcode=instruction.value),
+            )
+            next_astat = (
+                sign.state.status.astat.to_word()
+                if sign.state.status.astat.is_fully_known
+                else UNKNOWN
+            )
+            next_state = replace(
+                self.state,
+                primary=sign.state.primary,
+                alternate=sign.state.alternate,
+                astat=next_astat,
+                mstat=sign.state.status.mstat,
+                icntl=sign.state.status.icntl,
+                imask=sign.state.status.imask,
             )
         elif instruction.value & 0xFFF8FF == 0x071000:
             from .divide_quotient import (

@@ -14,6 +14,8 @@ module tb_adsp2100_architectural_state;
     logic [15:0] probe_data;
     logic [3:0] dreg_read_address;
     logic [15:0] dreg_read_data;
+    logic [3:0] dreg_read_address_2;
+    logic [15:0] dreg_read_data_2;
     logic dreg_write_enable_1;
     logic [3:0] dreg_write_address_1;
     logic [15:0] dreg_write_data_1;
@@ -182,6 +184,8 @@ module tb_adsp2100_architectural_state;
         .probe_data_o(probe_data),
         .dreg_read_address_i(dreg_read_address),
         .dreg_read_data_o(dreg_read_data),
+        .dreg_read_address_2_i(dreg_read_address_2),
+        .dreg_read_data_2_o(dreg_read_data_2),
         .dreg_write_enable_1_i(dreg_write_enable_1),
         .dreg_write_address_1_i(dreg_write_address_1),
         .dreg_write_data_1_i(dreg_write_data_1),
@@ -262,6 +266,7 @@ module tb_adsp2100_architectural_state;
         read_code = 6'h00;
         probe_code = 6'h00;
         dreg_read_address = 4'h0;
+        dreg_read_address_2 = 4'h0;
         clear_actions();
         tick();
         reset = 1'b0;
@@ -289,10 +294,12 @@ module tb_adsp2100_architectural_state;
         read_code = 6'h00;
         probe_code = 6'h01;
         dreg_read_address = 4'h2;
+        dreg_read_address_2 = 4'h0;
         #1;
         expect16(read_data, 16'h1111, "old move read");
         expect16(probe_data, 16'h2222, "old probe read");
         expect16(dreg_read_data, 16'h3333, "old execution read");
+        expect16(dreg_read_data_2, 16'h1111, "old second execution read");
         if (internal_conflict !== 1'b0) begin
             $fatal(1, "nonoverlapping DREG writes reported conflict");
         end
@@ -300,6 +307,7 @@ module tb_adsp2100_architectural_state;
         expect16(read_data, 16'haaaa, "new move read");
         expect16(probe_data, 16'hbbbb, "new probe read");
         expect16(dreg_read_data, 16'hcccc, "new execution read");
+        expect16(dreg_read_data_2, 16'haaaa, "new second execution read");
 
         // The computational result ports update the selected bank only.
         clear_actions();

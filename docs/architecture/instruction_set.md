@@ -304,12 +304,12 @@ algebraic forms, exhaustive 24-bit RTL decode, ten directed model tests, and
 executes one DIVS plus fifteen DIVQ operations for positive and negative signed
 cases. The ordinary-fetch owner now also retires every divisor form from both
 banks and both old-AQ paths; a consecutive pair proves that the second DIVQ
-reads the first iteration's retired AF/AY0/AQ state within the 443,740-clock
+reads the first iteration's retired AF/AY0/AQ state within the 443,607-clock
 native-fetch comparison
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4, B-1–B-8]. Appendix B's
 documented quotient-correction exceptions remain software responsibilities;
-DIVS-to-DIVQ fetch composition, active loops, interrupts, and unified PM/cache/
-event ownership remain outside this attachment.
+A fetched DIVS-to-DIVQ dependency is also covered; active loops, interrupts,
+and unified PM/cache/event ownership remain outside this attachment.
 
 Type 24 encodes fixed `DIVS` with YOP `[12:11]` and XOP `[10:8]`. Original
 prose permits AY1 or AF as the upper dividend and all eight ALU-X sources as
@@ -319,10 +319,14 @@ atomically writes shifted AF/AY0 and the sign XOR to AQ. No other ASTAT bit,
 the inactive bank, or PM/DM data state changes. The AY0 and zero upper-source
 codes fail closed. Two hand-derived fixtures, every legal algebraic form,
 exhaustive 24-bit RTL decode, eleven directed model tests, and 50,109 stateful
-model/RTL cycles provide bounded evidence [ADI-UM-1989, printed pp. 2-9–2-13,
+model/RTL cycles provide bounded standalone evidence. The ordinary-fetch owner
+also retires every legal divisor/upper-source combination in both banks and a
+dependent DIVS-to-DIVQ sequence within its 443,607-clock comparison
+[ADI-UM-1989, printed pp. 2-9–2-13,
 4-21, 6-6–6-9, A-4, B-1–B-8; ADI-2101-CROSS-1990, printed pp. 9-17–9-18,
-later-device operand corroboration only]. Fetch, PC, active-loop, interrupt,
-wait-state, and external bus phases remain outside this slice.
+later-device operand corroboration only]. Reset-first-fetch, active-loop,
+interrupt, PM-data/cache, and unified event priority remain outside this
+attachment.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
 exponent in bits `[7:0]`. The original instruction summary permits the eight
@@ -347,7 +351,7 @@ selected-bank state and commit together at cycle end. This defines 25,648
 executable words; 32,768 unresolved bit-15-one words, 4,096 XOP `001` words,
 and 3,024 same-destination words fail closed. Two hand fixtures, all supported
 syntax forms, exhaustive Python/RTL partitioning, and 82,597 stateful cycles
-provide bounded evidence. A separate 443,740-clock fetched comparison retires
+provide bounded evidence. A separate 443,607-clock fetched comparison retires
 every canonical packet with PC+1 native PM overlap and atomic DREG/shifter/
 status/PC/next-word commit
 [ADI-UM-1989, printed pp. 1-5, 2-6–2-7, 2-18, 5-5–5-8, 6-4–6-7, A-3,
@@ -411,7 +415,7 @@ pp. 3-47 and A-4]. The hand fixture also drives the database-based
 assembler/disassembler round trip. The shared ordinary-fetch owner now also
 retires this exact word at its native state-7 completion; directed sequences
 cover positive and negative saturation in both banks plus the MV-false path
-within the 443,740-clock fetched comparison.
+within the 443,607-clock fetched comparison.
 
 A primary-backed Type 18 record closes all 256 field-defined mode-control
 words. The four independent two-bit fields are AS `[11:10]`, OL `[9:8]`,

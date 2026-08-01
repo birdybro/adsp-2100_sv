@@ -15,6 +15,7 @@ from .conditional_shift import (
 from .immediate_shift import decode_immediate_shift, is_immediate_shift_class
 from .shift_move import decode_shift_move, is_shift_move_class
 from .divide_quotient import decode_divide_quotient
+from .divide_sign import decode_divide_sign, is_divide_sign_class
 from .mr_saturation import decode_mr_saturation
 from .mode_control import decode_mode_control
 from .model import (
@@ -101,6 +102,10 @@ def _instruction_class(
         return (True, False)
     if decode_divide_quotient(instruction.value) is not None:
         return (True, False)
+    if is_divide_sign_class(instruction.value):
+        action = decode_divide_sign(instruction.value)
+        assert action is not None
+        return (action.supported, not action.supported)
     if decode_mr_saturation(instruction.value):
         return (True, False)
     if is_shift_move_class(instruction.value):

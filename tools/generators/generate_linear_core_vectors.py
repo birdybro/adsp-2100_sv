@@ -105,6 +105,10 @@ def _type23(xop: int) -> int:
     return 0x071000 | ((xop & 0x7) << 8)
 
 
+def _type24(yop: int, xop: int) -> int:
+    return 0x060000 | ((yop & 0x3) << 11) | ((xop & 0x7) << 8)
+
+
 def _type14_destination_legal(sf: int, destination: int) -> bool:
     return not (
         (sf <= 0xB and destination in (int(DREG.SR0), int(DREG.SR1)))
@@ -215,6 +219,24 @@ def _directed_opcodes() -> tuple[int, ...]:
                     _type23(xop),
                 )
             )
+    # Exercise both sourced DIVS upper operands with all divisors in both
+    # banks. AF is initialized from AY1, after which AY1 is overwritten so the
+    # two YOP forms cannot accidentally alias in the fetched comparison.
+    for bank in (0, 1):
+        opcodes.append(_type7(writable["MSTAT"], bank))
+        for yop in (1, 2):
+            for xop, source in enumerate(DIVIDE_X_DREG):
+                opcodes.extend(
+                    (
+                        _type6(int(source), (0x2221 * (xop + 1)) & 0xFFFF),
+                        _type6(int(DREG.AY0), 0x8001),
+                        _type6(int(DREG.AY1), 0xC001),
+                        _type9(z=1, amf=0x10, yop=1, xop=0, condition=0xF),
+                        _type6(int(DREG.AY1), 0x4001),
+                        _type7(writable["ASTAT"], 0xD5),
+                        _type24(yop, xop),
+                    )
+                )
     # Type 14 executes its shifter and move in parallel. Traverse every
     # canonical, source-backed, noncolliding packet through fetched retirement;
     # the current known register bank makes both old-value results observable.
@@ -249,7 +271,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(23)
+    choice = rng.randrange(24)
     if choice == 0:
         return 0
     if choice < 5:
@@ -293,7 +315,9 @@ def _legal_opcode(rng: random.Random) -> int:
         )
     if choice == 21:
         return 0x050000
-    return _type23(rng.randrange(8))
+    if choice == 22:
+        return _type23(rng.randrange(8))
+    return _type24(rng.choice((1, 2)), rng.randrange(8))
 
 
 def _exact(value: object) -> tuple[bool, int]:

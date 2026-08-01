@@ -8,6 +8,26 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of all sixteen source-closed original Type 24 `DIVS`
+  operand combinations in the bounded ordinary linear owner. A stateless
+  action producer samples the cycle-start selected-bank divisor, AY1-or-AF
+  upper dividend, and AY0 through two independent execution DREG read ports,
+  then drives atomic AF/AY0/AQ retirement while preserving every non-AQ ASTAT
+  bit. Unsupported AY0/zero YOP forms remain fail-closed. Two new directed
+  owner tests cover both upper-source forms, every divisor, both banks, and a
+  dependent fetched DIVS-to-DIVQ sequence. The 22-test owner suite and 443,607
+  deterministic model/RTL phase clocks pass, as do the unchanged BR/BG,
+  shared-PM/BR-BG, and HALT compositions. Strict lint is clean, all 688 Python
+  checks pass, and all 73 formal recipes pass assertion syntax lint; proofs
+  and Yosys synthesis remain unavailable. A fully constrained 25 ns Cyclone V
+  fit uses 2,759 ALMs, 1,191 registers, one DSP, no RAM, +1.115 ns worst
+  multicorner setup slack, +0.171 ns worst hold slack, 41.87 MHz worst
+  slow-corner Fmax, and zero unconstrained clocks, ports, or paths. The
+  stricter 20 ns shared-PM/BR-BG composition also fits (2,873 ALMs, 1,220
+  registers, one DSP, no RAM) but misses setup by 3.541 ns at the worst slow
+  corner; timing optimization, reset-first-fetch, active control flow,
+  interrupts, and unified PM/cache/event ownership remain open.
+
 - Fetched execution of all eight original Type 23 `DIVQ XOP;` words in the
   bounded ordinary linear owner. A stateless action producer samples the
   cycle-start selected-bank divisor, AF, AY0, and AQ; performs the documented

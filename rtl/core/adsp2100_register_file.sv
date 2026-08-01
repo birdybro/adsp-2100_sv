@@ -7,9 +7,11 @@ module adsp2100_register_file (
     input  logic [3:0]  read_address_0_i,
     input  logic [3:0]  read_address_1_i,
     input  logic [3:0]  read_address_2_i,
+    input  logic [3:0]  read_address_3_i,
     output logic [15:0] read_data_0_o,
     output logic [15:0] read_data_1_o,
     output logic [15:0] read_data_2_o,
+    output logic [15:0] read_data_3_o,
 
     input  logic        write_enable_0_i,
     input  logic [3:0]  write_address_0_i,
@@ -121,6 +123,7 @@ module adsp2100_register_file (
         read_data_0_o = read_value[alternate_bank_i][read_address_0_i];
         read_data_1_o = read_value[alternate_bank_i][read_address_1_i];
         read_data_2_o = read_value[alternate_bank_i][read_address_2_i];
+        read_data_3_o = read_value[alternate_bank_i][read_address_3_i];
         af_o = af_q[alternate_bank_i];
         mf_o = mf_q[alternate_bank_i];
         mr_o = {

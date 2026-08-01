@@ -54,6 +54,7 @@ module adsp2100_mode_slice (
     logic [3:0]  unused_imask;
     logic [15:0] unused_read_1;
     logic [15:0] unused_read_2;
+    logic [15:0] unused_read_3;
     logic [15:0] unused_af;
     logic [15:0] unused_mf;
     logic [39:0] unused_mr;
@@ -159,9 +160,11 @@ module adsp2100_mode_slice (
         .read_address_0_i(dreg_read_address_i),
         .read_address_1_i(4'h0),
         .read_address_2_i(4'h0),
+        .read_address_3_i(4'h0),
         .read_data_0_o(dreg_read_data_o),
         .read_data_1_o(unused_read_1),
         .read_data_2_o(unused_read_2),
+        .read_data_3_o(unused_read_3),
         .write_enable_0_i(dreg_write_enable_i && !reset_i),
         .write_address_0_i(dreg_write_address_i),
         .write_data_0_i(dreg_write_data_i),

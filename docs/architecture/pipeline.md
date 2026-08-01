@@ -38,18 +38,21 @@ predicate, X operand, SE/SR/SB, and ASTAT feedback at cycle start; a true form
 commits only the function-selected SR/SE/SB/SS destinations, while a false
 form preserves them without changing the fetch cycle. Type 23 samples the
 selected-bank divisor, AF, AY0, and AQ at cycle start, then commits AF, AY0,
-and AQ together at retirement while preserving every other ASTAT bit. A
-following DIVQ therefore observes the just-retired division state. Type 25 samples cycle-start MV,
+and AQ together at retirement while preserving every other ASTAT bit. Type 24
+similarly samples the divisor, AY0, and AY1-or-AF upper dividend through three
+cycle-start DREG reads before atomically retiring AF/AY0/AQ. A following DIVQ
+therefore observes the just-retired division state. Type 25 samples cycle-start MV,
 selected-bank MR, and bank selection; MV true commits the sign-selected MR
 limit at state 7-to-8 without altering ASTAT, while MV false retires on the
 same boundary without an MR write. The request is admitted at the enabled
 state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Twenty directed tests and 443,740
+interface exposes no PM acknowledge input. Twenty-two directed tests and 443,607
 phase clocks compare the independent model with RTL, including every legal
 Type 17 pair, every Type 9 AMF/condition combination, every canonical Type 14
 packet, every supported Type 15 and Type 16 word, every Type 18 encoding,
-all Type 23 divisors in both banks and both old-AQ paths, the Type 25
+all Type 23 divisors in both banks and both old-AQ paths, every legal Type 24
+divisor/upper-source form in both banks, dependent DIVS-to-DIVQ, the Type 25
 true/false paths in both banks, phase holds, bus-output
 relinquishment, PC wrap, selected-bank state,
 CNTR-stack effects, invalid fetched data, and fail-closed unsupported words. A

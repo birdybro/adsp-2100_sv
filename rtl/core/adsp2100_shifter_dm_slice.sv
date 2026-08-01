@@ -185,6 +185,7 @@ module adsp2100_shifter_dm_slice (
     logic dag_conflict;
     logic dag_invalid_setup_kind;
     logic [15:0] unused_af;
+    logic [15:0] unused_read_3;
     logic [15:0] unused_mf;
     logic [39:0] unused_mr;
     logic [4:0] unused_icntl;
@@ -508,9 +509,11 @@ module adsp2100_shifter_dm_slice (
         .read_address_0_i(shifter_source_dreg_o),
         .read_address_1_i(memory_dreg_o),
         .read_address_2_i(probe_dreg_code_i),
+        .read_address_3_i(4'h0),
         .read_data_0_o(shifter_source_data),
         .read_data_1_o(memory_source_data),
         .read_data_2_o(probe_dreg_data_o),
+        .read_data_3_o(unused_read_3),
         .write_enable_0_i(register_write_enable),
         .write_address_0_i(register_write_address),
         .write_data_0_i(register_write_data),

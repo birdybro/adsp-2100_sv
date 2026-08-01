@@ -15,6 +15,7 @@ module tb_adsp2100_register_file;
     logic [15:0] read_data_0;
     logic [15:0] read_data_1;
     logic [15:0] read_data_2;
+    logic [15:0] read_data_3;
     logic        write_enable_0;
     logic [3:0]  write_address_0;
     logic [15:0] write_data_0;
@@ -68,9 +69,11 @@ module tb_adsp2100_register_file;
         .read_address_0_i(read_address_0),
         .read_address_1_i(read_address_1),
         .read_address_2_i(read_address_2),
+        .read_address_3_i(read_address_0),
         .read_data_0_o(read_data_0),
         .read_data_1_o(read_data_1),
         .read_data_2_o(read_data_2),
+        .read_data_3_o(read_data_3),
         .write_enable_0_i(write_enable_0),
         .write_address_0_i(write_address_0),
         .write_data_0_i(write_data_0),
@@ -121,6 +124,9 @@ module tb_adsp2100_register_file;
             );
             if (scan_count == 2) begin
                 #1;
+                if (read_data_3 !== read_data_0) begin
+                    $fatal(1, "fourth register read port mismatch");
+                end
                 if (write_conflict !== expected_conflict) begin
                     $fatal(
                         1,

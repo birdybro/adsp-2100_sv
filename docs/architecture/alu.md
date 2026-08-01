@@ -107,12 +107,14 @@ examples. Appendix B documents exceptional inputs for which the primitive
 sequence can be off by one; those software correction rules are deliberately
 not folded into a single DIVQ instruction. The Type 23 transformation is
 additionally attached to the bounded native ordinary-fetch owner. Two directed
-tests and 443,740 phase clocks cover all eight divisors in both banks, both
+tests and 443,607 phase clocks cover all eight divisors in both banks, both
 old-AQ paths, and a following DIVQ that reads the just-retired AF/AY0/AQ state.
-This establishes consecutive fetched DIVQ ordering but not DIVS-to-DIVQ fetch
-composition, active-loop, interrupt, or unified PM/cache/event behavior. Type
-24 remains standalone. Unknown divisor, AF, AY0, or AQ invalidates only AF,
-AY0, and AQ in the standalone unknown-aware slices.
+The same owner now executes all sixteen legal DIVS operand combinations through
+distinct divisor, AY0, and upper-dividend reads; a fetched DIVS-to-DIVQ test
+proves the quotient step sees the just-retired seed state. Active-loop,
+interrupt, reset-first-fetch, and unified PM/cache/event behavior remain open.
+Unknown divisor, AF, AY0, or AQ invalidates only AF, AY0, and AQ in the
+standalone unknown-aware slices.
 
 The separate `adsp2100_compute_move_slice` connects every standard ALU AMF
 to original Type 8 X/Y/Z selection, selected-bank AR/AF writeback, ASTAT

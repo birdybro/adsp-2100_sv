@@ -70,6 +70,7 @@ module adsp2100_divide_sign_slice (
     logic        register_conflict;
     logic        status_conflict;
     logic [15:0] unused_mf;
+    logic [15:0] unused_read_data_3;
     logic [39:0] unused_mr;
     logic [7:0]  unused_se;
     logic [4:0]  unused_sb;
@@ -164,9 +165,11 @@ module adsp2100_divide_sign_slice (
         .read_address_0_i(x_source_dreg_o),
         .read_address_1_i(upper_source_dreg_o),
         .read_address_2_i(DREG_AY0),
+        .read_address_3_i(4'h0),
         .read_data_0_o(divisor_data),
         .read_data_1_o(upper_dreg_data),
         .read_data_2_o(ay0_data),
+        .read_data_3_o(unused_read_data_3),
         .write_enable_0_i(dreg_setup_enable || known_execute_enable),
         .write_address_0_i(
             known_execute_enable ? DREG_AY0 : dreg_setup_code_i

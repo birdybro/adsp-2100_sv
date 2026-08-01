@@ -67,6 +67,7 @@ module adsp2100_conditional_compute_slice (
     logic        alu_valid;
     logic        mac_valid;
     logic [15:0] unused_alu_raw_result;
+    logic [15:0] unused_read_3;
     logic        alu_az;
     logic        alu_an;
     logic        alu_av;
@@ -217,9 +218,11 @@ module adsp2100_conditional_compute_slice (
         .read_address_0_i(x_source_dreg_o),
         .read_address_1_i(y_source_dreg_o),
         .read_address_2_i(probe_code_i),
+        .read_address_3_i(4'h0),
         .read_data_0_o(x_source_data_o),
         .read_data_1_o(y_dreg_data),
         .read_data_2_o(probe_data_o),
+        .read_data_3_o(unused_read_3),
         .write_enable_0_i(dreg_setup_enable),
         .write_address_0_i(dreg_setup_code_i),
         .write_data_0_i(dreg_setup_data_i),

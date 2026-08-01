@@ -79,6 +79,10 @@ def _type23(xop: int) -> int:
     return 0x071000 | ((xop & 0x7) << 8)
 
 
+def _type24(yop: int, xop: int) -> int:
+    return 0x060000 | ((yop & 0x3) << 11) | ((xop & 0x7) << 8)
+
+
 def _type15(*, sf: int, xop: int, exponent: int) -> int:
     return 0x0F0000 | ((sf & 0xF) << 11) | ((xop & 0x7) << 8) | (exponent & 0xFF)
 
@@ -158,6 +162,10 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "ALL_8_TYPE_23_DIVQ_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_16_SOURCE_CLOSED_TYPE_24_DIVS_WORDS",
             contract["supported_current_instructions"],
         )
         self.assertIn(
@@ -472,6 +480,80 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0x00))
 
+    def test_type24_all_sources_upper_forms_and_banks(self) -> None:
+        sources = (
+            (DREG.AX0, 0x0002),
+            (DREG.AX1, 0x8002),
+            (DREG.AR, 0x7FFF),
+            (DREG.MR0, 0x8000),
+            (DREG.MR1, 0x0001),
+            (DREG.MR2, 0xFFFE),
+            (DREG.SR0, 0xFFFF),
+            (DREG.SR1, 0x0000),
+        )
+        writable = register_code_by_name(writable=True)
+        for mstat in (0, 1):
+            for yop, upper in ((1, 0x4001), (2, 0xC001)):
+                for xop, (source, divisor) in enumerate(sources):
+                    state = _setup(
+                        LinearCoreState.reset(),
+                        _type7(writable["MSTAT"], mstat),
+                    )
+                    for opcode in (
+                        _type6(source, divisor),
+                        _type6(DREG.AY0, 0x8001),
+                        _type6(DREG.AY1, 0xC001),
+                        _type9(z=1, amf=0x10, yop=1, xop=0, condition=0xF),
+                        _type6(DREG.AY1, 0x4001),
+                        _type7(writable["ASTAT"], 0xD5),
+                        _type24(yop, xop),
+                    ):
+                        state = _complete(_issue(state).state, opcode).state
+
+                    retired = _complete(_issue(state).state, 0)
+                    selected = (
+                        retired.state.architecture.alternate
+                        if mstat else retired.state.architecture.primary
+                    )
+                    quotient_sign = ((divisor ^ upper) >> 15) & 1
+                    self.assertEqual(
+                        selected.af,
+                        ExactWord(16, ((upper << 1) & 0xFFFF) | 1),
+                    )
+                    self.assertEqual(
+                        selected.ay[0],
+                        ExactWord(16, 0x0002 | quotient_sign),
+                    )
+                    self.assertEqual(
+                        retired.state.architecture.astat,
+                        ExactWord(8, (0xD5 & ~0x20) | (quotient_sign << 5)),
+                    )
+
+    def test_fetched_divs_then_divq_reads_retired_state(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            LinearCoreState.reset(),
+            _type7(writable["MSTAT"], 0),
+        )
+        for opcode in (
+            _type6(DREG.AX0, 0x0002),
+            _type6(DREG.AY0, 0x8001),
+            _type6(DREG.AY1, 0xC001),
+            _type7(writable["ASTAT"], 0x15),
+            _type24(1, 0),
+            _type23(0),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        retired = _complete(_issue(state).state, 0)
+        # DIVS produces AF=0x8003, AY0=0x0003, AQ=1. DIVQ then adds AX0,
+        # shifts the new remainder with old AY0[15]=0, and appends quotient 0.
+        self.assertEqual(retired.state.architecture.primary.af, ExactWord(16, 0x000A))
+        self.assertEqual(
+            retired.state.architecture.primary.ay[0], ExactWord(16, 0x0006)
+        )
+        self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0x35))
+
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))
         for value in range(1, 7):
@@ -486,6 +568,8 @@ class LinearCoreTests(unittest.TestCase):
             (0x000001, False),
             (0x050001, False),
             (0x071001, False),
+            (_type24(0, 0), True),
+            (_type24(3, 7), True),
             (_type7(0x32, 1), True),
             (_type17(0x32, 0x00), True),
             (

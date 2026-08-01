@@ -20,6 +20,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_condition
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_compute_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_quotient_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_quotient_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_sign_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_sign_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_alu.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturation_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturate.sv

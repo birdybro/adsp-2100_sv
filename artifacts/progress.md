@@ -12,9 +12,9 @@ exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/
-Type 18/Type 23/Type 25 ordinary-fetch ownership with Type 9 ALU/MAC, Type 14
-parallel move/shifter, Type 15/16 shifter/status, Type 23 divide-quotient, and
-Type 25 conditional MR actions
+Type 18/Type 23/Type 24/Type 25 ordinary-fetch ownership with Type 9 ALU/MAC,
+Type 14 parallel move/shifter, Type 15/16 shifter/status, Type 23 divide-
+quotient, Type 24 divide-sign, and Type 25 conditional MR actions
 attached directly to the shared architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
@@ -33,6 +33,21 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- fetched all sixteen source-closed original Type 24 DIVS forms attached to
+  the shared architectural-state owner and native ordinary-fetch phases. A
+  fourth register-file read port supplies the independent upper-dividend read;
+  two new directed tests cover every divisor, both AY1/AF upper forms, both
+  banks, and dependent DIVS-to-DIVQ retirement. The 22-test owner suite and
+  443,607 model/RTL clocks pass, as do the unchanged 50,003-clock BR/BG,
+  shared-PM/BR/BG, and HALT compositions. Strict lint, all 688 Python checks,
+  and all 73 formal-recipe syntax checks pass; SymbiYosys/Yosys remain
+  unavailable. A fully constrained 25 ns Cyclone V fit uses 2,759 ALMs, 1,191
+  registers, one DSP, no RAM, +1.115 ns worst setup, +0.171 ns worst hold,
+  41.87 MHz worst slow-corner Fmax, and zero unconstrained clocks, ports, or
+  paths. The stricter 20 ns shared-PM/BR-BG fit succeeds at 2,873 ALMs and
+  1,220 registers but misses worst setup by 3.541 ns; reset-first-fetch,
+  control flow, interrupts, and unified PM/cache/event ownership remain open;
 
 - fetched all eight original Type 23 DIVQ forms attached to the shared
   architectural-state owner and native ordinary-fetch phases: two new directed
@@ -475,7 +490,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 686 distinct Python unit checks plus manifest/hash verification;
+- 688 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -615,7 +630,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/9/14/15/16/17/18/23/25 linear owner adds 443,740 phase clocks,
+  the bounded Type 6/7/9/14/15/16/17/18/23/24/25 linear owner adds 443,607 phase clocks,
   the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across
@@ -792,13 +807,12 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach the next source-closed non-memory instruction class to the shared
-   architectural-state owner, then converge ordinary fetch, Type 5, and Type
-   13 on that one owner and one cache before composing HALT, DMACK waits, TRAP,
-   interrupts, and reset.
-4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
+3. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
-   Type 9/Type 14/Type 17/Type 18 owner's deterministic preload.
+   Type 9/Type 14/Type 15/Type 16/Type 17/Type 18/Type 23/Type 24/Type 25
+   owner's deterministic preload.
+4. Converge ordinary fetch, Type 5, and Type 13 on one owner and cache before
+   composing HALT, DMACK waits, TRAP, interrupts, and reset.
 5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.
