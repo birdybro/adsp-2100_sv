@@ -30,6 +30,7 @@ Known cases:
 | Type 23 `DIVQ divisor;` | one processor cycle; old selected-bank AF/AY0/divisor/AQ values produce simultaneous cycle-end AF, AY0, and AQ writes; no PM-data or DM transfer |
 | Type 24 `DIVS upper, divisor;` | one processor cycle; old selected-bank upper/AY0/divisor values produce simultaneous cycle-end AF, AY0, and AQ writes; no PM-data or DM transfer |
 | Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
+| Type 7 immediate non-data-register load | one processor cycle; no PM-data or DM transfer; a valid CNTR load performs its count-stack push at the same cycle-end boundary |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
 | Type 16 conditional shifter | one processor cycle whether true or false; no PM-data or DM transfer |
@@ -158,6 +159,14 @@ PM-data or DM transaction. Its 50,204-cycle state comparison establishes this
 instruction boundary but does not model overlapped fetch, waits, interrupts,
 or external bus phases
 [ADI-UM-1989, printed pp. 1-2, 2-6–2-7, 6-12–6-13, A-2, and A-9].
+
+The bounded Type 7 model/RTL slice applies the same one-cycle boundary to a
+right-justified fourteen-bit immediate and one legal non-data destination.
+It verifies following-cycle MSTAT visibility, cycle-start selected-bank SB,
+and same-boundary CNTR/count-stack load effects without adding a data-memory
+or PM-data transaction. It likewise does not yet connect normal fetch overlap,
+active-loop/interrupt arbitration, or external PM fetch phases
+[ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and A-9].
 
 The bounded Type 15 model/RTL slice verifies a cycle-start selected-bank
 operand read, optional old-SR read for OR forms, and one cycle-end SR write.

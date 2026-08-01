@@ -15,6 +15,11 @@ from tools.generators.validate_direct_dm import (
     load_database as load_direct_dm_database,
     validate_database as validate_direct_dm_database,
 )
+from tools.generators.validate_load_non_dreg_immediate import (
+    decode_load_non_dreg_immediate,
+    load_database as load_non_dreg_immediate_database,
+    validate_database as validate_load_non_dreg_immediate_database,
+)
 from tools.generators.validate_condition_codes import (
     load_database as load_condition_database,
     validate_database as validate_condition_database,
@@ -136,6 +141,38 @@ def _try_disassemble_direct_dm(opcode: int) -> Disassembly | None:
         opcode=opcode,
         text=text,
         classification="TYPE_03_SOURCE_CLOSED_ACTION",
+        implemented=True,
+    )
+
+
+@lru_cache(maxsize=1)
+def _non_dreg_immediate_database() -> dict[str, object]:
+    database = load_non_dreg_immediate_database()
+    validate_load_non_dreg_immediate_database(database)
+    return database
+
+
+def _try_disassemble_non_dreg_immediate(
+    opcode: int,
+) -> Disassembly | None:
+    decoded = decode_load_non_dreg_immediate(
+        _non_dreg_immediate_database(), opcode
+    )
+    if decoded is None:
+        return None
+    if not decoded["legal"]:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification=(
+                f"UNSUPPORTED_TYPE_07_{decoded['invalid_reason']}"
+            ),
+            implemented=False,
+        )
+    return Disassembly(
+        opcode=opcode,
+        text=f"{decoded['register']} = 0x{decoded['data']:04x};",
+        classification="TYPE_07_BOUNDED_EXECUTION",
         implemented=True,
     )
 
@@ -762,6 +799,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     direct_dm = _try_disassemble_direct_dm(opcode)
     if direct_dm is not None:
         return direct_dm
+    non_dreg_immediate = _try_disassemble_non_dreg_immediate(opcode)
+    if non_dreg_immediate is not None:
+        return non_dreg_immediate
     conditional_compute = _try_disassemble_conditional_compute(opcode)
     if conditional_compute is not None:
         return conditional_compute

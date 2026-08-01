@@ -173,3 +173,14 @@ CNTR load/push and unknown-data invalidation, and adds 50,151 logical plus
 50,077 native clocks. Both slices remain outside whole-core
 fetch/interrupt/bus sequencing
 [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
+
+The Type 7 immediate-load boundary reuses the same complete destination
+storage instead of defining a second register map. It accepts all 31 writable
+non-data selectors, right-justifies the fourteen-bit immediate, narrows it to
+the selected register's documented width, applies SB to the cycle-start
+selected computational bank, and performs the documented old-CNTR push on a
+valid CNTR load. Computational group zero, blank selectors, and SSTAT
+destinations fail closed. Eight directed tests and 50,299 model/RTL clocks
+cover all legal destinations, boundary values, reset unknowns, conflicts, and
+the count-stack side effect [ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2,
+6-12–6-13, A-2, and A-9].

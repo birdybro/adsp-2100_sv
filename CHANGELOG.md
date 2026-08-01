@@ -8,6 +8,18 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original Type 7 immediate-to-non-data-register database,
+  independent decoder and state model, exact assembler/disassembler support,
+  portable RTL decoder/state composition, hand-derived fixtures, exhaustive
+  1,048,576-word Python and RTL partitions, eight directed model tests, and
+  50,299 deterministic model/RTL clocks. The implementation accepts 507,904
+  words selecting 31 writable original non-data registers, rejects 540,672
+  group-zero, reserved-selector, or read-only-SSTAT words, preserves exact
+  destination widths and reset unknowns, applies selected-bank SB writes and
+  the documented CNTR/count-stack side effect, and emits no PM-data or DM
+  transaction. A formal harness and fully constrained Cyclone V fit provide
+  additional bounded evidence.
+
 - A bounded original Type 3 state/native-DM composition in structurally
   independent Python and portable SystemVerilog. It shares the complete Type
   17 general-register state, captures absolute address and cycle-start write

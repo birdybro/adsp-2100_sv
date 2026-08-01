@@ -111,6 +111,19 @@ lint:
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_load_dreg_immediate_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_load_non_dreg_immediate_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_immediate_shift_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -641,6 +654,7 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_modify_address.py
 	$(PYTHON) tools/generators/validate_internal_move.py
 	$(PYTHON) tools/generators/validate_direct_dm.py
+	$(PYTHON) tools/generators/validate_load_non_dreg_immediate.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
@@ -650,6 +664,7 @@ decode-tests:
 		tests.test_stack_control tests.test_mr_saturation \
 		tests.test_dm_write_immediate tests.test_direct_dm \
 		tests.test_internal_move tests.test_load_dreg_immediate \
+		tests.test_load_non_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
 		tests.test_compute_move tests.test_compute_dual \
@@ -676,6 +691,13 @@ decode-tests:
 			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
 			sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv; \
 		build/obj_load_dreg_immediate_decode/Vtb_adsp2100_load_dreg_immediate_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_load_non_dreg_immediate_decode \
+			--top-module tb_adsp2100_load_non_dreg_immediate_decode \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			sim/unit/tb_adsp2100_load_non_dreg_immediate_decode.sv; \
+		build/obj_load_non_dreg_immediate_decode/Vtb_adsp2100_load_non_dreg_immediate_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			-Wno-TIMESCALEMOD \
 			--Mdir build/obj_immediate_shift_decode \
@@ -1280,7 +1302,7 @@ sequencer-tests:
 register-tests:
 	$(PYTHON) -m unittest -v tests.test_register_banks \
 		tests.test_internal_move_slice tests.test_direct_dm_slice \
-		tests.test_load_dreg_immediate
+		tests.test_load_dreg_immediate tests.test_load_non_dreg_immediate
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_register_vectors.py \
@@ -1352,6 +1374,25 @@ register-tests:
 			rtl/core/adsp2100_load_dreg_immediate_slice.sv \
 			sim/unit/tb_adsp2100_load_dreg_immediate_slice.sv; \
 		build/obj_load_dreg_immediate_slice/Vtb_adsp2100_load_dreg_immediate_slice; \
+		$(PYTHON) tools/generators/generate_load_non_dreg_immediate_vectors.py \
+			--output build/load_non_dreg_immediate_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_load_non_dreg_immediate_slice \
+			--top-module tb_adsp2100_load_non_dreg_immediate_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv \
+			sim/unit/tb_adsp2100_load_non_dreg_immediate_slice.sv; \
+		build/obj_load_non_dreg_immediate_slice/Vtb_adsp2100_load_non_dreg_immediate_slice; \
 	else \
 		echo "SKIP register-file RTL test: Verilator is not installed"; \
 	fi
@@ -1540,6 +1581,20 @@ formal:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_load_dreg_immediate_slice.sv \
 			formal/harnesses/adsp2100_load_dreg_immediate_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_load_non_dreg_immediate_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv \
+			formal/harnesses/adsp2100_load_non_dreg_immediate_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_immediate_shift_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -1936,6 +1991,8 @@ formal:
 		sby -f -d build/formal_decode formal/class_decode.sby; \
 		sby -f -d build/formal_load_dreg_immediate \
 			formal/load_dreg_immediate.sby; \
+		sby -f -d build/formal_load_non_dreg_immediate \
+			formal/load_non_dreg_immediate.sby; \
 		sby -f -d build/formal_immediate_shift \
 			formal/immediate_shift.sby; \
 		sby -f -d build/formal_conditional_shift \
@@ -2040,6 +2097,8 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/load_dreg_immediate_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/load_non_dreg_immediate_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/immediate_shift_smoke; \
 		quartus_sh --flow compile \
@@ -2175,6 +2234,7 @@ clean:
 	@find build -maxdepth 1 -type f -name direct_dm_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name direct_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name load_dreg_immediate_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name load_non_dreg_immediate_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name immediate_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shift_move_vectors.txt -delete
@@ -2241,6 +2301,12 @@ clean:
 	fi
 	@if [ -d build/obj_load_dreg_immediate_slice ]; then \
 		find build/obj_load_dreg_immediate_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_load_non_dreg_immediate_decode ]; then \
+		find build/obj_load_non_dreg_immediate_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_load_non_dreg_immediate_slice ]; then \
+		find build/obj_load_non_dreg_immediate_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_immediate_shift_decode ]; then \
 		find build/obj_immediate_shift_decode -depth -delete; \
@@ -2424,6 +2490,9 @@ clean:
 	@if [ -d build/quartus_load_dreg_immediate ]; then \
 		find build/quartus_load_dreg_immediate -depth -delete; \
 	fi
+	@if [ -d build/quartus_load_non_dreg_immediate ]; then \
+		find build/quartus_load_non_dreg_immediate -depth -delete; \
+	fi
 	@if [ -d build/quartus_immediate_shift ]; then \
 		find build/quartus_immediate_shift -depth -delete; \
 	fi
@@ -2547,6 +2616,7 @@ clean:
 		build/formal_direct_dm_native \
 		build/formal_internal_move_slice \
 		build/formal_load_dreg_immediate \
+		build/formal_load_non_dreg_immediate \
 		build/formal_immediate_shift \
 		build/formal_conditional_shift \
 		build/formal_shift_move \

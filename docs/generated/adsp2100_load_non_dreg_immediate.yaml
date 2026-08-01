@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "immediate_width": 14,
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_7_BOUNDED_STATE",
+  "confidence": "VERIFIED_PRIMARY",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "register_code_database": "docs/generated/adsp2100_register_codes.yaml",
+  "instruction": {
+    "original_type": 7,
+    "name": "load non-data register immediate",
+    "opcode_mask": "0xf00000",
+    "opcode_value": "0x300000",
+    "encoding_pattern": "0011xxxxxxxxxxxxxxxxxxxx",
+    "field_defined_encoding_count": 1048576,
+    "legal_action_count": 507904,
+    "illegal_or_reserved_subencoding_count": 540672,
+    "destination_register_count": 31,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "NONE",
+    "status_generated": "NONE"
+  },
+  "fields": [
+    {"id": "RGP", "msb": 19, "lsb": 18, "role": "NON_DATA_REGISTER_GROUP"},
+    {"id": "DATA", "msb": 17, "lsb": 4, "role": "RAW_14_BIT_IMMEDIATE"},
+    {"id": "REG", "msb": 3, "lsb": 0, "role": "NON_DATA_REGISTER_INDEX"}
+  ],
+  "legality": {
+    "data_register_group": "RGP=00 names computational data registers and belongs to Type 6, not the original Type 7 non-data-register instruction.",
+    "non_data_destinations": "Every nonblank RGP=01, 10, or 11 REG-table destination except read-only SSTAT is writable.",
+    "reserved_selector": "A blank original REG-table selector has no documented execution behavior.",
+    "read_only_destination": "SSTAT is readable but has no documented write behavior.",
+    "invalid_action_policy": "RGP=00, blank selectors, and SSTAT decode as Type 7 but emit no architectural write."
+  },
+  "execution_semantics": {
+    "immediate_sampling": "DATA is a raw fourteen-bit instruction field and is known at the instruction boundary.",
+    "destination_commit": "The selected non-data destination receives DATA at cycle end.",
+    "right_justification": "Immediate bit 0 maps to destination bit 0; destinations narrower than fourteen bits retain their low documented width.",
+    "dag_writes": "I, M, and L registers retain DATA[13:0] exactly; signed interpretation of M affects later address arithmetic, not the stored bit pattern.",
+    "status_control_writes": "ASTAT, MSTAT, IMASK, and ICNTL retain their low 8, 4, 4, and 5 bits respectively.",
+    "other_narrow_writes": "SB and PX retain their low 5 and 8 bits respectively.",
+    "counter_write": "CNTR retains DATA[13:0] and uses the documented CNTR-load count-stack push rule.",
+    "memory_effect": "No PM-data or DM transaction is performed.",
+    "status_generation": "No computational status is generated; a direct ASTAT/MSTAT/IMASK/ICNTL destination replaces that register's stored bits."
+  },
+  "implementation_boundary": {
+    "action_decode": "COMPLETE",
+    "state_execution": "COMPLETE_BOUNDED",
+    "native_bus_attachment": "NOT_APPLICABLE_NO_DATA_TRANSFER",
+    "whole_core_fetch_interrupt_attachment": "NOT_IMPLEMENTED"
+  },
+  "assembly": {
+    "syntax": "destination_non_data_reg = immediate;",
+    "canonical_immediate": "0x0000 through 0x3fff",
+    "signed_input_range": "-8192 through 16383, encoded modulo 2^14"
+  },
+  "parallel_actions": [
+    {
+      "action": "IMMEDIATE_NON_DATA_REGISTER_WRITE",
+      "reads": ["INSTRUCTION_DATA_13_0"],
+      "writes": ["CYCLE_END_SELECTED_NON_DATA_REGISTER"],
+      "memory_transaction": "NONE",
+      "status_generation": "NONE"
+    }
+  ],
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 6-1–6-2 and 6-12–6-13, Tables 6.6–6.7",
+      "supports": "single-cycle immediate MOVE, original accessible registers, and separation of reg and dreg forms"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. A-2 (scan PDF p. 141)",
+      "supports": "Type 7 fixed bits and RGP/DATA[13:0]/REG field positions"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. A-9 (scan PDF p. 148)",
+      "supports": "complete original REG table, computational group, non-data groups, and blank selectors"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 4-4 and 4-22",
+      "supports": "CNTR-load count-stack behavior and read-only SSTAT"
+    },
+    {
+      "reference_id": "ADI-2101-CROSS-1990",
+      "authority": "CONTEMPORARY_LATER_DEVICE_TOOLCHAIN_CORROBORATION",
+      "location": "printed pp. 9-43–9-44",
+      "supports": "right-justified Type 6/Type 7 immediate loads and the maximum fourteen-bit non-data-register field; later-only register names are excluded"
+    }
+  ],
+  "unresolved_issues": [
+    "Reserved selectors, RGP=00 Type 7 words, and an SSTAT destination have no documented execution behavior and fail closed.",
+    "Interrupt-abort, following instruction fetch, and whole-core boundary ownership remain unintegrated."
+  ]
+}

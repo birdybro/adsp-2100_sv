@@ -82,6 +82,15 @@ with the MR1 sign bit
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 6-12–6-13,
 A-2, and A-9]. The bounded reset path clears MSTAT without assigning either
 bank a fabricated value.
+The exact Type 7 boundary uses the same cycle-start/cycle-end rule for the 31
+writable non-data destinations. The fourteen-bit immediate is right-justified
+on the internal bus and narrowed only at the authentic destination storage
+boundary. I/M/L and CNTR retain fourteen bits; ASTAT/PX retain eight, ICNTL
+five, MSTAT/IMASK four, and selected-bank SB five. Loading an already valid
+CNTR pushes its old value to the count stack before replacement. SSTAT and
+blank REG codes are not writable, and computational-register group zero is
+owned by Type 6
+[ADI-UM-1989, printed pp. 4-4, 4-22, 6-12–6-13, A-2, and A-9].
 The bounded Type 15 immediate-shift path likewise samples MSTAT and its X
 operand at cycle start and commits SR0/SR1 together at cycle end. PASS forms
 replace SR, OR forms also consume the old selected-bank SR, and the signed

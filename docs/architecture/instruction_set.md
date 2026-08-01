@@ -21,7 +21,8 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
-loads, the source-closed Type 15
+loads, 507,904 supported Type 7 immediate non-data-register loads, the
+source-closed Type 15
 immediate-shift subset, all 4,194,304 source-closed Type 1 action words,
 1,556,480 source-closed Type 3 direct-DM words with bounded state/native execution,
 2,034,688 source-closed Type 4 action words,
@@ -159,6 +160,26 @@ exhaustive Python and RTL field decode, assembler/disassembler round trips,
 and 50,204 stateful model-versus-RTL cycles provide the bounded execution
 evidence. Fetch, interrupts, stalls, and external bus phases remain outside
 this slice.
+
+Type 7 encodes `0011 RGP[1:0] DATA[13:0] REG[3:0]`. DATA is a raw,
+right-justified fourteen-bit immediate. RGP/REG selects one writable original
+non-data register: I0-I7, M0-M7, L0-L7, ASTAT, MSTAT, IMASK, ICNTL, CNTR, SB,
+or PX. RGP zero denotes the computational-register group handled by Type 6;
+blank REG-table cells and read-only SSTAT have no documented Type 7 write
+action and fail closed. This partitions all 1,048,576 class words into
+507,904 supported and 540,672 unsupported words. The bounded model and RTL
+right-justify DATA on the internal 16-bit move path, then retain only the
+selected register's exact storage width. An SB destination uses the
+cycle-start selected bank; an MSTAT load affects consumers on the following
+cycle; and a CNTR load pushes the old count when it is valid before installing
+the new fourteen-bit count. No PM-data or DM transfer occurs
+[ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and
+A-9; ADI-2101-CROSS-1990, printed pp. 9-43–9-44, corroboration only]. Two
+hand-derived legal fixtures and three fail-closed fixtures, exhaustive Python
+and RTL decode, assembler/disassembler round trips, eight directed tests, and
+50,299 stateful model-versus-RTL clocks close this bounded state slice. Fetch,
+interrupt abort, active-loop arbitration, and physical instruction-fetch
+phases remain outside it.
 
 Type 11 encodes `000101 ADDR[13:0] TERM[3:0]`. All 262,144 field
 combinations are defined because the original termination table assigns all
@@ -414,7 +435,8 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 2 bounded logical execution, Type 6, Type 9, Type 18, Type 21, and Type 25 are the class-complete
+Type 2 bounded logical execution, Type 6, Type 7, Type 9, Type 18, Type 21,
+and Type 25 are the class-complete
 source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic
 entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
 closed. Type 14 has a bounded semantic entry for 25,648 canonical words while

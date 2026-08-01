@@ -291,6 +291,15 @@ from .load_dreg_immediate import (
     apply_load_dreg_immediate_cycle,
     decode_load_dreg_immediate,
 )
+from .load_non_dreg_immediate import (
+    LOAD_NON_DREG_IMMEDIATE_MASK,
+    LOAD_NON_DREG_IMMEDIATE_VALUE,
+    LoadNonDregImmediateAction,
+    LoadNonDregImmediateCycleResult,
+    LoadNonDregImmediateState,
+    apply_load_non_dreg_immediate_cycle,
+    decode_load_non_dreg_immediate,
+)
 from .modify_address import (
     MODIFY_ADDRESS_MASK,
     MODIFY_ADDRESS_VALUE,
@@ -555,6 +564,11 @@ __all__ = [
     "LoadDregImmediateAction",
     "LoadDregImmediateCycleResult",
     "LoadDregImmediateState",
+    "LOAD_NON_DREG_IMMEDIATE_MASK",
+    "LOAD_NON_DREG_IMMEDIATE_VALUE",
+    "LoadNonDregImmediateAction",
+    "LoadNonDregImmediateCycleResult",
+    "LoadNonDregImmediateState",
     "LOOP_STACK_DEPTH",
     "LOOP_STACK_WIDTH",
     "MemorySpace",
@@ -687,6 +701,7 @@ __all__ = [
     "decode_immediate_shift",
     "decode_indirect_jump",
     "decode_load_dreg_immediate",
+    "decode_load_non_dreg_immediate",
     "decode_modify_address",
     "apply_stack_control_slice_cycle",
     "apply_mode_control",
@@ -696,6 +711,7 @@ __all__ = [
     "apply_immediate_shift_cycle",
     "apply_indirect_jump_cycle",
     "apply_load_dreg_immediate_cycle",
+    "apply_load_non_dreg_immediate_cycle",
     "apply_compute_dm_cycle",
     "apply_compute_dm_native_cycle",
     "is_conditional_shift_class",

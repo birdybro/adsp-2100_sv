@@ -10,6 +10,7 @@ bounded semantic instruction decode including Type 4 native-DM execution and
 Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
+exhaustive Type 7 non-data-register immediate state execution,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -73,6 +74,12 @@ cycle-, or Hard Drivin'-complete
 - exact Type 6 immediate-to-DREG semantics, assembler/disassembler support,
   exhaustive Python/RTL field decode, both-bank independent state execution,
   and exact SE/MR2/MR1 storage side effects;
+- exact Type 7 immediate-to-non-data-register semantics for 507,904 supported
+  and 540,672 fail-closed words, with independent database/model decode,
+  hand-derived fixtures, algebraic/raw assembler/disassembler support,
+  exhaustive Python/RTL partitioning, shared exact-width state, selected-bank
+  SB and CNTR/count-stack effects, 50,299 differential clocks, a formal
+  harness, and a fully constrained Cyclone V fit;
 - bounded Type 8 ALU/MAC-plus-internal-MOVE semantics, two hand-derived
   fixtures, representative canonical assembler/disassembler coverage,
   exhaustive three-way class partitioning, cycle-start selected-bank operand,
@@ -239,7 +246,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 559 implemented Python unit checks plus manifest/hash verification;
+- 588 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -268,6 +275,10 @@ outstanding.
 - all 1,048,576 Type 6 words decode to exact immediate/DREG fields in both
   Python and exhaustive RTL traversal; 50,204 selected-bank model/RTL cycles
   pass with no PM-data or DM activity;
+- all 1,048,576 Type 7 words partition in independent Python and exhaustive
+  RTL into 507,904 legal non-data-register loads and 540,672 group-zero,
+  reserved, or read-only-SSTAT destinations; 50,299 stateful model/RTL clocks
+  cover all 31 legal destinations with no PM-data or DM activity;
 - all 524,288 Type 8 words partition into exactly 476,672 supported actions,
   16,384 unresolved AMF-zero words, and 31,232 same-destination conflicts in
   Python and exhaustive RTL; 983,386 model/RTL cycles execute every supported
@@ -354,7 +365,8 @@ outstanding.
   execution cycles and 50,112 stateful Type 25 cycles pass simulation;
   the Type 18 state slice adds 58,248 passing cycles and the Type 21 slice adds
   50,124, while the Type 17 state slice adds 59,430 and the Type 6 slice adds
-  50,204; the Type 8 state slice adds 983,386, the Type 9 state slice adds
+  50,204 and the Type 7 slice adds 50,299; the Type 8 state slice adds 983,386,
+  the Type 9 state slice adds
   283,996, the Type 10 state slice adds 554,412, the Type 11 state slice adds
   554,309, the Type 19 state slice adds 50,259, the Type 20 slice adds 50,254,
   the phase-aware Type 22 slice adds 50,168 clocks, the Type 23 slice adds
@@ -385,7 +397,10 @@ outstanding.
   paths, while the Type 17 state slice fits in 816 ALMs and 906 registers with
   +6.401 ns setup, +0.151 ns hold, and no unconstrained paths; the Type 6 slice
   fits in 302 ALMs and 484 registers with +8.167 ns setup, +0.133 ns hold, and
-  no unconstrained paths; the Type 15 slice fits in 774 ALMs and 501 fitted
+  no unconstrained paths; the Type 7 slice fits in 572 ALMs and 886 fitted
+  registers at 25 ns with +13.448 ns worst setup, +0.185 ns worst hold,
+  86.57 MHz worst slow-100C Fmax, and no unconstrained paths; the Type 15 slice
+  fits in 774 ALMs and 501 fitted
   registers with +3.728 ns setup, +0.057 ns hold, and no unconstrained paths;
   the Type 14 slice fits in 1,032 ALMs and 565 fitted registers (502 design
   plus 63 routing duplicates) with +3.041 ns setup, +0.171 ns hold, and no
@@ -483,7 +498,8 @@ outstanding.
   Type 13, Type 2, Type 3, Type 4, and Type 12 native-attachment invariants, plus
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
-  and Type 3 logical state execution (59 total)
+  and Type 3 logical state execution plus exact Type 7 state execution
+  (60 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -496,8 +512,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Close original Type 7 non-data-register immediate semantics, fixtures,
-   executable state, assembler/disassembler syntax, and portable RTL.
+3. Build the first integrated instruction owner for source-closed no-data
+   instructions, ordinary PM fetch, PC progression, and native phase timing.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

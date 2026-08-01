@@ -94,6 +94,13 @@ both banks, boundary values, invalid words, and atomic setup-conflict
 suppression [ADI-UM-1989, printed pp. 1-2, 2-6–2-7, 2-15, 2-18,
 6-12–6-13, A-2, and A-9].
 
+`adsp2100_load_non_dreg_immediate_slice` composes exact Type 7 decode with the
+shared complete general-register state. Only SB is banked among the legal
+Type 7 destinations, and it uses cycle-start MSTAT bit 0. An MSTAT destination
+becomes visible to bank consumers on the following cycle. The slice also
+retains the original exact widths and CNTR/count-stack load side effect and
+issues no PM-data or DM transaction.
+
 `adsp2100_immediate_shift_slice` connects the Type 15 immediate LSHIFT/ASHIFT
 subset to the same bank boundary. It reads SI, AR, MR0, MR1, MR2, SR0, or SR1
 from the bank selected by cycle-start MSTAT and atomically writes the 32-bit SR
@@ -170,6 +177,9 @@ therefore remains `IMPLEMENTING`.
 - `make register-tests` also adds six Type 6 model tests and 50,204 stateful
   model-versus-RTL cycles, including every destination in both banks and exact
   SE/MR2/MR1 storage side effects.
+- `make register-tests` adds eight Type 7 model tests and 50,299 stateful
+  model/RTL clocks across all 31 legal non-data destinations, exact-width
+  narrowing, selected-bank SB writes, CNTR push/load, reset, and conflicts.
 - `make register-tests` adds nine Type 3 state tests and 50,151 logical
   transaction clocks; `make dm-direct-native-tests` adds five attachment tests
   and 50,077 native phase clocks.

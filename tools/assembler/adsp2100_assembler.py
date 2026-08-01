@@ -16,6 +16,11 @@ from tools.generators.validate_direct_dm import (
     register_map as direct_dm_register_map,
     validate_database as validate_direct_dm_database,
 )
+from tools.generators.validate_load_non_dreg_immediate import (
+    load_database as load_non_dreg_immediate_database,
+    register_map as load_non_dreg_immediate_register_map,
+    validate_database as validate_load_non_dreg_immediate_database,
+)
 from tools.generators.validate_condition_codes import (
     load_database as load_condition_database,
     validate_database as validate_condition_database,
@@ -134,6 +139,41 @@ def _assemble_dreg_immediate(statement: str) -> int | None:
     if not -0x8000 <= value <= 0xFFFF:
         raise AssemblyError("Type 6 immediate must fit a 16-bit data word")
     return 0x400000 | ((value & 0xFFFF) << 4) | registers[destination]
+
+
+@lru_cache(maxsize=1)
+def _non_dreg_immediate_tables() -> tuple[int, dict[str, int]]:
+    database = load_non_dreg_immediate_database()
+    validate_load_non_dreg_immediate_database(database)
+    writable = {
+        metadata["register"]: code
+        for code, metadata in load_non_dreg_immediate_register_map().items()
+        if code >> 4 != 0 and metadata["register"] != "SSTAT"
+    }
+    return int(database["instruction"]["opcode_value"], 16), writable
+
+
+def _assemble_non_dreg_immediate(statement: str) -> int | None:
+    match = re.fullmatch(
+        r"([A-Z][A-Z0-9]*)\s*=\s*(?:(?:0X|H#)([0-9A-F]+)|(-?[0-9]+))",
+        statement,
+    )
+    if match is None:
+        return None
+    destination, hexadecimal, decimal = match.groups()
+    if destination == "SSTAT":
+        raise AssemblyError("SSTAT is read-only")
+    opcode, writable = _non_dreg_immediate_tables()
+    if destination not in writable:
+        return None
+    value = int(hexadecimal, 16) if hexadecimal is not None else int(decimal, 10)
+    if not -0x2000 <= value <= 0x3FFF:
+        raise AssemblyError("Type 7 immediate must fit a 14-bit data field")
+    code = writable[destination]
+    return (
+        opcode | ((code >> 4) << 18)
+        | ((value & 0x3FFF) << 4) | (code & 0xF)
+    )
 
 
 def _assemble_dm_write_immediate(statement: str) -> int | None:
@@ -1071,6 +1111,9 @@ def assemble_statement(source: str) -> AssembledWord:
     do_until = _assemble_do_until(statement)
     if do_until is not None:
         return AssembledWord(do_until)
+    non_dreg_immediate = _assemble_non_dreg_immediate(statement)
+    if non_dreg_immediate is not None:
+        return AssembledWord(non_dreg_immediate)
     dreg_immediate = _assemble_dreg_immediate(statement)
     if dreg_immediate is not None:
         return AssembledWord(dreg_immediate)

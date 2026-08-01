@@ -109,7 +109,8 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `tests/test_model_state.py`,
   `tests/test_register_metadata.py`, `tests/test_counter.py`,
   `tests/test_internal_move.py`, `tests/test_internal_move_slice.py`,
-  `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
+  `tests/test_load_dreg_immediate.py`,
+  `tests/test_load_non_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
   `tests/test_shifter_dm.py`,
   `tests/test_compute_move.py`, `tests/test_conditional_compute.py`
@@ -122,7 +123,10 @@ advance beyond research until a page-level primary citation is added.
   status/control, PX, CNTR/count-stack, and SSTAT. OQ-016 narrow status reads
   remain visibly provisional. Exact Type 6 execution now covers all sixteen
   DREG destinations in both computational banks, including narrow storage and
-  MR1 sign-fill side effects. Bounded Type 15 execution now covers
+  MR1 sign-fill side effects. Exact Type 7 execution now covers all 31 writable
+  original non-data destinations, including exact-width narrowing,
+  selected-bank SB, and CNTR/count-stack side effects. Bounded Type 15
+  execution now covers
   selected-bank X-operand reads and SR writeback for all source-closed
   immediate LSHIFT/ASHIFT forms, while hidden state and whole-core
   fetch/interrupt access still require complete extraction. Bounded Type 16
@@ -162,7 +166,8 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_dm_write_immediate_slice.py`,
   `tests/test_assembler_disassembler.py`,
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
-  `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
+  `tests/test_load_dreg_immediate.py`,
+  `tests/test_load_non_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
   `tests/test_shifter_pm.py`,
   `tests/test_compute_move.py`, `tests/test_compute_dm.py`,
@@ -179,6 +184,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_dm_write_immediate_slice.sv`,
   `sim/unit/tb_adsp2100_internal_move_decode.sv`,
   `sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv`,
+  `sim/unit/tb_adsp2100_load_non_dreg_immediate_decode.sv`,
   `sim/unit/tb_adsp2100_immediate_shift_decode.sv`,
   `sim/unit/tb_adsp2100_conditional_shift_decode.sv`,
   `sim/unit/tb_adsp2100_shift_move_decode.sv`,
@@ -194,7 +200,8 @@ advance beyond research until a page-level primary citation is added.
   `formal/direct_dm_decode.sby`,
   `formal/dm_write_immediate_slice.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
-  `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
+  `formal/load_dreg_immediate.sby`,
+  `formal/load_non_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
   `formal/shift_move.sby`, `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
   `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
@@ -275,6 +282,15 @@ advance beyond research until a page-level primary citation is added.
   1,048,576 field-defined immediate/DREG words, has two independent opcode
   fixtures, assembler/disassembler round trips, exact SE/MR2 storage and MR1
   sign-fill behavior, and 50,204 stateful model/RTL cycles across both banks.
+  Type 7 partitions all 1,048,576 words into 507,904 supported loads to 31
+  writable non-data registers and 540,672 group-zero, reserved-selector, or
+  read-only-SSTAT words. Its semantic database, two legal and three invalid
+  hand-derived fixtures, exhaustive Python and RTL decode, algebraic/raw tools,
+  formal harness, eight directed model tests, and 50,299 stateful model/RTL
+  clocks cover exact-width I/M/L/status/PX/CNTR/SB writes, selected-bank SB,
+  reset unknowns, conflicts, and CNTR/count-stack push. Fetch, interrupt,
+  active-loop, and physical instruction-fetch phases remain outside the
+  bounded state slice.
   Type 15 exhaustively partitions all 32,768 class words into 14,336 supported
   actions and 18,432 unsupported subencodings. Two manual fixtures, 280 syntax
   forms, all supported words in both banks, and 58,709 stateful model/RTL
@@ -509,6 +525,11 @@ advance beyond research until a page-level primary citation is added.
   outside the bounded model. A separate Type 6 model decodes the complete
   immediate/DREG class and executes selected-bank cycle-end writes while
   preserving authentic reset unknowns and exact narrow-register side effects.
+  A separate Type 7 model independently partitions the complete class,
+  right-justifies its fourteen-bit immediate, reuses the complete non-data
+  register state, preserves reset unknowns, performs selected-bank SB and
+  CNTR/count-stack writes, and fails closed for computational-group, reserved,
+  and read-only-SSTAT destinations.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
   an independently structured compute model, commits SR at cycle end, and
@@ -616,7 +637,11 @@ advance beyond research until a page-level primary citation is added.
   boundaries; reserved selectors and reads to SSTAT remain raw unsupported
   words. Type 6 accepts hexadecimal and
   signed/unsigned decimal 16-bit immediates for every DREG destination and
-  round trips through canonical hexadecimal disassembly. Type 15 accepts all
+  round trips through canonical hexadecimal disassembly. Type 7 accepts
+  hexadecimal and decimal values from -8192 through 16383 for every writable
+  non-data destination and round trips through canonical right-justified
+  hexadecimal disassembly; SSTAT, computational DREGs, reserved selectors,
+  and wider immediates fail closed. Type 15 accepts all
   280 algebraic LSHIFT/ASHIFT PASS/OR HI/LO and source combinations with
   signed-decimal or raw hexadecimal exponents. Unsupported SF/XOP
   subencodings disassemble as unverified and never assemble silently. Type 16
@@ -932,12 +957,14 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make register-tests`, `tests/test_register_banks.py`,
   `make mode-tests`, `tests/test_mode_integration.py`,
   `tests/test_internal_move.py`, `formal/registers.sby`,
-  `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
+  `tests/test_load_dreg_immediate.py`,
+  `tests/test_load_non_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`,
   `tests/test_shift_move.py`,
   `tests/test_compute_move.py`,
   `formal/mode_slice.sby`, `formal/internal_move_decode.sby`,
-  `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
+  `formal/load_dreg_immediate.sby`,
+  `formal/load_non_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`, `formal/shift_move.sby`,
   `formal/compute_move.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
@@ -956,7 +983,10 @@ advance beyond research until a page-level primary citation is added.
   old-bank/current-cycle ordering and 59,430 passing model/RTL cycles. The
   exact Type 6 slice connects full-width immediate decode to the same banked
   DREG write path and passes exhaustive class decode plus 50,204 stateful
-  model/RTL cycles across all destinations and both banks. The bounded Type 15
+  model/RTL cycles across all destinations and both banks. The exact Type 7
+  slice reuses the shared complete register state; selected-bank SB writes and
+  all other exact-width non-data writes pass exhaustive decode plus 50,299
+  stateful model/RTL clocks. The bounded Type 15
   slice uses the same selected-bank SR writeback and passes 58,709 cycles over
   every supported word in both banks. The bounded Type 16 slice uses the same
   bank boundary for all SR/SE/SB shifter writebacks, commits EXP SS to ASTAT,
@@ -993,6 +1023,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_status_registers.py`, `tests/test_mode_integration.py`,
   `tests/test_mode_control.py`,
   `tests/test_internal_move_slice.py`,
+  `tests/test_load_non_dreg_immediate.py`,
   `tests/test_sequencer_stacks.py`, `formal/status_registers.sby`,
   `formal/mode_slice.sby`, `formal/mode_control_slice.sby`,
   `formal/sequencer_stacks.sby`, `formal/internal_move_slice.sby`
@@ -1020,6 +1051,9 @@ advance beyond research until a page-level primary citation is added.
   The bounded Type 17 slice now connects direct ASTAT/MSTAT/IMASK/ICNTL moves,
   composed SSTAT reads, and CNTR/count-stack effects; its narrow read extension
   remains explicitly provisional under OQ-016.
+  The exact Type 7 slice connects immediate ASTAT/MSTAT/IMASK/ICNTL/CNTR loads
+  to the same live state, rejects read-only SSTAT, and passes exact-width and
+  CNTR/count-stack tests without depending on OQ-016 read extension.
 - **Unresolved questions:** architectural SSTAT instruction reads, interrupt
   recognition/RTI/status-stack arbitration, empty-pop effects (OQ-013), narrow
   DMD read extension (OQ-016), competing-write behavior (OQ-017), and
@@ -1385,9 +1419,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Fifty-five harnesses now pass strict assertion
+  result a complete proof. Sixty harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
-  exact Type 6 immediate-load, bounded Type 15 immediate-shift,
+  exact Type 6 and Type 7 immediate loads, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 12 shifter-plus-DM decode, wait stability, and atomic completion,
   bounded Type 13 shifter-plus-PM decode, fixed-cycle commit, and one-cycle
@@ -1441,6 +1475,11 @@ advance beyond research until a page-level primary citation is added.
   and zero unconstrained clocks, ports, or paths. The bounded Type 6 slice
   fits in 302 ALMs and 484 registers with no RAM/DSPs, +8.167 ns worst setup,
   +0.133 ns worst hold, and zero unconstrained clocks, ports, or paths.
+  The bounded Type 7 slice fits in 572 ALMs and 886 fitted registers with no
+  RAM/DSPs against 25 ns. Worst multicorner setup is +13.448 ns, worst hold is
+  +0.185 ns, worst slow-100C Fmax is 86.57 MHz, and no clocks, ports, or paths
+  are unconstrained. This is a bounded register-state fit, not whole-core or
+  MiSTer timing closure.
   The bounded Type 15 slice fits in 774 ALMs and 501 fitted registers with no
   RAM/DSPs, +3.728 ns worst setup, +0.057 ns worst hold, and zero unconstrained
   clocks, ports, or paths.
@@ -1641,10 +1680,11 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is original Type 7
-non-data-register immediate semantics, decode fixtures, executable state, and
-portable RTL. Type 3 state/native-DM execution is now bounded and verified.
-The Type 1 dual-memory action graph is complete,
+The highest-priority unblocked implementation work is the first integrated
+instruction owner joining source-closed no-data instructions to ordinary PM
+fetch, PC progression, and the native eight-state phase boundary. Type 7
+immediate non-data-register execution and Type 3 state/native-DM execution are
+now bounded and verified. The Type 1 dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode

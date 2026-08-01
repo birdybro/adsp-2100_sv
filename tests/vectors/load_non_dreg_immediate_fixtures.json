@@ -1,0 +1,41 @@
+{
+  "source": "ADI-UM-1989 printed p. A-2 Type 7 and p. A-9 REG table",
+  "derivation": "The opcodes were assembled by hand from 0011|RGP|DATA[13:0]|REG before implementation.",
+  "hand_checked_cases": [
+    {
+      "statement": "I0 = 0x1234;",
+      "opcode": "0x352340",
+      "data": "0x1234",
+      "register": "I0",
+      "legal": true
+    },
+    {
+      "statement": "PX = 0x00ff;",
+      "opcode": "0x3c0ff7",
+      "data": "0x00ff",
+      "register": "PX",
+      "legal": true
+    },
+    {
+      "opcode": "0x300000",
+      "data": "0x0000",
+      "register": "AX0",
+      "legal": false,
+      "invalid_reason": "DATA_REGISTER_DESTINATION"
+    },
+    {
+      "opcode": "0x3c0002",
+      "data": "0x0000",
+      "register": "SSTAT",
+      "legal": false,
+      "invalid_reason": "READ_ONLY_SSTAT_DESTINATION"
+    },
+    {
+      "opcode": "0x34000c",
+      "data": "0x0000",
+      "register": null,
+      "legal": false,
+      "invalid_reason": "RESERVED_DESTINATION_SELECTOR"
+    }
+  ]
+}

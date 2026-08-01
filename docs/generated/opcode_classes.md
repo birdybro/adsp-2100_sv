@@ -10,7 +10,7 @@
 | 4 | ALU/MAC plus DM read/write | `011xxxxxxxxxxxxxxxxxxxxx` | `0xe00000` | `0x600000` | VERIFIED_PRIMARY |
 | 5 | ALU/MAC plus PM read/write | `0101xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x500000` | VERIFIED_PRIMARY |
 | 6 | data-register immediate | `0100xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x400000` | CORROBORATED |
-| 7 | non-data-register immediate | `0011xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x300000` | CORROBORATED |
+| 7 | non-data-register immediate | `0011xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x300000` | VERIFIED_PRIMARY |
 | 8 | ALU/MAC plus internal data-register move | `00101xxxxxxxxxxxxxxxxxxx` | `0xf80000` | `0x280000` | CORROBORATED |
 | 9 | conditional ALU/MAC | `00100xxxxxxxxxxx0000xxxx` | `0xf800f0` | `0x200000` | CORROBORATED |
 | 10 | conditional direct jump/call | `00011xxxxxxxxxxxxxxxxxxx` | `0xf80000` | `0x180000` | CORROBORATED |

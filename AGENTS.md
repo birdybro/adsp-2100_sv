@@ -228,7 +228,8 @@ No integrated fetch/decode/execute instruction core exists. Bounded
 source-backed RTL execution slices now implement all original Type 2
 immediate-DM-write words, all original Type 18 mode
 controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
-MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
+MR saturation, all Type 6 immediate-to-DREG loads, all 507,904 supported
+Type 7 immediate-to-non-data-register loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, 108,640 source-closed Type 12 shifter-plus-DM words,
 54,320 source-closed Type 13 shifter-plus-PM words,
@@ -286,6 +287,13 @@ state, captures write sources at state 8-to-1, retains transactions through
 full-cycle DMACK extensions, and commits reads only at state 7-to-8. OQ-016
 still governs narrow status/control write-source extension, and whole-core
 ownership remains pending.
+Type 7 field/action and bounded state execution are independently closed for
+its complete 1,048,576-word class: 507,904 words target the 31 writable
+original non-data registers, while 540,672 computational-group, reserved, or
+read-only-SSTAT destinations fail closed. The shared general-register state
+preserves exact storage widths, selected-bank SB writes, CNTR/count-stack load
+effects, and reset unknowns. Whole-core fetch, interrupt-abort, active-loop,
+and phase ownership remain pending.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at

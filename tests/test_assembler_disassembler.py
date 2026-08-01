@@ -12,6 +12,9 @@ from tools.assembler.adsp2100_assembler import (
 )
 from tools.disassembler.adsp2100_disassembler import disassemble_word
 from tools.generators.validate_internal_move import register_map
+from tools.generators.validate_load_non_dreg_immediate import (
+    register_map as non_dreg_register_map,
+)
 from tools.generators.validate_condition_codes import EXPECTED_IF_MNEMONICS
 
 
@@ -19,6 +22,59 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class AssemblerDisassemblerTests(unittest.TestCase):
+    def test_type_7_non_data_immediate_forms_round_trip(self) -> None:
+        fixture_data = json.loads(
+            (
+                ROOT / "tests/vectors/load_non_dreg_immediate_fixtures.json"
+            ).read_text(encoding="utf-8")
+        )
+        for fixture in fixture_data["hand_checked_cases"]:
+            opcode = int(fixture["opcode"], 16)
+            decoded = disassemble_word(opcode)
+            if fixture["legal"]:
+                self.assertEqual(
+                    assemble_statement(fixture["statement"]).value,
+                    opcode,
+                )
+                self.assertTrue(decoded.implemented)
+                self.assertEqual(
+                    decoded.classification,
+                    "TYPE_07_BOUNDED_EXECUTION",
+                )
+                self.assertEqual(decoded.text, fixture["statement"])
+            else:
+                self.assertFalse(decoded.implemented)
+                self.assertEqual(
+                    decoded.classification,
+                    f"UNSUPPORTED_TYPE_07_{fixture['invalid_reason']}",
+                )
+
+        count = 0
+        for code, metadata in non_dreg_register_map().items():
+            if code >> 4 == 0 or metadata["register"] == "SSTAT":
+                continue
+            for data in (0, 1, 0x1FFF, 0x2000, 0x3FFF):
+                statement = f"{metadata['register']} = 0x{data:04x};"
+                opcode = (
+                    0x300000 | ((code >> 4) << 18)
+                    | (data << 4) | (code & 0xF)
+                )
+                self.assertEqual(assemble_statement(statement).value, opcode)
+                decoded = disassemble_word(opcode)
+                self.assertTrue(decoded.implemented)
+                self.assertEqual(decoded.text, statement)
+                self.assertEqual(
+                    assemble_statement(decoded.text).value,
+                    opcode,
+                )
+                count += 1
+        self.assertEqual(count, 155)
+        self.assertEqual(assemble_statement("M0 = -1;").value, 0x37FFF4)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SSTAT = 0;")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("I0 = 0x4000;")
+
     def test_type_3_direct_dm_forms_round_trip(self) -> None:
         fixture_data = json.loads(
             (ROOT / "tests/vectors/direct_dm_fixtures.json").read_text(

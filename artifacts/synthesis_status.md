@@ -6,7 +6,8 @@
   Type 1 dual-read action decoder,
   Type 2 action decoder and waited execution slice, Type 4 action and waited
   logical-DM slices,
-  Type 5 action/logical/cache/native-PM execution, Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
+  Type 5 action/logical/cache/native-PM execution, Type 6, Type 7, Type 8,
+  Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
@@ -266,6 +267,14 @@
   ns and worst hold slack is +0.133 ns against 20 ns, with zero unconstrained
   clocks, ports, or paths. Constant no-PM/no-DM and conflict outputs are
   asserted properties of this bounded instruction slice.
+- Quartus 17.0.2 full compilation of the bounded Type 7 immediate-load slice
+  passes for Cyclone V `5CSEBA6U23I7`. It uses 572 ALMs and 886 fitted
+  registers with no RAM or DSP blocks. Across four timing models, worst setup
+  slack is +13.448 ns and worst hold slack is +0.185 ns against 25 ns; worst
+  slow-100C Fmax is 86.57 MHz, and zero clocks, ports, or paths are
+  unconstrained. Expected warnings are limited to virtual/incomplete pins,
+  small asynchronous arrays, constant bounded outputs, and Quartus Lite
+  LogicLock licensing. This is not whole-core or MiSTer timing closure.
 - Quartus 17.0.2 full compilation of the generated class-decoder smoke project
   passes for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 55
   ALMs, 63 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks.

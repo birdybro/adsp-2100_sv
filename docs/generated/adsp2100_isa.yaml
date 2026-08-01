@@ -149,9 +149,9 @@
       "encoding_pattern": "0011xxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xf00000",
       "opcode_value": "0x300000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
-      "source_citation": "ADI-UM-1989 printed p. A-2 (scan PDF p. 141)"
+      "status": "COMPLETE_BOUNDED_STATE",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and A-9"
     },
     {
       "original_type": 8,
@@ -1642,6 +1642,119 @@
       "confidence": "VERIFIED_PRIMARY",
       "unresolved_issues": [
         "Fetch, interrupt-abort, PC, and external wait-state phases remain outside the bounded state slice."
+      ]
+    },
+    {
+      "id": "LOAD-NON-DREG-IMMEDIATE-TYPE-7",
+      "mnemonic": "LOAD NON-DATA REGISTER IMMEDIATE",
+      "algebraic_assembly_syntax": "non_data_reg = <data14>;",
+      "encoding_pattern": "0011xxxxxxxxxxxxxxxxxxxx",
+      "opcode_mask": "0xf00000",
+      "opcode_value": "0x300000",
+      "fields": [
+        "RGP",
+        "DATA",
+        "REG"
+      ],
+      "condition_field": null,
+      "computation_field": null,
+      "source_register_selections": [],
+      "destination_register_selections": [
+        "WRITABLE_NON_DATA_REG"
+      ],
+      "data_move_fields": [
+        "RGP",
+        "DATA[13:0]",
+        "REG"
+      ],
+      "dag_selection": "RGP_SELECTS_DAG1_OR_DAG2_FOR_I_M_L_DESTINATIONS",
+      "addressing_mode": "IMMEDIATE",
+      "immediate_fields": [
+        "DATA[13:0]"
+      ],
+      "branch_fields": [],
+      "registers_read": [
+        "CYCLE_START_MSTAT_BANK_SELECT_FOR_SB",
+        "CYCLE_START_CNTR_FOR_DOCUMENTED_COUNT_STACK_PUSH"
+      ],
+      "registers_written": [
+        "ONE_SELECTED_I_M_L_ASTAT_MSTAT_IMASK_ICNTL_CNTR_SB_OR_PX",
+        "COUNT_STACK_WHEN_LOADING_AN_ALREADY_VALID_CNTR"
+      ],
+      "computational_unit_used": null,
+      "status_flags_read": [],
+      "status_flags_written": [
+        "DIRECT_ASTAT_DESTINATION_REPLACES_STORED_ASTAT_BITS"
+      ],
+      "memory_spaces_accessed": [
+        "PROGRAM_INSTRUCTION_FETCH"
+      ],
+      "pm_read_write_behavior": "Normal 24-bit instruction fetch; no PM data transfer.",
+      "dm_read_write_behavior": "No DM transaction.",
+      "simultaneous_operations": [
+        "RAW_14_BIT_IMMEDIATE_TO_ONE_NON_DATA_REGISTER",
+        "CNTR_LOAD_MAY_PUSH_OLD_VALID_CNTR_TO_COUNT_STACK"
+      ],
+      "legal_multifunction_combinations": [],
+      "illegal_or_reserved_combinations": [
+        "RGP=00 selects computational data registers and belongs to Type 6, not original Type 7.",
+        "Blank REG-table destinations have no documented execution behavior.",
+        "SSTAT is read-only and is not a legal destination."
+      ],
+      "old_value_new_value_semantics": "DATA[13:0] is right-justified and committed to the selected destination at cycle end. Narrow destinations retain their documented low bits. Loading CNTR pushes the old valid count before replacing it. MSTAT changes take effect for following-cycle consumers; an SB destination uses the cycle-start selected bank.",
+      "write_conflict_rules": "Type 7 has one explicit destination plus CNTR's documented implicit count-stack push. Collision with an external setup or another architectural owner is outside this bounded slice and fails closed.",
+      "condition_false_behavior": "Unconditional instruction; not applicable.",
+      "loop_interaction": "A CNTR destination performs the documented counter-load push. Active-loop terminal arbitration is not integrated.",
+      "interrupt_interaction": "Interrupt recognition, instruction abort, and status visibility at the state-7 boundary are not integrated or claimed by this bounded slice.",
+      "documented_cycles": {
+        "base_instruction_cycles": 1,
+        "notes": "The register load occupies one instruction cycle; external instruction-fetch acknowledgement can extend the physical cycle."
+      },
+      "external_bus_transactions": [
+        {
+          "space": "PM",
+          "kind": "INSTRUCTION_FETCH",
+          "width": 24,
+          "address_source": "PC"
+        }
+      ],
+      "wait_state_sensitivity": "Instruction fetch is subject to external acknowledgement; no PM-data or DM transaction is issued.",
+      "parallel_actions": [
+        {
+          "action": "LOAD_NON_DATA_REGISTER_IMMEDIATE",
+          "reads": [
+            "INSTRUCTION_DATA_13_0",
+            "CYCLE_START_SELECTED_BANK_IF_DESTINATION_IS_SB",
+            "CYCLE_START_CNTR_IF_DESTINATION_IS_CNTR"
+          ],
+          "writes": [
+            "CYCLE_END_SELECTED_NON_DATA_REGISTER",
+            "COUNT_STACK_IF_OLD_CNTR_WAS_VALID"
+          ]
+        }
+      ],
+      "source_citations": [
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 6-1–6-2 and 6-12–6-13, Tables 6.6–6.7: one-cycle immediate MOVE, original register set, and non-data/data register separation"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. A-2 and A-9: Type 7 RGP/DATA[13:0]/REG placement, complete original REG table, and blank selectors"
+        },
+        {
+          "reference_id": "ADI-UM-1989",
+          "location": "printed pp. 4-4 and 4-22: CNTR-load count-stack behavior and read-only SSTAT"
+        },
+        {
+          "reference_id": "ADI-2101-CROSS-1990",
+          "location": "printed pp. 9-43–9-44: contemporary later-device corroboration of right justification and maximum fourteen-bit non-data immediates; later-only destinations are excluded"
+        }
+      ],
+      "confidence": "VERIFIED_PRIMARY",
+      "unresolved_issues": [
+        "Execution behavior of RGP=00, blank selectors, or an SSTAT destination is undocumented and fails closed.",
+        "Fetch, interrupt-abort, active-loop arbitration, and external wait-state phases remain outside the bounded state slice."
       ]
     },
     {
