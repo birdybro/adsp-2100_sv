@@ -64,6 +64,14 @@ not a claim that the original device discarded such work: architectural
 request generation and branch/loop/interrupt/event priority remain outside
 this decision until sourced and composed.
 
+Normal BR/BG is composed above that selector by gating only future descriptor
+valids after state-3 recognition while continuing to advance an already-active
+native PM transaction. Native grant remains a separate output-enable mask.
+The composition reports request attempts during issue inhibition but does not
+store or prioritize them; retry is an architectural-client responsibility.
+This preserves the original distinction between completing the current
+instruction and relinquishing pins without introducing an undocumented queue.
+
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete

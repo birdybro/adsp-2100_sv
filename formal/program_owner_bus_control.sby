@@ -1,0 +1,25 @@
+[options]
+mode prove
+depth 40
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/packages/adsp2100_pkg.sv
+read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv rtl/core/adsp2100_program_owner_bus.sv
+read -formal -sv rtl/core/adsp2100_bus_control.sv
+read -formal -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
+read -formal -sv rtl/core/adsp2100_program_owner_bus_control.sv
+read -formal -sv formal/harnesses/adsp2100_program_owner_bus_control_formal.sv
+prep -top adsp2100_program_owner_bus_control_formal
+
+[files]
+rtl/packages/adsp2100_pkg.sv
+rtl/core/adsp2100_program_bus.sv
+rtl/core/adsp2100_program_owner_bus.sv
+rtl/core/adsp2100_bus_control.sv
+rtl/wrappers/adsp2100_reset_bus_grant.sv
+rtl/core/adsp2100_program_owner_bus_control.sv
+formal/harnesses/adsp2100_program_owner_bus_control_formal.sv

@@ -8,6 +8,21 @@ semantic versioning after its first release.
 
 ### Added
 
+- A source-backed composition of the fail-closed shared PM owner and the
+  original normal BR/BG sequencer. A state-3 bus request lets the active
+  fetch/Type 5/Type 13 transaction complete, blocks later descriptor capture,
+  masks every PM driver during grant, and accepts exactly one held descriptor
+  at the state-8 resume boundary. Six directed tests and 50,002 deterministic
+  model/RTL clocks cover all owners, 131 complete handshakes, 90 completions
+  after request recognition, 1,735 blocked requests, 4,525 masked grant
+  clocks, 86 resume-edge accepts, and 514 fail-closed collisions. A
+  machine-readable contract, formal harness, Yosys recipe, and fully
+  constrained Cyclone V project bind the result. Quartus uses 190 ALMs and 84
+  fitted registers, no RAM/DSP blocks, +11.053 ns worst setup, +0.167 ns worst
+  hold, 111.77 MHz worst slow-corner Fmax, and no unconstrained paths at
+  20 ns. Architectural client attachment, requester retry storage, DM-bus
+  composition, and HALT/TRAP/interrupt/loop priority remain open.
+
 - A bounded fail-closed shared program-memory owner selector in an independent
   Python model and portable SystemVerilog. Ordinary fetch, Type 5 PM data, and
   Type 13 PM data descriptors now converge on exactly one native PM phase
@@ -607,6 +622,12 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- The shared-PM-owner/BR/BG composition passes six directed checks, 50,002
+  deterministic model/RTL clocks, the complete 661-check `make test`
+  regression, strict module/formal-harness lint, and a fully constrained
+  Quartus Cyclone V fit at 20 ns. Formal proof execution and Yosys synthesis
+  remain unavailable in this environment.
 
 - The shared-PM owner passes eight directed checks, 50,007 deterministic
   model/RTL clocks, the complete 655-check `make test` regression, strict

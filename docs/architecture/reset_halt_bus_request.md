@@ -190,6 +190,22 @@ the bounded NOP/Type 6/Type 7/Type 17/Type 18 linear fetch owner; PM-data,
 DM, transfer, loop, interrupt, HALT, and reset-first-fetch ownership remain
 unconnected.
 
+`rtl/core/adsp2100_program_owner_bus_control.sv` independently attaches the
+same controller to the single fail-closed PM selector shared by ordinary
+fetch, Type 5 PM data, and Type 13 PM data descriptors. Recognition does not
+cancel the active owner's transaction; descriptor capture is inhibited only
+after recognition, all PM drivers are masked during native grant, and exactly
+one requester held by its architectural client may be accepted on the
+state-8-to-state-1 resume edge. Six directed tests and 50,002 independent-
+model/RTL clocks cover all owners, 131 complete handshakes, 90 active
+transactions completed after recognition, 1,735 blocked requests, 4,525
+masked grant clocks, 86 resume-edge accepts, and 514 fail-closed collisions.
+The composition reports a blocked request but deliberately does not store it;
+architectural clients, retry policy, DM-driver masking, and priority against
+HALT, TRAP, loops, reset release, or interrupts remain outside this bounded
+result [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
+ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+
 The machine-readable contract is
 `docs/generated/adsp2100_bus_control.yaml`. Seven directed tests and 50,084
 deterministic model/RTL clocks cover request/grant and release/restart latency,

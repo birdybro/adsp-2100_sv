@@ -18,7 +18,8 @@ attached separately to that owner, standalone PM-data HALT forced-fetch
 scheduling attached independently to the bounded Type 5 and Type 13
 native-PM owners,
 fail-closed shared native-PM transaction ownership for ordinary fetch and the
-Type 5/Type 13 descriptor classes,
+Type 5/Type 13 descriptor classes plus normal BR/BG sequencing on that shared
+interface,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -27,6 +28,17 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- primary-backed normal BR/BG composition above the shared ordinary-fetch/
+  Type 5/Type 13 PM selector, completing an active owner after recognition,
+  inhibiting later descriptor capture, masking every PM driver during grant,
+  and accepting one held request on resume; six directed tests and 50,002
+  independent-model/RTL clocks cover all owners, 131 full handshakes, 90
+  post-recognition completions, 1,735 blocked requests, 4,525 masked grant
+  clocks, 86 resume accepts, and 514 collisions, with a machine-readable
+  contract, formal/Yosys recipes, and a fully constrained 190-ALM/84-register
+  Cyclone V fit; clients, retry storage, DM composition, and event priority
+  remain unconnected;
 
 - bounded shared-PM transaction owner for ordinary fetch, Type 5 PM data, and
   Type 13 PM data descriptors, accepting exactly one request at state 8-to-1,
@@ -343,7 +355,10 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 655 distinct Python unit checks plus manifest/hash verification;
+- 661 distinct Python unit checks plus manifest/hash verification;
+- 50,002 shared-PM-owner/BR-BG model/RTL clocks cover all three descriptor
+  owners, 131 handshakes, active-transaction completion after recognition,
+  capture inhibition, native output masking, and resume-edge acceptance;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -532,6 +547,10 @@ outstanding.
   with no RAM or DSP blocks, +12.825 ns setup, +0.167 ns worst multicorner
   hold, 139.37 MHz worst slow-corner Fmax, and no unconstrained paths against
   its 20 ns constraint;
+  the shared-PM-owner/BR-BG composition fits in 190 ALMs and 84 fitted
+  registers with no RAM or DSP blocks, +11.053 ns worst setup, +0.167 ns worst
+  multicorner hold, 111.77 MHz worst slow-corner Fmax, and zero unconstrained
+  clocks, ports, or paths against its 20 ns constraint;
   the bounded linear owner fits in 885 ALMs and 1,020 fitted registers with no
   RAM or DSP blocks, +13.145 ns setup, +0.166 ns worst multicorner hold,
   84.35 MHz worst slow-corner Fmax, and no unconstrained paths against its
@@ -626,7 +645,8 @@ outstanding.
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants
-  plus shared-PM-owner mutual-exclusion and routing invariants (69 total)
+  plus shared-PM-owner mutual-exclusion/routing and normal-BR/BG composition
+  invariants (70 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -640,9 +660,9 @@ outstanding.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
 3. Attach the bounded ordinary-fetch and verified Type 5/Type 13 PM-data
-   clients to the fail-closed shared selector, then compose HALT with BR/BG,
-   DMACK waits, TRAP, interrupts, and reset without inventing priority or
-   weakening the bounded attachments.
+   clients to the fail-closed shared selector and its normal-BR/BG boundary,
+   then compose HALT, DMACK waits, TRAP, interrupts, and reset without
+   inventing priority or weakening the bounded attachments.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed

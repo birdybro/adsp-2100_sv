@@ -78,6 +78,17 @@ model/RTL clocks pass with all three requesters, 1,100 boundary conflicts,
 among fetch, PM data recovery, branch, loop, interrupt, HALT, TRAP, and BR/BG
 remain open.
 
+The bounded BR/BG composition keeps those capture and completion boundaries
+distinct from bus relinquishment. BR recognition at state 3 does not disturb
+the active descriptor; it completes at state 7. All later state-8 captures are
+inhibited through the request/grant/release delay, PM output enables are masked
+only while native BG is asserted, and the state-8 resume event may accept one
+held descriptor. A held request remains the client's responsibility and is
+reported with `request_blocked_o`; the composition does not create an
+unsourced retry queue. Six directed tests and 50,002 model/RTL clocks cover all
+three owners and 131 complete handshakes. DM-bus masking and priority with
+HALT, TRAP, interrupts, loops, and reset release remain open.
+
 ## Type 13/cache attachment
 
 The bounded `adsp2100_shifter_pm_native_slice` admits architectural issue and

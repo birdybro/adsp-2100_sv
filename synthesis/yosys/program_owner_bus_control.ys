@@ -1,0 +1,12 @@
+read_verilog -sv rtl/packages/adsp2100_pkg.sv
+read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_program_owner_bus.sv
+read_verilog -sv rtl/core/adsp2100_bus_control.sv
+read_verilog -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
+read_verilog -sv rtl/core/adsp2100_program_owner_bus_control.sv
+
+hierarchy -check -top adsp2100_program_owner_bus_control
+synth -top adsp2100_program_owner_bus_control
+check
+stat
+write_json build/yosys_program_owner_bus_control.json

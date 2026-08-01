@@ -75,6 +75,18 @@ selector and branch/loop/interrupt/HALT/BR priority is not claimed
 [ADI-UM-1989, printed pp. 1-5–1-7, 3-6–3-7, 4-26–4-30, 5-5–5-8;
 ADI-DATABOOK-1987, printed pp. 2-36–2-39].
 
+The bounded `adsp2100_program_owner_bus_control` composition applies the
+source-backed normal BR/BG sequence to that one shared interface. An active
+owner remains driven and completes after state-3 recognition; future
+descriptor capture is inhibited; native grant masks all PM output enables;
+and capture resumes at state 8-to-1 after the complete release interval. Six
+directed tests and 50,002 independent-model/RTL clocks cover 131 handshakes,
+90 post-recognition completions, 1,735 blocked requests, and 4,525 masked
+grant clocks. The wrapper exposes blocked requests without inventing storage
+or priority, so the three architectural clients and their retry behavior are
+still not attached [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
+ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+
 A separate active-low HALT controller is now composed with the same bounded
 ordinary-fetch owner. It samples HALT at the enabled end of state 3, lets the
 current PM read complete at state 7-to-8, holds the owner and its driven PM

@@ -1117,6 +1117,9 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_program_owner_bus.py`,
   `sim/unit/tb_adsp2100_program_owner_bus.sv`,
   `formal/program_owner_bus.sby`,
+  `tests/test_program_owner_bus_control.py`,
+  `sim/unit/tb_adsp2100_program_owner_bus_control.sv`,
+  `formal/program_owner_bus_control.sby`,
   `tests/test_shifter_pm_native.py`,
   `sim/unit/tb_adsp2100_shifter_pm_native_slice.sv`,
   `formal/shifter_pm_native.sby`, `tests/test_compute_pm_cache.py`,
@@ -1183,6 +1186,17 @@ advance beyond research until a page-level primary citation is added.
   setup, +0.168 ns worst hold, 125.93 MHz worst slow-corner Fmax, and zero
   unconstrained paths. The verified architectural client wrappers are not yet
   connected to this selector and it makes no architectural priority claim.
+  The selector is now structurally composed with the original normal BR/BG
+  controller and RESET-time native-pin wrapper. Six directed tests and 50,002
+  model/RTL clocks cover all three owners, 131 request/grant/release/resume
+  handshakes, 90 in-flight completions after BR recognition, 1,735 blocked
+  new requests, 4,525 masked grant clocks, 86 resume-edge acceptances, and 514
+  fail-closed collisions. Its formal recipe syntax-checks and a fully
+  constrained 20 ns Cyclone V fit uses 190 ALMs and 84 registers, no RAM/DSP
+  blocks, +11.053 ns worst setup, +0.167 ns worst hold, 111.77 MHz worst
+  slow-corner Fmax, and zero unconstrained paths. Architectural clients,
+  requester retry storage, DM-bus composition, and cross-event priority remain
+  outside this composition.
   A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It
@@ -1383,11 +1397,14 @@ advance beyond research until a page-level primary citation is added.
   `make reset-tests`, `make bus-control-tests`, `tests/test_reset_phase.py`,
   `tests/test_bus_control.py`, `make linear-bus-control-tests`,
   `tests/test_linear_bus_control.py`, `make halt-tests`,
+  `make program-owner-bus-control-tests`,
+  `tests/test_program_owner_bus_control.py`,
   `tests/test_halt_control.py`,
   `tests/test_shifter_pm_halt.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
   `formal/bus_control.sby`, `formal/halt_control.sby`,
   `formal/linear_bus_control.sby`,
+  `formal/program_owner_bus_control.sby`,
   `formal/linear_halt_control.sby`,
   `formal/shifter_pm_halt.sby`,
   `formal/conditional_trap.sby`,
@@ -1419,6 +1436,15 @@ advance beyond research until a page-level primary citation is added.
   and 5,376 issues. The composition has a formal recipe and a fully constrained
   Cyclone V fit; PM-data/cache, DM, transfer, loop, interrupt, HALT, and reset-
   first-fetch ownership remain unimplemented.
+  A second bounded BR/BG composition now covers the one physical PM selector
+  shared by ordinary fetch and Type 5/Type 13 descriptor classes. Six directed
+  tests and 50,002 model/RTL clocks cover 131 full handshakes, 90 active-owner
+  completions after recognition, 1,735 blocked new requests, 4,525 masked
+  grant clocks, 86 resume accepts, and 514 fail-closed collisions. It preserves
+  the distinction between future-issue inhibition and native output masking,
+  and its formal recipe plus fully constrained 190-ALM/84-register Cyclone V
+  fit pass. Architectural client attachment, held-request storage, DM-bus
+  masking, and event priority remain incomplete.
   A second structurally independent model/RTL composition now implements the
   primary-backed active-low ordinary-fetch HALT path: recognition at enabled
   state 3, current-fetch retirement at state 7, stopped state-8 PM outputs

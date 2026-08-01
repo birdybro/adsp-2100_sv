@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests pm-owner-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
@@ -30,6 +30,14 @@ lint:
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_program_owner_bus.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_program_owner_bus_control \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_program_owner_bus.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
+			rtl/core/adsp2100_program_owner_bus_control.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_reset_phase \
 			rtl/packages/adsp2100_pkg.sv \
@@ -617,6 +625,28 @@ pm-owner-bus-tests:
 		build/obj_program_owner_bus/Vtb_adsp2100_program_owner_bus; \
 	else \
 		echo "SKIP shared-PM-owner RTL test: Verilator is not installed"; \
+	fi
+
+program-owner-bus-control-tests:
+	$(PYTHON) -m unittest -v tests.test_program_owner_bus_control
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_program_owner_bus_control_vectors.py \
+			--output build/program_owner_bus_control_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_program_owner_bus_control \
+			--top-module tb_adsp2100_program_owner_bus_control \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_program_owner_bus.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
+			rtl/core/adsp2100_program_owner_bus_control.sv \
+			sim/unit/tb_adsp2100_program_owner_bus_control.sv; \
+		build/obj_program_owner_bus_control/Vtb_adsp2100_program_owner_bus_control; \
+	else \
+		echo "SKIP shared-PM-owner/BR-BG RTL test: Verilator is not installed"; \
 	fi
 
 reset-tests:
@@ -1789,7 +1819,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
+bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -1837,6 +1867,15 @@ formal:
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_program_owner_bus.sv \
 			formal/harnesses/adsp2100_program_owner_bus_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_program_owner_bus_control_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_program_owner_bus.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
+			rtl/core/adsp2100_program_owner_bus_control.sv \
+			formal/harnesses/adsp2100_program_owner_bus_control_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_reset_phase_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -2459,6 +2498,8 @@ formal:
 		sby -f -d build/formal_pm_bus formal/pm_bus.sby; \
 		sby -f -d build/formal_program_owner_bus \
 			formal/program_owner_bus.sby; \
+		sby -f -d build/formal_program_owner_bus_control \
+			formal/program_owner_bus_control.sby; \
 		sby -f -d build/formal_reset_phase formal/reset_phase.sby; \
 		sby -f -d build/formal_bus_control formal/bus_control.sby; \
 		sby -f -d build/formal_halt_control formal/halt_control.sby; \
@@ -2572,6 +2613,8 @@ synth-yosys:
 			synthesis/yosys/compute_pm_halt.ys; \
 		yosys -q -l build/yosys_program_owner_bus.log \
 			synthesis/yosys/program_owner_bus.ys; \
+		yosys -q -l build/yosys_program_owner_bus_control.log \
+			synthesis/yosys/program_owner_bus_control.ys; \
 		echo "PASS bounded reset/phase, BR/BG, HALT, linear, PM-data/HALT, and shared-PM-owner Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
@@ -2613,6 +2656,8 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/program_bus_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/program_owner_bus_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/program_owner_bus_control_smoke; \
 		quartus_sh --flow compile synthesis/quartus/data_bus_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/dm_write_immediate_native_smoke; \
@@ -2708,6 +2753,9 @@ clean:
 	@find build -maxdepth 1 -type f -name program_owner_bus_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name yosys_program_owner_bus.log -delete
 	@find build -maxdepth 1 -type f -name yosys_program_owner_bus.json -delete
+	@find build -maxdepth 1 -type f -name program_owner_bus_control_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name yosys_program_owner_bus_control.log -delete
+	@find build -maxdepth 1 -type f -name yosys_program_owner_bus_control.json -delete
 	@find build -maxdepth 1 -type f -name data_bus_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_dm_native_vectors.txt -delete
@@ -2890,6 +2938,9 @@ clean:
 	@if [ -d build/obj_linear_bus_control ]; then \
 		find build/obj_linear_bus_control -depth -delete; \
 	fi
+	@if [ -d build/obj_program_owner_bus_control ]; then \
+		find build/obj_program_owner_bus_control -depth -delete; \
+	fi
 	@if [ -d build/obj_halt_control ]; then \
 		find build/obj_halt_control -depth -delete; \
 	fi
@@ -3042,6 +3093,9 @@ clean:
 	@if [ -d build/quartus_program_owner_bus ]; then \
 		find build/quartus_program_owner_bus -depth -delete; \
 	fi
+	@if [ -d build/quartus_program_owner_bus_control ]; then \
+		find build/quartus_program_owner_bus_control -depth -delete; \
+	fi
 	@if [ -d build/quartus_immediate_shift ]; then \
 		find build/quartus_immediate_shift -depth -delete; \
 	fi
@@ -3160,6 +3214,7 @@ clean:
 		find build/quartus_mode_slice -depth -delete; \
 	fi
 	@for directory in build/formal_decode build/formal_program_owner_bus \
+		build/formal_program_owner_bus_control \
 		build/formal_stack_control_decode \
 		build/formal_stack_control_slice \
 		build/formal_mr_saturation_decode \
