@@ -32,15 +32,30 @@ fetch/event and multi-owner DM arbitration remain open
 [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7, 6-12–6-13, A-1,
 A-5–A-11].
 
-The original Type 3 action boundary selects one absolute 14-bit DM address
-directly from the instruction and one general-register source or destination;
-it has no DAG effect. The complete class partitions into 770,048 supported
-reads, 786,432 supported writes, and 540,672 reserved/read-only-destination
-words. Action selection is independently and exhaustively checked, but
-architectural register updates and the native phase controller are not yet
-composed. Writes sourced by narrow status/control registers retain the OQ-016
-upper-DMD-bit question [ADI-UM-1989, printed pp. 1-5–1-6, 4-22,
-6-1–6-2, 6-12–6-13, A-1, A-7, and A-9].
+The original Type 3 boundary selects one absolute 14-bit DM address directly
+from the instruction and one general-register source or destination; it has no
+DAG effect. The complete class partitions into 770,048 supported reads,
+786,432 supported writes, and 540,672 reserved/read-only-destination words.
+The bounded logical implementation reuses the complete Type 17 register-state
+semantics, including selected computational banks, MR1-to-MR2 sign fill,
+status-field narrowing, PX, CNTR/count-stack load effects, and explicit reset
+unknowns. A write captures the cycle-start register value and address; a read
+updates its destination only on acknowledged completion. Invalid read data
+invalidates the destination, including CNTR, without fabricating data or a
+count-stack push. Nine directed tests and 50,151 deterministic model/RTL clocks
+cover every legal selector, both directions, banking, waits, side effects,
+reset, conflicts, and unknowns.
+
+The native Type 3 composition accepts only at state 8-to-1 and returns the
+qualified state-7-to-8 completion to the logical slice. Five directed tests and
+50,077 connected clocks cover physical read/write phases, complete-cycle
+DMACK extension, late-ACK and off-boundary rejection, reset, relinquishment,
+and completion-only register writes. Writes sourced by narrow status/control
+registers remain executable with an observable provisional flag because
+OQ-016 has not closed their upper-DMD-bit values. Whole-core request ownership,
+fetch, and event arbitration remain outside this bounded client
+[ADI-UM-1989, printed pp. 1-5–1-6, 4-22, 5-9–5-12, 6-1–6-2,
+6-12–6-13, A-1, A-7, and A-9].
 
 The bounded Type 2 immediate-write path drives the old selected I (or DAG1
 bit reversal), raw 16-bit immediate, and write direction. It holds those
@@ -77,7 +92,7 @@ seven while all eight physical substates repeat; a high sample permits the
 read sample/completion at the following 7-to-8 edge. Nine directed tests and
 50,039 model/RTL clocks cover normal reads/writes, repeated extensions,
 late-ACK rejection, back-to-back select, reset, unknowns, and external
-relinquishment. Type 2, Type 4, and Type 12 are attached through separate bounded
+relinquishment. Type 2, Type 3, Type 4, and Type 12 are attached through separate bounded
 wrappers; whole-core PM/DM arbitration remains outside this standalone
 boundary
 [ADI-UM-1989, printed pp. 5-9–5-12,

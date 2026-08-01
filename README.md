@@ -56,7 +56,7 @@ immediate-DM-write words with captured raw data, waited logical DMACK
 transactions, and completion-only DAG post-modification, 108,640 source-closed
 Type 12 shifter-plus-DM words with ACK-stretched logical bus transactions and
 atomic shifter/DREG/DAG completion, plus bounded source-backed native DM
-attachments for Type 2, Type 4, and Type 12 issue, read/write pin phases, wait
+attachments for Type 2, Type 3, Type 4, and Type 12 issue, read/write pin phases, wait
 extension, and completion, 54,320 source-closed Type 13
 shifter-plus-PM words with the original 16-word cache monitor now connected
 for pre-cycle hits, one-cycle recovery fetches, recovery fills, and ordinary
@@ -73,7 +73,8 @@ DAG2-PM dual-read actions with cycle-start computation operands, cycle-end
 DD/PD loads, implicit AR/MR result selection, and AMF-zero dual fetch,
 all 2,097,152 Type 3 direct-DM words partitioned into 1,556,480 supported
 general-register transfers and 540,672 explicit reserved/read-only-destination
-words at an action-only boundary,
+words, with selected-bank/general-register execution, waited logical
+transactions, and native state-8 issue/state-7 completion,
 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
@@ -103,9 +104,9 @@ conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
 division-flag conflict is recorded as SC-014. Division exists as bounded
 instruction slices, not yet in the top-level fetch/decode/execute model.
-Type 2, Type 4, and Type 12 supply logical DM transaction boundaries, and a separate
+Type 2, Type 3, Type 4, and Type 12 supply logical DM transaction boundaries, and a separate
 native controller reproduces the original active-low DM phases and full-cycle
-DMACK extension. All three clients attach at state 8-to-1 and defer every
+DMACK extension. All four clients attach at state 8-to-1 and defer every
 architectural destination, including read data and selected-I postmodify, to
 the qualified state 7-to-8 completion. Types 5 and 13 supply cache-integrated
 logical PM data/recovery

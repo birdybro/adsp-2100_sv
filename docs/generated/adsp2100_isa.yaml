@@ -109,7 +109,7 @@
       "encoding_pattern": "100xxxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xe00000",
       "opcode_value": "0x800000",
-      "status": "COMPLETE_BOUNDED_ACTION_DECODE_EXECUTION_PENDING",
+      "status": "COMPLETE_BOUNDED_STATE_AND_NATIVE_DM",
       "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed pp. 1-5–1-6, 4-22, 6-1–6-2, 6-12–6-13, A-1, A-7, and A-9"
     },

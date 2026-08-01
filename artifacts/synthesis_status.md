@@ -27,6 +27,16 @@
   paths. The expected decoder-only LogicLock license warning does not affect
   compilation; this is action selection, not state/native-DM or whole-core
   timing closure.
+- Quartus 17.0.2 Standard Fits of the bounded Type 3 logical state/transaction
+  slice and native-DM attachment pass for Cyclone V `5CSEBA6U23I7` at 25 ns
+  constraints. They use respectively 849 and 825 ALMs, 1,019 and 1,044 fitted
+  registers, and no RAM or DSP blocks. Across four timing models their worst
+  setup slacks are +11.556 and +11.702 ns, worst hold slacks are +0.167 and
+  +0.160 ns, and worst slow-100C Fmax values are 74.38 and 75.20 MHz. Both
+  have zero unconstrained clocks, inputs, outputs, or paths. Expected warnings
+  are limited to virtual/incomplete pins, asynchronous small-array inference,
+  constant bounded outputs, and the Quartus Lite LogicLock license. These are
+  bounded-client fits, not whole-core, physical-I/O, or MiSTer timing closure.
 - Quartus 17.0.2 full compilation of the combinational Type 1 dual-read
   action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
   constraint. It uses 53 ALMs and no registers, RAM, or DSP blocks. Across

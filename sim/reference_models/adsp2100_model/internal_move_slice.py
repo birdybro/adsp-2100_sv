@@ -319,6 +319,27 @@ def _write_register(
     raise AssertionError("validated writable group-three register not handled")
 
 
+def write_internal_move_register(
+    state: InternalMoveSliceState,
+    code: int,
+    value: KnownOrUnknown,
+) -> tuple[InternalMoveSliceState | None, bool, int]:
+    """Apply one general-register-bus write using original MOVE semantics.
+
+    This is the shared architectural storage boundary for Type 17 internal
+    moves and memory instructions whose REG field names the same table.
+    The boolean and integer results report the documented CNTR-load push.
+    """
+
+    if code not in _WRITABLE_CODES:
+        raise ValueError("code is not an original writable register")
+    if value is not UNKNOWN and (
+        not isinstance(value, ExactWord) or value.width != 16
+    ):
+        raise ValueError("general-register write data must be exactly 16 bits")
+    return _write_register(state, code, value)
+
+
 def apply_internal_move_cycle(
     state: InternalMoveSliceState,
     *,
@@ -357,7 +378,7 @@ def apply_internal_move_cycle(
         )
 
     if setup is not None:
-        next_state, pushed, push_value = _write_register(
+        next_state, pushed, push_value = write_internal_move_register(
             state,
             setup.code,
             ExactWord(16, setup.value),
@@ -378,7 +399,7 @@ def apply_internal_move_cycle(
         state,
         selection.source_code,
     )
-    next_state, pushed, push_value = _write_register(
+    next_state, pushed, push_value = write_internal_move_register(
         state,
         selection.destination_code,
         source,

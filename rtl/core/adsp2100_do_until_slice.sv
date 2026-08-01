@@ -151,6 +151,7 @@ module adsp2100_do_until_slice (
         .clk_i(clk_i),
         .reset_i(reset_i),
         .load_i(counter_setup_enable),
+        .invalidate_i(1'b0),
         .load_data_i(counter_setup_data_i),
         .ce_test_i(1'b0),
         .manual_pop_i(1'b0),

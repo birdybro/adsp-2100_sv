@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
@@ -38,6 +38,22 @@ lint:
 			rtl/core/adsp2100_dm_write_immediate_slice.sv \
 			rtl/core/adsp2100_data_bus.sv \
 			rtl/core/adsp2100_dm_write_immediate_native_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_direct_dm_native_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_direct_dm_slice.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_direct_dm_native_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_dm_native_slice \
 			rtl/packages/adsp2100_pkg.sv \
@@ -496,6 +512,36 @@ dm-write-native-tests:
 		build/obj_dm_write_immediate_native_slice/Vtb_adsp2100_dm_write_immediate_native_slice; \
 	else \
 		echo "SKIP Type 2/native-DM RTL test: Verilator is not installed"; \
+	fi
+
+dm-direct-native-tests:
+	$(PYTHON) -m unittest -v tests.test_direct_dm_native
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_direct_dm_native_vectors.py \
+			--output build/direct_dm_native_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_direct_dm_native_slice \
+			--top-module tb_adsp2100_direct_dm_native_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_direct_dm_slice.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_direct_dm_native_slice.sv \
+			sim/unit/tb_adsp2100_direct_dm_native_slice.sv; \
+		build/obj_direct_dm_native_slice/Vtb_adsp2100_direct_dm_native_slice; \
+	else \
+		echo "SKIP Type 3/native-DM RTL test: Verilator is not installed"; \
 	fi
 
 dm-shifter-native-tests:
@@ -1233,7 +1279,8 @@ sequencer-tests:
 
 register-tests:
 	$(PYTHON) -m unittest -v tests.test_register_banks \
-		tests.test_internal_move_slice tests.test_load_dreg_immediate
+		tests.test_internal_move_slice tests.test_direct_dm_slice \
+		tests.test_load_dreg_immediate
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_register_vectors.py \
@@ -1273,6 +1320,25 @@ register-tests:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			sim/unit/tb_adsp2100_internal_move_slice.sv; \
 		build/obj_internal_move_slice/Vtb_adsp2100_internal_move_slice; \
+		$(PYTHON) tools/generators/generate_direct_dm_slice_vectors.py \
+			--output build/direct_dm_slice_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_direct_dm_slice \
+			--top-module tb_adsp2100_direct_dm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_direct_dm_slice.sv \
+			sim/unit/tb_adsp2100_direct_dm_slice.sv; \
+		build/obj_direct_dm_slice/Vtb_adsp2100_direct_dm_slice; \
 		$(PYTHON) tools/generators/generate_load_dreg_immediate_vectors.py \
 			--output build/load_dreg_immediate_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -1353,7 +1419,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests compute-tests
+bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -1372,7 +1438,7 @@ bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-shifte
 	else \
 		echo "SKIP Type 2 transaction RTL test: Verilator is not installed"; \
 	fi
-	@echo "PASS bounded cache, Type 2/4/12 DM, and Type 5/13 PM transaction regressions"
+	@echo "PASS bounded cache, Type 2/3/4/12 DM, and Type 5/13 PM transaction regressions"
 
 interrupt-tests:
 	@echo "SKIP interrupt tests: interrupt RTL does not exist"
@@ -1655,6 +1721,37 @@ formal:
 			rtl/core/adsp2100_direct_dm_decode.sv \
 			formal/harnesses/adsp2100_direct_dm_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_direct_dm_slice_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_direct_dm_slice.sv \
+			formal/harnesses/adsp2100_direct_dm_slice_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_direct_dm_native_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_direct_dm_slice.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_direct_dm_native_slice.sv \
+			formal/harnesses/adsp2100_direct_dm_native_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_internal_move_slice_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_internal_move_decode.sv \
@@ -1884,6 +1981,10 @@ formal:
 			formal/internal_move_decode.sby; \
 		sby -f -d build/formal_direct_dm_decode \
 			formal/direct_dm_decode.sby; \
+		sby -f -d build/formal_direct_dm_slice \
+			formal/direct_dm_slice.sby; \
+		sby -f -d build/formal_direct_dm_native \
+			formal/direct_dm_native.sby; \
 		sby -f -d build/formal_internal_move_slice \
 			formal/internal_move_slice.sby; \
 		sby -f -d build/formal_modify_address_decode \
@@ -2010,6 +2111,10 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/direct_dm_decode_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/direct_dm_slice_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/direct_dm_native_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/internal_move_slice_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/modify_address_slice_smoke; \
@@ -2067,6 +2172,8 @@ clean:
 	@find build -maxdepth 1 -type f -name status_stack_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name mode_slice_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name internal_move_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name direct_dm_slice_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name direct_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name load_dreg_immediate_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name immediate_shift_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_shift_vectors.txt -delete
@@ -2122,6 +2229,12 @@ clean:
 	fi
 	@if [ -d build/obj_internal_move_slice ]; then \
 		find build/obj_internal_move_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_direct_dm_slice ]; then \
+		find build/obj_direct_dm_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_direct_dm_native_slice ]; then \
+		find build/obj_direct_dm_native_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_load_dreg_immediate_decode ]; then \
 		find build/obj_load_dreg_immediate_decode -depth -delete; \
@@ -2302,6 +2415,12 @@ clean:
 	@if [ -d build/quartus_internal_move_slice ]; then \
 		find build/quartus_internal_move_slice -depth -delete; \
 	fi
+	@if [ -d build/quartus_direct_dm_slice ]; then \
+		find build/quartus_direct_dm_slice -depth -delete; \
+	fi
+	@if [ -d build/quartus_direct_dm_native ]; then \
+		find build/quartus_direct_dm_native -depth -delete; \
+	fi
 	@if [ -d build/quartus_load_dreg_immediate ]; then \
 		find build/quartus_load_dreg_immediate -depth -delete; \
 	fi
@@ -2424,6 +2543,8 @@ clean:
 		build/formal_mode_control_slice \
 		build/formal_internal_move_decode \
 		build/formal_direct_dm_decode \
+		build/formal_direct_dm_slice \
+		build/formal_direct_dm_native \
 		build/formal_internal_move_slice \
 		build/formal_load_dreg_immediate \
 		build/formal_immediate_shift \

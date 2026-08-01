@@ -8,6 +8,15 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded original Type 3 state/native-DM composition in structurally
+  independent Python and portable SystemVerilog. It shares the complete Type
+  17 general-register state, captures absolute address and cycle-start write
+  sources, commits read destinations only at completion, retains unknown
+  values and OQ-016 visibility, and attaches issue/completion to native state
+  8-to-1/state 7-to-8 boundaries. Fourteen directed tests, 50,151 logical and
+  50,077 native differential clocks, two formal harnesses, and two constrained
+  Cyclone V projects cover the bounded implementation.
+
 - A primary-backed original Type 3 direct-DM action database, independent
   decoder, two legal and two unsupported hand-derived fixtures, original
   algebraic/raw assembler-disassembler paths, exact portable RTL decoder,
@@ -382,13 +391,22 @@ semantic versioning after its first release.
 
 ### Fixed
 
+- Invalid Type 3 DM read data now invalidates a CNTR destination without
+  fabricating a value or pushing a phantom count-stack entry. The counter has
+  an explicit fail-closed invalidation action, and all existing sequencer
+  clients retain their prior behavior by tying that action inactive.
+
+- Type 3 general-register validity now follows the selected computational bank
+  at the cycle-start MSTAT boundary. A deterministic differential vector that
+  switches banks protects against leaking validity from the inactive bank.
+
 - Corrected the Type 5 logical test expectation for the issuing edge of a
   subsequently held PM transaction. Observable event fields describe pre-edge
   state, so `held_transaction` becomes true on the following clock; the RTL
   and independent model already agreed on that contract and were unchanged.
 
 - Moved the assembler/disassembler legal-but-unimplemented sentinel from
-  newly supported Type 5 to still-unimplemented Type 3. The distinction from
+  newly supported Type 5 to then-unimplemented Type 3. The distinction from
   reserved-unshown encodings remains tested; no expected opcode behavior was
   weakened.
 
@@ -1128,7 +1146,8 @@ semantic versioning after its first release.
   a separately verified native eight-state attachment, but fetch, shared-DM
   ownership, and control events are not attached.
 
-- Type 2, Type 4, and Type 12 are independently attached to the native DM controller,
+- Type 2, Type 3, Type 4, and Type 12 are independently attached to the native
+  DM controller,
   but no whole-core owner selects among them or coordinates simultaneous PM,
   fetch, control-event, interrupt, HALT, and BR/BG activity.
 

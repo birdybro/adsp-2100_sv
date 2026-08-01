@@ -239,8 +239,12 @@ advance beyond research until a page-level primary citation is added.
   exhaustive 24-bit RTL traversal, assembler/disassembler support, a formal
   harness, and a constrained decoder fit. All 2,097,152 words partition into
   770,048 legal reads, 786,432 legal writes, and 540,672 reserved-selector or
-  read-only-SSTAT-destination words. State/native-DM execution remains the
-  next bounded step; narrow status/control write sources retain OQ-016.
+  read-only-SSTAT-destination words. Its bounded state/native-DM composition
+  shares the complete general-register state, preserves reset unknowns and
+  selected-bank validity, holds absolute-address transactions over full-cycle
+  waits, and commits reads only at state 7-to-8. Fourteen directed tests and
+  50,151 logical plus 50,077 native clocks pass; narrow status/control write
+  sources retain an observable OQ-016 flag.
   Type 16 has a bounded semantic entry for 1,792 documented words;
   its 256 unassigned-XOP subencodings fail closed. Type 14 has a bounded
   semantic entry for 25,648 canonical words; 39,888 unresolved or unsupported
@@ -461,9 +465,10 @@ advance beyond research until a page-level primary citation is added.
   directions and absolute addresses. Independent model/database decode,
   hand-derived fixtures, exhaustive RTL, formal assertions, algebraic/raw
   tools, and a constrained Cyclone V decoder fit verify the 1,556,480
-  supported and 540,672 unsupported words. Architectural register state,
-  native DM phases, OQ-016 narrow write sources, and whole-core ownership
-  remain outside the action boundary.
+  supported and 540,672 unsupported words. Separate structurally independent
+  model/RTL compositions connect all general-register state and the native DM
+  controller with 50,151 logical and 50,077 native differential clocks. OQ-016
+  narrow write sources and whole-core ownership remain open.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, OQ-023 native PM behavior during Type 1 DMACK extension,
   and result forwarding outside the bounded old-value rule remain high-risk.
@@ -1315,7 +1320,8 @@ advance beyond research until a page-level primary citation is added.
   `formal/dm_write_immediate_native.sby`,
   `tests/test_shifter_dm_native.py`, `formal/shifter_dm_native.sby`,
   `tests/test_compute_dm_native.py`, `formal/compute_dm_native.sby`
-- **Implementation notes:** Type 2, Type 4, and Type 12 implement the sourced logical DMACK rule:
+- **Implementation notes:** Type 2, Type 3, Type 4, and Type 12 implement the
+  sourced logical DMACK rule:
   each low sample extends the transaction by a processor clock, bus outputs
   remain stable, state does not commit, and the first high sample commits all
   parallel actions. The Type 2 differential adds 50,035 clocks of raw
@@ -1325,7 +1331,9 @@ advance beyond research until a page-level primary citation is added.
   and state-7 completion. The Type 12 attachment adds 50,064 connected clocks
   proving read/write phase alignment and atomic parallel completion. The
   Type 4 attachment adds 50,082 clocks proving the same phase contract for
-  memory-only and ALU/MAC actions without any wait-time architectural write. PM
+  memory-only and ALU/MAC actions without any wait-time architectural write.
+  The Type 3 attachment adds 50,077 clocks proving absolute-address transfers,
+  old general-register write data, and completion-only read destinations. PM
   concurrency,
   interrupt/BR/HALT latching, and electrical constraints remain.
 - **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
@@ -1633,9 +1641,10 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is Type 3 direct-DM
-architectural state and native-DM attachment. Its complete action graph is
-source-closed. The Type 1 dual-memory action graph is now complete,
+The highest-priority unblocked implementation work is original Type 7
+non-data-register immediate semantics, decode fixtures, executable state, and
+portable RTL. Type 3 state/native-DM execution is now bounded and verified.
+The Type 1 dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode

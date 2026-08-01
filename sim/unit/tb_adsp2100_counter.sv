@@ -77,6 +77,7 @@ module tb_adsp2100_counter;
         .clk_i(clk),
         .reset_i(reset),
         .load_i(load),
+        .invalidate_i(1'b0),
         .load_data_i(load_data),
         .ce_test_i(ce_test),
         .manual_pop_i(manual_pop),

@@ -76,6 +76,13 @@ slice covers all legal computational-register source/destination pairs and
 retains the MR1-to-MR2 side effect. Its 59,430-cycle comparison initializes
 both banks independently and checks the complete register cross-product.
 
+`adsp2100_direct_dm_slice` reuses the same general-register state for every
+legal Type 3 absolute DM transfer. It captures selected-bank write sources at
+issue and changes a read destination only at acknowledged completion. Nine
+directed tests and 50,151 logical clocks include bank changes, MR1 sign fill,
+CNTR load/push, invalid read data, and OQ-016 visibility; a native wrapper adds
+five tests and 50,077 phase clocks.
+
 `adsp2100_load_dreg_immediate_slice` composes exact Type 6 decode with the
 same bank and storage boundary. The decoded word is `DATA[19:4]` and the DREG
 destination is `[3:0]`; all sixteen destinations execute in both banks. SE and
@@ -163,6 +170,9 @@ therefore remains `IMPLEMENTING`.
 - `make register-tests` also adds six Type 6 model tests and 50,204 stateful
   model-versus-RTL cycles, including every destination in both banks and exact
   SE/MR2/MR1 storage side effects.
+- `make register-tests` adds nine Type 3 state tests and 50,151 logical
+  transaction clocks; `make dm-direct-native-tests` adds five attachment tests
+  and 50,077 native phase clocks.
 - `make compute-tests` adds eight directed Type 15 tests and 58,709 stateful
   model-versus-RTL cycles, including all 14,336 supported words in each bank.
 - `make compute-tests` adds ten directed Type 16 tests and 54,403 stateful

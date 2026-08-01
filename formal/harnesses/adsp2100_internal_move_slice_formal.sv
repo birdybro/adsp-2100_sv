@@ -96,6 +96,7 @@ module adsp2100_internal_move_slice_formal (
         .execute_i(execute),
         .opcode_i(opcode),
         .setup_write_i(setup_write),
+        .setup_data_valid_i(1'b1),
         .setup_code_i(setup_code),
         .setup_data_i(setup_data),
         .probe_code_i(probe_code),

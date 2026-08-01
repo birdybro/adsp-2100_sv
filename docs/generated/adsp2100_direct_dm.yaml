@@ -4,7 +4,7 @@
   "program_word_width": 24,
   "data_word_width": 16,
   "data_address_width": 14,
-  "status": "COMPLETE_FOR_ORIGINAL_TYPE_3_ACTION_DECODE",
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_3_BOUNDED_STATE_AND_NATIVE_DM",
   "confidence": "VERIFIED_PRIMARY",
   "isa_database": "docs/generated/adsp2100_isa.yaml",
   "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
@@ -57,8 +57,8 @@
   },
   "implementation_boundary": {
     "action_decode": "COMPLETE",
-    "state_execution": "PENDING",
-    "native_dm_attachment": "PENDING",
+    "state_execution": "COMPLETE_BOUNDED",
+    "native_dm_attachment": "COMPLETE_BOUNDED",
     "provisional_dependency": "OQ-016 applies only to DM writes sourced by narrow status/control registers."
   },
   "assembly": {

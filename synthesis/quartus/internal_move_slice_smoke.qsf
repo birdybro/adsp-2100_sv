@@ -17,6 +17,7 @@ set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
 set_instance_assignment -name VIRTUAL_PIN ON -to execute_i
 set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to setup_data_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to setup_code_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to setup_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to probe_code_i[*]

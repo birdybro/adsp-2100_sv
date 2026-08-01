@@ -4,6 +4,7 @@ module adsp2100_counter (
     input  logic        clk_i,
     input  logic        reset_i,
     input  logic        load_i,
+    input  logic        invalidate_i,
     input  logic [13:0] load_data_i,
     input  logic        ce_test_i,
     input  logic        manual_pop_i,
@@ -26,17 +27,18 @@ module adsp2100_counter (
 );
     logic [13:0] cntr_q;
     logic        cntr_valid_q;
-    logic [1:0]  action_count;
+    logic [2:0]  action_count;
 
     always_comb begin
         action_count = (
-            {1'b0, load_i}
-            + {1'b0, ce_test_i}
-            + {1'b0, manual_pop_i}
+            {2'b00, load_i}
+            + {2'b00, invalidate_i}
+            + {2'b00, ce_test_i}
+            + {2'b00, manual_pop_i}
         );
     end
 
-    assign write_conflict_o = !reset_i && (action_count > 2'd1);
+    assign write_conflict_o = !reset_i && (action_count > 3'd1);
     assign cntr_data_o = cntr_q;
     assign cntr_valid_o = cntr_valid_q;
 
@@ -112,6 +114,8 @@ module adsp2100_counter (
             if (load_i) begin
                 cntr_q <= load_data_i;
                 cntr_valid_q <= 1'b1;
+            end else if (invalidate_i) begin
+                cntr_valid_q <= 1'b0;
             end else if (manual_pop_i) begin
                 if (count_stack_top_valid_i) begin
                     cntr_q <= count_stack_top_data_i;

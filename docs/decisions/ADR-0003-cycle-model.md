@@ -58,13 +58,15 @@ additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete
 8/1/2/3/4/5/6/7 sequence. A qualified high sample releases completion only at
 the next 7-to-8 edge. This encodes Figure 5.7 directly without gated clocks or
-collapsing a full processor-cycle wait into one FPGA clock. Type 2, Type 4,
-and Type 12 now use this boundary for issue and completion; each attachment is
+collapsing a full processor-cycle wait into one FPGA clock. Type 2, Type 3,
+Type 4, and Type 12 now use this boundary for issue and completion; each attachment is
 deliberately separate until a whole-core request arbiter can be sourced and
 verified. The Type 4 attachment captures selected-bank ALU/MAC, old DREG store
 data, and DAG state only at the enabled 8-to-1 boundary. The native 7-to-8
 completion is its sole compute/status, optional-read, and selected-I commit
-event.
+event. The Type 3 attachment similarly captures an absolute address and
+cycle-start general-register write source at 8-to-1, but has no DAG or
+computational action; its read destination changes only at qualified 7-to-8.
 
 ## Consequences
 

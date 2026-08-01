@@ -135,7 +135,8 @@ def validate_database(data: dict[str, Any]) -> None:
     ):
         raise DirectDMValidationError("database widths/device are not original ADSP-2100")
     if (
-        data["status"] != "COMPLETE_FOR_ORIGINAL_TYPE_3_ACTION_DECODE"
+        data["status"]
+        != "COMPLETE_FOR_ORIGINAL_TYPE_3_BOUNDED_STATE_AND_NATIVE_DM"
         or data["confidence"] != "VERIFIED_PRIMARY"
     ):
         raise DirectDMValidationError("Type 3 action boundary must retain primary confidence")
@@ -214,8 +215,8 @@ def validate_database(data: dict[str, Any]) -> None:
         raise DirectDMValidationError("Type 3 transfer/timing effects are incorrect")
     if data["implementation_boundary"] != {
         "action_decode": "COMPLETE",
-        "state_execution": "PENDING",
-        "native_dm_attachment": "PENDING",
+        "state_execution": "COMPLETE_BOUNDED",
+        "native_dm_attachment": "COMPLETE_BOUNDED",
         "provisional_dependency": (
             "OQ-016 applies only to DM writes sourced by narrow status/control "
             "registers."
@@ -255,7 +256,7 @@ def main() -> int:
         return 1
     instruction = data["instruction"]
     print(
-        "PASS original Type 3 action decode: "
+        "PASS original Type 3 bounded state/native contract: "
         f"{instruction['legal_read_count']} reads, "
         f"{instruction['legal_write_count']} writes, "
         f"{instruction['illegal_or_reserved_subencoding_count']} unsupported words"

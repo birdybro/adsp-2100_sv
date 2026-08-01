@@ -406,6 +406,7 @@ module adsp2100_sequencer_slice (
         .clk_i(clk_i),
         .reset_i(reset_i),
         .load_i(boundary_valid_o && counter_load_i),
+        .invalidate_i(1'b0),
         .load_data_i(counter_load_data_i),
         .ce_test_i(boundary_valid_o && raw_counter_test),
         .manual_pop_i(boundary_valid_o && count_manual_pop_i),

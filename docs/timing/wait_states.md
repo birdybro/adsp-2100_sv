@@ -14,20 +14,21 @@ permits completion and read sampling on the following 7-to-8 edge. Nine
 directed tests and 50,039 model/RTL clocks cover zero, one, and repeated
 extensions, late ACK rejection, phase holds, stable output values, and reset.
 
-The bounded Type 2, Type 4, and Type 12 execution slices separately automate the
-architectural rule:
+The bounded Type 2, Type 3, Type 4, and Type 12 execution slices separately
+automate the architectural rule:
 each DMACK-low sample retains select, direction, valid address/write data, and
 architectural state, while the first high sample completes the transaction and
-permits selected-I post-modification. Their 50,035-, 50,072-, and 50,069-clock
-model/RTL differentials establish the architectural hold/commit rule but do
+permits selected-I post-modification. Their 50,035-, 50,151-, 50,072-, and
+50,069-clock model/RTL differentials establish the architectural hold/commit rule but do
 not alone claim asynchronous setup/hold or native pin substate accuracy.
 
-Type 2, Type 4, and Type 12 are now connected to the native controller through
-separate bounded wrappers. Their 50,027-, 50,082-, and 50,064-clock attachment comparisons ensure
+Type 2, Type 3, Type 4, and Type 12 are now connected to the native controller
+through separate bounded wrappers. Their 50,027-, 50,077-, 50,082-, and
+50,064-clock attachment comparisons ensure
 that a DMACK-low sample causes a complete physical-substate repeat while the
-instruction remains pending. The selected I register, Type 12 shifter result,
-Type 4 compute/status result, and optional read destinations cannot change
-until the later qualified 7-to-8 completion.
+instruction remains pending. The selected I register, Type 3 general-register
+destination, Type 12 shifter result, Type 4 compute/status result, and optional
+read destinations cannot change until the later qualified 7-to-8 completion.
 
 The original AC table specifies DMACK setup to CLKIN high at 6-to-7 and hold
 after that edge; those nanosecond requirements are documented but not modeled

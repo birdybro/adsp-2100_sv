@@ -23,7 +23,7 @@ independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
 loads, the source-closed Type 15
 immediate-shift subset, all 4,194,304 source-closed Type 1 action words,
-1,556,480 source-closed Type 3 direct-DM action words,
+1,556,480 source-closed Type 3 direct-DM words with bounded state/native execution,
 2,034,688 source-closed Type 4 action words,
 1,017,344 source-closed Type 5 action words,
 25,648 bounded Type 14 shifter-plus-DREG words, all
@@ -93,9 +93,13 @@ destination selectors, and 16,384 reads to read-only SSTAT. They are not
 assigned no-op behavior. Independent model/database decoders, two legal and
 two invalid hand-derived fixtures, representative assembler/disassembler
 round trips, exhaustive 24-bit RTL traversal, formal assertions, and a
-constrained Cyclone V decoder project close the action boundary. Architectural
-register execution and native DM attachment remain pending; OQ-016 applies to
-writes sourced by narrow status/control registers
+constrained Cyclone V decoder project close the action boundary. A separate
+bounded execution composition shares the complete general-register state,
+captures write data at issue, commits reads only at acknowledgment, and attaches
+to native state-8-to-1 issue/state-7-to-8 completion. Its 50,151 logical and
+50,077 native model/RTL clocks cover both banks/directions, complete-cycle
+waits, register side effects, invalid data, reset, and relinquishment. OQ-016
+still applies to writes sourced by narrow status/control registers
 [ADI-UM-1989, printed pp. 1-5–1-6, 4-22, 6-1–6-2, 6-12–6-13, A-1,
 A-7, and A-9].
 

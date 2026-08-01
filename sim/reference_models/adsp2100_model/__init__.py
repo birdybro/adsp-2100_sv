@@ -149,6 +149,17 @@ from .direct_dm import (
     DirectDMAction,
     decode_direct_dm,
 )
+from .direct_dm_slice import (
+    DirectDMCycleResult,
+    DirectDMPending,
+    DirectDMSliceState,
+    apply_direct_dm_cycle,
+)
+from .direct_dm_native import (
+    DirectDMNativeCycleResult,
+    DirectDMNativeState,
+    apply_direct_dm_native_cycle,
+)
 from .dm_write_immediate_slice import (
     DMWriteImmediateCycleResult,
     DMWriteImmediatePending,
@@ -201,6 +212,7 @@ from .internal_move_slice import (
     InternalMoveSliceState,
     apply_internal_move_cycle,
     read_internal_move_register,
+    write_internal_move_register,
 )
 from .immediate_shift import (
     IMMEDIATE_SHIFT_MASK,
@@ -499,6 +511,11 @@ __all__ = [
     "DirectJumpAction",
     "DirectJumpCycleResult",
     "DirectJumpState",
+    "DirectDMCycleResult",
+    "DirectDMNativeCycleResult",
+    "DirectDMNativeState",
+    "DirectDMPending",
+    "DirectDMSliceState",
     "DREGWriteConflict",
     "DIVIDE_QUOTIENT_CLASS_MASK",
     "DIVIDE_QUOTIENT_CLASS_VALUE",
@@ -650,6 +667,8 @@ __all__ = [
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",
     "apply_direct_jump_cycle",
+    "apply_direct_dm_cycle",
+    "apply_direct_dm_native_cycle",
     "apply_status_cycle",
     "apply_status_stack_cycle",
     "decode_stack_control",
@@ -732,6 +751,7 @@ __all__ = [
     "lookup_instruction_cache",
     "read_dreg",
     "read_internal_move_register",
+    "write_internal_move_register",
     "register_code_by_name",
     "select_sequencer_flow",
     "shift_move_unsupported_reason",

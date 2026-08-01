@@ -9,6 +9,7 @@ module adsp2100_internal_move_slice (
     // Deterministic verification/integration preload. This uses the same
     // destination narrowing and side effects as an architectural MOVE.
     input  logic        setup_write_i,
+    input  logic        setup_data_valid_i,
     input  logic [5:0]  setup_code_i,
     input  logic [15:0] setup_data_i,
 
@@ -57,6 +58,7 @@ module adsp2100_internal_move_slice (
     logic       state_write;
     logic [5:0] write_code;
     logic [15:0] write_data;
+    logic        write_data_valid;
     logic [1:0] write_group;
     logic [3:0] write_index;
 
@@ -236,6 +238,7 @@ module adsp2100_internal_move_slice (
     assign write_data = boundary_valid_o
         ? source_data_o
         : setup_data_i;
+    assign write_data_valid = boundary_valid_o || setup_data_valid_i;
     assign write_group = write_code[5:4];
     assign write_index = write_code[3:0];
 
@@ -479,7 +482,12 @@ module adsp2100_internal_move_slice (
     adsp2100_counter counter (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .load_i(state_write && (write_code == 6'h35)),
+        .load_i(
+            state_write && write_data_valid && (write_code == 6'h35)
+        ),
+        .invalidate_i(
+            state_write && !write_data_valid && (write_code == 6'h35)
+        ),
         .load_data_i(write_data[13:0]),
         .ce_test_i(1'b0),
         .manual_pop_i(1'b0),

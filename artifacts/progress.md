@@ -2,16 +2,16 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `6cac801`
+**Latest verified engineering commit:** `04d6260`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
 bounded semantic instruction decode including Type 4 native-DM execution and
 Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
-exhaustive Type 3 direct-DM action selection,
+exhaustive Type 3 direct-DM state/native execution,
 logical DM/PM transactions, a Type 13/
-cache client attached to native PM pin phases, and Type 2, Type 4, plus Type 12 clients
+cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
 
 **Release status:** research/implementation in progress; not instruction-,
@@ -58,7 +58,11 @@ cycle-, or Hard Drivin'-complete
   into 770,048 direct reads, 786,432 direct writes, and 540,672 unsupported
   reserved/read-only-destination words, with independent model/database
   decoders, four hand fixtures, algebraic/raw tools, exhaustive RTL, formal
-  assertions, and a fully constrained 46-ALM Cyclone V decoder fit;
+  assertions, and a fully constrained 46-ALM Cyclone V decoder fit; plus a
+  bounded complete-general-register state/logical-DM slice and native-DM
+  attachment with 14 directed tests, 50,151 logical and 50,077 native
+  differential clocks, two stateful formal harnesses, and fully constrained
+  849-ALM logical plus 825-ALM native Cyclone V fits;
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
@@ -476,10 +480,10 @@ outstanding.
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
   Type 2 action/execution, Type 23, Type 24, standalone instruction-cache, and
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
-  Type 13, Type 2, Type 4, and Type 12 native-attachment invariants, plus
+  Type 13, Type 2, Type 3, Type 4, and Type 12 native-attachment invariants, plus
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
-  (57 total)
+  and Type 3 logical state execution (59 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -492,8 +496,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach the source-closed Type 3 direct-DM action graph to architectural
-   register state and native DM phases while preserving OQ-016 visibility.
+3. Close original Type 7 non-data-register immediate semantics, fixtures,
+   executable state, assembler/disassembler syntax, and portable RTL.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

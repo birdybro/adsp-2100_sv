@@ -1,7 +1,7 @@
 # Data-memory cycles
 
 **Status: source-backed eight-substate logical pin phases implemented;
-Type 2, Type 4, and Type 12 attached as bounded clients**
+Type 2, Type 3, Type 4, and Type 12 attached as bounded clients**
 
 DM read/write drives DMA and DMS, selects DMRD or DMWR, and transfers DMD.
 DMS can remain asserted without a glitch across consecutive DM cycles
@@ -38,15 +38,17 @@ DMS continuity; phase holds; reset; unknown validity; and externally directed
 bus relinquishment. The electrical DMACK setup/hold values remain wrapper
 constraints rather than delay constructs in synthesizable RTL.
 
-The Type 2 immediate-write, Type 4 ALU/MAC multifunction, and Type 12 shifter
-multifunction execution boundaries now automate that logical check. A request can
+The Type 2 immediate-write, Type 3 direct-transfer, Type 4 ALU/MAC
+multifunction, and Type 12 shifter multifunction execution boundaries now
+automate that logical check. A request can
 complete on its issue clock when DMACK is asserted or enter a pending state.
 Pending state freezes the transaction descriptor and does not repeat shifter
 or DAG execution. DM read data is sampled only on the completing clock; DM
 write data is either Type 2's captured raw immediate or Type 4/Type 12's old
 selected-bank DREG value. Reset cancels a pending transaction and invalidates
-reset-unknown computational and DAG state. The Type 2, Type 4, and Type 12
-logical differentials cover 50,035, 50,072, and 50,069 clocks respectively,
+reset-unknown computational and DAG state. The Type 2, Type 3, Type 4, and Type
+12 logical differentials cover 50,035, 50,151, 50,072, and 50,069 clocks
+respectively,
 including arbitrary multi-clock extension, stable address/data, and
 completion-only architectural writes.
 The bounded Type 2 native wrapper now accepts the captured old-I/raw-immediate
@@ -65,3 +67,11 @@ issue, old-value stores, full-cycle waits, state-7 atomic compute/read/I
 commit, reset, late-ACK and off-boundary rejection, and relinquishment. PM
 concurrency, multi-owner DM arbitration, event latching
 during waits, and BR/BG recognition are still unimplemented.
+
+The bounded Type 3 native wrapper accepts an absolute-address descriptor and
+cycle-start general-register write source at state 8-to-1. Its five directed
+tests and 50,077 connected clocks verify both directions, stable address/data
+through complete-cycle extension, state-7 read sampling and register commit,
+late-ACK/off-boundary rejection, reset, and relinquishment. OQ-016 remains
+visible for narrow status/control write sources rather than silently defining
+their upper DMD bits.
