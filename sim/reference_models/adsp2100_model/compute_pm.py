@@ -654,6 +654,12 @@ def apply_compute_pm_cycle(
     if state.pending is not None:
         conflict = execute or setup_count != 0
         pending = state.pending
+        # HALT is recognized at state 3, after the Type 5 PM-data descriptor
+        # was accepted at state 8-to-1. Preserve a late forced-fetch request
+        # so completion cannot release an issue-time cache hit.
+        if force_instruction_fetch and not pending.recovery_required:
+            pending = replace(pending, recovery_required=True)
+            state = replace(state, pending=pending)
         if not pm_cycle_complete:
             held = _data_result(
                 state,

@@ -8,6 +8,20 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed bounded Type 5/native-PM/HALT composition in an independent
+  Python model and portable SystemVerilog. HALT recognized during the PM-data
+  cycle now converts an issue-time hit into a recovery, suppresses the cached
+  word, commits the ALU/MAC/PM/PX/DAG2 action exactly once, performs one native
+  external fetch, fills the cache, and stops after that fetch completes. Five
+  directed tests and 50,126 deterministic model/RTL clocks cover 197 PM-data
+  recognitions, late hit overrides, and forced fetches, 1,996 data
+  completions, 387 stops/resumes, 196 DMACK-blocked releases, and 577 held
+  clocks. A formal harness, Yosys recipe, and fully constrained Cyclone V
+  project bind the claim. Quartus fit uses 1,946 ALMs and 1,768 registers,
+  no RAM, one DSP, +3.651 ns worst setup, +0.166 ns worst hold, 46.84 MHz
+  worst slow-corner Fmax, and no unconstrained paths at 25 ns. Shared
+  PM/BR/BG/interrupt/TRAP/reset priority remains outside this bounded result.
+
 - A primary-backed bounded Type 13/native-PM/HALT composition in an
   independent Python model and portable SystemVerilog. HALT recognized during
   the PM-data cycle now latches a late recovery request, discards an
@@ -20,8 +34,9 @@ semantic versioning after its first release.
   constrained Cyclone V project bind the claim. Quartus fit uses 2,094 ALMs
   and 1,655 registers, no RAM/DSP blocks, +7.946 ns worst setup, +0.168 ns
   worst hold, 58.64 MHz worst slow-corner Fmax, and no unconstrained paths at
-  25 ns. Type 5 attachment and shared PM/BR/BG/interrupt/TRAP/reset priority
-  remain outside this bounded composition.
+  25 ns. Type 5 is independently attached; shared
+  PM/BR/BG/interrupt/TRAP/reset priority remains outside both bounded
+  compositions.
 
 - A primary-backed standalone HALT sequencer for both ordinary instruction-
   fetch and PM-data recognition. A PM-data recognition completes its current
@@ -34,8 +49,8 @@ semantic versioning after its first release.
   Yosys flow, and fully constrained Cyclone V project bind the claim. The fit
   uses 26 ALMs and 6 registers, no RAM/DSP blocks, +12.584 ns worst setup,
   +0.172 ns worst hold, 134.84 MHz worst slow-corner Fmax, and no unconstrained
-  paths at 20 ns. Type 13 now consumes the forced-fetch pulse in a separate
-  bounded composition; Type 5 and shared-PM arbitration remain open.
+  paths at 20 ns. Type 5 and Type 13 now consume the forced-fetch pulse in
+  separate bounded compositions; shared-PM arbitration remains open.
 
 - A primary-backed bounded ordinary-fetch HALT controller and structural
   attachment in independent Python and portable SystemVerilog. It recognizes

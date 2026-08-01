@@ -236,11 +236,11 @@ owner: the current fetch completes, new issue is inhibited, PM output enables
 are masked during grant, HALT instead holds driven PM outputs in state 8, and
 restart occurs at state 8-to-1. A standalone primary-backed HALT sequencer now
 distinguishes PM-data recognition, admits exactly one forced external fetch on
-the following state-8 boundary, and stops after that fetch. A bounded Type 13
-attachment now consumes this late request, discards any issue-time cache hit,
-completes the PM data action once, fills the cache from the forced external
-fetch, and stops after its state-7 completion. Type 5, cross-event priority,
-and shared-PM ownership remain open. Other bounded
+the following state-8 boundary, and stops after that fetch. Bounded Type 5 and
+Type 13 attachments now consume this late request, discard any
+issue-time cache hit, complete the PM data action once, fill the cache from
+the forced external fetch, and stop after its state-7 completion. Cross-event
+priority and shared-PM ownership remain open. Other bounded
 source-backed RTL
 execution slices implement all
 original Type 2
@@ -289,8 +289,11 @@ I/M selection, AMF-zero behavior, old-value PM writes through `{DREG,PX}`,
 and PM-read `{DREG,PX}` destinations are source-backed. A bounded logical,
 cache, and native-PM composition now captures old state at issue, commits
 compute/status/read/PX/I effects atomically at data completion, and selects an
-issue-time cache hit or one pure recovery fetch. Whole-core fetch/PC/control-
-event ownership, hidden cache behavior, and physical validation remain open.
+issue-time cache hit or one pure recovery fetch. A bounded HALT attachment
+adds five directed tests and 50,126 deterministic clocks covering 197 late
+hit overrides/forced fetches, one-time ALU/MAC/PM/PX/DAG2 completion, and 387
+stop/resume handshakes. Whole-core fetch/PC/control-event ownership, hidden
+cache behavior, and physical validation remain open.
 Type 1 field/action decode is independently closed for its complete
 4,194,304-word class. Every word selects fixed DAG1 DM and DAG2 PM reads,
 restricted DD/PD input destinations, and either AMF-zero dual fetch or an
@@ -367,6 +370,10 @@ arbitration remains open under OQ-008. A further Type 13/HALT composition adds
 five directed tests and 50,124 deterministic clocks covering 210 late
 PM-data recognitions, 210 cache-hit overrides and forced issues, 397 stops and
 resumes, and no replay of shifter, PM-data, PX, or DAG actions.
+A parallel Type 5/HALT composition adds five directed tests and 50,126
+deterministic clocks covering 197 late PM-data recognitions, issue-time cache-
+hit overrides, and forced fetches, 387 stops/resumes, and no replay of
+ALU/MAC, PM-data, PX, or DAG actions.
 The source-bounded cache monitor implements the documented
 16-by-24 array, PMA[3:0] indexing, single contiguous valid region,
 out-of-region invalidation, sequential extension, and circular oldest-word
@@ -392,7 +399,7 @@ The separate ordinary-fetch HALT composition passes seven directed tests and
 release, and stable driven state-8 PM outputs.
 No PM-data/cache or DM client is attached to BR/BG, analog delays are not
 modeled, and the request boundaries are not claims about hidden device
-latches. HALT after Type 13 PM data is bounded and attached; Type 5, HALT
+latches. HALT after Type 5 or Type 13 PM data is bounded and attached; HALT
 during BG or DMACK waits, and TRAP/interrupt/reset arbitration remain
 unimplemented.
 The RESET-time direct pin path is confined to a wrapper.

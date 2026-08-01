@@ -57,8 +57,8 @@ now composed with the bounded ordinary NOP/Type 6/Type 7/Type 17/Type 18 fetch
 owner: a recognized request lets the current fetch retire, inhibits the next
 issue, masks all PM output enables during grant, and restarts issue at state
 8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 93
-complete handshakes. It is not yet composed with this Type 13 PM-data client,
-Type 5, other PM instruction classes, or a whole-core PM arbiter.
+complete handshakes. It is not yet composed with the Type 13 or Type 5
+PM-data clients, other PM instruction classes, or a whole-core PM arbiter.
 
 A separate active-low HALT controller is now composed with the same bounded
 ordinary-fetch owner. It samples HALT at the enabled end of state 3, lets the
@@ -71,14 +71,15 @@ fetch case. The standalone HALT controller separately classifies a recognized
 PM-data cycle and exposes one `force_fetch_issue_o` pulse on the following
 enabled state-8 issue boundary, then stops after that fetch reaches state 7.
 Eight directed tests and 50,033 independent-model/RTL clocks cover 335 PM-data
-recognitions and corresponding forced issue pulses. That signal is not yet
-connected to the Type 5 native-PM owner. It is connected to the bounded
-Type 13 owner: a late recognition discards an issue-time cache hit, commits
+recognitions and corresponding forced issue pulses. That signal is connected
+separately to the bounded Type 5 and Type 13 owners. In each, a late
+recognition discards an issue-time cache hit and commits
 the data action once, drives one following external fetch, fills the cache,
-and stops after its state-7 completion. Five directed tests and 50,124
-independent-model/RTL clocks cover 210 such handoffs, including stable driven
-halted outputs and DMACK-qualified resume. Shared-PM arbitration is not yet a
-complete external transaction owner. HALT during BG
+and stops after its state-7 completion. The Type 13 attachment passes five
+directed tests and 50,124 independent-model/RTL clocks with 210 such handoffs;
+the Type 5 attachment passes five and 50,126 with 197. Both cover stable
+driven halted outputs and DMACK-qualified resume. Shared-PM arbitration is not
+yet a complete external transaction owner. HALT during BG
 or DM waits, TRAP/interrupt priority, reset interaction, and analog input timing
 remain uncomposed
 [ADI-UM-1989, printed pp. 5-13–5-14, 5-17–5-20].

@@ -102,6 +102,49 @@ class ComputePMCacheTests(unittest.TestCase):
         self.assertEqual(completed.next_instruction, 0xABCDEF)
         self.assertIsNone(completed.state.pending_cache_instruction)
 
+    def test_late_force_replaces_pending_hit_with_recovery(self) -> None:
+        state = _fill(_known_state(), 0x222, 0xABCDEF)
+        issued = apply_compute_pm_cache_cycle(
+            state,
+            execute=True,
+            opcode=0x526000,
+            next_fetch_address=ExactWord(14, 0x222),
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(issued.core.cache_instruction_selected)
+        self.assertEqual(
+            issued.state.pending_cache_instruction,
+            ExactWord(24, 0xABCDEF),
+        )
+
+        forced = apply_compute_pm_cache_cycle(
+            issued.state,
+            force_instruction_fetch=True,
+            pm_cycle_complete=False,
+        )
+        self.assertIsNotNone(forced.state.core.pending)
+        assert forced.state.core.pending is not None
+        self.assertTrue(forced.state.core.pending.recovery_required)
+
+        completed = apply_compute_pm_cache_cycle(
+            forced.state,
+            force_instruction_fetch=True,
+            pm_read_data=ExactWord(24, 0xCAFE55),
+        )
+        self.assertTrue(completed.core.data_action_complete)
+        self.assertFalse(completed.core.instruction_complete)
+        self.assertFalse(completed.instruction_from_cache)
+        self.assertFalse(completed.next_instruction_known)
+        self.assertIsNotNone(completed.state.core.recovery)
+
+        recovered = apply_compute_pm_cache_cycle(
+            completed.state,
+            pm_read_data=ExactWord(24, 0x123456),
+        )
+        self.assertTrue(recovered.instruction_from_external)
+        self.assertEqual(recovered.next_instruction, 0x123456)
+        self.assertTrue(recovered.cache_fill_from_recovery)
+
     def test_miss_recovery_fills_monitor_and_is_later_hit(self) -> None:
         issued = apply_compute_pm_cache_cycle(
             _known_state(),

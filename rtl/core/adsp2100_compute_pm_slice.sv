@@ -233,8 +233,11 @@ module adsp2100_compute_pm_slice (
         core_accepted
         && (force_instruction_fetch_i || !cache_next_instruction_valid_i)
     );
+    // HALT can request a mandatory external fetch at state 3, after the
+    // Type 5 descriptor was captured at state 8-to-1.
     assign active_needs_recovery = data_pending_q
-        ? pending_needs_recovery_q : needs_recovery;
+        ? (pending_needs_recovery_q || force_instruction_fetch_i)
+        : needs_recovery;
     assign active_next_fetch_address = data_pending_q
         ? pending_next_fetch_address_q : next_fetch_address_i;
     assign active_next_fetch_address_valid = data_pending_q
@@ -425,6 +428,8 @@ module adsp2100_compute_pm_slice (
                     next_fetch_address_valid_i;
                 pending_px_q <= px_q;
                 pending_px_valid_q <= px_valid_q;
+            end else if (data_pending_q && force_instruction_fetch_i) begin
+                pending_needs_recovery_q <= 1'b1;
             end
 
             if (px_setup_enable) begin

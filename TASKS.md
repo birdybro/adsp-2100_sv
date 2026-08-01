@@ -321,8 +321,9 @@ advance beyond research until a page-level primary citation is added.
   and one pure recovery fetch after a miss. A composed cache boundary now
   derives hits from the standalone monitor, supplies the actual cached word,
   fills recovery and ordinary external fetches, and passes ten integration
-  tests plus 50,086 model/RTL clocks; attachment to the separately verified
-  native PM pin phases and whole-core event integration remain open.
+  tests plus 50,086 model/RTL clocks. Its native PM and HALT attachments add
+  50,081 and 50,124 clocks respectively; whole-core event integration remains
+  open.
   Type 4 action selection exhaustively partitions all 2,097,152 class words
   into 2,034,688 source-closed compute/memory or memory-only actions and
   62,464 prohibited DM-read destination collisions. Two independent
@@ -340,8 +341,9 @@ advance beyond research until a page-level primary citation is added.
   31,232 prohibited read-destination collisions. Two independent
   manual-derived fixtures, seven model/schema checks, canonical/raw
   assembler-disassembler paths, exhaustive 24-bit RTL traversal, a formal
-  harness, and a fully constrained 51-ALM Cyclone V decoder fit pass. State,
-  cache-recovery, native-PM, and whole-core execution remain open.
+  harness, and a fully constrained 51-ALM Cyclone V decoder fit pass. Bounded
+  logical, cache-recovery, native-PM, and HALT execution now pass; whole-core
+  execution and arbitration remain open.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -469,8 +471,10 @@ advance beyond research until a page-level primary citation is added.
   all 1,048,576 words partition in Python and RTL. Its bounded state/cache/
   native composition adds old-value selected-bank and DAG2 capture, atomic
   compute/status/read/PX/I completion, issue-time cache-hit selection, one
-  pure miss-recovery fetch, 25 directed tests, 50,071 logical clocks, and
-  50,083 native phase clocks. Type 1 now has a source-closed action graph for
+  pure miss-recovery fetch, 26 directed logical/cache/native tests, 50,071
+  logical clocks, and 50,083 native phase clocks. Its separate HALT attachment
+  adds five tests and 50,126 phase clocks covering 197 late hit overrides and
+  forced fetches without action replay. Type 1 now has a source-closed action graph for
   all 4,194,304 words: fixed DAG1 DM plus DAG2 PM reads, restricted DD/PD
   destinations, implicit AR/MR compute results, AMF-zero dual fetch, and
   cycle-start/cycle-end ordering. Independent exhaustive Python and RTL,
@@ -626,8 +630,11 @@ advance beyond research until a page-level primary citation is added.
   A separate Type 5 model closes all ALU/MAC/PM/DAG2 fields and the
   read-destination collision partition, then composes selected-bank state,
   PX packing, fixed PM completion, the instruction-cache monitor, and native
-  state-8/state-7 phases. Fourteen logical, six cache, and five native directed
-  tests plus 50,071 logical and 50,083 native comparison clocks pass.
+  state-8/state-7 phases. Fourteen logical, seven cache, and five native
+  directed tests plus 50,071 logical and 50,083 native comparison clocks pass.
+  An independent HALT composition adds five directed tests and 50,126 clocks,
+  including 197 late hit overrides/forced fetches, 387 stops/resumes, and
+  one-time compute/data/DAG commit.
   A structurally separate Type 13 transaction model captures old shifter,
   DREG, PX, and DAG2 state; performs the fixed logical PM data action; and
   distinguishes same-cycle next-fetch cache hits from exactly one external
@@ -1111,8 +1118,11 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_shifter_pm_native_slice.sv`,
   `formal/shifter_pm_native.sby`, `tests/test_compute_pm_cache.py`,
   `tests/test_compute_pm_native.py`,
+  `tests/test_compute_pm_halt.py`,
   `sim/unit/tb_adsp2100_compute_pm_native_slice.sv`,
+  `sim/unit/tb_adsp2100_compute_pm_halt_slice.sv`,
   `formal/compute_pm_cache.sby`, `formal/compute_pm_native.sby`,
+  `formal/compute_pm_halt.sby`,
   `tests/test_linear_core.py`,
   `sim/unit/tb_adsp2100_linear_core_slice.sv`, `formal/linear_core.sby`
 - **Implementation notes:** keep PM physically/logically distinct from DM.
@@ -1140,7 +1150,7 @@ advance beyond research until a page-level primary citation is added.
   Five directed tests and 50,081 model/RTL clocks pass, its formal recipe
   syntax-checks, and a fully constrained 50 MHz Cyclone V fit uses
   2,055 ALMs and 1,648 registers. A second bounded client now attaches Type 5
-  ALU/MAC-plus-PM through the same cache/native boundary. Six cache and five
+  ALU/MAC-plus-PM through the same cache/native boundary. Seven cache and five
   native directed tests plus 50,083 native clocks verify old-value compute/PX/
   DAG2 capture, state-7 atomic completion, hit/miss recovery, and
   relinquishment; its fully constrained 25 ns native fit uses 1,894 ALMs,
@@ -1151,8 +1161,13 @@ advance beyond research until a page-level primary citation is added.
   following native fetch, cache refill, state-7 stop, held driven outputs, and
   DMACK-qualified resume. Its formal recipe syntax-checks and a fully
   constrained 25 ns Cyclone V fit uses 2,094 ALMs and 1,655 registers with no
-  RAM/DSP blocks. Type 5 HALT attachment and shared event arbitration remain
-  open. A bounded ordinary linear-fetch owner now shares the native PM
+  RAM/DSP blocks. The Type 5 owner independently consumes the same late HALT
+  request. Five directed tests and 50,126 clocks verify 197 issue-time hit
+  overrides/forced fetches, one-time ALU/MAC/PM/PX/DAG2 completion, one native
+  recovery fetch, cache refill, 387 stops/resumes, and DMACK-qualified release.
+  Its formal recipe syntax-checks and a fully constrained 25 ns Cyclone V fit
+  uses 1,946 ALMs, 1,768 registers, one DSP, and no RAM. Shared event
+  arbitration remains open. A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
@@ -1407,8 +1422,12 @@ advance beyond research until a page-level primary citation is added.
   210 PM-data recognitions/cache-hit overrides/forced fetches, 397 stops and
   resumes, no architectural replay, and DMACK-qualified held-state release.
   Its fully constrained 25 ns Cyclone V fit uses 2,094 ALMs and 1,655
-  registers with no RAM/DSP blocks. Type 5 remains unattached, and HALT while
-  BG or a DMACK wait is active, TRAP handoff, BR requests while halted,
+  registers with no RAM/DSP blocks. A bounded Type 5 composition adds five
+  directed tests and 50,126 clocks covering 197 late hit overrides/forced
+  fetches, one-time compute/data/DAG completion, 387 stops/resumes, and
+  DMACK-qualified release. Its constrained fit uses 1,946 ALMs, 1,768
+  registers, one DSP, and no RAM. HALT while BG or a DMACK wait is active,
+  TRAP handoff, BR requests while halted,
   interrupts, reset, and analog input synchronization remain explicitly
   unimplemented.
 - **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
@@ -1544,7 +1563,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Sixty harnesses now pass strict assertion
+  result a complete proof. Sixty-eight harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 and Type 7 immediate loads, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
@@ -1557,7 +1576,8 @@ advance beyond research until a page-level primary citation is added.
   native issue/completion attachment and stalled-descriptor stability,
   exhaustive Type 5 ALU/MAC-plus-PM action selection and collision exclusion,
   logical fixed-cycle execution/cache recovery/native state-8 issue and
-  state-7 completion,
+  state-7 completion plus the late-HALT forced-fetch/one-time-commit
+  composition,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
@@ -1631,7 +1651,10 @@ advance beyond research until a page-level primary citation is added.
   DSP and no RAM; their worst multicorner setup slacks are +0.811/+4.571/
   +4.233 ns, worst hold slacks +0.166/+0.164/+0.164 ns, and worst slow-corner
   Fmax values 41.34/48.95/48.15 MHz. These are bounded-client, not whole-core,
-  results.
+  results. The bounded Type 5/cache/native-PM/HALT attachment fits in 1,946
+  ALMs and 1,768 registers with one DSP and no RAM at 25 ns. Worst multicorner
+  setup is +3.651 ns, worst hold is +0.166 ns, worst slow-corner Fmax is
+  46.84 MHz, and no clock, port, or path is unconstrained.
   The bounded Type 2 DM-write slice fits in 581 ALMs and 430 fitted registers
   with no RAM/DSP blocks against a 20 ns standalone constraint. Worst setup is
   +3.590 ns, worst multicorner hold is +0.165 ns, worst slow-corner Fmax is

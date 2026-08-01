@@ -51,7 +51,7 @@ Known cases:
 | interrupt vectoring | two cycles described, including vector jump |
 | DMACK low | extend state 7 by whole processor cycles until high |
 | HALT during ordinary instruction fetch | asserted active-low input is recognized at state 3; the current cycle completes at state 7-to-8, stopped outputs hold state 8, and a DMACK-high release resumes at state 8-to-1 |
-| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and the bounded Type 13/native-PM attachment are verified, while Type 5/shared ownership remains open |
+| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified, while shared ownership remains open |
 
 Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 5-13–5-16, 6-14–6-15, 6-21, A-4, A-8–A-10]. The Type 26
@@ -135,7 +135,10 @@ miss or forced fetch commits those data actions once, then schedules exactly
 one pure instruction-recovery cycle. Its native attachment adds 50,083 phase
 clocks: the descriptor is captured at state 8-to-1, architectural effects
 commit only at state 7-to-8, and recovery is accepted on the following
-state 8-to-1. Ordinary fetch, branch/loop/interrupt/HALT/BR ownership remains
+state 8-to-1. A bounded HALT attachment adds five directed tests and 50,126
+phase clocks: 197 late issue-time hits become one external fetch, all data and
+compute actions commit once, and 387 stop/resume handshakes complete. Ordinary
+fetch, branch/loop/interrupt/BR ownership remains
 outside this bounded timing claim under OQ-008
 [ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
 6-3–6-7, A-1].
@@ -163,7 +166,7 @@ state-3 recognition: it commits the data action once, issues one external
 fetch at the next state-8 edge, and stops after the fetch's state-7
 completion. Five directed tests and 50,124 clocks cover 210 late hit overrides
 and forced fetches without architectural replay. Ordinary fetch, branches,
-loops, interrupts, Type 5 HALT, and BR/BG are not integrated into this owner.
+loops, interrupts, and BR/BG are not integrated into this owner.
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no
@@ -211,8 +214,11 @@ PM-data recognitions each schedule one state-8 forced-fetch issue before the
 later state-7 stop. A bounded Type 13 composition adds five directed tests and
 50,124 clocks: 210 late recognitions override 210 issue-time hits, complete
 the data action once, drive one native recovery fetch, fill the cache, and
-stop after that fetch. Type 5, HALT during grant/waits, TRAP, BR while stopped,
-interrupts, reset, and shared-PM arbitration remain outside this evidence
+stop after that fetch. A parallel Type 5 attachment adds five directed tests
+and 50,126 clocks: 197 late hits become forced fetches, the compute/data action
+commits once, and 387 stops/resumes complete. HALT during grant/waits, TRAP,
+BR while stopped, interrupts, reset, and shared-PM arbitration remain outside
+this evidence
 [ADI-UM-1989, printed
 pp. 1-5, 2-6, 2-15, 2-18,
 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24, 5-5–5-8,

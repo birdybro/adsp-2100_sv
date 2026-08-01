@@ -142,5 +142,8 @@ the PM data action once, then accepts exactly one native external fetch at the
 next state-8 boundary. That fetch fills the monitor and its state-7 completion
 enters stopped state 8. Five tests and 50,124 model/RTL clocks verify this
 sequence, including stable halted outputs and DMACK-qualified release. Type 5
-and shared PM-event arbitration remain outside this boundary
+has an independent equivalent attachment: five tests and 50,126 clocks verify
+197 hit overrides/forced fetches, one-time ALU/MAC/PM/PX/DAG2 completion, and
+387 stop/resume handshakes. Shared PM-event arbitration remains outside both
+boundaries
 [ADI-UM-1989, printed pp. 4-26–4-30 and 5-13–5-14].

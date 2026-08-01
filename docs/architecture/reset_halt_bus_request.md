@@ -1,7 +1,8 @@
 # Reset, halt, trap, and bus request
 
-**Status: reset phase, HALT sequence control, ordinary-fetch HALT attachment,
-normal BR/BG, and Type 22 handshake bounded in RTL**
+**Status: reset phase, HALT sequence control, ordinary-fetch plus bounded
+Type 5/Type 13 PM-data HALT attachments, normal BR/BG, and Type 22 handshake
+bounded in RTL**
 
 RESET is recognized on a CLKIN rising edge, must remain asserted for at least
 four CLKIN cycles, holds state 4 and CLKOUT low, and releases into state 5 on
@@ -118,8 +119,15 @@ external fetch at the following state-8 edge, fills the cache from that fetch,
 and enters the stopped state only at its state-7 completion. Five directed
 tests and 50,124 independent-model/RTL clocks cover 210 late recognitions,
 210 hit overrides/forced fetches, 397 stops/resumes, 209 DMACK-blocked
-releases, and 580 held clocks. Type 5 and shared-PM event arbitration remain
-unattached.
+releases, and 580 held clocks. Shared-PM event arbitration remains unattached.
+
+`rtl/core/adsp2100_compute_pm_halt_slice.sv` independently attaches the same
+scheduler to the bounded Type 5 cache/native-PM owner. It uses the identical
+late-recognition recovery rule while committing the ALU/MAC/PM/PX/DAG2 action
+exactly once. Five directed tests and 50,126 independent-model/RTL clocks cover
+197 late recognitions, hit overrides, and forced fetches, 1,996 data-cycle
+completions, 387 stops/resumes, 196 DMACK-blocked releases, and 577 held
+clocks. Shared-PM event arbitration remains unattached.
 
 General HALT support still excludes HALT recognition while BG is active or a
 DMACK wait is incomplete, Type 22 TRAP clear/release composition, BR recognition

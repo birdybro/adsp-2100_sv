@@ -116,12 +116,16 @@ postmodify atomically; preserve all of that state over a held logical PM
 transaction; and use the shared 16-word monitor for an issue-time cache hit or
 one pure recovery fetch. The native attachment accepts the descriptor only at
 state 8-to-1 and exposes its sole architectural completion at state 7-to-8.
-Fourteen logical, six cache, and five native directed tests plus 50,071 logical
+Fourteen logical, seven cache, and five native directed tests plus 50,071 logical
 and 50,083 native model/RTL clocks cover both banks, ALU/MAC and PM-only forms,
 old-value store overlap, read/PX split, cache hits/misses, recovery, reset,
-off-boundary rejection, and bus relinquishment. Ordinary fetch ownership,
-branches/loops/interrupt/HALT/BR arbitration, self-modifying PM, and physical
-hardware confirmation remain outside this bounded client under OQ-008.
+off-boundary rejection, late forced-fetch conversion, and bus relinquishment.
+A bounded HALT wrapper adds five directed tests and 50,126 deterministic
+model/RTL clocks. All 197 late PM-data recognitions override an issue-time hit,
+commit ALU/MAC/PM/PX/DAG2 actions once, and issue one external recovery fetch;
+387 stops/resumes complete with no replay. Ordinary fetch ownership, branches,
+loops, interrupt/BR arbitration, self-modifying PM, and physical hardware
+confirmation remain outside this bounded client under OQ-008.
 
 ## Bounded Type 8 execution
 
@@ -272,12 +276,12 @@ external instruction fetch follows without replay. Its completion fills the
 cache and enters held state 8. Five directed tests and 50,124 deterministic
 model/RTL clocks cover 210 hit overrides/forced fetches and 397 complete
 stop/resume sequences. Unified branches, loops, interrupts, self-modifying PM,
-ordinary fetch ownership, Type 5 HALT, and whole-core arbitration remain open
+ordinary fetch ownership, and whole-core arbitration remain open
 under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap execution for Types 1 and 5;
+- source/destination overlap execution for Type 1;
 - old store value versus new computation result execution outside Types 12 and 13;
 - dual PM/DM loads and independent DAG post-modifies;
 - status from the computation visible only to the next cycle;

@@ -1,8 +1,8 @@
 # Pipeline and cache
 
 **Status: one-stage pipeline, bounded ordinary linear fetch/BR/HALT control,
-bounded Type 13 PM-data/HALT forced-fetch attachment, and cache-integrated
-PM-data hit/miss timing implemented; unified hazards pending**
+bounded Type 5/Type 13 PM-data/HALT forced-fetch attachments, and cache-
+integrated PM-data hit/miss timing implemented; unified hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
 following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
@@ -56,8 +56,11 @@ Type 13/native-PM composition now attaches the handoff: late recognition
 overrides a captured cache hit, data actions commit exactly once, one external
 fetch fills the monitor, and the stop follows that fetch's state-7 completion.
 Five directed tests and 50,124 clocks cover 210 such attached handoffs.
-Type 5 and shared-PM/event arbitration remain open [ADI-UM-1989, printed
-pp. 5-13–5-14].
+The parallel Type 5/native-PM composition verifies another five directed tests
+and 50,126 clocks: 197 late hits are suppressed, ALU/MAC/PM/PX/DAG2 effects
+commit once, one native external fetch follows, and 387 stop/resume handshakes
+complete without replay. Shared-PM/event arbitration remains open
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-13–5-14].
 
 PM data use conflicts with external instruction fetch. The 16×24 cache can
 supply a valid next instruction; otherwise an additional external fetch cycle
@@ -108,6 +111,8 @@ arrives at state 3, records recovery in the already-pending descriptor, and
 hands the native PM bus to exactly one recovery fetch after data completion.
 The recovery fills the monitor and provides the stopped instruction word; no
 shifter, PM transfer, PX, or DAG write is replayed. Halted state 8 retains the
-driven PM levels, and release requires HALT inactive with DMACK high. Idle
-ordinary-fetch HALT, Type 5, BG/DM waits, TRAP, interrupts, reset release, and
-multi-owner priority remain outside this owner.
+driven PM levels, and release requires HALT inactive with DMACK high. The
+Type 5/HALT wrapper applies the same late-hit conversion and one-time commit
+rule to ALU/MAC-plus-PM. Idle ordinary-fetch HALT, BG/DM waits, TRAP,
+interrupts, reset release, and multi-owner priority remain outside these
+PM-data owners.

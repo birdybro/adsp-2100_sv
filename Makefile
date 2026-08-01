@@ -346,6 +346,27 @@ lint:
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_halt_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_compute_pm_native_slice.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_compute_pm_halt_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_conditional_compute_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -833,7 +854,8 @@ linear-bus-control-tests:
 	fi
 
 halt-tests:
-	$(PYTHON) -m unittest -v tests.test_halt_control tests.test_shifter_pm_halt
+	$(PYTHON) -m unittest -v tests.test_halt_control \
+		tests.test_shifter_pm_halt tests.test_compute_pm_halt
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_halt_control_vectors.py \
@@ -894,6 +916,33 @@ halt-tests:
 			rtl/core/adsp2100_shifter_pm_halt_slice.sv \
 			sim/unit/tb_adsp2100_shifter_pm_halt_slice.sv; \
 		build/obj_shifter_pm_halt_slice/Vtb_adsp2100_shifter_pm_halt_slice; \
+		$(PYTHON) tools/generators/generate_compute_pm_halt_vectors.py \
+			--output build/compute_pm_halt_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_pm_halt_slice \
+			--top-module tb_adsp2100_compute_pm_halt_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_compute_pm_native_slice.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_compute_pm_halt_slice.sv \
+			sim/unit/tb_adsp2100_compute_pm_halt_slice.sv; \
+		build/obj_compute_pm_halt_slice/Vtb_adsp2100_compute_pm_halt_slice; \
 	else \
 		echo "SKIP bounded HALT attachment RTL tests: Verilator is not installed"; \
 	fi
@@ -2100,6 +2149,28 @@ formal:
 			rtl/core/adsp2100_compute_pm_native_slice.sv \
 			formal/harnesses/adsp2100_compute_pm_native_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_halt_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_compute_pm_native_slice.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_compute_pm_halt_slice.sv \
+			formal/harnesses/adsp2100_compute_pm_halt_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_conditional_compute_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_condition_logic.sv \
@@ -2388,6 +2459,8 @@ formal:
 			formal/compute_pm_cache.sby; \
 		sby -f -d build/formal_compute_pm_native \
 			formal/compute_pm_native.sby; \
+		sby -f -d build/formal_compute_pm_halt \
+			formal/compute_pm_halt.sby; \
 		sby -f -d build/formal_conditional_compute \
 			formal/conditional_compute.sby; \
 		sby -f -d build/formal_stack_control_decode \
@@ -2463,7 +2536,9 @@ synth-yosys:
 			synthesis/yosys/linear_halt_control.ys; \
 		yosys -q -l build/yosys_shifter_pm_halt.log \
 			synthesis/yosys/shifter_pm_halt.ys; \
-		echo "PASS bounded reset/phase, BR/BG, HALT, linear, and Type 13/HALT Yosys synthesis"; \
+		yosys -q -l build/yosys_compute_pm_halt.log \
+			synthesis/yosys/compute_pm_halt.ys; \
+		echo "PASS bounded reset/phase, BR/BG, HALT, linear, and PM-data/HALT Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
 	fi
@@ -2529,6 +2604,8 @@ synth-quartus:
 			synthesis/quartus/compute_pm_cache_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_pm_native_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/compute_pm_halt_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/conditional_compute_smoke; \
 		quartus_sh --flow compile \
@@ -2598,11 +2675,14 @@ clean:
 	@find build -maxdepth 1 -type f -name compute_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_halt_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name compute_pm_halt_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name linear_core_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name yosys_linear_core.log -delete
 	@find build -maxdepth 1 -type f -name yosys_linear_core.json -delete
 	@find build -maxdepth 1 -type f -name yosys_shifter_pm_halt.log -delete
 	@find build -maxdepth 1 -type f -name yosys_shifter_pm_halt.json -delete
+	@find build -maxdepth 1 -type f -name yosys_compute_pm_halt.log -delete
+	@find build -maxdepth 1 -type f -name yosys_compute_pm_halt.json -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
@@ -2798,6 +2878,9 @@ clean:
 	@if [ -d build/obj_compute_pm_native_slice ]; then \
 		find build/obj_compute_pm_native_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_compute_pm_halt_slice ]; then \
+		find build/obj_compute_pm_halt_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_conditional_compute_decode ]; then \
 		find build/obj_conditional_compute_decode -depth -delete; \
 	fi
@@ -2983,6 +3066,9 @@ clean:
 	@if [ -d build/quartus_compute_pm_native ]; then \
 		find build/quartus_compute_pm_native -depth -delete; \
 	fi
+	@if [ -d build/quartus_compute_pm_halt ]; then \
+		find build/quartus_compute_pm_halt -depth -delete; \
+	fi
 	@if [ -d build/quartus_conditional_compute ]; then \
 		find build/quartus_conditional_compute -depth -delete; \
 	fi
@@ -3069,6 +3155,7 @@ clean:
 		build/formal_compute_pm \
 		build/formal_compute_pm_cache \
 		build/formal_compute_pm_native \
+		build/formal_compute_pm_halt \
 		build/formal_conditional_compute \
 		build/formal_direct_jump \
 		build/formal_do_until \

@@ -43,6 +43,10 @@ class HaltControlTests(unittest.TestCase):
             contract["pm_data_effect"],
         )
         self.assertIn(
+            "TYPE_5_COMPUTE_PM_NATIVE_OWNER",
+            contract["implemented_attachments"],
+        )
+        self.assertNotIn(
             "TYPE_5_PROGRAM_MEMORY_DATA_OWNER_ATTACHMENT",
             contract["excluded_claims"],
         )

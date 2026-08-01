@@ -98,6 +98,11 @@ from .compute_pm_native import (
     ComputePMNativeState,
     apply_compute_pm_native_cycle,
 )
+from .compute_pm_halt import (
+    ComputePMHaltCycleResult,
+    ComputePMHaltState,
+    apply_compute_pm_halt_cycle,
+)
 from .conditional_compute import (
     CONDITIONAL_COMPUTE_CLASS_MASK,
     CONDITIONAL_COMPUTE_CLASS_VALUE,
@@ -529,6 +534,8 @@ __all__ = [
     "ComputePMCacheCycleResult",
     "ComputePMCacheState",
     "ComputePMCycleResult",
+    "ComputePMHaltCycleResult",
+    "ComputePMHaltState",
     "ComputePMNativeCycleResult",
     "ComputePMNativeState",
     "ComputePMPending",
@@ -777,6 +784,7 @@ __all__ = [
     "apply_sequencer_slice_cycle",
     "apply_compute_pm_cycle",
     "apply_compute_pm_cache_cycle",
+    "apply_compute_pm_halt_cycle",
     "apply_compute_pm_native_cycle",
     "compute_alu",
     "compute_dm_unsupported_reason",
