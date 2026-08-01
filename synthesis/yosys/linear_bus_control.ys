@@ -12,6 +12,12 @@ read_verilog -sv rtl/core/adsp2100_sequencer_stacks.sv
 read_verilog -sv rtl/core/adsp2100_status_stack.sv
 read_verilog -sv rtl/core/adsp2100_architectural_state.sv
 read_verilog -sv rtl/core/adsp2100_internal_move_slice.sv
+read_verilog -sv rtl/core/adsp2100_condition_logic.sv
+read_verilog -sv rtl/core/adsp2100_conditional_compute_decode.sv
+read_verilog -sv rtl/core/adsp2100_alu.sv
+read_verilog -sv rtl/core/adsp2100_mr_saturate.sv
+read_verilog -sv rtl/core/adsp2100_mac.sv
+read_verilog -sv rtl/core/adsp2100_conditional_compute_action.sv
 read_verilog -sv rtl/core/adsp2100_program_bus.sv
 read_verilog -sv rtl/core/adsp2100_bus_control.sv
 read_verilog -sv rtl/wrappers/adsp2100_reset_bus_grant.sv

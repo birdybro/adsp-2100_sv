@@ -65,6 +65,7 @@ module tb_adsp2100_architectural_state;
     logic [3:0] imask;
     logic [13:0] cntr;
     logic cntr_valid;
+    logic not_counter_expired;
     logic [7:0] px;
     logic [7:0] sstat;
     logic alternate_bank;
@@ -232,6 +233,7 @@ module tb_adsp2100_architectural_state;
         .imask_o(imask),
         .cntr_o(cntr),
         .cntr_valid_o(cntr_valid),
+        .not_counter_expired_o(not_counter_expired),
         .px_o(px),
         .sstat_o(sstat),
         .alternate_bank_o(alternate_bank),
@@ -249,7 +251,8 @@ module tb_adsp2100_architectural_state;
     assign unused_observation = ^{
         probe_data, invalid_move_write, count_stack_push,
         count_stack_push_data, count_stack_depth, count_stack_overflow,
-        icntl, imask, cntr, cntr_valid, px, sstat, bit_reverse,
+        icntl, imask, cntr, cntr_valid, not_counter_expired, px, sstat,
+        bit_reverse,
         overflow_latch, saturate_ar, mf
     };
 

@@ -48,12 +48,13 @@ banks, the 14,336 source-closed Type 15 immediate LSHIFT/ASHIFT words with
 selected-bank SR writeback, all 507,904 supported Type 7 immediate-to-non-data
 register words with exact-width state, selected-bank SB, and CNTR/count-stack
 effects, and bounded independent-model/native-RTL integration in which NOP,
-legal Type 6/7, all 2,256 legal Type 17 internal MOVE source/destination pairs,
-and all Type 18 MODE CONTROL words execute at the current PC while the
+legal Type 6/7, all Type 9 conditional ALU/MAC words, all 2,256 legal Type 17
+internal MOVE source/destination pairs, and all Type 18 MODE CONTROL words
+execute at the current PC while the
 following word is fetched at PC+1 across the sourced state-8 issue/state-7
-retire phases, with 53,985 model/RTL phase clocks and an explicit OQ-016
+retire phases, with 53,662 model/RTL phase clocks and an explicit OQ-016
 provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
-50,003 clocks and 93 complete current-fetch/inhibit/grant/restart handshakes,
+50,003 clocks and 86 complete current-fetch/inhibit/grant/restart handshakes,
 and a separate bounded active-low HALT attachment adds 50,003 clocks and 790
 ordinary-fetch stop/restart sequences with state-8 PM stability and DMACK-
 qualified release, while the standalone HALT sequencer adds 50,033 clocks

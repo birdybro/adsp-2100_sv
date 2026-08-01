@@ -87,10 +87,11 @@ implemented independently in Python and portable RTL:
 
 `rtl/core/adsp2100_halt_control.sv` separates new-issue inhibition from phase
 hold. `rtl/core/adsp2100_linear_halt_control_slice.sv` attaches both effects
-to the bounded ordinary NOP/Type 6/Type 7/Type 17/Type 18 PM owner without
+to the bounded ordinary NOP/Type 6/Type 7/Type 9/Type 17/Type 18 PM owner without
 gating a clock. Seven directed tests and 50,003 deterministic independent-
-model/RTL clocks cover 790 complete recognize/stop/resume sequences, 161
-DMACK-low blocked-release observations, and 742 held state-8 clocks. The
+model/RTL clocks cover 769 complete recognize/stop/resume sequences, 140
+DMACK-low blocked-release observations, 804 held state-8 clocks, and 469
+fetched Type 9 no-op retirements. The
 machine-readable boundary is `docs/generated/adsp2100_halt_control.yaml`.
 
 ## PM-data forced-fetch sequencing boundary
@@ -184,9 +185,10 @@ asserted, all PM output enables are masked while the architectural and PM
 transaction state remains preserved. After release recognition and the full
 release interval, BG deasserts and the next fetch is accepted on the documented
 state-8-to-state-1 restart edge. Five directed composition tests and 50,003
-independent-model/RTL clocks cover 93 complete request/grant/release/resume
-handshakes, 5,375 retirements, and 5,376 issues. This evidence applies only to
-the bounded NOP/Type 6/Type 7/Type 17/Type 18 linear fetch owner; PM-data,
+independent-model/RTL clocks cover 86 complete request/grant/release/resume
+handshakes, 5,404 retirements, 5,405 issues, and 446 fetched Type 9 no-op
+retirements. This evidence applies only to
+the bounded NOP/Type 6/Type 7/Type 9/Type 17/Type 18 linear fetch owner; PM-data,
 DM, transfer, loop, interrupt, HALT, and reset-first-fetch ownership remain
 unconnected.
 

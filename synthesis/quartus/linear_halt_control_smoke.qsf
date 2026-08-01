@@ -16,6 +16,12 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_stack.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_architectural_state.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_move_slice.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_condition_logic.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_compute_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_alu.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturate.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mac.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_compute_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_fetch_client.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_core_slice.sv

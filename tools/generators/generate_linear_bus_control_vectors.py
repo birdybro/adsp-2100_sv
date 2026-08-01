@@ -55,15 +55,28 @@ def _type7(code: int, data: int) -> int:
     )
 
 
+def _type9_nop(rng: random.Random) -> int:
+    """Return a legal Type 9 AMF-zero word with no architectural write."""
+    return (
+        0x200000
+        | (rng.randrange(2) << 18)
+        | (rng.randrange(4) << 11)
+        | (rng.randrange(8) << 8)
+        | rng.randrange(16)
+    )
+
+
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(10)
+    choice = rng.randrange(12)
     if choice < 2:
         return 0
     if choice < 7:
         return _type6(rng.randrange(16), rng.randrange(1 << 16))
     if choice < 9:
         return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
-    return 0x0C0000 | (rng.randrange(256) << 4)
+    if choice < 11:
+        return 0x0C0000 | (rng.randrange(256) << 4)
+    return _type9_nop(rng)
 
 
 def _exact(value: object) -> tuple[bool, int]:
@@ -110,12 +123,16 @@ def _probe(state: LinearBusControlState, code: int) -> tuple[bool, int]:
     return _exact(arch.px)
 
 
-def generate_lines(clock_count: int, seed: int) -> list[str]:
+def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, int]]:
     rng = random.Random(seed)
     state = LinearBusControlState.reset()
     phase = LogicalPhase.STATE_8
     br_n = True
     lines: list[str] = []
+    coverage = {key: 0 for key in (
+        "recognized", "grant_assert", "grant_release", "resume",
+        "retire", "issue", "masked", "type9_retire",
+    )}
 
     def emit(
         *,
@@ -142,6 +159,25 @@ def generate_lines(clock_count: int, seed: int) -> list[str]:
             br_n=br_n,
             instruction_setup=setup_value,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
+        )
+        coverage["type9_retire"] += int(
+            result.core.retire_event
+            and isinstance(state.core.instruction, ExactWord)
+            and state.core.instruction.value & 0xF800F0 == 0x200000
+        )
+        coverage["recognized"] += int(result.control.request_recognized)
+        coverage["grant_assert"] += int(result.control.grant_assert_event)
+        coverage["grant_release"] += int(
+            result.control.grant_release_event
+        )
+        coverage["resume"] += int(result.control.resume_event)
+        coverage["retire"] += int(result.core.retire_event)
+        coverage["issue"] += int(result.core.instruction_issue)
+        coverage["masked"] += int(
+            result.native_bus_relinquished
+            and not result.core.bus.address_output_enable
+            and not result.core.bus.control_output_enable
+            and not result.core.bus.data_output_enable
         )
 
         stimulus = 0
@@ -304,7 +340,7 @@ def generate_lines(clock_count: int, seed: int) -> list[str]:
 
     br_n = False
     emit(reset=True, pmd_valid=False)
-    return lines
+    return lines, coverage
 
 
 def result_native_relinquished(
@@ -331,12 +367,15 @@ def main() -> int:
         default=0x2100B7,
     )
     args = parser.parse_args()
-    lines = generate_lines(args.clocks, args.seed)
+    lines, coverage = generate_lines(args.clocks, args.seed)
+    if min(coverage.values()) == 0:
+        raise RuntimeError(f"insufficient BR/BG coverage: {coverage}")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text("\n".join(lines) + "\n", encoding="ascii")
     print(
         f"PASS generated {len(lines)} linear-BR/BG clocks "
-        f"seed={args.seed:#x}"
+        f"seed={args.seed:#x} "
+        + " ".join(f"{name}={count}" for name, count in coverage.items())
     )
     return 0
 

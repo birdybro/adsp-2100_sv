@@ -11,7 +11,9 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
-bounded steady-state NOP/Type 6/Type 7/Type 17/Type 18 ordinary-fetch ownership,
+bounded steady-state NOP/Type 6/Type 7/Type 9/Type 17/Type 18 ordinary-fetch
+ownership with Type 9 computation/status actions attached directly to the
+shared architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
 attached separately to that owner, standalone PM-data HALT forced-fetch
@@ -30,6 +32,17 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- fetched Type 9 conditional ALU/MAC execution attached to the shared
+  architectural-state owner and native ordinary-fetch phases: 14 directed
+  tests and 53,662 model/RTL clocks traverse every AMF/condition combination;
+  separate 50,003-clock BR/BG, shared-PM/BR-BG, and HALT comparisons cover 446,
+  368, and 469 Type 9 no-op retirements while preserving control sequencing;
+  strict lint and 73 formal recipes syntax-check, and a fully constrained
+  25 ns Cyclone V fit uses 1,327 ALMs, 1,196 registers, one DSP, no RAM,
+  +2.707 ns setup, +0.167 ns worst hold, 44.86 MHz worst slow-corner Fmax, and
+  zero unconstrained paths; reset-first-fetch, active loops, control transfers,
+  interrupts, and unified PM/cache ownership remain open;
+
 - reusable shared architectural-state owner extracted from the bounded Type
   17 slice without changing its public behavior: it exclusively holds both
   computational banks, both DAG register sets, status/control, CNTR/count
@@ -42,8 +55,8 @@ cycle-, or Hard Drivin'-complete
   unconstrained paths; the owner now exposes and directly tests parallel
   DREG, ALU/MAC/shifter, DAG-I, automatic-status, and mode-control actions
   with cycle-start/cycle-end visibility, bank isolation, conflict
-  preservation, and reset suppression; fetched compute and unified cache/PM
-  client state remain open;
+  preservation, and reset suppression; additional fetched classes and unified
+  cache/PM client state remain open;
 
 - extracted retained ordinary-fetch architectural client attached to the
   shared PM owner and normal BR/BG composition, while the prior linear-core
@@ -403,7 +416,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 679 distinct Python unit checks plus manifest/hash verification;
+- 680 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -543,11 +556,11 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/17/18 linear owner adds 53,985 phase clocks,
-  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 93
+  the bounded Type 6/7/9/17/18 linear owner adds 53,662 phase clocks,
+  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across
-  790 stop/restart handshakes,
+  769 stop/restart handshakes,
   the Type 2/native-DM attachment adds 50,027 clocks,
   the Type 12/native-DM attachment adds 50,064 clocks,
   and the Type 14 state slice adds
@@ -701,7 +714,7 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/17/18 linear fetch owner and original
+  the bounded steady-state Type 6/7/9/17/18 linear fetch owner and original
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants
@@ -720,14 +733,13 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Extend the extracted architectural-state owner with the already-verified
-   ALU/MAC/shifter/DAG action intents, then attach ordinary fetch, Type 5, and
-   Type 13 to that one owner and one cache before composing HALT, DMACK waits,
-   TRAP, interrupts, and reset.
+3. Attach the next source-closed non-memory instruction class to the shared
+   architectural-state owner, then converge ordinary fetch, Type 5, and Type
+   13 on that one owner and one cache before composing HALT, DMACK waits, TRAP,
+   interrupts, and reset.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
-   Type 17/Type 18 owner's deterministic preload and add further source-closed
-   non-memory classes.
+   Type 9/Type 17/Type 18 owner's deterministic preload.
 5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

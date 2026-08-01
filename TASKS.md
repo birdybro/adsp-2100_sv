@@ -538,9 +538,9 @@ advance beyond research until a page-level primary citation is added.
   register state, preserves reset unknowns, performs selected-bank SB and
   CNTR/count-stack writes, and fails closed for computational-group, reserved,
   and read-only-SSTAT destinations.
-  The integrated model now retires NOP, legal Type 6/7, known-source legal Type
-  17 internal MOVE, and all Type 18 MODE CONTROL words in a bounded linear-flow
-  context. It applies their state
+  The integrated model now retires NOP, legal Type 6/7, every Type 9
+  conditional ALU/MAC word, known-source legal Type 17 internal MOVE, and all
+  Type 18 MODE CONTROL words in a bounded linear-flow context. It applies their state
   actions, advances the PC, records the overlapped fetch at PC+1 rather than
   at the retiring address, and rejects the former synthetic PM-fetch wait
   extension. Nineteen foundation tests cover this boundary, including atomic
@@ -553,12 +553,13 @@ advance beyond research until a page-level primary citation is added.
   interrupts, PM-data/cache, HALT, and BR/BG remain outside this model
   increment.
   A structurally separate phase model now composes that architectural state
-  with the native PM transaction model. Thirteen directed tests and 53,985
+  with the native PM transaction model. Fourteen directed tests and 53,662
   deterministic model/RTL clocks cover enabled state-8 issue, state-7 retire,
   phase holds, bus-output relinquishment, PC wrap, invalid fetched data,
-  selected-bank Type 6/7/17/18 ordering, every legal Type 17 pair, every Type
-  18 encoding, CNTR stack saturation, and fail-closed unsupported/reserved
-  words. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source extension raises a
+  selected-bank Type 6/7/9/17/18 ordering, every legal Type 17 pair, every Type
+  9 AMF/condition combination, every Type 18 encoding, CNTR stack saturation,
+  and fail-closed unsupported/reserved words. Type 17
+  ASTAT/MSTAT/SSTAT/IMASK/ICNTL source extension raises a
   dedicated retirement pulse so the OQ-016 provisional boundary is
   observable. Its instruction preload and complete-state initialization are
   explicitly deterministic test hooks rather than architectural loading or
@@ -567,7 +568,7 @@ advance beyond research until a page-level primary citation is added.
   bus relinquishment: the current fetch retires, the following state-8 issue is
   blocked, PM output enables are masked only while BG is asserted, and release
   restarts fetch at state 8-to-1. Five directed tests and 50,003 differential
-  clocks cover 93 complete request/grant/release/resume handshakes. Other PM
+  clocks cover 86 complete request/grant/release/resume handshakes. Other PM
   owners, DM, HALT, interrupts, and reset-first-fetch remain unattached.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
@@ -1254,9 +1255,10 @@ advance beyond research until a page-level primary citation is added.
   without changing the legacy private-PM wrapper's behavior. A rejected PC+1
   fetch remains represented by the current instruction and retries at a later
   enabled state-8 boundary; only routed fetch completion retires the
-  instruction. Six directed tests and 50,003 model/RTL clocks cover 4,247
-  fetch accepts, 781 retries/collisions, 4,246 completions, 62 raw Type 5 and
-  32 raw Type 13 accepts, 94 BR recognitions/resumes, and 3,161 grant clocks.
+  instruction. Six directed tests and 50,003 model/RTL clocks cover 4,329
+  fetch accepts, 755 retries/collisions, 4,328 completions, 54 raw Type 5 and
+  29 raw Type 13 accepts, 90 BR recognitions/resumes, 3,189 grant clocks, and
+  368 fetched Type 9 no-op retirements.
   Its formal recipe syntax-checks and a fully constrained 20 ns Cyclone V fit
   uses 1,031 ALMs and 1,072 registers, no RAM/DSP blocks, +8.005 ns worst
   setup, +0.165 ns worst multicorner hold, 83.37 MHz worst slow-corner Fmax,
@@ -1264,19 +1266,21 @@ advance beyond research until a page-level primary citation is added.
   this attachment; a single three-client/cache/HALT composition and sourced
   cross-event priority remain open.
   A bounded ordinary linear-fetch owner now shares the native PM
-  controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
-  source/destination pairs, and every Type 18 MODE CONTROL word. It
+  controller with NOP, legal Type 6/7, every Type 9 conditional ALU/MAC word,
+  all 2,256 legal Type 17 internal MOVE source/destination pairs, and every
+  Type 18 MODE CONTROL word. It
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
   and loaded next word at state 7-to-8, preserves pending state through phase
   holds/relinquishment, and fails closed for unsupported or reserved current
-  words. Thirteen directed tests and 53,985 phase clocks pass, with each legal
-  Type 17 pair and each Type 18 encoding exercised in the integrated flow.
+  words. Fourteen directed tests and 53,662 phase clocks pass, with each legal
+  Type 17 pair, each Type 9 AMF/condition combination, and each Type 18
+  encoding exercised in the integrated flow.
   Narrow Type 17 status/control sources raise an OQ-016 provisional retirement
   pulse. Reset's special first-fetch
   waveform, PM-data/cache ownership, transfers, loops, interrupts, and HALT
-  remain separate work. A bounded NOP/Type 6/Type 7/Type 17/Type 18
+  remain separate work. A bounded NOP/Type 6/Type 7/Type 9/Type 17/Type 18
   composition now attaches normal BR/BG issue inhibition and PM output masking
-  through five tests and 50,003 clocks, including 93 full handshakes; every
+  through five tests and 50,003 clocks, including 86 full handshakes; every
   other owner remains outside that result.
 - **Unresolved questions:** unified Type 5/Type 13/fetch request generation,
   branch/loop/interrupt/HALT/TRAP/BR priority, and electrical wrapper
@@ -1498,8 +1502,9 @@ advance beyond research until a page-level primary citation is added.
   ordinary linear PM owner: current fetch completes through state 7, the next
   issue is stopped, all PM output enables are masked during grant, and issue
   resumes at state 8-to-1 after release. Five directed tests and 50,003
-  independent-model/RTL clocks cover 93 complete handshakes, 5,375 retires,
-  and 5,376 issues. The composition has a formal recipe and a fully constrained
+  independent-model/RTL clocks cover 86 complete handshakes, 5,404 retires,
+  5,405 issues, and 446 fetched Type 9 no-op retirements. The composition has a
+  formal recipe and a fully constrained
   Cyclone V fit; PM-data/cache, DM, transfer, loop, interrupt, HALT, and reset-
   first-fetch ownership remain unimplemented.
   A second bounded BR/BG composition now covers the one physical PM selector
@@ -1574,14 +1579,16 @@ advance beyond research until a page-level primary citation is added.
   and recovery fills; this does not yet close branch/loop/interrupt/HALT/BR
   arbitration under OQ-008.
   The independent top-level model and a bounded native RTL owner now enforce
-  the sourced ordinary-flow overlap for NOP, legal Type 6/7, all legal Type 17
-  internal MOVE words from initialized state, and all Type 18 MODE CONTROL
-  words: the current-PC instruction executes while PC+1 is
+  the sourced ordinary-flow overlap for NOP, legal Type 6/7, every Type 9
+  conditional ALU/MAC word, all legal Type 17 internal MOVE words from
+  initialized state, and all Type 18 MODE CONTROL words: the current-PC
+  instruction executes while PC+1 is
   fetched, then action/PC/next-word state retires at state 7-to-8. The phase
-  model and RTL agree for 53,985 clocks, including every legal Type 17 pair and
-  every Type 18 encoding, and no longer permit an invented ordinary-PM wait
+  model and RTL agree for 53,662 clocks, including every Type 9 AMF/condition
+  combination, every legal Type 17 pair, and every Type 18 encoding, and no
+  longer permit an invented ordinary-PM wait
   extension. OQ-016 narrow-source extension is exposed at retirement. A
-  separate bounded composition adds 50,003 clocks and 93 complete normal
+  separate bounded composition adds 50,003 clocks and 86 complete normal
   BR/BG handshakes while retaining the current fetch, inhibiting the next
   issue, masking PM only during grant, and restarting at state 8-to-1. Reset
   first-fetch, all other instruction owners, HALT/interrupt control events,
@@ -1943,11 +1950,12 @@ advance beyond research until a page-level primary citation is added.
 ## Next task selection
 
 The highest-priority unblocked implementation work is replacing the bounded
-steady-state NOP/Type 6/Type 7/Type 17/Type 18 owner's deterministic
+steady-state NOP/Type 6/Type 7/Type 9/Type 17/Type 18 owner's deterministic
 preload with the sourced reset-release/first-fetch sequence and a documented
-next-PC/PM-owner arbiter, followed by additional source-closed non-memory
-linear instruction classes. Type 7 immediate non-data-register execution and
-Type 3 state/native-DM execution are bounded and verified. The Type 1
+next-PC/PM-owner arbiter, followed by attaching additional source-closed
+non-memory linear instruction classes to the shared state. Type 9 fetched
+conditional compute, Type 7 immediate non-data-register execution, and Type 3
+state/native-DM execution are bounded and verified. The Type 1
 dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.

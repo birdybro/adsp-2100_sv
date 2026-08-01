@@ -182,7 +182,7 @@ owner is now attached to BR/BG: its current ordinary fetch remains driven and
 retires before the new-issue inhibit takes effect; grant then masks every PM
 output enable, and the first post-release fetch starts at the state-8-to-state-1
 restart boundary. Five directed tests and 50,003 differential clocks exercise
-93 complete request/grant/release/resume sequences. PM-data/cache owners,
+86 complete request/grant/release/resume sequences. PM-data/cache owners,
 control transfers, interrupts, HALT, and reset-first-fetch are not part of that
 composition.
 

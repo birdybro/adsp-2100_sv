@@ -55,15 +55,28 @@ def _type7(code: int, data: int) -> int:
     )
 
 
+def _type9_nop(rng: random.Random) -> int:
+    """Return a legal Type 9 AMF-zero word with no architectural write."""
+    return (
+        0x200000
+        | (rng.randrange(2) << 18)
+        | (rng.randrange(4) << 11)
+        | (rng.randrange(8) << 8)
+        | rng.randrange(16)
+    )
+
+
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(10)
+    choice = rng.randrange(12)
     if choice < 2:
         return 0
     if choice < 7:
         return _type6(rng.randrange(16), rng.randrange(1 << 16))
     if choice < 9:
         return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
-    return 0x0C0000 | (rng.randrange(256) << 4)
+    if choice < 11:
+        return 0x0C0000 | (rng.randrange(256) << 4)
+    return _type9_nop(rng)
 
 
 def _exact(value: object) -> tuple[bool, int]:
@@ -126,6 +139,7 @@ def generate_lines(
         "resumed": 0,
         "dmack_blocked": 0,
         "held_clocks": 0,
+        "type9_retire": 0,
     }
 
     def emit(
@@ -154,6 +168,11 @@ def generate_lines(
             dmack=dmack,
             instruction_setup=setup_value,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
+        )
+        coverage["type9_retire"] += int(
+            result.core.retire_event
+            and isinstance(state.core.instruction, ExactWord)
+            and state.core.instruction.value & 0xF800F0 == 0x200000
         )
 
         stimulus = 0

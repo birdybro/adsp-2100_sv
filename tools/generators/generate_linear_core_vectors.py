@@ -62,6 +62,24 @@ def _type17(destination: int, source: int) -> int:
     )
 
 
+def _type9(
+    *,
+    z: int,
+    amf: int,
+    yop: int,
+    xop: int,
+    condition: int,
+) -> int:
+    return (
+        0x200000
+        | ((z & 1) << 18)
+        | ((amf & 0x1F) << 13)
+        | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | (condition & 0xF)
+    )
+
+
 def _directed_opcodes() -> tuple[int, ...]:
     readable = register_code_by_name(writable=False)
     writable = register_code_by_name(writable=True)
@@ -84,18 +102,51 @@ def _directed_opcodes() -> tuple[int, ...]:
         for destination in sorted(writable.values())
         for source in sorted(readable.values())
     )
+    # Establish known feedback registers in both banks, then traverse every
+    # Type 9 AMF/condition combination through the fetched retirement path.
+    opcodes.extend(
+        (
+            _type7(writable["MSTAT"], 0),
+            _type7(writable["ASTAT"], 0),
+            _type9(z=1, amf=0x10, yop=0, xop=0, condition=0xF),
+            _type9(z=1, amf=0x04, yop=0, xop=0, condition=0xF),
+            _type7(writable["MSTAT"], 1),
+            _type7(writable["ASTAT"], 0),
+            _type9(z=1, amf=0x10, yop=0, xop=0, condition=0xF),
+            _type9(z=1, amf=0x04, yop=0, xop=0, condition=0xF),
+        )
+    )
+    opcodes.extend(
+        _type9(
+            z=(amf ^ condition) & 1,
+            amf=amf,
+            yop=(amf + condition) & 3,
+            xop=(amf * 3 + condition) & 7,
+            condition=condition,
+        )
+        for amf in range(32)
+        for condition in range(16)
+    )
     return tuple(opcodes)
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(11)
+    choice = rng.randrange(14)
     if choice == 0:
         return 0
     if choice < 5:
         return _type6(rng.randrange(16), rng.randrange(1 << 16))
     if choice < 9:
         return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
-    return MODE_CONTROL_VALUE | (rng.randrange(256) << 4)
+    if choice < 11:
+        return MODE_CONTROL_VALUE | (rng.randrange(256) << 4)
+    return _type9(
+        z=rng.randrange(2),
+        amf=rng.randrange(32),
+        yop=rng.randrange(4),
+        xop=rng.randrange(8),
+        condition=rng.randrange(16),
+    )
 
 
 def _exact(value: object) -> tuple[bool, int]:

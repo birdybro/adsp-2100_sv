@@ -151,6 +151,9 @@ module adsp2100_linear_core_formal (
         cover (phase_conflict);
         cover (integration_conflict);
         cover (provisional_source_extension);
+        cover (
+            retire_event && ((opcode & 24'hf800f0) == 24'h200000)
+        );
     end
 
     always_ff @(posedge clk) begin

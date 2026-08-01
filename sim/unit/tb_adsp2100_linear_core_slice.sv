@@ -339,7 +339,7 @@ module tb_adsp2100_linear_core_slice;
             $fatal(1, "insufficient linear-core vectors: %0d", vector_count);
         end
         $display(
-            "PASS bounded NOP/Type 6/Type 7/Type 17/Type 18 linear core: %0d clocks",
+            "PASS bounded NOP/Type 6/Type 7/Type 9/Type 17/Type 18 linear core: %0d clocks",
             vector_count
         );
         $finish;

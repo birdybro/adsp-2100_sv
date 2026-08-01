@@ -1,9 +1,10 @@
 """Exact-width foundation for an independent original ADSP-2100 model.
 
 The integrated instruction boundary currently covers linear-flow NOP, the
-source-closed Type 6/7 immediate-load classes, original Type 18 mode control,
-and legal Type 17 internal moves from known sources. Unsupported behavior
-fails closed instead of becoming an accidental no-op.
+source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
+original Type 18 mode control, and legal Type 17 internal moves from known
+sources. Unsupported behavior fails closed instead of becoming an accidental
+no-op.
 """
 
 from __future__ import annotations
@@ -380,6 +381,51 @@ class ADSP2100Model:
                 self.state,
                 action.destination_register,
                 source,
+            )
+        elif instruction.value & 0xF800F0 == 0x200000:
+            from .conditional_compute import (
+                ConditionalComputeState,
+                apply_conditional_compute_cycle,
+            )
+            from .status import ASTATState, StatusRegisters
+
+            status = StatusRegisters(
+                astat=(
+                    ASTATState()
+                    if self.state.astat is UNKNOWN
+                    else ASTATState.from_word(self.state.astat)
+                ),
+                mstat=self.state.mstat,
+                icntl=self.state.icntl,
+                imask=self.state.imask,
+            )
+            compute_state = ConditionalComputeState(
+                primary=self.state.primary,
+                alternate=self.state.alternate,
+                status=status,
+            )
+            computed = apply_conditional_compute_cycle(
+                compute_state,
+                execute=True,
+                opcode=instruction.value,
+                not_counter_expired=(
+                    isinstance(self.state.cntr, ExactWord)
+                    and self.state.cntr.value != 1
+                ),
+            )
+            next_astat = (
+                computed.state.status.astat.to_word()
+                if computed.state.status.astat.is_fully_known
+                else UNKNOWN
+            )
+            next_state = replace(
+                self.state,
+                primary=computed.state.primary,
+                alternate=computed.state.alternate,
+                astat=next_astat,
+                mstat=computed.state.status.mstat,
+                icntl=computed.state.status.icntl,
+                imask=computed.state.status.imask,
             )
         else:
             database = load_database()

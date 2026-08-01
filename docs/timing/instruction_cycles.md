@@ -191,21 +191,22 @@ separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
 changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
 stack saturation/SSTAT, fail-closed reserved Type 7 destinations, legal Type
 17 execution, and unknown-source/reserved-selector rejection. A separate
-phase-level composition and bounded RTL owner add thirteen directed tests and
-53,985 differential clocks: all 2,256 legal Type 17 source/destination pairs
-execute from fully initialized state, every Type 18 encoding executes, the next
+phase-level composition and bounded RTL owner add fourteen directed tests and
+53,662 differential clocks: every Type 9 AMF/condition combination and all
+2,256 legal Type 17 source/destination pairs execute from fully initialized
+state, every Type 18 encoding executes, the next
 fetch is admitted only at enabled state 8-to-1, PM pins follow the native
 controller, and the current action plus PC/next-word state retire only at
 state 7-to-8. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source use raises a
 dedicated OQ-016 provisional-behavior pulse at retirement. Phase holds preserve
 the transaction, and a distinct new-issue inhibit does not mask the active
 fetch. The bounded BR/BG composition adds five directed tests and 50,003
-clocks with 93 complete handshakes: the recognized request permits current
+clocks with 86 complete handshakes: the recognized request permits current
 retirement, blocks the next issue, masks PM output enables only during grant,
 and restarts at state 8-to-1 after release. This still is not a multi-owner
 core; reset first-fetch, loop/transfer/event selection, PM-data/cache,
 DM ownership, and interrupt arbitration remain open. The bounded ordinary-
-fetch HALT attachment adds seven directed tests and 50,003 clocks with 790
+fetch HALT attachment adds seven directed tests and 50,003 clocks with 769
 recognized stops and restarts: active-low HALT is sampled at state 3, the
 current fetch retires at state 7-to-8, state 8 and its PM levels hold static,
 and release advances only when DMACK is high. The standalone HALT controller
@@ -264,8 +265,12 @@ operands, feedback, and arithmetic modes followed by true-only cycle-end
 result/status writes. False and AMF-zero paths preserve state without changing
 the one-cycle boundary. Exhaustive decode covers all 32,768 class words, and
 283,996 model/RTL cycles execute every word in both banks and both available
-condition outcomes. Fetch overlap, counter-valid integration, loop-terminal
-handling, interrupts, waits, and pin-level phases remain open
+condition outcomes. The integrated ordinary-fetch owner now accepts every
+Type 9 word and uses the shared validity-aware CNTR predicate; 14 directed
+tests and 53,662 model/RTL phase clocks exercise every AMF/condition
+combination with native state-8 fetch issue and atomic state-7 computation,
+status, PC, and next-word retirement. Active-loop termination, interrupts,
+PM-data ownership, and cross-event priority remain open
 [ADI-UM-1989, printed pp. 2-6–2-20, 4-21, 4-25, 6-8–6-10, A-2, A-5–A-7].
 
 The bounded Type 10 model/RTL slice verifies cycle-start condition, PC, CNTR,

@@ -65,6 +65,7 @@ module adsp2100_internal_move_slice (
     logic       bit_reverse_unused;
     logic       overflow_latch_unused;
     logic       saturate_ar_unused;
+    logic       not_counter_expired_unused;
     logic [15:0] dreg_read_unused;
     logic [15:0] af_unused;
     logic [15:0] mf_unused;
@@ -197,6 +198,7 @@ module adsp2100_internal_move_slice (
         .imask_o(imask_o),
         .cntr_o(cntr_o),
         .cntr_valid_o(cntr_valid_o),
+        .not_counter_expired_o(not_counter_expired_unused),
         .px_o(px_o),
         .sstat_o(sstat_o),
         .alternate_bank_o(alternate_bank_unused),
@@ -216,7 +218,8 @@ module adsp2100_internal_move_slice (
         unused_destination_present, unused_destination_writable,
         unused_source_selector_valid, state_invalid_move_write,
         alternate_bank_unused, bit_reverse_unused, overflow_latch_unused,
-        saturate_ar_unused, dreg_read_unused, af_unused, mf_unused,
+        saturate_ar_unused, not_counter_expired_unused,
+        dreg_read_unused, af_unused, mf_unused,
         mr_unused, se_unused, sb_unused, sr_unused
     };
 

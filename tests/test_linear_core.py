@@ -40,6 +40,24 @@ def _type17(destination: int, source: int) -> int:
     )
 
 
+def _type9(
+    *,
+    z: int,
+    amf: int,
+    yop: int,
+    xop: int,
+    condition: int,
+) -> int:
+    return (
+        0x200000
+        | ((z & 1) << 18)
+        | ((amf & 0x1F) << 13)
+        | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | (condition & 0xF)
+    )
+
+
 def _setup(state: LinearCoreState, opcode: int, *, pc: int = 4) -> LinearCoreState:
     result = apply_linear_core_cycle(
         state,
@@ -95,6 +113,10 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "ALL_2256_LEGAL_TYPE_17_INTERNAL_MOVES",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_TYPE_9_CONDITIONAL_ALU_MAC_WORDS",
             contract["supported_current_instructions"],
         )
         self.assertIn("OQ_016", contract["provisional_behavior"])
@@ -169,6 +191,42 @@ class LinearCoreTests(unittest.TestCase):
             read_dreg(moved.state.architecture.alternate, DREG.AX0),
             ExactWord(16, 0x000B),
         )
+
+    def test_type9_alu_retires_with_next_fetch_and_false_form_preserves(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type7(0x30, 0))
+        state = _complete(
+            _issue(state).state,
+            _type6(DREG.AX0, 3),
+        ).state
+        state = _complete(
+            _issue(state).state,
+            _type6(DREG.AY0, 4),
+        ).state
+        state = _complete(
+            _issue(state).state,
+            _type9(z=0, amf=0x13, yop=0, xop=0, condition=0xF),
+        ).state
+        added = _complete(_issue(state).state, _type6(DREG.AR, 0x1234))
+        self.assertEqual(
+            read_dreg(added.state.architecture.primary, DREG.AR),
+            ExactWord(16, 7),
+        )
+        self.assertEqual(added.state.architecture.astat, ExactWord(8, 0))
+
+        loaded = _complete(
+            _issue(added.state).state,
+            _type9(z=0, amf=0x13, yop=0, xop=0, condition=0),
+        )
+        self.assertEqual(
+            read_dreg(loaded.state.architecture.primary, DREG.AR),
+            ExactWord(16, 0x1234),
+        )
+        preserved = _complete(_issue(loaded.state).state, 0)
+        self.assertEqual(
+            read_dreg(preserved.state.architecture.primary, DREG.AR),
+            ExactWord(16, 0x1234),
+        )
+        self.assertEqual(preserved.state.architecture.astat, ExactWord(8, 0))
 
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))

@@ -8,6 +8,27 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched Type 9 conditional ALU/MAC execution in the bounded ordinary linear
+  owner. A stateless action producer now decodes cycle-start operands,
+  condition/status, feedback, CNTR predicate, and MSTAT arithmetic modes, then
+  drives atomic ALU/MAC result and ASTAT intents into the single shared
+  architectural-state owner at the state-7 retirement edge. Type 6/7/17 moves
+  and Type 18 mode controls now use the same owner directly. Fourteen directed
+  tests and 53,662 deterministic model/RTL clocks traverse every Type 9
+  AMF/condition combination while preserving PC+1 fetch overlap, false/AMF-zero
+  timing, selected-bank behavior, phase holds, and fail-closed words. Separate
+  50,003-clock BR/BG, shared-PM/BR-BG, and HALT compositions cover 446, 368,
+  and 469 fetched Type 9 no-op retirements respectively. The 44-test shared-
+  state suite, its focused direct action-boundary RTL test, and 210,084
+  dependent Type 17/3/6/7 clocks remain passing. Strict lint and all 73 formal
+  recipe syntax checks pass; proofs and
+  Yosys synthesis remain unavailable. A fully constrained 25 ns Cyclone V fit
+  uses 1,327 ALMs, 1,196 registers, one DSP, no block RAM, +2.707 ns worst
+  multicorner setup slack, +0.167 ns worst hold slack, 44.86 MHz worst
+  slow-corner Fmax, and zero unconstrained paths. Reset-first-fetch, active
+  loops, control-flow redirection, interrupts, PM-data/cache ownership, and
+  unified cross-event priority remain open.
+
 - A preservation-oriented `adsp2100_architectural_state` owner extracted from
   the bounded Type 17 implementation. It now exclusively owns the two banked
   computational register sets, both DAG register sets, status/control state,

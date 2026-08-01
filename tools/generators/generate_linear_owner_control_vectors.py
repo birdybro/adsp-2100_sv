@@ -55,15 +55,28 @@ def _type7(code: int, data: int) -> int:
     )
 
 
+def _type9_nop(rng: random.Random) -> int:
+    """Return a legal Type 9 AMF-zero word with no architectural write."""
+    return (
+        0x200000
+        | (rng.randrange(2) << 18)
+        | (rng.randrange(4) << 11)
+        | (rng.randrange(8) << 8)
+        | rng.randrange(16)
+    )
+
+
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(11)
+    choice = rng.randrange(13)
     if choice < 2:
         return 0
     if choice < 7:
         return _type6(rng.randrange(16), rng.randrange(1 << 16))
     if choice < 10:
         return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
-    return 0x0C0000 | (rng.randrange(256) << 4)
+    if choice < 12:
+        return 0x0C0000 | (rng.randrange(256) << 4)
+    return _type9_nop(rng)
 
 
 def _exact(value: object) -> tuple[bool, int]:
@@ -82,6 +95,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
         "fetch_accept", "fetch_retry", "fetch_complete", "type5_accept",
         "type13_accept", "collision", "recognized", "grant", "resume",
         "masked",
+        "type9_retire",
     )}
 
     def emit(
@@ -113,6 +127,11 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             type5_request=type5,
             type13_request=type13,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
+        )
+        coverage["type9_retire"] += int(
+            result.core.retire_event
+            and isinstance(state.core.instruction, ExactWord)
+            and state.core.instruction.value & 0xF800F0 == 0x200000
         )
 
         stimulus = 0
@@ -342,6 +361,7 @@ def main() -> int:
         "fetch_accept", "fetch_retry", "fetch_complete", "type5_accept",
         "type13_accept", "collision", "recognized", "grant", "resume",
         "masked",
+        "type9_retire",
     )
     missing = [key for key in required if coverage[key] == 0]
     if missing:

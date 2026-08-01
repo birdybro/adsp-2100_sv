@@ -81,6 +81,7 @@ module adsp2100_architectural_state (
     output logic [3:0]  imask_o,
     output logic [13:0] cntr_o,
     output logic        cntr_valid_o,
+    output logic        not_counter_expired_o,
     output logic [7:0]  px_o,
     output logic [7:0]  sstat_o,
     output logic        alternate_bank_o,
@@ -146,7 +147,6 @@ module adsp2100_architectural_state (
     logic        counter_conflict;
     logic        unused_counter_condition_valid;
     logic        unused_counter_expired;
-    logic        unused_not_counter_expired;
     logic        unused_counter_decrement;
     logic        unused_counter_restore;
     logic        unused_empty_ce_invalidate;
@@ -450,7 +450,7 @@ module adsp2100_architectural_state (
         .cntr_valid_o(cntr_valid_o),
         .condition_valid_o(unused_counter_condition_valid),
         .counter_expired_o(unused_counter_expired),
-        .not_counter_expired_o(unused_not_counter_expired),
+        .not_counter_expired_o(not_counter_expired_o),
         .count_stack_push_o(count_stack_push_o),
         .count_stack_push_data_o(counter_push_data),
         .count_stack_pop_o(count_stack_pop),

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field, replace
 from .load_dreg_immediate import decode_load_dreg_immediate
 from .load_non_dreg_immediate import decode_load_non_dreg_immediate
 from .internal_move import decode_internal_move
+from .conditional_compute import decode_conditional_compute
 from .mode_control import decode_mode_control
 from .model import (
     ADSP2100Model,
@@ -87,6 +88,8 @@ def _instruction_class(
     if decode_load_dreg_immediate(instruction.value) is not None:
         return (True, False)
     if decode_mode_control(instruction.value) is not None:
+        return (True, False)
+    if decode_conditional_compute(instruction.value) is not None:
         return (True, False)
     type17 = decode_internal_move(instruction.value)
     if type17 is not None:
