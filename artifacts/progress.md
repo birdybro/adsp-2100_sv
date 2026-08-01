@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `a69e3a8`
+**Latest verified engineering commit:** `b7f1d68`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -11,6 +11,7 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
+bounded steady-state NOP/Type 6/Type 7 ordinary-fetch ownership,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -20,6 +21,12 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- bounded steady-state native linear owner for NOP and legal Type 6/7,
+  executing at the current PC while the native PM controller fetches PC+1,
+  with state-8 issue, state-7 atomic action/PC/next-word retirement,
+  fail-closed unsupported words, nine directed checks, 53,588 differential
+  clocks, formal assertions, a machine-readable contract, and a fully
+  constrained Cyclone V fit;
 - required repository layout and autonomous-agent governance;
 - lawful cache-only reference workflow with content and SHA-256 validation;
 - initial source-precedence, exact-device, and cycle-model ADRs;
@@ -250,7 +257,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 593 distinct Python unit checks plus manifest/hash verification;
+- 602 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -502,13 +509,13 @@ outstanding.
   Type 13, Type 2, Type 3, Type 4, and Type 12 native-attachment invariants, plus
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
-  and Type 3 logical state execution plus exact Type 7 state execution
-  (60 total)
+  and Type 3 logical state execution plus exact Type 7 state execution and
+  the bounded steady-state linear fetch owner (61 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
-- no integrated architectural core, complete assembler, or whole-core
-  synthesis top exists.
+- no integrated multi-owner architectural core, complete assembler, or
+  whole-core synthesis top exists.
 
 ## Next highest-priority work
 
@@ -516,8 +523,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach the bounded integrated-model NOP/Type 6/Type 7 linear flow to an RTL
-   owner for ordinary PM fetch, PC progression, and native phase timing.
+3. Extend the bounded NOP/Type 6/Type 7 linear owner with source-closed
+   non-memory classes, then implement reset first-fetch and PM ownership.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

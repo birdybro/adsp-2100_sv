@@ -9,7 +9,8 @@
   Type 5 action/logical/cache/native-PM execution, Type 6, Type 7, Type 8,
   Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
-  decoders/integration slices, the standalone and Type 13-integrated
+  decoders/integration slices, the bounded NOP/Type 6/Type 7 linear owner,
+  the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
   stack-control
@@ -19,7 +20,14 @@
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
-- Yosys is not installed in this environment.
+- Yosys is not installed in this environment. A bounded linear-owner Yosys
+  synthesis script is wired into `make synth-yosys` for an equipped host.
+- Quartus 17.0.2 full compilation of the bounded steady-state linear owner
+  passes for Cyclone V `5CSEBA6U23I7`. It uses 643 ALMs, 948 fitted registers,
+  no block memory, and no DSP blocks. Against its documented 25 ns virtual-pin
+  smoke constraint, worst multicorner setup slack is +14.027 ns, worst hold
+  slack is +0.168 ns, and TimeQuest reports zero unconstrained clocks, ports,
+  or paths. This is not a whole-core utilization or Fmax result.
 - Quartus 17.0.2 full compilation of the combinational Type 3 direct-DM
   action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
   constraint. It uses 46 ALMs (32 combinational ALUTs) and no registers, RAM,
@@ -414,7 +422,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 43
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 61
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -423,6 +431,7 @@ timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded class-decode,
 internal-move-decode, stack-control-decode, stack-control-integration,
 Type-6 integration,
+bounded NOP/Type-6/Type-7 linear ownership,
 Type-8 integration,
 Type-9 integration,
 Type-2 integration,
