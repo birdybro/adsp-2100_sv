@@ -183,8 +183,14 @@ ADI-2101-CROSS-1990, printed pp. 9-71–9-73].
 Two hand-derived fixtures, all 25,648 canonical assembler/disassembler forms,
 an exhaustive 24-bit RTL class traversal, ten model checks, and 82,597
 stateful model-versus-RTL cycles cover every supported word in both banks.
-Whole-core fetch overlap, loop-terminal behavior, interrupt abort, wait
-extension, and bus phases remain outside this bounded instruction boundary.
+A stateless parallel-action boundary now attaches every canonical packet to
+the shared ordinary-fetch owner. Sixteen directed tests and 443,794 model/RTL
+phase clocks cover native state-8 PC+1 issue, cycle-start reads, and atomic
+state-7 DREG/shifter/status/PC/next-word retirement; 50,003-clock BR/BG,
+shared-PM/BR-BG, and HALT compositions separately preserve the packet across
+their control sequences. Loop-terminal behavior, interrupt abort, unified
+PM/cache/event ownership, and OQ-021 bit-15 behavior remain outside this
+bounded attachment.
 
 ## Bounded Type 12 execution and DM transaction
 

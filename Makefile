@@ -7,9 +7,11 @@ LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_conditional_compute_action.sv \
 	rtl/core/adsp2100_immediate_shift_decode.sv \
 	rtl/core/adsp2100_conditional_shift_decode.sv \
+	rtl/core/adsp2100_shift_move_decode.sv \
 	rtl/core/adsp2100_shifter.sv \
 	rtl/core/adsp2100_immediate_shift_action.sv \
-	rtl/core/adsp2100_conditional_shift_action.sv
+	rtl/core/adsp2100_conditional_shift_action.sv \
+	rtl/core/adsp2100_shift_move_action.sv
 
 .DEFAULT_GOAL := test
 

@@ -184,8 +184,9 @@ active-loop/interrupt arbitration, or external PM fetch phases
 [ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and A-9].
 
 The top-level independent model additionally composes NOP, legal Type 6/7,
-every Type 9 conditional compute word, every supported Type 15/16 shifter
-word, known-source legal Type 17 internal MOVE, and all Type 18 MODE CONTROL
+every Type 9 conditional compute word, every canonical Type 14 shifter-plus-
+DREG packet, every supported Type 15/16 shifter word, known-source legal Type
+17 internal MOVE, and all Type 18 MODE CONTROL
 words with ordinary linear PC progression and the overlapped next-instruction
 fetch.
 Nineteen foundation tests verify PC/fetch
@@ -193,9 +194,10 @@ separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
 changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
 stack saturation/SSTAT, fail-closed reserved Type 7 destinations, legal Type
 17 execution, and unknown-source/reserved-selector rejection. A separate
-phase-level composition and bounded RTL owner add fifteen directed tests and
-177,167 differential clocks: every Type 9 AMF/condition combination, every
-supported Type 15 and Type 16 word, and all 2,256 legal Type 17 source/
+phase-level composition and bounded RTL owner add sixteen directed tests and
+443,794 differential clocks: every Type 9 AMF/condition combination, every
+canonical Type 14 packet, every supported Type 15 and Type 16 word, and all
+2,256 legal Type 17 source/
 destination pairs execute from fully initialized state, every Type 18 encoding
 executes, the next
 fetch is admitted only at enabled state 8-to-1, PM pins follow the native
@@ -204,12 +206,12 @@ state 7-to-8. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source use raises a
 dedicated OQ-016 provisional-behavior pulse at retirement. Phase holds preserve
 the transaction, and a distinct new-issue inhibit does not mask the active
 fetch. The bounded BR/BG composition adds five directed tests and 50,003
-clocks with 92 complete handshakes: the recognized request permits current
+clocks with 86 complete handshakes: the recognized request permits current
 retirement, blocks the next issue, masks PM output enables only during grant,
 and restarts at state 8-to-1 after release. This still is not a multi-owner
 core; reset first-fetch, loop/transfer/event selection, PM-data/cache,
 DM ownership, and interrupt arbitration remain open. The bounded ordinary-
-fetch HALT attachment adds seven directed tests and 50,003 clocks with 784
+fetch HALT attachment adds seven directed tests and 50,003 clocks with 788
 recognized stops and restarts: active-low HALT is sampled at state 3, the
 current fetch retires at state 7-to-8, state 8 and its PM levels hold static,
 and release advances only when DMACK is high. The standalone HALT controller
@@ -234,7 +236,7 @@ operand read, optional old-SR read for OR forms, and one cycle-end SR write.
 Its signed immediate does not access SE and it emits no PM-data or DM request.
 The 58,709-cycle standalone comparison covers all 14,336 supported words in
 both banks. The integrated linear owner additionally retires every supported
-word within its 177,167-clock native-fetch comparison. Loop-terminal handling,
+word within its 443,794-clock native-fetch comparison. Loop-terminal handling,
 interrupts, and cross-event priority remain outside that attachment
 [ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
 
@@ -244,7 +246,7 @@ SR/SE/SB/SS writes. A false predicate preserves all of those destinations
 without changing the one-cycle boundary. Its exhaustive decoder partitions
 all 2,048 class words, and 54,403 model/RTL cycles cover every one of the 1,792
 supported words in both banks. The integrated linear owner additionally
-retires every supported word within its 177,167-clock native-fetch comparison,
+retires every supported word within its 443,794-clock native-fetch comparison,
 including true and false forms at the sourced one-cycle boundary. Loop
 termination, interrupt recognition/abort, and cross-event priority remain open
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
@@ -253,8 +255,11 @@ The bounded Type 14 model/RTL slice verifies simultaneous cycle-start shifter
 and move reads followed by noncolliding cycle-end DREG, SR/SE/SB, and SS
 writes. Its exhaustive decoder partitions all 65,536 class words, and 82,597
 model/RTL cycles cover every one of the 25,648 supported canonical words in
-both banks. This remains an instruction-boundary result; fetch overlap,
-loop-terminal handling, interrupts, waits, and pin-level phases remain open
+both banks. The fetched owner additionally retires every canonical word within
+its 443,794-clock native-fetch comparison while committing the noncolliding
+DREG and shifter/status results atomically with PC and the next word. OQ-021
+bit-15-one behavior, loop-terminal handling, interrupts, and cross-event
+priority remain open
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 
 The bounded Type 8 model/RTL slice verifies simultaneous cycle-start ALU/MAC
@@ -271,8 +276,8 @@ result/status writes. False and AMF-zero paths preserve state without changing
 the one-cycle boundary. Exhaustive decode covers all 32,768 class words, and
 283,996 model/RTL cycles execute every word in both banks and both available
 condition outcomes. The integrated ordinary-fetch owner now accepts every
-Type 9 word and uses the shared validity-aware CNTR predicate; 15 directed
-tests and 177,167 model/RTL phase clocks exercise every AMF/condition
+Type 9 word and uses the shared validity-aware CNTR predicate; 16 directed
+tests and 443,794 model/RTL phase clocks exercise every AMF/condition
 combination with native state-8 fetch issue and atomic state-7 computation,
 status, PC, and next-word retirement. Active-loop termination, interrupts,
 PM-data ownership, and cross-event priority remain open

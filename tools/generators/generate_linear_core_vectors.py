@@ -81,6 +81,23 @@ def _type9(
     )
 
 
+def _type14(*, sf: int, xop: int, destination: int, source: int) -> int:
+    return (
+        0x100000
+        | ((sf & 0xF) << 11)
+        | ((xop & 0x7) << 8)
+        | ((destination & 0xF) << 4)
+        | (source & 0xF)
+    )
+
+
+def _type14_destination_legal(sf: int, destination: int) -> bool:
+    return not (
+        (sf <= 0xB and destination in (int(DREG.SR0), int(DREG.SR1)))
+        or (0xC <= sf <= 0xE and destination == int(DREG.SE))
+    )
+
+
 def _type15(*, sf: int, xop: int, exponent: int) -> int:
     return (
         0x0F0000
@@ -146,6 +163,18 @@ def _directed_opcodes() -> tuple[int, ...]:
         for amf in range(32)
         for condition in range(16)
     )
+    # Type 14 executes its shifter and move in parallel. Traverse every
+    # canonical, source-backed, noncolliding packet through fetched retirement;
+    # the current known register bank makes both old-value results observable.
+    opcodes.append(_type7(writable["MSTAT"], 0))
+    opcodes.extend(
+        _type14(sf=sf, xop=xop, destination=destination, source=source)
+        for sf in range(16)
+        for xop in LEGAL_SHIFTER_XOPS
+        for destination in range(16)
+        if _type14_destination_legal(sf, destination)
+        for source in range(16)
+    )
     # Traverse every source-backed Type 15 and Type 16 word through the real
     # fetched retirement path. Standalone state tests already execute both
     # banks exhaustively; mode changes and random tail traffic vary the bank
@@ -168,7 +197,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(18)
+    choice = rng.randrange(21)
     if choice == 0:
         return 0
     if choice < 5:
@@ -191,10 +220,23 @@ def _legal_opcode(rng: random.Random) -> int:
             xop=rng.choice(LEGAL_SHIFTER_XOPS),
             exponent=rng.randrange(256),
         )
-    return _type16(
-        sf=rng.randrange(16),
+    if choice < 18:
+        return _type16(
+            sf=rng.randrange(16),
+            xop=rng.choice(LEGAL_SHIFTER_XOPS),
+            condition=rng.randrange(16),
+        )
+    sf = rng.randrange(16)
+    legal_destinations = tuple(
+        destination
+        for destination in range(16)
+        if _type14_destination_legal(sf, destination)
+    )
+    return _type14(
+        sf=sf,
         xop=rng.choice(LEGAL_SHIFTER_XOPS),
-        condition=rng.randrange(16),
+        destination=rng.choice(legal_destinations),
+        source=rng.randrange(16),
     )
 
 
@@ -457,7 +499,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--instructions", type=int, default=20_000)
+    parser.add_argument("--instructions", type=int, default=50_000)
     parser.add_argument("--seed", type=lambda value: int(value, 0), default=0x210067)
     args = parser.parse_args()
     lines = generate_lines(args.instructions, args.seed)

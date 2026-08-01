@@ -85,8 +85,27 @@ def _type16(rng: random.Random) -> int:
     )
 
 
+def _type14(rng: random.Random) -> int:
+    sf = rng.randrange(16)
+    destinations = tuple(
+        destination
+        for destination in range(16)
+        if not (
+            (sf <= 0xB and destination in (0xE, 0xF))
+            or (0xC <= sf <= 0xE and destination == 0x9)
+        )
+    )
+    return (
+        0x100000
+        | (sf << 11)
+        | (rng.choice(LEGAL_SHIFTER_XOPS) << 8)
+        | (rng.choice(destinations) << 4)
+        | rng.randrange(16)
+    )
+
+
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(16)
+    choice = rng.randrange(18)
     if choice < 2:
         return 0
     if choice < 7:
@@ -99,7 +118,9 @@ def _legal_opcode(rng: random.Random) -> int:
         return _type9_nop(rng)
     if choice < 14:
         return _type15(rng)
-    return _type16(rng)
+    if choice < 16:
+        return _type16(rng)
+    return _type14(rng)
 
 
 def _exact(value: object) -> tuple[bool, int]:
@@ -155,7 +176,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
     coverage = {key: 0 for key in (
         "recognized", "grant_assert", "grant_release", "resume",
         "retire", "issue", "masked", "type9_retire",
-        "type15_retire", "type16_retire",
+        "type14_retire", "type15_retire", "type16_retire",
     )}
 
     def emit(
@@ -188,6 +209,11 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             result.core.retire_event
             and isinstance(state.core.instruction, ExactWord)
             and state.core.instruction.value & 0xF800F0 == 0x200000
+        )
+        coverage["type14_retire"] += int(
+            result.core.retire_event
+            and isinstance(state.core.instruction, ExactWord)
+            and state.core.instruction.value & 0xFF0000 == 0x100000
         )
         coverage["type15_retire"] += int(
             result.core.retire_event

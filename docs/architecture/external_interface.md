@@ -53,11 +53,11 @@ descriptor at state 8-to-1, commits the architectural data action at state
 50,081 model/RTL clocks cover the attachment. A separate phase-aware BR/BG
 controller now provides normal grant/release timing and a RESET-time native-pin
 wrapper provides the documented asynchronous relationship. That controller is
-now composed with the bounded ordinary NOP/Type 6/Type 7/Type 9/Type 15/Type
-16/Type 17/Type 18 fetch
+now composed with the bounded ordinary NOP/Type 6/Type 7/Type 9/Type 14/Type
+15/Type 16/Type 17/Type 18 fetch
 owner: a recognized request lets the current fetch retire, inhibits the next
 issue, masks all PM output enables during grant, and restarts issue at state
-8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 92
+8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 86
 complete handshakes. A separate composition described below now attaches the
 Type 13 client to the shared owner; Type 5, other PM instruction classes, and
 a whole-core PM arbiter remain outside the linear owner.

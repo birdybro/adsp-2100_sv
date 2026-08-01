@@ -58,6 +58,18 @@ def _type9(
     )
 
 
+def _type14(
+    *, sf: int, xop: int, destination: DREG, source: DREG
+) -> int:
+    return (
+        0x100000
+        | ((sf & 0xF) << 11)
+        | ((xop & 0x7) << 8)
+        | (int(destination) << 4)
+        | int(source)
+    )
+
+
 def _type15(*, sf: int, xop: int, exponent: int) -> int:
     return 0x0F0000 | ((sf & 0xF) << 11) | ((xop & 0x7) << 8) | (exponent & 0xFF)
 
@@ -125,6 +137,10 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "ALL_TYPE_9_CONDITIONAL_ALU_MAC_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_25648_CANONICAL_TYPE_14_SHIFT_MOVE_WORDS",
             contract["supported_current_instructions"],
         )
         self.assertIn(
@@ -295,6 +311,28 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertEqual(true_shift.state.architecture.astat, ExactWord(8, 0))
 
+    def test_type14_parallel_actions_use_cycle_start_values(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type7(0x30, 0))
+        for opcode in (
+            _type6(DREG.SI, 0x1234),
+            _type6(DREG.SE, 0),
+            _type6(DREG.MR0, 0xABCD),
+            _type14(
+                sf=0,
+                xop=0,
+                destination=DREG.SI,
+                source=DREG.MR0,
+            ),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        retired = _complete(_issue(state).state, 0)
+        bank = retired.state.architecture.primary
+        self.assertEqual(read_dreg(bank, DREG.SI), ExactWord(16, 0xABCD))
+        self.assertEqual(read_dreg(bank, DREG.SR0), ExactWord(16, 0x0000))
+        self.assertEqual(read_dreg(bank, DREG.SR1), ExactWord(16, 0x1234))
+        self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0))
+
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))
         for value in range(1, 7):
@@ -309,6 +347,34 @@ class LinearCoreTests(unittest.TestCase):
             (0x000001, False),
             (_type7(0x32, 1), True),
             (_type17(0x32, 0x00), True),
+            (
+                _type14(
+                    sf=0,
+                    xop=0,
+                    destination=DREG.AX0,
+                    source=DREG.AX1,
+                )
+                | 0x008000,
+                True,
+            ),
+            (
+                _type14(
+                    sf=0,
+                    xop=1,
+                    destination=DREG.AX0,
+                    source=DREG.AX1,
+                ),
+                True,
+            ),
+            (
+                _type14(
+                    sf=0,
+                    xop=0,
+                    destination=DREG.SR0,
+                    source=DREG.AX1,
+                ),
+                True,
+            ),
             (_type15(sf=8, xop=0, exponent=0), True),
             (_type16(sf=0, xop=1, condition=0xF), True),
         ):

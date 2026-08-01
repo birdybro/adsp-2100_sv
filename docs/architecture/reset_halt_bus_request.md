@@ -87,12 +87,13 @@ implemented independently in Python and portable RTL:
 
 `rtl/core/adsp2100_halt_control.sv` separates new-issue inhibition from phase
 hold. `rtl/core/adsp2100_linear_halt_control_slice.sv` attaches both effects
-to the bounded ordinary NOP/Type 6/Type 7/Type 9/Type 15/Type 16/Type 17/Type
-18 PM owner without
+to the bounded ordinary NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type
+17/Type 18 PM owner without
 gating a clock. Seven directed tests and 50,003 deterministic independent-
-model/RTL clocks cover 784 complete recognize/stop/resume sequences, 178
-DMACK-low blocked-release observations, 883 held state-8 clocks, 410 fetched
-Type 9 no-op retirements, 729 Type 15 retirements, and 685 Type 16 retirements.
+model/RTL clocks cover 788 complete recognize/stop/resume sequences, 148
+DMACK-low blocked-release observations, 812 held state-8 clocks, 370 fetched
+Type 9 no-op retirements, 655 Type 14 retirements, 619 Type 15 retirements, and
+586 Type 16 retirements.
 The
 machine-readable boundary is `docs/generated/adsp2100_halt_control.yaml`.
 
@@ -187,10 +188,11 @@ asserted, all PM output enables are masked while the architectural and PM
 transaction state remains preserved. After release recognition and the full
 release interval, BG deasserts and the next fetch is accepted on the documented
 state-8-to-state-1 restart edge. Five directed composition tests and 50,003
-independent-model/RTL clocks cover 92 complete request/grant/release/resume
-handshakes, 5,427 retirements and issues, 324 fetched Type 9 no-op retirements,
-629 Type 15 retirements, and 676 Type 16 retirements. This evidence applies
-only to the bounded NOP/Type 6/Type 7/Type 9/Type 15/Type 16/Type 17/Type 18
+independent-model/RTL clocks cover 86 complete request/grant/release/resume
+handshakes, 5,437 retirements, 5,438 issues, 273 fetched Type 9 no-op
+retirements, 596 Type 14 retirements, 590 Type 15 retirements, and 591 Type 16
+retirements. This evidence applies only to the bounded NOP/Type 6/Type 7/Type
+9/Type 14/Type 15/Type 16/Type 17/Type 18
 linear fetch owner; PM-data,
 DM, transfer, loop, interrupt, HALT, and reset-first-fetch ownership remain
 unconnected.

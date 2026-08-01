@@ -24,9 +24,11 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mac.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_compute_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_immediate_shift_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_shift_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shift_move_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_immediate_shift_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_shift_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shift_move_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_fetch_client.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_core_slice.sv

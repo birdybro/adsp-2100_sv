@@ -13,6 +13,7 @@ from .conditional_shift import (
     is_conditional_shift_class,
 )
 from .immediate_shift import decode_immediate_shift, is_immediate_shift_class
+from .shift_move import decode_shift_move, is_shift_move_class
 from .mode_control import decode_mode_control
 from .model import (
     ADSP2100Model,
@@ -96,6 +97,11 @@ def _instruction_class(
         return (True, False)
     if decode_conditional_compute(instruction.value) is not None:
         return (True, False)
+    if is_shift_move_class(instruction.value):
+        return (
+            decode_shift_move(instruction.value) is not None,
+            decode_shift_move(instruction.value) is None,
+        )
     if is_immediate_shift_class(instruction.value):
         return (
             decode_immediate_shift(instruction.value) is not None,

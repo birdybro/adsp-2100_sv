@@ -8,6 +8,25 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched Type 14 shifter-plus-DREG execution in the bounded ordinary linear
+  owner. A stateless parallel-action producer samples both DREG sources,
+  SR/SE/SB, and ASTAT from cycle-start selected-bank state, then drives the
+  noncolliding DREG, shifter-result, and SS intents together at state-7
+  retirement. Sixteen directed tests and 443,794 deterministic model/RTL
+  clocks traverse all 25,648 canonical packets through native PC+1 fetch while
+  preserving old-value ordering; all bit-15-one, unavailable-XOP, and
+  destination-collision words fail closed. Separate 50,003-clock BR/BG,
+  shared-PM/BR-BG, and HALT compositions retire 596, 490, and 655 fetched Type
+  14 packets respectively without changing request retention, grant masking,
+  stop, or restart behavior. Strict lint and all 73 formal recipe syntax
+  checks pass; proofs and Yosys synthesis remain unavailable. A fully
+  constrained 25 ns Cyclone V fit uses 2,725 ALMs, 1,180 registers, one DSP,
+  no block RAM, +2.169 ns worst multicorner setup slack, +0.166 ns worst hold
+  slack, 43.80 MHz worst slow-corner Fmax, and zero unconstrained clocks,
+  ports, or paths. OQ-021 bit-15 behavior, reset-first-fetch, active loops,
+  control transfers, interrupts, and unified PM/cache/event ownership remain
+  open.
+
 - Fetched Type 15 immediate-shift and Type 16 conditional-shift execution in
   the bounded ordinary linear owner. Two stateless action producers now sample
   selected-bank X, immediate/SE shift counts, old SR/SB, predicate/CNTR, and

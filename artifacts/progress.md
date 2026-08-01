@@ -11,9 +11,10 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
-bounded steady-state NOP/Type 6/Type 7/Type 9/Type 15/Type 16/Type 17/Type 18
-ordinary-fetch ownership with Type 9 ALU/MAC and Type 15/16 shifter/status
-actions attached directly to the shared architectural state,
+bounded steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/
+Type 18 ordinary-fetch ownership with Type 9 ALU/MAC, Type 14 parallel move/
+shifter, and Type 15/16 shifter/status actions attached directly to the shared
+architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
 attached separately to that owner, standalone PM-data HALT forced-fetch
@@ -31,6 +32,21 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- fetched Type 14 shifter-plus-DREG execution attached to the shared
+  architectural-state owner and native ordinary-fetch phases: 16 directed
+  tests and 443,794 model/RTL clocks traverse all 25,648 canonical packets
+  while proving cycle-start reads and atomic noncolliding move/shifter/status
+  retirement; bit-15-one, unavailable-XOP, and destination-collision words
+  remain fail-closed. Separate 50,003-clock BR/BG, shared-PM/BR-BG, and HALT
+  comparisons retire 596, 490, and 655 Type 14 packets while preserving
+  request retention and control sequencing. Strict lint and all 73 formal
+  recipes syntax-check, and a fully constrained 25 ns Cyclone V fit uses
+  2,725 ALMs, 1,180 registers, one DSP, no RAM, +2.169 ns worst setup,
+  +0.166 ns worst hold, 43.80 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths; OQ-021, reset-first-fetch, loops,
+  interrupts, control transfers, and unified PM/cache/event ownership remain
+  open;
 
 - fetched Type 15 immediate-shift and Type 16 conditional-shift execution
   attached to the shared architectural-state owner and native ordinary-fetch
@@ -431,7 +447,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 681 distinct Python unit checks plus manifest/hash verification;
+- 682 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -571,11 +587,11 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/9/15/16/17/18 linear owner adds 177,167 phase clocks,
-  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 92
+  the bounded Type 6/7/9/14/15/16/17/18 linear owner adds 443,794 phase clocks,
+  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across
-  784 stop/restart handshakes,
+  788 stop/restart handshakes,
   the Type 2/native-DM attachment adds 50,027 clocks,
   the Type 12/native-DM attachment adds 50,064 clocks,
   and the Type 14 state slice adds
@@ -729,7 +745,7 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/9/15/16/17/18 linear fetch owner and original
+  the bounded steady-state Type 6/7/9/14/15/16/17/18 linear fetch owner and original
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants
@@ -754,7 +770,7 @@ outstanding.
    interrupts, and reset.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
-   Type 9/Type 17/Type 18 owner's deterministic preload.
+   Type 9/Type 14/Type 17/Type 18 owner's deterministic preload.
 5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

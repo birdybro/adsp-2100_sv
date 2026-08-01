@@ -2,7 +2,7 @@
   "schema_version": 1,
   "device": "original ADSP-2100",
   "status": "BOUNDED_RETAINED_ORDINARY_FETCH_SHARED_PM_AND_BR_BG_ATTACHMENT",
-  "architectural_client": "LINEAR_NOP_TYPE6_TYPE7_TYPE9_TYPE15_TYPE16_TYPE17_TYPE18_FETCH_OWNER",
+  "architectural_client": "LINEAR_NOP_TYPE6_TYPE7_TYPE9_TYPE14_TYPE15_TYPE16_TYPE17_TYPE18_FETCH_OWNER",
   "other_requesters": ["RAW_TYPE_5_DESCRIPTOR", "RAW_TYPE_13_DESCRIPTOR"],
   "collision_effect": "FETCH_CLIENT_RETAINS_CURRENT_INSTRUCTION_AND_RETRIES_PC_PLUS_1_AT_A_LATER_STATE_8_BOUNDARY",
   "completion_routing": "ONLY_FETCH_OWNER_COMPLETION_RETIRES_THE_LINEAR_CLIENT",
@@ -11,6 +11,7 @@
   "sources": [
     "ADI-UM-1989 printed pp. 1-5 through 1-7",
     "ADI-UM-1989 printed pp. 2-6 through 2-7 and 4-20 through 4-30",
+    "ADI-UM-1989 printed pp. 2-18 and 6-4 through 6-7",
     "ADI-UM-1989 printed pp. 2-20 through 2-35 and 6-11",
     "ADI-UM-1989 printed pp. 5-3 through 5-8, Figures 5.3 and 5.5",
     "ADI-DATABOOK-1987 printed pp. 2-33 through 2-39"

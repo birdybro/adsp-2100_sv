@@ -27,7 +27,7 @@ immediate-shift subset, all 4,194,304 source-closed Type 1 action words,
 1,556,480 source-closed Type 3 direct-DM words with bounded state/native execution,
 2,034,688 source-closed Type 4 action words,
 1,017,344 source-closed Type 5 action words,
-25,648 bounded Type 14 shifter-plus-DREG words, all
+25,648 fetched-bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
@@ -343,10 +343,12 @@ selected-bank state and commit together at cycle end. This defines 25,648
 executable words; 32,768 unresolved bit-15-one words, 4,096 XOP `001` words,
 and 3,024 same-destination words fail closed. Two hand fixtures, all supported
 syntax forms, exhaustive Python/RTL partitioning, and 82,597 stateful cycles
-provide bounded evidence
-[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7]. Fetch,
-loop-terminal, interrupt-abort, wait, and external bus phases remain outside
-the slice; bit 15 remains OQ-021.
+provide bounded evidence. A separate 443,794-clock fetched comparison retires
+every canonical packet with PC+1 native PM overlap and atomic DREG/shifter/
+status/PC/next-word commit
+[ADI-UM-1989, printed pp. 1-5, 2-6–2-7, 2-18, 5-5–5-8, 6-4–6-7, A-3,
+and A-7]. Loop-terminal and interrupt-abort priority remain outside the
+attachment; bit 15 remains OQ-021.
 
 Type 16 encodes SF `[14:11]`, XOP `[10:8]`, fixed-zero bits `[7:4]`, and COND
 `[3:0]`. All sixteen SF functions are legal: LSHIFT, ASHIFT, and NORM
