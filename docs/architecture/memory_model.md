@@ -35,8 +35,13 @@ select, and old write-source data. A missing DMACK holds all valid bus outputs
 and all architectural destinations. The first acknowledged boundary samples
 read data and atomically commits the optional DREG load, shifter action, and
 selected-I post-modification [ADI-UM-1989, printed pp. 5-9–5-12,
-6-3–6-7]. It does not yet include PM fetch concurrency, BR/BG ownership, or
-interrupt/HALT latching.
+6-3–6-7]. Its native composition accepts that old-value descriptor only at
+state 8-to-1, samples a read at the native state 7-to-8 edge, and presents that
+same completion event to the architectural slice. Six directed tests and
+50,064 connected model/RTL clocks cover read/write direction, old-value
+stores, complete-cycle waits, invalid read data, reset with an outstanding
+transaction, off-boundary controls, and relinquishment. It does not yet
+include PM fetch concurrency, BR/BG ownership, or interrupt/HALT latching.
 
 The separate native DM controller captures one selected descriptor at its
 implementation state-8-to-state-1 boundary and produces DMA, active-low
@@ -46,8 +51,9 @@ seven while all eight physical substates repeat; a high sample permits the
 read sample/completion at the following 7-to-8 edge. Nine directed tests and
 50,039 model/RTL clocks cover normal reads/writes, repeated extensions,
 late-ACK rejection, back-to-back select, reset, unknowns, and external
-relinquishment. Type 2 is attached through a bounded wrapper; Type 12 and
-whole-core PM/DM arbitration remain outside this standalone boundary
+relinquishment. Type 2 and Type 12 are attached through separate bounded
+wrappers; whole-core PM/DM arbitration remains outside this standalone
+boundary
 [ADI-UM-1989, printed pp. 5-9–5-12,
 Figures 5.6–5.7; ADI-DATABOOK-1987, printed pp. 2-40–2-43,
 Figures 16–17].

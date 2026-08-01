@@ -90,8 +90,11 @@ at the enabled 6-to-7 edge, holds address/select/strobe/write data across each
 complete eight-substate state-seven extension, and samples reads only on the
 qualified 7-to-8 completion edge. The bounded Type 2 wrapper adds five
 directed tests and 50,027 connected clocks: issue occurs only at 8-to-1 and
-the selected-I postmodify occurs only at qualified 7-to-8 completion. Type 12
-is not yet connected
+the selected-I postmodify occurs only at qualified 7-to-8 completion. The
+bounded Type 12 wrapper adds six directed tests and 50,064 connected clocks:
+both read and write descriptors issue only at 8-to-1, old write data remains
+stable through waits, read data is sampled at 7-to-8, and the shifter,
+optional DREG load, and selected-I postmodify commit only on that same edge
 [ADI-UM-1989, printed pp. 5-9–5-12, Figures 5.6–5.7;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43, Figures 16–17].
 

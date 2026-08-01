@@ -714,7 +714,7 @@ module adsp2100_shifter_dm_slice (
             assert (!i_write_o && !dreg_write_o);
             assert (!sr_write_o && !se_write_o && !sb_write_o && !ss_write_o);
         end
-        if (pending_q) begin
+        if (pending_q && !reset_i) begin
             if (pending_dm_address_valid_q) begin
                 assert (dm_address_o == pending_dm_address_q);
             end

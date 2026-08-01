@@ -62,6 +62,7 @@ selection and writeback path for standalone MODIFY. With `G=0`, it maps the
 two-bit I and M fields to I0–I3 and M0–M3, selects the L corresponding to I,
 uses normal-order I arithmetic even when MSTAT bit-reverse mode is active, and
 writes only the selected I at cycle end. Type 12 separately attaches DAG1 to
-shifter-plus-DM transfers. Other direct DM transfers and multifunction
+the native shifter-plus-DM transfer phases and commits its selected-I update
+only at qualified completion. Other direct DM transfers and multifunction
 instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].

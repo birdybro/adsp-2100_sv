@@ -6,9 +6,9 @@
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
-bounded semantic instruction decode, logical DM/PM transactions, and a first
-Type 13/cache client attached to native PM pin phases plus native DM pin phases
-with a first Type 2 instruction client
+bounded semantic instruction decode, logical DM/PM transactions, a Type 13/
+cache client attached to native PM pin phases, and Type 2 plus Type 12 clients
+attached to native DM pin phases
 
 **Release status:** research/implementation in progress; not instruction-,
 cycle-, or Hard Drivin'-complete
@@ -111,6 +111,10 @@ cycle-, or Hard Drivin'-complete
   capture, complete-cycle DMACK extension, state-7-to-state-8 completion-only
   selected-I postmodify, late-ACK rejection, phase-conflict reporting, and
   relinquishment masking;
+- bounded Type 12/native-DM attachment with state-8-to-state-1 old shifter,
+  DREG, and DAG capture; sourced read/write pin phases; complete-cycle DMACK
+  extension; state-7-to-state-8 DMD sampling and atomic shifter/DREG/I commit;
+  phase-conflict reporting; and relinquishment masking;
 - bounded Type 13/cache/native-PM attachment with state-8-to-state-1
   old-value capture, state-7-to-state-8 architectural commit, issue-time cache
   hit retention, back-to-back miss recovery, phase-hold stability, and
@@ -196,7 +200,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 498 implemented Python unit checks plus manifest/hash verification;
+- 504 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 2,097,152 Type 2 words decode to exact immediate/G/I/M fields in Python
@@ -207,6 +211,10 @@ outstanding.
 - 50,027 Type 2/native-DM model/RTL clocks cover state-8 descriptor issue,
   qualified state-7 completion, complete-cycle wait extensions, late-ACK
   rejection, old-value stability, off-boundary controls, and relinquishment;
+- 50,064 Type 12/native-DM model/RTL clocks cover state-8 descriptor issue,
+  read/write phases, old-DREG store data, qualified state-7 read sampling,
+  atomic shifter/DREG/I completion, complete-cycle waits, invalid read data,
+  reset, off-boundary controls, and relinquishment;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
   other 24-bit word produces no stack-control action in exhaustive RTL
   simulation;
@@ -315,6 +323,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 2/native-DM attachment adds 50,027 clocks,
+  the Type 12/native-DM attachment adds 50,064 clocks,
   and the Type 14 state slice adds
   82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
@@ -367,6 +376,10 @@ outstanding.
   the Type 2/native-DM attachment fits in 608 ALMs and 466 fitted registers
   with no RAM or DSP blocks, +2.590 ns worst setup, +0.159 ns worst
   multicorner hold, 57.44 MHz worst slow-corner Fmax, and zero unconstrained
+  clocks, ports, or paths against its 20 ns constraint;
+  the Type 12/native-DM attachment fits in 1,739 ALMs and 1,139 fitted
+  registers with no RAM or DSP blocks, +1.262 ns worst setup, +0.167 ns worst
+  multicorner hold, 53.37 MHz worst slow-corner Fmax, and zero unconstrained
   clocks, ports, or paths against its 20 ns constraint;
   the Type 13/cache/native-PM attachment fits in 2,055 ALMs and 1,648 fitted
   registers with no RAM or DSP blocks, +3.925 ns worst setup, +0.162 ns worst
@@ -424,7 +437,7 @@ outstanding.
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
   Type 2 action/execution, Type 23, Type 24, standalone instruction-cache, and
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
-  Type 13 and Type 2 native-attachment invariants (47 total)
+  Type 13, Type 2, and Type 12 native-attachment invariants (48 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -437,8 +450,9 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach the bounded Type 12 DM path to the sourced native pin-phase
-   controller, then add whole-core transaction arbitration.
+3. Build the next source-closed Type 1/4/5 action graph, then add whole-core
+   transaction arbitration when its ownership and parallel-ordering rules are
+   sufficiently sourced.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

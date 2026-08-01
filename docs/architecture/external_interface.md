@@ -24,8 +24,9 @@ DMACK completion. Address/control/write data remain stable through arbitrary
 wait extensions, and no architectural destination changes before completion.
 This is traceable transaction-level behavior. A separate native controller
 maps captured descriptors to active-low DMS/DMRD/DMWR, shared-DMD output
-enable, DMACK qualification, and full-cycle state-seven extension. The clients
-now include a bounded Type 2 attachment; Type 12 remains unattached
+enable, DMACK qualification, and full-cycle state-seven extension. Bounded
+Type 2 and Type 12 attachments now accept descriptors only at state 8-to-1
+and return completion only at the qualified state 7-to-8 edge
 [ADI-UM-1989, printed pp. 5-9–5-12;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43].
 

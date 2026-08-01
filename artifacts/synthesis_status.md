@@ -7,8 +7,8 @@
   Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone and Type 13-integrated
-  instruction cache, native PM and DM phase controllers and Type 13/Type 2
-  attachments,
+  instruction cache, native PM and DM phase controllers and Type 13/Type 2/
+  Type 12 attachments,
   stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
@@ -33,6 +33,14 @@
   or paths. Constant DM-read and virtual-pin warnings are expected for this
   write-only bounded project; this is not whole-core, physical-I/O, or MiSTer
   timing closure.
+- Quartus 17.0.2 full compilation of the bounded Type 12/native-DM attachment
+  passes for Cyclone V `5CSEBA6U23I7` at its 20 ns constraint. It uses 1,739
+  ALMs and 1,139 fitted registers with no RAM or DSP blocks. Across four
+  timing models, worst setup slack is +1.262 ns, worst hold slack is
+  +0.167 ns, and worst slow-corner Fmax is 53.37 MHz, with zero unconstrained
+  clocks, ports, or paths. Asynchronous register/DAG arrays remain in logic;
+  this is bounded Type 12 phase-attachment evidence, not whole-core,
+  physical-I/O, or MiSTer closure.
 - Quartus 17.0.2 full compilation of the native PM phase controller passes
   for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It uses
   112 ALMs and 71 fitted registers with no RAM or DSP blocks. Across four

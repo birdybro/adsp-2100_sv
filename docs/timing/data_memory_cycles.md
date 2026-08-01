@@ -1,7 +1,7 @@
 # Data-memory cycles
 
 **Status: source-backed eight-substate logical pin phases implemented;
-Type 2 attached, Type 12 pending**
+Type 2 and Type 12 attached as bounded clients**
 
 DM read/write drives DMA and DMS, selects DMRD or DMWR, and transfers DMD.
 DMS can remain asserted without a glitch across consecutive DM cycles
@@ -53,5 +53,9 @@ descriptor only at state 8-to-1, retains it across complete-cycle extensions,
 and returns completion to the architectural slice only at the qualified
 state-7-to-state-8 edge. Its five directed tests and 50,027 connected
 model/RTL clocks verify that selected-I postmodify cannot occur on the state-6
-ACK sample or on a late unsampled ACK. Type 12 attachment, PM concurrency,
-event latching during waits, and BR/BG recognition are still unimplemented.
+ACK sample or on a late unsampled ACK. The bounded Type 12 native wrapper uses
+the same issue/completion boundary for reads and writes. Six directed tests and
+50,064 connected clocks verify old-DREG write data, state-7 DMD read sampling,
+atomic shifter/DREG/I commit, full-cycle wait stability, invalid-data
+propagation, reset, and bus relinquishment. PM concurrency, event latching
+during waits, and BR/BG recognition are still unimplemented.

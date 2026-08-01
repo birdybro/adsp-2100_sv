@@ -276,9 +276,12 @@ postmodify writes atomically on the first ACK-high boundary, and uses the old
 DREG value for a simultaneous store. A separate native DM controller now
 implements DMA/DMS states 1–8, DMRD/DMWR states 4–7, DMACK qualification at
 6–7, DMD read sampling at 7–8, write drive states 5–8, and the original
-full-eight-substate state-seven extension. A bounded wrapper now attaches Type
-2 writes at state 8-to-1 and returns only the qualified state 7-to-8 completion
-to the architectural slice. Type 12 attachment, instruction-fetch concurrency,
+full-eight-substate state-seven extension. A bounded wrapper attaches Type 2
+writes at state 8-to-1 and returns only the qualified state 7-to-8 completion
+to the architectural slice. A second bounded wrapper attaches Type 12 reads
+and writes at the same sourced phase boundary; its shifter, optional read
+DREG, and selected-I destinations remain frozen through full-cycle wait
+extensions and commit together at state 7-to-8. Instruction-fetch concurrency
 and whole-core interrupt/bus arbitration remain open.
 The bounded Type 13 slice partitions all 65,536 words into 54,320 supported
 actions, 8,192 unavailable-XOP words, and 3,024 illegal PM-read destination

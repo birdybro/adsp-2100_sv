@@ -50,7 +50,9 @@ multifunction words with old-value parallel semantics, all 2,097,152 original
 Type 2 immediate-DM-write words with captured raw data, waited logical DMACK
 transactions, and completion-only DAG post-modification, 108,640 source-closed
 Type 12 shifter-plus-DM words with ACK-stretched logical bus transactions and
-atomic shifter/DREG/DAG completion, 54,320 source-closed Type 13
+atomic shifter/DREG/DAG completion, plus bounded source-backed native DM
+attachments for Type 2 and Type 12 issue, read/write pin phases, wait
+extension, and completion, 54,320 source-closed Type 13
 shifter-plus-PM words with the original 16-word cache monitor now connected
 for pre-cycle hits, one-cycle recovery fetches, recovery fills, and ordinary
 external instruction fills, plus a source-backed eight-state native PM
@@ -88,9 +90,10 @@ division-flag conflict is recorded as SC-014. Division exists as bounded
 instruction slices, not yet in the top-level fetch/decode/execute model.
 Type 2 and Type 12 supply logical DM transaction boundaries, and a separate
 native controller reproduces the original active-low DM phases and full-cycle
-DMACK extension. Type 2 is now attached at state 8-to-1 with architectural
-postmodify only at qualified state 7-to-8 completion; Type 12 remains
-unattached. Type 13 supplies a cache-integrated logical PM data/recovery
+DMACK extension. Both clients now attach at state 8-to-1 and defer every
+architectural destination, including read data and selected-I postmodify, to
+the qualified state 7-to-8 completion. Type 13 supplies a cache-integrated
+logical PM data/recovery
 boundary attached to the original active-low logical pin phases. These remain
 bounded clients, not an integrated fetch/decode/execute bus owner; ordinary
 fetch arbitration, other PM instruction classes, and BR/BG remain

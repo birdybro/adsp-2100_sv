@@ -51,8 +51,9 @@ additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete
 8/1/2/3/4/5/6/7 sequence. A qualified high sample releases completion only at
 the next 7-to-8 edge. This encodes Figure 5.7 directly without gated clocks or
-collapsing a full processor-cycle wait into one FPGA clock. Type 2 now uses
-this boundary for issue and completion; Type 12 remains unattached.
+collapsing a full processor-cycle wait into one FPGA clock. Type 2 and Type 12
+now use this boundary for issue and completion; each attachment is deliberately
+separate until a whole-core request arbiter can be sourced and verified.
 
 ## Consequences
 

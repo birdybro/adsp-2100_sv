@@ -8,6 +8,11 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded Type 12/native-DM composition in independent Python and portable
+  RTL, connecting old-value shifter/DREG/DAG issue at state 8-to-1 to native
+  read/write phases and atomic state-7 completion, with directed/random
+  differential tests, a formal harness, and a constrained Cyclone V project.
+
 - A bounded Type 2/native-DM composition in independent Python and portable
   RTL, connecting state-8 descriptor acceptance to state-7 native completion,
   with directed/random differential tests, a formal harness, and a constrained
@@ -325,6 +330,11 @@ semantic versioning after its first release.
 
 ### Fixed
 
+- Scoped the Type 12 pending-descriptor stability assertion outside reset.
+  Reset intentionally masks transaction outputs before the synchronous edge
+  clears the retained descriptor; the connected reset vector now protects
+  that distinction without weakening normal pending-state invariants.
+
 - Made clean-checkout CI independent of the intentionally untracked reference
   cache while retaining strict local hash checks whenever the cache is present.
 - Excluded ignored Quartus database products from source-text hygiene checks so
@@ -345,6 +355,15 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- Type 12/native-DM attachment passes six directed tests and 50,064 connected
+  model/RTL clocks spanning reads, writes, old-value store data, state-7 read
+  sampling, atomic shifter/DREG/I completion, complete-cycle waits, invalid
+  read data, reset, phase conflicts, and relinquishment.
+- Quartus full compilation passes for the Type 12/native-DM attachment on
+  Cyclone V at 20 ns: 1,739 ALMs, 1,139 registers, no RAM/DSP blocks,
+  +1.262 ns worst setup, +0.167 ns worst hold, 53.37 MHz worst slow-corner
+  Fmax, and no unconstrained clocks, ports, or paths.
 
 - Type 2/native-DM attachment passes five directed tests and 50,027
   deterministic model/RTL clocks covering state-8 issue, state-7 commit,
@@ -777,6 +796,11 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Distinguished the now-attached bounded Type 12 native read/write path from
+  still-open whole-core DM/PM ownership, event arbitration, BR/BG, and analog
+  I/O timing throughout memory, cycle, wait-state, DAG, confidence, synthesis,
+  and verification status.
+
 - Distinguished the attached Type 2 native write path from the still-logical
   Type 12 path throughout the memory, cycle, wait-state, interface, confidence,
   verification, and synthesis records.
@@ -941,9 +965,9 @@ semantic versioning after its first release.
 
 ### Known Issues
 
-- Type 12 remains unattached to the native DM controller; PM concurrency,
-  wait-time event latching, and BR/BG recognition remain outside the bounded
-  controller and Type 2 wrapper.
+- Type 2 and Type 12 are independently attached to the native DM controller,
+  but no whole-core owner selects among them or coordinates simultaneous PM,
+  fetch, control-event, interrupt, HALT, and BR/BG activity.
 
 - The exact original ADSP-2100 Cross-Software manual, evaluation-board manual,
   independent data-sheet revisions, and errata remain unavailable. Appendix A

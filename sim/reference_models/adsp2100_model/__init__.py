@@ -212,6 +212,11 @@ from .dm_write_immediate_native import (
     DMWriteImmediateNativeState,
     apply_dm_write_immediate_native_cycle,
 )
+from .shifter_dm_native import (
+    ShifterDMNativeCycleResult,
+    ShifterDMNativeState,
+    apply_shifter_dm_native_cycle,
+)
 from .load_dreg_immediate import (
     LOAD_DREG_IMMEDIATE_MASK,
     LOAD_DREG_IMMEDIATE_VALUE,
@@ -487,6 +492,8 @@ __all__ = [
     "DataBusState",
     "DMWriteImmediateNativeCycleResult",
     "DMWriteImmediateNativeState",
+    "ShifterDMNativeCycleResult",
+    "ShifterDMNativeState",
     "ProgramBusCycleResult",
     "ProgramBusRequest",
     "ProgramBusState",
@@ -563,6 +570,7 @@ __all__ = [
     "apply_instruction_cache_cycle",
     "apply_data_bus_cycle",
     "apply_dm_write_immediate_native_cycle",
+    "apply_shifter_dm_native_cycle",
     "apply_program_bus_cycle",
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",

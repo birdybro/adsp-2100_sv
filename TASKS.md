@@ -271,8 +271,9 @@ advance beyond research until a page-level primary citation is added.
   source-closed actions, 16,384 unavailable-XOP words, and 6,048 illegal
   DM-read destination collisions. Two hand-derived fixtures, all supported
   assembler/disassembler forms, exhaustive 24-bit RTL decode, and 50,069
-  state/bus differential clocks pass; physical pin phases and whole-core
-  PM/event integration remain open.
+  state/bus differential clocks pass. A separate native-DM composition adds
+  six directed tests and 50,064 connected phase clocks; whole-core PM/event
+  integration remains open.
   Type 13 exhaustively partitions all 65,536 class words into 54,320
   source-closed actions, 8,192 unavailable-XOP words, and 3,024 illegal
   PM-read destination collisions. Two hand-derived fixtures, every supported
@@ -692,7 +693,8 @@ advance beyond research until a page-level primary citation is added.
   A bounded Type 21 slice adds exact I/M/L storage, all DAG1 selections,
   selected-I cycle-end writeback, and 50,124 stateful model/RTL cycles. Type
   12 now attaches every DAG1 I/M selection to a DM transaction, including bit
-  reversal and completion-only post-modification through arbitrary waits. Type
+  reversal and completion-only post-modification through arbitrary waits;
+  50,064 connected clocks verify its native-phase attachment. Type
   2 adds the same sourced waited/post-modified path for immediate DM writes
   across 50,035 logical differential clocks and 50,027 native-attached clocks.
 - **Unresolved questions:** remaining direct-transfer writeback and stall enables,
@@ -983,8 +985,11 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_data_bus.py`, `sim/unit/tb_adsp2100_data_bus.sv`,
   `formal/dm_bus.sby`, `tests/test_dm_write_immediate_native.py`,
   `sim/unit/tb_adsp2100_dm_write_immediate_native_slice.sv`,
-  `formal/dm_write_immediate_native.sby`, `make dm-bus-tests`,
-  `make dm-write-native-tests`, `make compute-tests`
+  `formal/dm_write_immediate_native.sby`, `tests/test_shifter_dm_native.py`,
+  `sim/unit/tb_adsp2100_shifter_dm_native_slice.sv`,
+  `formal/shifter_dm_native.sby`, `make dm-bus-tests`,
+  `make dm-write-native-tests`, `make dm-shifter-native-tests`,
+  `make compute-tests`
 - **Implementation notes:** the Type 2 immediate-write and Type 12
   multifunction boundaries expose a distinct logical
   14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
@@ -1003,12 +1008,19 @@ advance beyond research until a page-level primary citation is added.
   7-to-8 after a qualified DMACK. Five directed tests and 50,027 connected
   model/RTL clocks cover issue/commit ordering, complete-cycle waits, late-ACK
   rejection, stable old values, off-boundary rejection, and relinquishment.
-  Its forty-seventh formal recipe syntax-checks;
+  A second bounded wrapper attaches Type 12 reads and writes: it samples DMD
+  at native completion and atomically commits the shifter, optional DREG load,
+  and selected-I postmodify. Six directed tests and 50,064 connected clocks
+  cover old-DREG stores, state-7 reads, full-cycle waits, invalid read data,
+  reset, conflicts, and relinquishment. Its forty-eighth formal recipe
+  syntax-checks;
   a fully constrained 50 MHz Cyclone V fit uses 100 ALMs and 57 registers.
   The attached Type 2 fit uses 608 ALMs and 466 registers, meets 50 MHz with
   +2.590 ns worst setup and +0.159 ns worst hold slack, and has no
-  unconstrained paths. Type 12 attachment and whole-core arbitration do not
-  yet exist.
+  unconstrained paths. The attached Type 12 fit uses 1,739 ALMs and 1,139
+  registers, meets 50 MHz with +1.262 ns worst setup and +0.167 ns worst hold
+  slack, and has no unconstrained paths. Whole-core arbitration does not yet
+  exist.
 - **Unresolved questions:** shared data-bus turnaround, Type 1 dual-memory
   concurrency, event latching during waits, and BR/BG recognition.
 - **Confidence:** CORROBORATED
@@ -1181,7 +1193,8 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
   `tests/test_data_bus.py`, `formal/dm_bus.sby`,
   `tests/test_dm_write_immediate_native.py`,
-  `formal/dm_write_immediate_native.sby`
+  `formal/dm_write_immediate_native.sby`,
+  `tests/test_shifter_dm_native.py`, `formal/shifter_dm_native.sby`
 - **Implementation notes:** Type 2 and Type 12 implement the sourced logical DMACK rule:
   each low sample extends the transaction by a processor clock, bus outputs
   remain stable, state does not commit, and the first high sample commits all
@@ -1189,7 +1202,9 @@ advance beyond research until a page-level primary citation is added.
   immediate writes, both DAGs, and completion-only I updates. The native DM
   controller and attached Type 2 wrapper add 50,039 standalone and 50,027
   connected clocks proving the state-6 DMACK sample, complete-cycle extension,
-  and state-7 completion. Type 12 attachment, PM concurrency,
+  and state-7 completion. The Type 12 attachment adds 50,064 connected clocks
+  proving read/write phase alignment and atomic parallel completion. PM
+  concurrency,
   interrupt/BR/HALT latching, and electrical constraints remain.
 - **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
   behavior.
@@ -1306,6 +1321,10 @@ advance beyond research until a page-level primary citation is added.
   multicorner hold slack at 21 ns, 50.96 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths. The unassigned standalone clock pin
   warning is expected for this virtual-pin smoke project.
+  The bounded Type 12/native-DM attachment fits in 1,739 ALMs and 1,139 fitted
+  registers with no RAM/DSPs at 20 ns. Worst multicorner setup is +1.262 ns,
+  worst hold is +0.167 ns, worst slow-corner Fmax is 53.37 MHz, and no clocks,
+  ports, or paths are unconstrained.
   The bounded Type 13 PM transaction/cache-recovery slice fits in 1,640 ALMs
   and 1,002 fitted registers with no RAM/DSP blocks, +1.172 ns worst setup,
   +0.168 ns worst multicorner hold slack at 21 ns, 50.43 MHz worst slow-corner
@@ -1464,9 +1483,8 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is attaching the existing Type 12 logical
-client to the new native DM phase controller; constructing
-the next source-closed Type 1/4/5 action graph in
+The highest-priority unblocked work is constructing the next source-closed
+Type 1/4/5 action graph in
 `ISA-002`/`ISA-001`; and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field
 placement is closed for the printed Appendix A diagrams, but legality,
