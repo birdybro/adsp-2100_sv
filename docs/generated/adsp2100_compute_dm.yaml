@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "SOURCE_CLOSED_TYPE_4_ALU_MAC_PLUS_WAITED_LOGICAL_DM_EXECUTION",
+  "scope": "SOURCE_CLOSED_TYPE_4_ALU_MAC_PLUS_NATIVE_DM_EXECUTION",
   "decode": {
     "original_type": 4,
     "opcode_mask": "0xe00000",
@@ -48,6 +48,15 @@
     "reset": "ABORT_PENDING_TRANSACTION_WITHOUT_INVENTING_ARCHITECTURAL_RESET_VALUES",
     "unknown_policy": "INVALIDATE_ONLY_DESTINATIONS_DEPENDENT_ON_UNKNOWN_OPERANDS_DATA_OR_DAG_CONFIGURATION"
   },
+  "native_transaction": {
+    "issue_edge": "ENABLED_STATE_8_TO_STATE_1_ONLY",
+    "dmack_sample_edge": "STATE_6_TO_STATE_7_ONLY",
+    "wait_extension": "EACH_DMACK_LOW_SAMPLE_REPEATS_ONE_COMPLETE_EIGHT_SUBSTATE_STATE_7_EXTENSION",
+    "completion_edge": "QUALIFIED_STATE_7_TO_STATE_8_ONLY",
+    "atomic_commit": "COMPUTE_STATUS_OPTIONAL_DM_READ_AND_SELECTED_I_POSTMODIFY",
+    "relinquishment": "MASK_NATIVE_ADDRESS_CONTROL_AND_DATA_OUTPUT_ENABLES",
+    "scope_limit": "SEPARATE_BOUNDED_CLIENT_WITHOUT_WHOLE_CORE_DM_OWNER_ARBITRATION"
+  },
   "source_citations": [
     "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
     "ADI-UM-1989 printed pp. 5-9–5-12",
@@ -62,13 +71,17 @@
     "tool_round_trip": "tests/test_assembler_disassembler.py",
     "rtl_decode": "sim/unit/tb_adsp2100_compute_dm_decode.sv",
     "rtl_state": "sim/unit/tb_adsp2100_compute_dm_slice.sv (50072 deterministic clocks)",
+    "python_native": "tests/test_compute_dm_native.py (6 directed tests)",
+    "rtl_native": "sim/unit/tb_adsp2100_compute_dm_native_slice.sv (50082 deterministic clocks)",
     "formal_decode": "formal/compute_dm_decode.sby",
     "formal_state": "formal/compute_dm.sby",
-    "quartus": "synthesis/quartus/compute_dm_smoke.qpf"
+    "formal_native": "formal/compute_dm_native.sby",
+    "quartus": "synthesis/quartus/compute_dm_smoke.qpf",
+    "quartus_native": "synthesis/quartus/compute_dm_native_smoke.qpf"
   },
   "unresolved": [
-    "NATIVE_DM_PHASE_ATTACHMENT",
     "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_AND_BUS_ARBITRATION",
+    "WHOLE_CORE_MULTI_OWNER_DM_ARBITRATION",
     "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
   ]
 }

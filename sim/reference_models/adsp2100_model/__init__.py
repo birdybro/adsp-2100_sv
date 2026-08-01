@@ -41,6 +41,11 @@ from .compute_dm import (
     decode_compute_dm,
     is_compute_dm_class,
 )
+from .compute_dm_native import (
+    ComputeDMNativeCycleResult,
+    ComputeDMNativeState,
+    apply_compute_dm_native_cycle,
+)
 from .conditional_compute import (
     CONDITIONAL_COMPUTE_CLASS_MASK,
     CONDITIONAL_COMPUTE_CLASS_VALUE,
@@ -416,6 +421,8 @@ __all__ = [
     "COMPUTE_DM_CLASS_VALUE",
     "ComputeDMAction",
     "ComputeDMCycleResult",
+    "ComputeDMNativeCycleResult",
+    "ComputeDMNativeState",
     "ComputeDMPending",
     "ComputeDMState",
     "COMPUTE_MOVE_CLASS_MASK",
@@ -619,6 +626,7 @@ __all__ = [
     "apply_indirect_jump_cycle",
     "apply_load_dreg_immediate_cycle",
     "apply_compute_dm_cycle",
+    "apply_compute_dm_native_cycle",
     "is_conditional_shift_class",
     "is_conditional_compute_class",
     "is_compute_dm_class",

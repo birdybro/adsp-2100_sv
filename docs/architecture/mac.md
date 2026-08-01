@@ -1,6 +1,6 @@
 # Multiplier/accumulator
 
-**Status: standard fractional compute model and RTL implemented; Type 4 logical
+**Status: standard fractional compute model and RTL implemented; Type 4 native
 execution closed; exact Type 25 saturation and bounded Type 8/Type 9 integrations
 complete**
 
@@ -59,8 +59,10 @@ The bounded Type 4 slice distinguishes every MAC AMF, X/Y/Z field, and
 MR0/MR1/MR2 read-load collision; captures cycle-start inputs, MR feedback, and
 old store data; and commits MR/MF plus ASTAT.MV atomically with the
 acknowledged DM action. Immediate and waited completion pass the 50,072-clock
-comparison. Type 1/5 action selection, native Type 4 DM phases, and all
-remaining memory multifunction execution/timing remain unimplemented.
+logical comparison; the 50,082-clock native attachment comparison additionally
+checks state-8 issue, complete-cycle waits, and state-7-only MAC/status commit.
+Type 1/5 action selection and all remaining memory multifunction
+execution/timing remain unimplemented.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the

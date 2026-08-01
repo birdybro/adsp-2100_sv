@@ -1,7 +1,7 @@
 # Arithmetic/logic unit
 
 **Status: standard function and both division primitives implemented in
-bounded model/RTL; Type 4 logical execution closed; Type 8, Type 9, Type 23, and
+bounded model/RTL; Type 4 native-DM execution closed; Type 8, Type 9, Type 23, and
 Type 24 integrations complete**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
@@ -41,7 +41,8 @@ cycle, consistent with cycle-start operand use and cycle-end register writes
 [ADI-UM-1989, printed pp. 2-6–2-9]. The bounded Type 4 slice selects every ALU
 X/Y/Z field, rejects AR read-load collisions, captures cycle-start operands,
 and commits AR/AF plus ASTAT atomically with the acknowledged DM action. Its
-50,072-clock comparison includes immediate and waited completion. Outside the
+50,072-clock logical and 50,082-clock native comparisons include immediate and
+wait-extended completion. Outside the
 bounded Type 4, Type 8, and Type 9 slices, ALU multifunction execution remains
 excluded. Type 23 DIVQ and Type 24
 DIVS are implemented in separate bounded execution slices.

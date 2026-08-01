@@ -75,8 +75,11 @@ formal assertions close action selection. A bounded independent state model
 and portable RTL slice capture all cycle-start operands, preserve the logical
 transaction across DMACK-low clocks, and atomically commit computation/status,
 optional DM read, and selected-I postmodify on acknowledgment. Twelve
-model/schema/directed checks and 50,072 deterministic model/RTL clocks pass. Native phases, fetch,
-and events are not yet implemented [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12,
+model/schema/directed checks and 50,072 deterministic model/RTL clocks pass.
+Its bounded native attachment adds six directed checks and 50,082 clocks for
+state-8 issue, full-cycle DMACK extension, read/write phases, and state-7
+atomic completion. Fetch, shared-bus arbitration, and events are not yet
+implemented [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12,
 6-1, 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
 
 Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded

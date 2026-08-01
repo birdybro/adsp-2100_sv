@@ -6,9 +6,9 @@
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
-bounded semantic instruction decode including Type 4 waited logical execution,
+bounded semantic instruction decode including Type 4 native-DM execution,
 logical DM/PM transactions, a Type 13/
-cache client attached to native PM pin phases, and Type 2 plus Type 12 clients
+cache client attached to native PM pin phases, and Type 2, Type 4, plus Type 12 clients
 attached to native DM pin phases
 
 **Release status:** research/implementation in progress; not instruction-,
@@ -32,8 +32,9 @@ cycle-, or Hard Drivin'-complete
   fully constrained 53-ALM Cyclone V decoder fit; plus a bounded selected-bank
   ALU/MAC/DAG state model and RTL slice with arbitrary logical DMACK waits,
   old-value stores, atomic compute/read/I completion, 50,072 differential
-  clocks, and a timing-clean 1,677-ALM/one-DSP Standard Fit; native attachment
-  remains;
+  clocks, and a timing-clean 1,677-ALM/one-DSP Standard Fit; plus a separate
+  six-test/50,082-clock native phase attachment and timing-clean
+  1,693-ALM/1,226-register/one-DSP Standard Fit;
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
@@ -447,8 +448,8 @@ outstanding.
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
   Type 2 action/execution, Type 23, Type 24, standalone instruction-cache, and
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
-  Type 13, Type 2, and Type 12 native-attachment invariants, plus Type 4
-  action-decode and waited logical-execution invariants (50 total)
+  Type 13, Type 2, Type 4, and Type 12 native-attachment invariants, plus
+  Type 4 action-decode and waited logical-execution invariants (51 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -461,8 +462,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach the verified Type 4 logical transaction to the native eight-state
-   DM controller, then close Type 1/5.
+3. Construct primary-backed Type 5 and Type 1 multifunction action graphs,
+   beginning with Type 5 ALU/MAC-plus-PM.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

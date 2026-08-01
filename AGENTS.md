@@ -252,9 +252,12 @@ shifter-plus-PM transaction paths.
 Type 4 field/action decode and bounded logical execution are exhaustive and
 primary-backed, including AMF-zero memory-only moves, selected-bank ALU/MAC
 state, old-value write overlap, fail-closed read destination collisions,
-arbitrary DMACK-low waits, and atomic compute/read/I completion. It has not
-yet been attached to the native eight-state DM controller or whole-core fetch
-and event arbitration.
+arbitrary DMACK-low waits, and atomic compute/read/I completion. A separate
+bounded wrapper now attaches that descriptor to the native eight-state DM
+controller: issue occurs only at state 8-to-1, waits repeat a complete native
+substate sequence, and compute/status/read/I effects commit only at qualified
+state 7-to-8 completion. Whole-core fetch, multi-owner arbitration, and event
+handling remain open.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at

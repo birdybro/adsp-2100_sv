@@ -24,8 +24,11 @@ cycle-start selected-bank compute and DAG state, holds address/direction/write
 data and every destination over arbitrary DMACK-low clocks, and atomically
 commits computation/status, optional read data, and selected-I postmodify on
 the first acknowledged clock. Twelve model/schema/directed checks and 50,072
-deterministic model/RTL clocks cover this boundary. Native eight-state DM
-phases and whole-core fetch/event arbitration remain open
+deterministic model/RTL clocks cover this boundary. A separate native
+composition adds six directed checks and 50,082 clocks covering state-8 issue,
+documented read/write pin phases, complete-cycle DMACK extension, state-7
+atomic commit, reset, off-boundary rejection, and relinquishment. Whole-core
+fetch/event and multi-owner DM arbitration remain open
 [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7, 6-12–6-13, A-1,
 A-5–A-11].
 
@@ -64,7 +67,7 @@ seven while all eight physical substates repeat; a high sample permits the
 read sample/completion at the following 7-to-8 edge. Nine directed tests and
 50,039 model/RTL clocks cover normal reads/writes, repeated extensions,
 late-ACK rejection, back-to-back select, reset, unknowns, and external
-relinquishment. Type 2 and Type 12 are attached through separate bounded
+relinquishment. Type 2, Type 4, and Type 12 are attached through separate bounded
 wrappers; whole-core PM/DM arbitration remains outside this standalone
 boundary
 [ADI-UM-1989, printed pp. 5-9–5-12,

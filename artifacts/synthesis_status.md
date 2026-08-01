@@ -9,7 +9,7 @@
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
-  Type 12 attachments,
+  Type 4/Type 12 attachments,
   stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
@@ -36,6 +36,15 @@
   constant bounded-slice outputs/sources, and the Quartus Lite LogicLock
   license. This is logical one-clock compute/DAG/DM capture-and-commit
   evidence, not native phase, whole-core, physical-I/O, or MiSTer closure.
+- Quartus 17.0.2 Standard Fit of the bounded Type 4/native-DM attachment
+  passes for Cyclone V `5CSEBA6U23I7` at a 25 ns virtual constraint. It uses
+  1,693 ALMs, 1,226 fitted registers, one DSP block, and no RAM. Across four
+  timing models, worst setup slack is +1.121 ns, worst hold slack is +0.167 ns,
+  and worst slow-corner Fmax is 41.88 MHz, with zero unconstrained clocks,
+  inputs, outputs, or paths. Expected warnings are the virtual/incomplete-pin,
+  asynchronous small-array, constant bounded-output, and Quartus Lite
+  LogicLock messages. This qualifies one Type 4 client attachment, not
+  whole-core ownership, physical-I/O timing, or MiSTer closure.
 - Quartus 17.0.2 full compilation of the native DM phase controller passes
   for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It uses
   100 ALMs and 57 fitted registers with no RAM or DSP blocks. Across four

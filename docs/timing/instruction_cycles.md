@@ -13,7 +13,7 @@ Known cases:
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
-| Type 4 ALU/MAC plus DM read/write | one logical processor cycle when DMACK is asserted; every DMACK-low clock preserves the captured bus and compute/DAG descriptor, and the first acknowledged boundary atomically commits compute/status, optional read, and selected-I postmodify; native eight-state attachment remains open |
+| Type 4 ALU/MAC plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low state-6 sample repeats a complete eight-substate state-seven extension while preserving the captured bus/compute/DAG descriptor, and the qualified state-7-to-state-8 edge atomically commits compute/status, optional read, and selected-I postmodify |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
@@ -79,8 +79,11 @@ The bounded Type 4 model/RTL slice verifies 50,072 logical clocks. Immediate
 acknowledgment commits the captured ALU/MAC or memory-only action, optional
 read data, and selected-I postmodify together. Each DMACK-low clock retains
 the old-value compute/store/DAG descriptor and stable valid logical bus
-outputs without any architectural write. This is logical transaction evidence;
-native substates, ordinary fetch overlap, and event arbitration remain open
+outputs without any architectural write. A separate six-test, 50,082-clock
+native composition admits the descriptor only at state 8-to-1, qualifies ACK
+at state 6-to-7, and commits only at state 7-to-8 through zero or repeated
+complete-cycle waits. Ordinary fetch overlap, shared-DM arbitration, and event
+arbitration remain open
 [ADI-UM-1989, printed pp. 2-6–2-7, 5-9–5-12, 6-3–6-7].
 
 The bounded Type 2 model/RTL slice verifies 50,035 logical clocks. An
@@ -104,6 +107,12 @@ bounded Type 12 wrapper adds six directed tests and 50,064 connected clocks:
 both read and write descriptors issue only at 8-to-1, old write data remains
 stable through waits, read data is sampled at 7-to-8, and the shifter,
 optional DREG load, and selected-I postmodify commit only on that same edge
+[ADI-UM-1989, printed pp. 5-9–5-12, Figures 5.6–5.7;
+ADI-DATABOOK-1987, printed pp. 2-40–2-43, Figures 16–17]. The bounded Type 4
+wrapper adds six directed tests and 50,082 clocks: memory-only and ALU/MAC
+reads/writes issue only at 8-to-1, old store/compute/DAG state stays fixed
+through waits, and compute/status, optional DREG read, and selected I commit
+only on the native 7-to-8 completion
 [ADI-UM-1989, printed pp. 5-9–5-12, Figures 5.6–5.7;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43, Figures 16–17].
 

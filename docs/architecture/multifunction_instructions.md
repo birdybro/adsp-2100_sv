@@ -55,8 +55,13 @@ zero follows the same transaction path without a computational effect.
 Directed checks and 50,072 deterministic model/RTL clocks cover immediate and
 arbitrarily waited reads/writes, old-value overlap, both banks and DAGs, DAG1
 bit reversal, reset abort, integration conflicts, and unknown-dependent
-destination invalidation. Native eight-state DM attachment, instruction fetch,
-and event arbitration remain open.
+destination invalidation. A separate bounded composition accepts the captured
+descriptor only at native state 8-to-1, repeats the complete physical substate
+sequence for every DMACK-low sample, and returns only qualified state-7-to-8
+completion to the logical client. Six directed tests and 50,082 additional
+model/RTL clocks cover reads, old-value writes, memory-only actions, waits,
+reset cancellation, off-boundary controls, late ACK, and relinquishment.
+Instruction fetch, multiple DM owners, and event arbitration remain open.
 
 ## Bounded Type 8 execution
 

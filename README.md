@@ -50,12 +50,13 @@ multifunction words with old-value parallel semantics, all 2,097,152 Type 4
 words partitioned at the action boundary into 2,034,688 source-closed
 compute/memory or memory-only actions and 62,464 fail-closed DM-read
 destination collisions, with waited logical DM transactions and atomic
-selected-bank compute/read/DAG completion across 50,072 clocks, all 2,097,152 original Type 2
+selected-bank compute/read/DAG completion across 50,072 clocks and a separate
+50,082-clock native-DM attachment comparison, all 2,097,152 original Type 2
 immediate-DM-write words with captured raw data, waited logical DMACK
 transactions, and completion-only DAG post-modification, 108,640 source-closed
 Type 12 shifter-plus-DM words with ACK-stretched logical bus transactions and
 atomic shifter/DREG/DAG completion, plus bounded source-backed native DM
-attachments for Type 2 and Type 12 issue, read/write pin phases, wait
+attachments for Type 2, Type 4, and Type 12 issue, read/write pin phases, wait
 extension, and completion, 54,320 source-closed Type 13
 shifter-plus-PM words with the original 16-word cache monitor now connected
 for pre-cycle hits, one-cycle recovery fetches, recovery fills, and ordinary
@@ -94,9 +95,9 @@ division-flag conflict is recorded as SC-014. Division exists as bounded
 instruction slices, not yet in the top-level fetch/decode/execute model.
 Type 2, Type 4, and Type 12 supply logical DM transaction boundaries, and a separate
 native controller reproduces the original active-low DM phases and full-cycle
-DMACK extension. The Type 2 and Type 12 clients attach at state 8-to-1 and defer every
+DMACK extension. All three clients attach at state 8-to-1 and defer every
 architectural destination, including read data and selected-I postmodify, to
-the qualified state 7-to-8 completion; Type 4 native attachment remains open. Type 13 supplies a cache-integrated
+the qualified state 7-to-8 completion. Type 13 supplies a cache-integrated
 logical PM data/recovery
 boundary attached to the original active-low logical pin phases. These remain
 bounded clients, not an integrated fetch/decode/execute bus owner; ordinary

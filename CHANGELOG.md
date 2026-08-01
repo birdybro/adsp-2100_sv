@@ -8,6 +8,13 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded original Type 4/native-DM composition in structurally independent
+  Python and portable SystemVerilog. It accepts only at state 8-to-1, reuses
+  the sourced state-6 DMACK/full-cycle wait controller, and commits
+  compute/status, optional read, and selected-I state only at state 7-to-8;
+  with directed/random differential tests, formal assertions, and a
+  constrained Cyclone V project.
+
 - A bounded original Type 4 state/transaction model and portable RTL slice
   connecting the exact action decoder to selected-bank ALU/MAC, ASTAT, both
   DAGs, and a waited logical DM boundary; plus deterministic differential
@@ -347,6 +354,11 @@ semantic versioning after its first release.
 
 ### Fixed
 
+- Scoped the Type 4/native-DM wait-state commit assertion outside the
+  synchronous reset pre-edge. The native pins remain masked immediately, while
+  the retained bus state clears on the reset clock edge as the independent
+  model specifies.
+
 - Re-ran the Type 4 logical-DM smoke project with Standard Fit after Auto Fit
   exposed a -0.215 ns multicorner hold violation; the verified fit now has
   +0.104 ns worst hold slack without weakening its constraints.
@@ -376,6 +388,16 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- Type 4/native-DM attachment passes six directed tests and 50,082 connected
+  model/RTL clocks spanning memory-only and ALU/MAC reads/writes, old-value
+  stores, state-8 issue, native strobes, full-cycle waits, state-7 atomic
+  compute/status/read/I completion, reset, late ACK, off-boundary controls,
+  debug-port conflicts, and relinquishment.
+- Quartus Standard Fit closes the Type 4/native-DM attachment at 25 ns on
+  Cyclone V: 1,693 ALMs, 1,226 registers, one DSP block, no RAM, +1.121 ns
+  worst setup, +0.167 ns worst multicorner hold, 41.88 MHz worst slow-corner
+  Fmax, and zero unconstrained clocks, inputs, outputs, or paths.
 
 - The bounded Type 4 state model and RTL agree for 50,072 clocks spanning
   immediate and arbitrary waits, reads/writes, all selected-bank compute
@@ -834,6 +856,10 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Updated the Type 4 execution, memory, wait-state, cycle, confidence,
+  verification, synthesis, and backlog records to distinguish the closed
+  bounded native client from still-open whole-core ownership and event timing.
+
 - Closed original Type 4 field placement, memory-only AMF-zero behavior,
   cycle-start/cycle-end ordering, read-collision rule, and legal old-value
   write overlap from the 1989 primary manual, and recorded the bounded waited
@@ -1009,11 +1035,11 @@ semantic versioning after its first release.
 
 ### Known Issues
 
-- Type 4 now has selected-register/DAG state and waited logical DM execution,
-  but native eight-state DM attachment, fetch, and control events are not
-  attached.
+- Type 4 now has selected-register/DAG state, waited logical DM execution, and
+  a separately verified native eight-state attachment, but fetch, shared-DM
+  ownership, and control events are not attached.
 
-- Type 2 and Type 12 are independently attached to the native DM controller,
+- Type 2, Type 4, and Type 12 are independently attached to the native DM controller,
   but no whole-core owner selects among them or coordinates simultaneous PM,
   fetch, control-event, interrupt, HALT, and BR/BG activity.
 

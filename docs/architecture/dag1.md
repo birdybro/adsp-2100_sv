@@ -66,6 +66,7 @@ the native shifter-plus-DM transfer phases and commits its selected-I update
 only at qualified completion. The bounded Type 4 logical slice selects all
 DAG1 I/M pairs and the matching L-by-I rule, applies bit reversal only to the
 old address, holds pending transactions, and commits selected-I postmodify
-only at acknowledged completion. Its native DM attachment remains open.
-Other direct DM transfers and multifunction instructions remain unattached
+only at acknowledged completion. Its native attachment now preserves that
+rule through state-6 DMACK qualification and state-7 completion. Other direct
+DM transfers and multifunction instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].

@@ -297,7 +297,9 @@ advance beyond research until a page-level primary citation is added.
   selected-bank compute/DREG/DAG state, hold logical bus and state across
   arbitrary DMACK waits, and atomically commit compute/status, optional read,
   and I postmodify. Twelve model/schema/directed checks and 50,072 deterministic clocks
-  pass; native DM attachment remains explicitly incomplete.
+  pass. A separate six-test, 50,082-clock native attachment comparison now
+  closes state-8 issue, full-cycle waits, state-7 atomic completion, reset,
+  late ACK, off-boundary controls, and relinquishment for this bounded client.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -411,8 +413,10 @@ advance beyond research until a page-level primary citation is added.
   ASTAT, optional read DREG, and selected I atomically on acknowledgment.
   Twelve model/schema/directed checks and 50,072 differential clocks cover both banks and
   DAGs, memory-only aliases, old-value overlap, reset, conflicts, and unknowns.
-  Native Type 4 attachment, Type 1/5 action graphs, PM/DM concurrency, and
-  whole-core event arbitration remain.
+  The separate Type 4/native-DM composition adds six directed checks and
+  50,082 clocks for state-8 issue, documented pin phases, complete-cycle waits,
+  and state-7-only compute/read/I commit. Type 1/5 action graphs, PM/DM
+  concurrency, shared-owner arbitration, and whole-core events remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, and result forwarding outside the bounded old-value rule
   remain high-risk.
@@ -511,6 +515,10 @@ advance beyond research until a page-level primary citation is added.
   and commits computation/status, optional read, and I postmodify atomically.
   Twelve model/schema/directed checks and 50,072 model/RTL clocks pass for both banks and
   DAGs, memory-only aliases, reset, conflicts, and unknown-state propagation.
+  A structurally separate Type 4/native-DM model composes that transaction
+  with the eight-state bus controller; six directed tests and 50,082 clocks
+  cover issue/commit phase alignment, native strobes, waits, reset, late ACK,
+  off-boundary rejection, and relinquishment without transliterating RTL.
   A structurally separate Type 13 transaction model captures old shifter,
   DREG, PX, and DAG2 state; performs the fixed logical PM data action; and
   distinguishes same-cycle next-fetch cache hits from exactly one external
@@ -754,14 +762,15 @@ advance beyond research until a page-level primary citation is added.
   has a DAG2 configuration in which bit-reverse is structurally ineffective;
   all vectors compare DAG1/DAG2 arithmetic. The bounded Type 21 slice adds all
   DAG2 register selections, exact I/M/L storage, selected-I writeback, and
-  stateful comparison. Type 2 and Type 12 attach every DAG2 I/M selection to
-  immediate and shifter-plus-DM transactions respectively, with
+  stateful comparison. Type 2, Type 4, and Type 12 attach every DAG2 I/M
+  selection to immediate, ALU/MAC-plus-DM, and shifter-plus-DM transactions,
+  respectively, with
   completion-only post-modification. The bounded Type 19
   slice now reads exact I4-I7 storage
   without modification, drives a testable PMA-target observation when taken,
   and passes 50,259 model/RTL cycles. The bounded Type 13 path attaches every
   DAG2 I/M selection to a PM data transaction and post-modifies only when its
-  fixed data cycle commits. Other PM and non-Type-2/12 DM data-bus attachment
+  fixed data cycle commits. Other PM and non-Type-2/4/12 DM data-bus attachment
   does not exist.
 - **Unresolved questions:** differing register group restrictions and
   simultaneous PM/DM semantics.
@@ -1022,10 +1031,12 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_dm_write_immediate_native_slice.sv`,
   `formal/dm_write_immediate_native.sby`, `tests/test_shifter_dm_native.py`,
   `sim/unit/tb_adsp2100_shifter_dm_native_slice.sv`,
-  `formal/shifter_dm_native.sby`, `make dm-bus-tests`,
+  `formal/shifter_dm_native.sby`, `tests/test_compute_dm_native.py`,
+  `sim/unit/tb_adsp2100_compute_dm_native_slice.sv`,
+  `formal/compute_dm_native.sby`, `make dm-bus-tests`,
   `make dm-write-native-tests`, `make dm-shifter-native-tests`,
-  `make compute-tests`
-- **Implementation notes:** the Type 2 immediate-write and Type 12
+  `make dm-compute-native-tests`, `make compute-tests`
+- **Implementation notes:** the Type 2 immediate-write, Type 4 ALU/MAC, and Type 12
   multifunction boundaries expose a distinct logical
   14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
   completion, and validity signals. It holds the transaction stable over waits
@@ -1054,8 +1065,13 @@ advance beyond research until a page-level primary citation is added.
   +2.590 ns worst setup and +0.159 ns worst hold slack, and has no
   unconstrained paths. The attached Type 12 fit uses 1,739 ALMs and 1,139
   registers, meets 50 MHz with +1.262 ns worst setup and +0.167 ns worst hold
-  slack, and has no unconstrained paths. Whole-core arbitration does not yet
-  exist.
+  slack, and has no unconstrained paths. A third bounded wrapper attaches
+  Type 4 memory-only and ALU/MAC reads/writes. Six directed tests and 50,082
+  clocks cover state-8 issue, native phases, complete-cycle waits, state-7
+  atomic compute/status/read/I commit, reset, late ACK, off-boundary rejection,
+  and relinquishment. Its fully constrained 25 ns Cyclone V fit uses 1,693
+  ALMs, 1,226 registers, one DSP, no RAM, and has positive multicorner
+  setup/hold slack. Whole-core arbitration does not yet exist.
 - **Unresolved questions:** shared data-bus turnaround, Type 1 dual-memory
   concurrency, event latching during waits, and BR/BG recognition.
 - **Confidence:** CORROBORATED
@@ -1229,8 +1245,9 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_data_bus.py`, `formal/dm_bus.sby`,
   `tests/test_dm_write_immediate_native.py`,
   `formal/dm_write_immediate_native.sby`,
-  `tests/test_shifter_dm_native.py`, `formal/shifter_dm_native.sby`
-- **Implementation notes:** Type 2 and Type 12 implement the sourced logical DMACK rule:
+  `tests/test_shifter_dm_native.py`, `formal/shifter_dm_native.sby`,
+  `tests/test_compute_dm_native.py`, `formal/compute_dm_native.sby`
+- **Implementation notes:** Type 2, Type 4, and Type 12 implement the sourced logical DMACK rule:
   each low sample extends the transaction by a processor clock, bus outputs
   remain stable, state does not commit, and the first high sample commits all
   parallel actions. The Type 2 differential adds 50,035 clocks of raw
@@ -1238,7 +1255,9 @@ advance beyond research until a page-level primary citation is added.
   controller and attached Type 2 wrapper add 50,039 standalone and 50,027
   connected clocks proving the state-6 DMACK sample, complete-cycle extension,
   and state-7 completion. The Type 12 attachment adds 50,064 connected clocks
-  proving read/write phase alignment and atomic parallel completion. PM
+  proving read/write phase alignment and atomic parallel completion. The
+  Type 4 attachment adds 50,082 clocks proving the same phase contract for
+  memory-only and ALU/MAC actions without any wait-time architectural write. PM
   concurrency,
   interrupt/BR/HALT latching, and electrical constraints remain.
 - **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
@@ -1266,6 +1285,9 @@ advance beyond research until a page-level primary citation is added.
   hit completion, miss/forced-fetch recovery, PX packing, and DAG2 updates.
   Type 4 adds 50,072 deterministic logical-DM clocks over selected-bank
   ALU/MAC, old-value reads/writes, DAG postmodify, waits, and invalid state.
+  Its independent native composition adds 50,082 clocks spanning state-8
+  acceptance, native strobes, full-cycle waits, state-7 atomic completion,
+  reset, and relinquishment.
   These are
   bounded state/action traces, not legal-program execution; the MAME adapter,
   unified architectural trace schema, and reducer remain absent. MAME is an
@@ -1287,7 +1309,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Fifty harnesses now pass strict assertion
+  result a complete proof. Fifty-one harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
@@ -1296,7 +1318,8 @@ advance beyond research until a page-level primary citation is added.
   cache-miss recovery plus connected cache selection/fill ownership,
   source-bounded instruction-cache count, reset, hold, restart, and oldest-
   replacement invariants,
-  bounded Type 4 ALU/MAC-plus-DM wait stability and atomic completion,
+  bounded Type 4 ALU/MAC-plus-DM wait stability and atomic completion plus
+  native issue/completion attachment and stalled-descriptor stability,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
@@ -1352,7 +1375,10 @@ advance beyond research until a page-level primary citation is added.
   registers with one DSP and no RAM at 25 ns. Standard Fit closes the initial
   Auto Fit hold failure with +3.644 ns worst setup, +0.104 ns worst
   multicorner hold, 46.83 MHz worst slow-corner Fmax, and zero unconstrained
-  clocks, ports, or paths. Native DM phases and whole-core timing remain open.
+  clocks, ports, or paths. The bounded Type 4/native-DM attachment fits in
+  1,693 ALMs and 1,226 registers with one DSP and no RAM at 25 ns; worst setup
+  is +1.121 ns, worst hold is +0.167 ns, worst slow-corner Fmax is 41.88 MHz,
+  and no clock, port, or path is unconstrained. Whole-core timing remains open.
   The bounded Type 2 DM-write slice fits in 581 ALMs and 430 fitted registers
   with no RAM/DSP blocks against a 20 ns standalone constraint. Worst setup is
   +3.590 ns, worst multicorner hold is +0.165 ns, worst slow-corner Fmax is
@@ -1526,12 +1552,13 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is attaching the now verified logical
-Type 4 ALU/MAC-plus-DM transaction to the native eight-state DM controller in
-`ISA-002`/`MODEL-001`; then constructing Type 1/5 action graphs.
+The highest-priority unblocked implementation work is constructing the
+primary-backed Type 1 and Type 5 multifunction action graphs, beginning with
+Type 5 ALU/MAC-plus-PM because its source/destination legality can reuse the
+now-qualified compute and PM boundaries without inventing dual-bus ordering.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
-reference. Field placement, Type 4 action legality, and waited logical
-execution are closed, while native attachment, whole-core integration, and
-the remaining multifunction classes are not.
+reference. Field placement, Type 4 action legality, waited logical execution,
+and its separate native attachment are closed at a bounded client boundary,
+while whole-core integration and the remaining multifunction classes are not.
 `TIME-001` must be completed before architectural execution RTL is permitted
 to claim cycle accuracy.
