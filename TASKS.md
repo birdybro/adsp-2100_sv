@@ -1127,6 +1127,9 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_shifter_pm_owner_control.py`,
   `sim/unit/tb_adsp2100_shifter_pm_owner_control_slice.sv`,
   `formal/shifter_pm_owner_control.sby`,
+  `tests/test_compute_pm_owner_control.py`,
+  `sim/unit/tb_adsp2100_compute_pm_owner_control_slice.sv`,
+  `formal/compute_pm_owner_control.sby`,
   `tests/test_shifter_pm_native.py`,
   `sim/unit/tb_adsp2100_shifter_pm_native_slice.sv`,
   `formal/shifter_pm_native.sby`, `tests/test_compute_pm_cache.py`,
@@ -1216,6 +1219,19 @@ advance beyond research until a page-level primary citation is added.
   worst slow-corner Fmax, and zero unconstrained paths. Ordinary fetch and
   Type 5 remain raw descriptor inputs; their architectural retry storage,
   DM-bus composition, and cross-event priority remain outside this result.
+  The symmetric Type 5/cache client is now attached in a separate composition
+  with ordinary fetch and raw Type 13. Rejected PM-data/recovery descriptors
+  retry without replaying committed ALU/MAC/PM/PX/DAG2 state, only routed
+  Type 5 completion advances the client, and completed ordinary fetches fill
+  its cache. Six directed tests and 50,063 model/RTL clocks cover 2,742
+  accepted Type 5 transactions, 713 retries, 1,371 data completions, 290
+  ordinary-fetch cache fills, 322 raw Type 13 completions, 78 BR handshakes,
+  and 2,727 masked grant clocks. Its formal recipe syntax-checks and its fully
+  constrained 25 ns Cyclone V fit uses 1,923 ALMs, 1,756 registers, one DSP,
+  no RAM, +3.950 ns worst setup, +0.161 ns worst hold, 47.51 MHz worst
+  slow-corner Fmax, and zero unconstrained paths. A single composition with
+  ordinary-fetch, Type 5, and Type 13 architectural clients plus complete
+  cross-event priority remains open.
   A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It

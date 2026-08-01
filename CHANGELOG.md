@@ -8,6 +8,23 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded Type 5/cache architectural client attached to the single shared
+  PM owner and normal BR/BG composition. Captured PM-data and recovery-fetch
+  descriptors survive fail-closed collision or issue inhibition and retry at
+  a later enabled state-8 boundary; only routed Type 5 completion advances
+  ALU/MAC/PM/PX/DAG2 state, and completed ordinary fetches fill the same
+  instruction cache. Six directed tests and 50,063 deterministic model/RTL
+  clocks cover 2,742 accepted Type 5 descriptors, 713 retained retries,
+  1,371 one-time data completions, 17,072 recovery observations, 290 ordinary-
+  fetch fills, 322 raw Type 13 completions, 78 BR recognitions/resumes, and
+  2,727 masked grant clocks. A machine-readable boundary, formal harness,
+  Yosys recipe, and fully constrained Cyclone V project bind the result.
+  Quartus uses 1,923 ALMs, 1,756 fitted registers, one DSP and no RAM,
+  +3.950 ns worst setup, +0.161 ns worst hold, 47.51 MHz worst slow-corner
+  Fmax, and no unconstrained paths at 25 ns. Ordinary fetch and Type 13 remain
+  raw descriptor inputs; unified Type 5/Type 13/fetch ownership and complete
+  HALT/TRAP/interrupt/loop/DM priority remain open.
+
 - A bounded Type 13/cache architectural client attached to the single shared
   PM owner and normal BR/BG composition. The client presents captured PM-data
   or recovery-fetch descriptors only at enabled state-8 boundaries, retains

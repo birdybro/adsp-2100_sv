@@ -313,6 +313,11 @@ from .shifter_pm_owner_control import (
     ShifterPMOwnerControlState,
     apply_shifter_pm_owner_control_cycle,
 )
+from .compute_pm_owner_control import (
+    ComputePMOwnerControlCycleResult,
+    ComputePMOwnerControlState,
+    apply_compute_pm_owner_control_cycle,
+)
 from .data_bus import (
     DATA_ADDRESS_WIDTH,
     DATA_WORD_WIDTH,
@@ -673,6 +678,8 @@ __all__ = [
     "ProgramOwnerBusControlState",
     "ShifterPMOwnerControlCycleResult",
     "ShifterPMOwnerControlState",
+    "ComputePMOwnerControlCycleResult",
+    "ComputePMOwnerControlState",
     "MACResult",
     "MACRegisterWrite",
     "MR_SATURATION_OPCODE",
@@ -754,6 +761,7 @@ __all__ = [
     "apply_program_owner_bus_cycle",
     "apply_program_owner_bus_control_cycle",
     "apply_shifter_pm_owner_control_cycle",
+    "apply_compute_pm_owner_control_cycle",
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",
     "apply_direct_jump_cycle",

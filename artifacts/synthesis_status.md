@@ -16,7 +16,7 @@
   linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
   compositions plus the Type 5/Type 13 native-PM/HALT attachments,
   the shared-PM-owner selector and its normal-BR/BG composition, the
-  attached Type 13/cache/shared-PM/BR-BG composition, the
+  attached Type 5/cache and Type 13/cache shared-PM/BR-BG compositions, the
   standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
@@ -30,8 +30,19 @@
 - Yosys is not installed in this environment. Original RESET/phase, normal
   BR/BG, standalone HALT sequencing, bounded linear-owner, linear-owner/BR/BG,
   linear-owner/HALT, shared-PM-owner, shared-PM-owner/BR-BG, and Type 5/Type 13
-  native-PM/HALT plus Type 13/shared-PM/BR-BG synthesis scripts are wired into
+  native-PM/HALT plus Type 5/Type 13 shared-PM/BR-BG synthesis scripts are wired into
   `make synth-yosys` for an equipped host.
+- Quartus 17.0.2 full compilation of the bounded Type
+  5/cache/shared-PM/BR-BG attachment passes for Cyclone V `5CSEBA6U23I7`.
+  It uses 1,923 ALMs and 1,756 fitted registers, one DSP and no block memory.
+  Against its 25 ns virtual-pin smoke constraint, worst multicorner setup
+  slack is +3.950 ns, worst hold slack is +0.161 ns, worst slow-corner Fmax is
+  47.51 MHz, and TimeQuest reports zero unconstrained clocks, ports, or paths.
+  Expected warnings are limited to virtual-pin optimization and the Quartus
+  Lite LogicLock license. This qualifies bounded Type 5 retry, routed
+  completion, ordinary-fetch cache fill, PMDA qualification, and BR/BG output
+  masking; unified Type 5/Type 13/fetch clients, physical I/O, and whole-core
+  timing closure remain open.
 - Quartus 17.0.2 full compilation of the bounded Type
   13/cache/shared-PM/BR-BG attachment passes for Cyclone V `5CSEBA6U23I7`.
   It uses 2,089 ALMs and 1,646 fitted registers, no block memory, and no DSP

@@ -102,6 +102,16 @@ ordinary-fetch fill, raw Type 5 isolation, and 88 BR handshakes. Ordinary
 fetch and Type 5 architectural request generation plus complete event priority
 remain open.
 
+The bounded Type 5/cache client is attached in a symmetric but separate
+composition. Its captured ALU/MAC/PM descriptor or later recovery descriptor
+survives a fail-closed collision or issue inhibition, only routed Type 5
+completion advances client state, and completed ordinary fetches fill its
+cache. Six directed tests and 50,063 model/RTL clocks cover 2,742 accepts, 713
+retries, 1,371 one-time data completions, 290 ordinary-fetch fills, 322 raw
+Type 13 completions, and 78 BR handshakes. A single composition containing
+ordinary-fetch, Type 5, and Type 13 architectural clients plus sourced event
+priority remains open.
+
 ## Type 13/cache attachment
 
 The bounded `adsp2100_shifter_pm_native_slice` admits architectural issue and

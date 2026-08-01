@@ -82,6 +82,14 @@ owner ID, so a Type 13 recovery fetch remains an instruction access. Ordinary
 fetch and Type 5 are still raw descriptor inputs, and no whole-core priority
 decision is added by this attachment.
 
+The bounded Type 5/cache client is attached by the same rule in a separate
+composition: captured data/recovery descriptors remain in the client after
+rejection, only routed Type 5 completion advances it, ordinary fetch
+completion fills its cache, and PMDA comes from the retained descriptor. The
+two client attachments deliberately remain separate until ordinary-fetch,
+Type 5, Type 13, and system-event priority can be sourced and verified as one
+processor-level decision.
+
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete

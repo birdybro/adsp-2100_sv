@@ -210,6 +210,13 @@ release, or interrupts remain outside this bounded result
 [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
+The Type 5/cache client is now attached in a separate composition and likewise
+retains rejected data/recovery work without replaying ALU/MAC/PM/PX/DAG2
+effects. Six directed tests and 50,063 model/RTL clocks cover 78 additional
+BR recognize/release/resume handshakes and 2,727 grant clocks with every PM
+driver masked. A unified composition with both PM-data clients, ordinary
+fetch, and HALT/TRAP/loop/interrupt priority remains open.
+
 The machine-readable contract is
 `docs/generated/adsp2100_bus_control.yaml`. Seven directed tests and 50,084
 deterministic model/RTL clocks cover request/grant and release/restart latency,

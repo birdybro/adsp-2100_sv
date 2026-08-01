@@ -19,7 +19,8 @@ scheduling attached independently to the bounded Type 5 and Type 13
 native-PM owners,
 fail-closed shared native-PM transaction ownership for ordinary fetch and the
 Type 5/Type 13 descriptor classes plus normal BR/BG sequencing on that shared
-interface with the bounded Type 13/cache architectural client attached,
+interface with bounded Type 5/cache and Type 13/cache clients attached in
+separate compositions,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -28,6 +29,15 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- bounded Type 5/cache architectural client attached to the shared PM owner
+  and normal BR/BG composition, retaining rejected PM-data/recovery
+  descriptors, routing only Type 5 completion, and filling its cache from
+  completed ordinary fetches; six directed tests and 50,063 model/RTL clocks
+  cover 2,742 accepts, 713 retries, 1,371 data completions, 290 fetch fills,
+  322 isolated raw Type 13 completions, 78 BR handshakes, and 2,727 masked
+  grant clocks, with a fully constrained 1,923-ALM/1,756-register/one-DSP
+  Cyclone V fit;
 
 - bounded Type 13/cache architectural client attached to the shared PM owner
   and normal BR/BG composition, retaining rejected PM-data/recovery
@@ -368,7 +378,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 667 distinct Python unit checks plus manifest/hash verification;
+- 673 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -570,6 +580,10 @@ outstanding.
   the Type 13/cache/shared-PM/BR-BG attachment fits in 2,089 ALMs and 1,646
   fitted registers with no RAM or DSP blocks, +8.194 ns worst setup,
   +0.166 ns worst multicorner hold, 59.5 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths against its 25 ns constraint;
+  the Type 5/cache/shared-PM/BR-BG attachment fits in 1,923 ALMs and 1,756
+  fitted registers with one DSP and no RAM, +3.950 ns worst setup,
+  +0.161 ns worst multicorner hold, 47.51 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths against its 25 ns constraint;
   the bounded linear owner fits in 885 ALMs and 1,020 fitted registers with no
   RAM or DSP blocks, +13.145 ns setup, +0.166 ns worst multicorner hold,

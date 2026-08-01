@@ -91,6 +91,18 @@ blocked requests without inventing storage or priority
 [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
+`adsp2100_compute_pm_owner_control_slice` applies the same shared-owner/BR-BG
+boundary to the bounded Type 5 ALU/MAC-plus-PM/cache client. Captured PM-data
+and recovery descriptors retry after fail-closed rejection, only routed Type 5
+completion may commit ALU/MAC/PM/PX/DAG2 or recovery state, and completed
+ordinary fetches fill the client cache. Six directed tests and 50,063 model/
+RTL clocks cover 2,742 accepts, 713 retries, 1,371 data completions, 290 fetch
+fills, 322 raw Type 13 completions, and 78 BR handshakes. Ordinary fetch and
+Type 13 remain raw descriptor inputs in this separate attachment; unified
+event priority remains outside the result [ADI-UM-1989, printed pp. 1-5–1-7,
+2-6–2-7, 4-26–4-30, 5-3–5-8, Figures 5.3 and 5.5;
+ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+
 `adsp2100_shifter_pm_owner_control_slice` attaches the bounded Type 13/cache
 client to that shared owner and BR/BG boundary. A collision or grant-time
 inhibition leaves the captured Type 13 PM-data or recovery descriptor pending;
