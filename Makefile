@@ -1,6 +1,8 @@
 PYTHON ?= python3
 VERILATOR ?= verilator
 LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
+	rtl/core/adsp2100_compute_move_decode.sv \
+	rtl/core/adsp2100_compute_move_action.sv \
 	rtl/core/adsp2100_conditional_compute_decode.sv \
 	rtl/core/adsp2100_divide_quotient_decode.sv \
 	rtl/core/adsp2100_divide_quotient_action.sv \

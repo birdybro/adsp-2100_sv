@@ -398,8 +398,8 @@ advance beyond research until a page-level primary citation is added.
   cycles pass. A composed model test executes DIVS plus fifteen DIVQ steps for
   signed positive and negative examples. Appendix B correction exceptions and
   fetched execution now also covers every divisor in both banks and both
-  old-AQ paths plus a dependent following DIVQ across 443,607 native-fetch
-  phase clocks. A fetched DIVS-to-DIVQ sequence is now also covered; loops,
+  old-AQ paths plus a dependent following DIVQ across the superseding 442,392
+  native-fetch phase clocks. A fetched DIVS-to-DIVQ sequence is now also covered; loops,
   interrupts, and unified PM/cache/event ownership remain outside this
   attachment.
   Type 24 now partitions all 32 field words into sixteen source-closed DIVS
@@ -410,7 +410,7 @@ advance beyond research until a page-level primary citation is added.
   later-device flag-description conflict in favor of the original-device
   ASTAT table. All sixteen legal forms now attach to the bounded ordinary-
   fetch owner using distinct divisor, AY0, and upper-dividend reads. Two
-  directed tests plus the 443,607-clock integrated flow cover every divisor,
+  directed tests plus the superseding 442,392-clock integrated flow cover every divisor,
   both upper forms and banks, and dependent DIVS-to-DIVQ retirement. Reset-
   first-fetch, active-loop, interrupt, PM-data/cache, and event-priority
   integration remain.
@@ -566,10 +566,10 @@ advance beyond research until a page-level primary citation is added.
   interrupts, PM-data/cache, HALT, and BR/BG remain outside this model
   increment.
   A structurally separate phase model now composes that architectural state
-  with the native PM transaction model. Twenty-two directed tests and 443,607
+  with the native PM transaction model. Twenty-three directed tests and 442,392
   deterministic model/RTL clocks cover enabled state-8 issue, state-7 retire,
   phase holds, bus-output relinquishment, PC wrap, invalid fetched data,
-  selected-bank Type 6/7/9/14/15/16/17/18/23/24/25 ordering, every legal Type 17 pair,
+  selected-bank Type 6/7/8/9/14/15/16/17/18/23/24/25 ordering, every legal Type 17 pair,
   every Type 9 AMF/condition combination, every canonical Type 14 packet,
   every supported Type 15 and Type 16 word, every Type 18 encoding, every Type
   23 divisor in both banks and both old-AQ paths, every legal Type 24 divisor/
@@ -776,18 +776,21 @@ advance beyond research until a page-level primary citation is added.
   compute block, flags, sticky AV, and AR saturation exist in independent
   model and RTL. Type 8 now connects every source-closed standard ALU field to
   selected-bank operand/feedback selection, atomic AR/AF/ASTAT and parallel
-  DREG writeback, and 983,386 ALU/MAC model/RTL packet cycles. Type 9 connects
+  DREG writeback, and 983,386 exhaustive ALU/MAC model/RTL packet cycles. The
+  fetched owner adds a directed old-value test and a 442,392-clock comparison
+  traversing every compute-field tuple and every move source/destination pair
+  in both banks. Type 9 connects
   all standard conditional ALU fields with true-only AR/AF/ASTAT writeback and
   passes 283,996 cycles over every class word. The bounded Type 23 slice
   executes all eight source-closed DIVQ divisor selections with the old-AQ
   add/subtract decision and atomic AF/AY0/AQ write across 50,081 cycles. Type
   23 is now also attached to the fetched shared-state owner; two directed
-  tests and 443,607 aggregate phase clocks cover every divisor/bank/old-AQ
+  tests and 442,392 aggregate phase clocks cover every divisor/bank/old-AQ
   path and a dependent following iteration. The bounded Type 24 slice
   executes all sixteen source-closed DIVS operand combinations with atomic
   old-value AF/AY0/AQ semantics and authentic unknown tracking across 50,109
   cycles. It is also attached to the fetched owner; two directed tests and the
-  same 443,607-clock flow cover every legal divisor/upper-source/bank path and
+  same 442,392-clock flow cover every legal divisor/upper-source/bank path and
   dependent DIVS-to-DIVQ retirement. Memory multifunction classes remain.
 - **Unresolved questions:** Appendix B quotient correction belongs to software;
   whole-core instruction/fetch timing remains open.
@@ -815,11 +818,13 @@ advance beyond research until a page-level primary citation is added.
   selected-bank execution RTL, formal recipes, exhaustive decode, nine model
   tests, and 50,112 model/RTL cycles. A stateless Type 25 action is now also
   attached to the shared ordinary-fetch owner; two directed fetched tests and
-  443,607 model/RTL phase clocks cover both banks/signs, MV false, and atomic
+  442,392 model/RTL phase clocks cover both banks/signs, MV false, and atomic
   state-7 MR/PC/next-word retirement. Type 8 now connects every source-closed
   fractional MAC field to selected-bank operand/feedback selection and atomic
   MR/MF/MV plus parallel DREG writeback; all supported Type 8 words execute in
-  both banks within the 983,386-cycle differential run. Type 9 connects all
+  both banks within the 983,386-cycle differential run. The fetched owner
+  additionally traverses every Type 8 compute-field tuple and every parallel
+  move source/destination pair in both banks within 442,392 phase clocks. Type 9 connects all
   standard conditional MAC fields with true-only MR/MF/MV writeback and passes
   283,996 cycles over every class word. Memory-access multifunction timing
   remains.
@@ -1081,8 +1086,10 @@ advance beyond research until a page-level primary citation is added.
   mode controls, and all computational/MSTAT-consumer observations. A focused
   RTL boundary test proves old-read/new-write timing, three-way DREG
   writeback, bank isolation, computational and status effects, DAG update,
-  local collision preservation, and reset suppression. The first fetched
-  compute client and interrupt/sequencer actions remain to be attached.
+  local collision preservation, and reset suppression. Fetched Type 8, Type 9,
+  Type 14, Type 15, Type 16, Type 23, Type 24, and Type 25 clients now drive
+  these shared ports; additional instruction, interrupt, and sequencer actions
+  remain to be attached.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -1291,8 +1298,9 @@ advance beyond research until a page-level primary citation is added.
   and zero unconstrained paths. Type 5 and Type 13 remain raw descriptors in
   this attachment; a single three-client/cache/HALT composition and sourced
   cross-event priority remain open.
-  A bounded ordinary linear-fetch owner now shares the native PM
-  controller with NOP, legal Type 6/7, every Type 9 conditional ALU/MAC word,
+  A bounded ordinary linear-fetch owner now shares the native PM controller
+  with NOP, legal Type 6/7, all 476,672 source-closed Type 8
+  ALU/MAC-plus-DREG packets, every Type 9 conditional ALU/MAC word,
   all 25,648 canonical Type 14 shifter-plus-DREG packets,
   all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
   16 conditional-shift words, all 2,256 legal Type 17 internal MOVE source/
@@ -1302,8 +1310,10 @@ advance beyond research until a page-level primary citation is added.
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
   and loaded next word at state 7-to-8, preserves pending state through phase
   holds/relinquishment, and fails closed for unsupported or reserved current
-  words. Twenty-two directed tests and 443,607 phase clocks pass, with each legal
-  Type 17 pair, each Type 9 AMF/condition combination, every canonical Type 14
+  words. Twenty-three directed tests and 442,392 phase clocks pass. The flow
+  traverses every Type 8 compute-field tuple and every move source/destination
+  pair in both banks, each legal Type 17 pair, each Type 9 AMF/condition
+  combination, every canonical Type 14
   packet, every supported Type 15 and Type 16 word, each Type 18 encoding,
   every Type 23 divisor/bank/old-AQ path plus a dependent following iteration,
   every legal Type 24 divisor/upper-source/bank path plus a dependent DIVS-to-
@@ -1312,8 +1322,8 @@ advance beyond research until a page-level primary citation is added.
   Narrow Type 17 status/control sources raise an OQ-016 provisional retirement
   pulse. Reset's special first-fetch
   waveform, PM-data/cache ownership, transfers, loops, interrupts, and HALT
-  remain separate work. A bounded NOP/Type 6/Type 7/Type 9/Type 14/Type 15/
-  Type 16/Type 17/Type 18/Type 23/Type 24/Type 25
+  remain separate work. A bounded NOP/Type 6/Type 7/Type 8/Type 9/Type 14/
+  Type 15/Type 16/Type 17/Type 18/Type 23/Type 24/Type 25
   composition now attaches normal BR/BG issue inhibition and PM output masking
   through five tests and 50,003 clocks, including 86 full handshakes; every
   other owner remains outside that result.
@@ -1615,16 +1625,18 @@ advance beyond research until a page-level primary citation is added.
   and recovery fills; this does not yet close branch/loop/interrupt/HALT/BR
   arbitration under OQ-008.
   The independent top-level model and a bounded native RTL owner now enforce
-  the sourced ordinary-flow overlap for NOP, legal Type 6/7, every Type 9
-  conditional ALU/MAC word, every canonical Type 14 shifter-plus-DREG packet,
+  the sourced ordinary-flow overlap for NOP, legal Type 6/7, all source-closed
+  Type 8 ALU/MAC-plus-DREG packets, every Type 9 conditional ALU/MAC word,
+  every canonical Type 14 shifter-plus-DREG packet,
   every supported Type 15/16 shifter word, all legal
   Type 17 internal MOVE words from initialized state, all Type 18 MODE CONTROL
   words, all Type 23 DIVQ forms, all sixteen source-closed Type 24 DIVS forms,
   and exact Type 25 MR saturation: the current-PC
   instruction executes while PC+1 is
   fetched, then action/PC/next-word state retires at state 7-to-8. The phase
-  model and RTL agree for 443,607 clocks, including every Type 9 AMF/condition
-  combination, every canonical Type 14 packet, every supported Type 15/16
+  model and RTL agree for 442,392 clocks, including every Type 8 compute-field
+  tuple and every move source/destination pair in both banks, every Type 9
+  AMF/condition combination, every canonical Type 14 packet, every supported Type 15/16
   word, every legal Type 17 pair, every Type 18 encoding, every Type 23
   divisor/bank/old-AQ path plus dependent retirement, every legal Type 24
   divisor/upper-source/bank path plus DIVS-to-DIVQ retirement, and Type 25 true/false
@@ -1740,7 +1752,8 @@ advance beyond research until a page-level primary citation is added.
   logical fixed-cycle execution/cache recovery/native state-8 issue and
   state-7 completion plus the late-HALT forced-fetch/one-time-commit
   composition,
-  bounded Type 8 ALU/MAC-plus-DREG execution,
+  bounded Type 8 ALU/MAC-plus-DREG execution and fetched-owner retirement
+  coverage,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
   bounded Type 11 DO UNTIL decode and state execution,
@@ -1860,6 +1873,16 @@ advance beyond research until a page-level primary citation is added.
   ns, worst hold is +0.165 ns, worst slow-corner Fmax is 47.94 MHz, and no
   clocks, ports, or paths are unconstrained. Its initial 20 ns fit missed
   setup by 1.735 ns; this likewise is not whole-core or MiSTer closure.
+  The Type 8-capable fetched owner fits at its 25 ns bounded constraint using
+  3,219 ALMs, 1,204 fitted registers, two DSP blocks, and no RAM. Worst
+  multicorner setup is +0.255 ns, worst hold is +0.168 ns, worst slow-corner
+  Fmax is 40.41 MHz, and TimeQuest reports zero unconstrained clocks, ports,
+  or paths. Its stricter 20 ns shared-PM/BR-BG composition fits using 3,381
+  ALMs, 1,256 registers, two DSP blocks, and no RAM, but misses setup by 5.223
+  ns with 39.65 MHz worst slow-corner Fmax. The duplicate DSP confirms that
+  the mutually exclusive Type 8 and Type 9 combinational compute paths should
+  be shared before whole-core timing/resource qualification; this is recorded
+  debt, not timing closure.
   The bounded Type 10 direct-transfer slice fits in 284 ALMs and 334 fitted
   registers with no RAM or DSP blocks against a 20 ns standalone constraint.
   Worst setup is +8.138 ns, worst multicorner hold is +0.167 ns, worst
@@ -1992,19 +2015,21 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is replacing the bounded
-steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/Type
-18/Type 23/Type 24/Type 25 owner's deterministic preload with the sourced
-reset-release/first-fetch sequence after resolving or explicitly bounding
-OQ-024, then adding a documented next-PC/PM-owner arbiter and attaching
-additional source-closed non-memory linear classes. Type 9
+The nominal highest-priority work is replacing the bounded steady-state
+NOP/Type 6/Type 7/Type 8/Type 9/Type 14/Type 15/Type 16/Type 17/Type 18/Type
+23/Type 24/Type 25 owner's deterministic preload with a sourced reset-release/
+first-fetch sequence. OQ-024 currently blocks that waveform: the original
+manual fixes the reset PC but not the first PMS/PMRD assertion boundary. The
+next unblocked source-closed increment is therefore attaching Type 21 MODIFY
+to the shared fetched state owner, followed by a documented next-PC/PM-owner
+arbiter and other non-memory linear classes. Type 9
 fetched conditional compute, Type 7 immediate non-data-register execution,
 and Type 3 state/native-DM execution are bounded and verified. The Type 1
 dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
-reference. Fetched Type 9/14/15/16/23/24/25 compute/division/multifunction
+reference. Fetched Type 8/9/14/15/16/23/24/25 compute/division/multifunction
 execution is now attached to the single shared state owner. Field placement
 and bounded Type 4/Type 5 execution/native attachments are closed, while
 whole-core integration and the remaining multifunction classes are not.

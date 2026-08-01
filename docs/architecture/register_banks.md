@@ -131,7 +131,7 @@ old SR/SE value before shifter writeback. The decoder excludes every
 same-destination request, and the register file atomically commits the
 remaining DREG plus SR/SE/SB writeback. The inactive bank is preserved across
 all 82,597 standalone comparison cycles. The shared fetched owner independently
-retires all 25,648 canonical packets across 443,607 clocks while committing
+retires all 25,648 canonical packets across 442,392 clocks while committing
 both write families atomically with PC and the next fetched word
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 
@@ -140,12 +140,12 @@ divisor, AF, and AY0 reads. State-7 retirement atomically replaces AF and AY0
 in that bank and unbanked ASTAT.AQ; the inactive bank and non-AQ status bits
 remain unchanged. The integrated comparison covers every divisor source in
 both banks, both old-AQ paths, and a dependent following iteration across
-443,607 clocks [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4].
+442,392 clocks [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4].
 
 Fetched Type 24 DIVS independently reads the selected-bank divisor, AY0, and
 YOP-selected AY1 or AF upper word. The three AF/AY0/AQ results retire together;
 all sixteen legal source forms execute in both banks, and a dependent fetched
-DIVQ observes that retired state in the same 443,607-clock comparison
+DIVQ observes that retired state in the same 442,392-clock comparison
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-6–6-9, A-4].
 
 `adsp2100_compute_move_slice` extends that parallel boundary through all
@@ -156,7 +156,10 @@ together at cycle end while the inactive bank remains unchanged. The decoder
 rejects move writes to AR alongside a Z=0 ALU result and MR0/MR1/MR2 alongside
 a Z=0 MAC result. Every one of the 476,672 supported words executes in both
 banks in the 983,386-cycle comparison
-[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11]. The
+ordinary-fetch owner separately traverses every compute-field tuple and every
+move source/destination pair in both banks within 442,392 phase clocks, with
+atomic compute/status/move/PC/next-word retirement.
 
 `adsp2100_conditional_compute_slice` uses the identical cycle-start bank and
 operand mapping for Type 9, but gates all result/status writes with the

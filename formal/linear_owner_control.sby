@@ -21,6 +21,8 @@ read -formal -sv rtl/core/adsp2100_status_stack.sv
 read -formal -sv rtl/core/adsp2100_architectural_state.sv
 read -formal -sv rtl/core/adsp2100_internal_move_slice.sv
 read -formal -sv rtl/core/adsp2100_condition_logic.sv
+read -formal -sv rtl/core/adsp2100_compute_move_decode.sv
+read -formal -sv rtl/core/adsp2100_compute_move_action.sv
 read -formal -sv rtl/core/adsp2100_conditional_compute_decode.sv
 read -formal -sv rtl/core/adsp2100_divide_quotient_decode.sv
 read -formal -sv rtl/core/adsp2100_divide_quotient_action.sv
@@ -65,6 +67,8 @@ rtl/core/adsp2100_status_stack.sv
 rtl/core/adsp2100_architectural_state.sv
 rtl/core/adsp2100_internal_move_slice.sv
 rtl/core/adsp2100_condition_logic.sv
+rtl/core/adsp2100_compute_move_decode.sv
+rtl/core/adsp2100_compute_move_action.sv
 rtl/core/adsp2100_conditional_compute_decode.sv
 rtl/core/adsp2100_divide_quotient_decode.sv
 rtl/core/adsp2100_divide_quotient_action.sv

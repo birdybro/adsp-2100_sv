@@ -2,8 +2,8 @@
 
 **Status: standard function and both division primitives implemented in
 bounded model/RTL; Type 1 action selection and Type 4 native-DM execution
-closed; Type 8 and Type 9 integrations plus fetched Type 23 execution
-complete; Type 24 remains a standalone bounded state slice**
+closed; Type 8 and Type 9 integrations plus fetched Type 23/24 execution
+complete within the bounded ordinary owner**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
 from ASTAT.AC. It generates AZ, AN, AV, AC, AS, and AQ
@@ -44,9 +44,8 @@ X/Y/Z field, rejects AR read-load collisions, captures cycle-start operands,
 and commits AR/AF plus ASTAT atomically with the acknowledged DM action. Its
 50,072-clock logical and 50,082-clock native comparisons include immediate and
 wait-extended completion. Outside the bounded Type 4, Type 8, and Type 9
-slices, ALU multifunction execution remains excluded. Type 23 DIVQ is also
-attached to the bounded ordinary-fetch owner; Type 24 DIVS remains a separate
-bounded execution slice.
+slices, ALU multifunction execution remains excluded. Both Type 23 DIVQ and
+Type 24 DIVS are attached to the bounded ordinary-fetch owner.
 
 The Type 5 path covers every ALU AMF/X/Y/Z selection paired with one PM
 transfer, rejects AR/PM-read double destinations, samples the selected-bank
@@ -107,7 +106,7 @@ examples. Appendix B documents exceptional inputs for which the primitive
 sequence can be off by one; those software correction rules are deliberately
 not folded into a single DIVQ instruction. The Type 23 transformation is
 additionally attached to the bounded native ordinary-fetch owner. Two directed
-tests and 443,607 phase clocks cover all eight divisors in both banks, both
+tests and 442,392 phase clocks cover all eight divisors in both banks, both
 old-AQ paths, and a following DIVQ that reads the just-retired AF/AY0/AQ state.
 The same owner now executes all sixteen legal DIVS operand combinations through
 distinct divisor, AY0, and upper-dividend reads; a fetched DIVS-to-DIVQ test
@@ -121,9 +120,12 @@ to original Type 8 X/Y/Z selection, selected-bank AR/AF writeback, ASTAT
 updates, and one simultaneous old-value DREG move. The fail-closed boundary
 rejects Z=0 packets whose move also targets AR and retains AMF zero as OQ-022.
 All supported operand and move combinations execute in the exhaustive
-983,386-cycle Type 8 comparison; memory multifunction classes remain
-unintegrated [ADI-UM-1989, printed pp. 6-4–6-10, A-2,
-A-5–A-7, A-11].
+983,386-cycle standalone Type 8 comparison. The fetched owner additionally
+traverses every compute-field tuple and every move source/destination pair in
+both banks within its 442,392-clock comparison, committing the computation,
+status, move, PC, and next word atomically at state 7-to-8. Active control
+flow, interrupts, and unified PM/cache ownership remain open
+[ADI-UM-1989, printed pp. 6-4–6-10, A-2, A-5–A-7, A-11].
 
 The independent `conditional_compute` model and
 `adsp2100_conditional_compute_slice` apply the same ALU field maps to every

@@ -152,8 +152,14 @@ an exhaustive 24-bit RTL traversal, ten directed/model checks, and 983,386
 stateful model-versus-RTL cycles cover every supported word in both banks.
 The later ADSP-2101 Cross-Software reference explicitly corroborates the
 old-value and unsupported-collision rules, but does not override the original
-manual [ADI-2101-CROSS-1990, printed pp. 9-71–9-73]. Fetch overlap, terminal
-loops, interrupt aborts, wait extension, and external bus phases remain open.
+manual [ADI-2101-CROSS-1990, printed pp. 9-71–9-73]. A separate stateless
+action producer now attaches the same sourced graph to the ordinary-fetch
+owner. One directed old-value test and 442,392 model/RTL phase clocks traverse
+every `(Z, AMF=1..31, YOP, XOP)` tuple and every move source/destination pair
+in both banks, with atomic state-7 compute/status/move/PC/next-word retirement.
+The standalone exhaustive run remains the evidence for every one of the
+476,672 words. Terminal loops, interrupt aborts, and unified PM/cache/event
+ownership remain open.
 
 ## Bounded Type 14 execution
 
@@ -184,7 +190,7 @@ Two hand-derived fixtures, all 25,648 canonical assembler/disassembler forms,
 an exhaustive 24-bit RTL class traversal, ten model checks, and 82,597
 stateful model-versus-RTL cycles cover every supported word in both banks.
 A stateless parallel-action boundary now attaches every canonical packet to
-the shared ordinary-fetch owner. Twenty-two directed tests and 443,607 model/RTL
+the shared ordinary-fetch owner. Twenty-three directed tests and 442,392 model/RTL
 phase clocks cover native state-8 PC+1 issue, cycle-start reads, and atomic
 state-7 DREG/shifter/status/PC/next-word retirement; 50,003-clock BR/BG,
 shared-PM/BR-BG, and HALT compositions separately preserve the packet across

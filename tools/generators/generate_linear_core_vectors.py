@@ -91,6 +91,20 @@ def _type9(
     )
 
 
+def _type8(
+    *, z: int, amf: int, yop: int, xop: int, destination: int, source: int
+) -> int:
+    return (
+        0x280000
+        | ((z & 1) << 18)
+        | ((amf & 0x1F) << 13)
+        | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | ((destination & 0xF) << 4)
+        | (source & 0xF)
+    )
+
+
 def _type14(*, sf: int, xop: int, destination: int, source: int) -> int:
     return (
         0x100000
@@ -181,6 +195,52 @@ def _directed_opcodes() -> tuple[int, ...]:
         for amf in range(32)
         for condition in range(16)
     )
+    # Traverse both banks and every Type 8 compute field combination through
+    # fetched retirement. The standalone exhaustive slice covers every legal
+    # 24-bit packet; the additional all-pairs pass below closes the attachment's
+    # independent move-source and move-destination routing.
+    for bank in (0, 1):
+        opcodes.append(_type7(writable["MSTAT"], bank))
+        for z in (0, 1):
+            for amf in range(1, 32):
+                for yop in range(4):
+                    for xop in range(8):
+                        destination = (amf + yop + xop + z) & 0xF
+                        if not z and (
+                            (amf >= 0x10 and destination == int(DREG.AR))
+                            or (
+                                amf < 0x10
+                                and destination in (
+                                    int(DREG.MR0),
+                                    int(DREG.MR1),
+                                    int(DREG.MR2),
+                                )
+                            )
+                        ):
+                            destination = int(DREG.AX0)
+                        source = (amf * 3 + yop * 5 + xop + z) & 0xF
+                        opcodes.append(
+                            _type8(
+                                z=z,
+                                amf=amf,
+                                yop=yop,
+                                xop=xop,
+                                destination=destination,
+                                source=source,
+                            )
+                        )
+        opcodes.extend(
+            _type8(
+                z=1,
+                amf=0x10,
+                yop=3,
+                xop=0,
+                destination=destination,
+                source=source,
+            )
+            for destination in range(16)
+            for source in range(16)
+        )
     # Exercise exact Type 25 through both banks, both saturation signs, and a
     # false MV predicate. The standalone slice remains the exhaustive opcode
     # and unknown-state reference; these sequences prove fetched retirement.
@@ -271,7 +331,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(24)
+    choice = rng.randrange(25)
     if choice == 0:
         return 0
     if choice < 5:
@@ -317,7 +377,27 @@ def _legal_opcode(rng: random.Random) -> int:
         return 0x050000
     if choice == 22:
         return _type23(rng.randrange(8))
-    return _type24(rng.choice((1, 2)), rng.randrange(8))
+    if choice == 23:
+        return _type24(rng.choice((1, 2)), rng.randrange(8))
+    z = rng.randrange(2)
+    amf = rng.randrange(1, 32)
+    destination = rng.randrange(16)
+    if not z and (
+        (amf >= 0x10 and destination == int(DREG.AR))
+        or (
+            amf < 0x10
+            and destination in (int(DREG.MR0), int(DREG.MR1), int(DREG.MR2))
+        )
+    ):
+        destination = int(DREG.AX0)
+    return _type8(
+        z=z,
+        amf=amf,
+        yop=rng.randrange(4),
+        xop=rng.randrange(8),
+        destination=destination,
+        source=rng.randrange(16),
+    )
 
 
 def _exact(value: object) -> tuple[bool, int]:

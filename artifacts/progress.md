@@ -11,8 +11,9 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
-bounded steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/
-Type 18/Type 23/Type 24/Type 25 ordinary-fetch ownership with Type 9 ALU/MAC,
+bounded steady-state NOP/Type 6/Type 7/Type 8/Type 9/Type 14/Type 15/Type 16/
+Type 17/Type 18/Type 23/Type 24/Type 25 ordinary-fetch ownership with Type 8
+ALU/MAC-plus-DREG and Type 9 ALU/MAC,
 Type 14 parallel move/shifter, Type 15/16 shifter/status, Type 23 divide-
 quotient, Type 24 divide-sign, and Type 25 conditional MR actions
 attached directly to the shared architectural state,
@@ -33,6 +34,26 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- fetched all 476,672 source-closed original Type 8 ALU/MAC-plus-DREG packets
+  attached to the shared architectural-state owner and native ordinary-fetch
+  phases. A stateless action producer uses three cycle-start DREG reads plus
+  AF/MF/MR/ASTAT/MSTAT consumers and drives atomic computation, status, move,
+  PC, and next-word retirement. The owner fails closed for all 16,384 AMF-zero
+  words and 31,232 result/move destination collisions. One directed old-value
+  test and the 23-test, 442,392-clock integrated model/RTL flow traverse every
+  compute-field tuple and every move source/destination pair in both banks;
+  the standalone 983,386-cycle comparison remains exhaustive over all legal
+  words in both banks. Shared-PM/BR-BG and HALT compositions remain green,
+  strict lint passes, all 689 Python checks pass, and all 73 formal recipes
+  pass assertion syntax lint; SymbiYosys/Yosys remain unavailable. The fully
+  constrained 25 ns Cyclone V owner fit uses 3,219 ALMs, 1,204 registers, two
+  DSPs, no RAM, +0.255 ns worst setup, +0.168 ns worst hold, 40.41 MHz worst
+  slow-corner Fmax, and zero unconstrained paths. Its 20 ns shared-PM/BR-BG
+  composition fits at 3,381 ALMs and 1,256 registers but misses setup by 5.223
+  ns; the duplicated Type 8/Type 9 compute datapath is recorded optimization
+  debt, and reset-first-fetch, control flow, interrupts, and unified PM/cache/
+  event ownership remain open;
 
 - fetched all sixteen source-closed original Type 24 DIVS forms attached to
   the shared architectural-state owner and native ordinary-fetch phases. A
@@ -490,7 +511,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 688 distinct Python unit checks plus manifest/hash verification;
+- 689 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -630,7 +651,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/9/14/15/16/17/18/23/24/25 linear owner adds 443,607 phase clocks,
+  the bounded Type 6/7/8/9/14/15/16/17/18/23/24/25 linear owner adds 442,392 phase clocks,
   the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across
@@ -788,7 +809,8 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/9/14/15/16/17/18/25 linear fetch owner and original
+  the bounded steady-state Type 6/7/8/9/14/15/16/17/18/23/24/25 linear fetch
+  owner and original
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants

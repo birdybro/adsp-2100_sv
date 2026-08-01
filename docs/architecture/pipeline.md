@@ -13,18 +13,22 @@ The PC names the instruction currently executing. During ordinary linear
 flow, the PC incrementer drives the following address onto PMA and that value
 is loaded into the PC at cycle end [ADI-UM-1989, printed pp. 4-3, 4-10]. The
 integrated Python model and bounded steady-state RTL owner now enforce this
-distinction for NOP, legal Type 6/7, every Type 9 conditional ALU/MAC word,
+distinction for NOP, legal Type 6/7, all 476,672 source-closed Type 8
+ALU/MAC-plus-DREG packets, every Type 9 conditional ALU/MAC word,
 all 25,648 canonical Type 14 shifter-plus-DREG packets,
 all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
 16 conditional-shift words, all 2,256 legal Type 17 internal MOVE source/
 destination pairs from fully initialized state, all Type 18 MODE CONTROL
-words, all eight Type 23 DIVQ forms, and the exact Type 25 conditional
-MR-saturation word:
+words, all eight Type 23 DIVQ forms, all sixteen source-closed Type 24 DIVS
+forms, and the exact Type 25 conditional MR-saturation word:
 address `N` executes while an ordinary fetch for `N+1` occupies the native PM
 phases, then the state-7-to-8 edge commits the current action, PC=`N+1`, and
 the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
 that completion edge and its bank-select effect is visible to the following
-instruction. Type 9 samples cycle-start operands, condition, bank, MSTAT
+instruction. Type 8 samples ALU/MAC operands, feedback, ASTAT, and the
+parallel DREG move source from one cycle-start selected-bank snapshot, then
+commits its noncolliding result, status, and move with PC and the fetched word
+at the completion edge. Type 9 samples cycle-start operands, condition, bank, MSTAT
 arithmetic controls, feedback, and validity-aware CNTR predicate, then commits
 true ALU/MAC result and ASTAT effects atomically with the fetched word at the
 same completion edge. False and AMF-zero forms retain the same one-cycle
@@ -47,9 +51,10 @@ limit at state 7-to-8 without altering ASTAT, while MV false retires on the
 same boundary without an MR write. The request is admitted at the enabled
 state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Twenty-two directed tests and 443,607
-phase clocks compare the independent model with RTL, including every legal
-Type 17 pair, every Type 9 AMF/condition combination, every canonical Type 14
+interface exposes no PM acknowledge input. Twenty-three directed tests and
+442,392 phase clocks compare the independent model with RTL. They traverse
+every Type 8 compute-field tuple and every move source/destination pair in both
+banks, every legal Type 17 pair, every Type 9 AMF/condition combination, every canonical Type 14
 packet, every supported Type 15 and Type 16 word, every Type 18 encoding,
 all Type 23 divisors in both banks and both old-AQ paths, every legal Type 24
 divisor/upper-source form in both banks, dependent DIVS-to-DIVQ, the Type 25

@@ -120,14 +120,19 @@ from that same cycle-start bank. A move may replace a computational source or
 read an old shifter result, and the noncolliding DREG plus SR/SE/SB/SS results
 become visible together at cycle end. Same-destination requests never execute
 in the bounded slice. The shared fetched owner now retires every canonical
-packet through native PC+1 overlap in its 443,607-clock comparison
+packet through native PC+1 overlap in its 442,392-clock comparison
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 The bounded Type 8 path applies the same bank and timing rule to ALU/MAC X/Y,
 optional MR feedback, and the DREG move source. Noncolliding AR/AF or MR/MF,
 ASTAT, and move writes become visible together at cycle end; the inactive bank
 is preserved. AMF zero and same-destination requests remain action-free under
 OQ-022/OQ-014 rather than receiving invented priority
-[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
+[ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11]. The
+fetched owner now applies that rule while overlapping PC+1 fetch and atomically
+retiring computation, status, move, PC, and next-word state. Its 442,392-clock
+comparison covers every compute-field tuple and every move-source/destination
+pair in both banks; exhaustive per-word execution remains the independent
+983,386-cycle standalone evidence.
 The bounded Type 9 path uses the same cycle-start bank, operands, optional MR
 feedback, ASTAT, and mode state. A true condition commits one AR/AF or MR/MF
 result and its unit-selected ASTAT fields at cycle end; false and AMF-zero

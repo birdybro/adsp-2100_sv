@@ -2,8 +2,9 @@
 
 The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
-Type 14 shifter-plus-move packets, Type 15 immediate shifts, Type 16
-conditional shifts, original Type 18 mode control, Type 23 DIVQ, the
+Type 8 ALU/MAC-plus-move packets, Type 14 shifter-plus-move packets, Type 15
+immediate shifts, Type 16 conditional shifts, original Type 18 mode control,
+Type 23 DIVQ, the
 source-closed Type 24 DIVS forms, exact Type 25 MR saturation, and legal Type
 17 internal moves from known sources.
 Unsupported behavior fails closed instead of becoming an accidental no-op.
@@ -383,6 +384,51 @@ class ADSP2100Model:
                 self.state,
                 action.destination_register,
                 source,
+            )
+        elif instruction.value & 0xF80000 == 0x280000:
+            from .compute_move import (
+                ComputeMoveState,
+                apply_compute_move_cycle,
+                decode_compute_move,
+            )
+            from .status import ASTATState, StatusRegisters
+
+            action = decode_compute_move(instruction.value)
+            if action is None:
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} has unsupported Type 8 fields"
+                )
+            computed = apply_compute_move_cycle(
+                ComputeMoveState(
+                    primary=self.state.primary,
+                    alternate=self.state.alternate,
+                    status=StatusRegisters(
+                        astat=(
+                            ASTATState()
+                            if self.state.astat is UNKNOWN
+                            else ASTATState.from_word(self.state.astat)
+                        ),
+                        mstat=self.state.mstat,
+                        icntl=self.state.icntl,
+                        imask=self.state.imask,
+                    ),
+                ),
+                execute=True,
+                opcode=instruction.value,
+            )
+            next_astat = (
+                computed.state.status.astat.to_word()
+                if computed.state.status.astat.is_fully_known
+                else UNKNOWN
+            )
+            next_state = replace(
+                self.state,
+                primary=computed.state.primary,
+                alternate=computed.state.alternate,
+                astat=next_astat,
+                mstat=computed.state.status.mstat,
+                icntl=computed.state.status.icntl,
+                imask=computed.state.status.imask,
             )
         elif instruction.value & 0xF800F0 == 0x200000:
             from .conditional_compute import (

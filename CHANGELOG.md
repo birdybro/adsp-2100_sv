@@ -8,6 +8,29 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of all 476,672 source-closed original Type 8
+  ALU/MAC-plus-DREG packets in the bounded ordinary linear owner. A stateless
+  action producer reads all compute operands, feedback, ASTAT, and the parallel
+  move source from cycle-start selected-bank state, then retires the
+  noncolliding computation, status, and DREG move atomically with PC and the
+  fetched next word at state 7. The owner fails closed for all 16,384 AMF-zero
+  words under OQ-022 and all 31,232 ALU/MAC destination collisions under
+  OQ-014. A directed old-value test plus the 442,392-clock integrated
+  model/RTL flow cover every `(Z, AMF=1..31, YOP, XOP)` tuple in both banks and
+  every move-source/destination pair in both banks; the independent standalone
+  Type 8 slice remains the exhaustive 983,386-cycle execution of every legal
+  word in both banks. The unchanged shared-PM/BR-BG and HALT compositions pass,
+  all 689 Python checks pass, strict lint is clean, and all 73 formal recipes
+  pass assertion syntax lint; proofs and Yosys synthesis remain unavailable.
+  A fully constrained 25 ns Cyclone V fit uses 3,219 ALMs, 1,204 registers,
+  two DSP blocks, no RAM, +0.255 ns worst multicorner setup slack, +0.168 ns
+  worst hold slack, 40.41 MHz worst slow-corner Fmax, and zero unconstrained
+  clocks, ports, or paths. The stricter 20 ns shared-PM/BR-BG composition fits
+  at 3,381 ALMs, 1,256 registers, two DSP blocks, and no RAM, but misses setup
+  by 5.223 ns with 39.65 MHz worst slow-corner Fmax. Sharing the mutually
+  exclusive Type 8/Type 9 compute datapath, reset-first-fetch, active control
+  flow, interrupts, and unified PM/cache/event ownership remain open.
+
 - Fetched execution of all sixteen source-closed original Type 24 `DIVS`
   operand combinations in the bounded ordinary linear owner. A stateless
   action producer samples the cycle-start selected-bank divisor, AY1-or-AF

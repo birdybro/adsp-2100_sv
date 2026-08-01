@@ -59,6 +59,20 @@ def _type9(
     )
 
 
+def _type8(
+    *, z: int, amf: int, yop: int, xop: int, destination: DREG, source: DREG
+) -> int:
+    return (
+        0x280000
+        | ((z & 1) << 18)
+        | ((amf & 0x1F) << 13)
+        | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | (int(destination) << 4)
+        | int(source)
+    )
+
+
 def _type14(
     *, sf: int, xop: int, destination: DREG, source: DREG
 ) -> int:
@@ -162,6 +176,10 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "ALL_8_TYPE_23_DIVQ_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_476672_SOURCE_CLOSED_TYPE_8_COMPUTE_MOVE_WORDS",
             contract["supported_current_instructions"],
         )
         self.assertIn(
@@ -284,6 +302,39 @@ class LinearCoreTests(unittest.TestCase):
             ExactWord(16, 0x1234),
         )
         self.assertEqual(preserved.state.architecture.astat, ExactWord(8, 0))
+
+    def test_type8_compute_and_move_sample_cycle_start_state(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            LinearCoreState.reset(),
+            _type7(writable["MSTAT"], 0),
+        )
+        for opcode in (
+            _type6(DREG.AX0, 3),
+            _type6(DREG.AY0, 4),
+            _type6(DREG.AR, 0x1234),
+            _type7(writable["ASTAT"], 0),
+            _type8(
+                z=0,
+                amf=0x13,
+                yop=0,
+                xop=0,
+                destination=DREG.AX0,
+                source=DREG.AR,
+            ),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        retired = _complete(_issue(state).state, 0)
+        self.assertEqual(
+            read_dreg(retired.state.architecture.primary, DREG.AR),
+            ExactWord(16, 7),
+        )
+        self.assertEqual(
+            read_dreg(retired.state.architecture.primary, DREG.AX0),
+            ExactWord(16, 0x1234),
+        )
+        self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0))
 
     def test_type15_and_type16_retire_shifter_actions_atomically(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x31, 0))
@@ -570,6 +621,39 @@ class LinearCoreTests(unittest.TestCase):
             (0x071001, False),
             (_type24(0, 0), True),
             (_type24(3, 7), True),
+            (
+                _type8(
+                    z=1,
+                    amf=0,
+                    yop=0,
+                    xop=0,
+                    destination=DREG.AX0,
+                    source=DREG.AX1,
+                ),
+                True,
+            ),
+            (
+                _type8(
+                    z=0,
+                    amf=0x13,
+                    yop=0,
+                    xop=0,
+                    destination=DREG.AR,
+                    source=DREG.AX1,
+                ),
+                True,
+            ),
+            (
+                _type8(
+                    z=0,
+                    amf=0x04,
+                    yop=0,
+                    xop=0,
+                    destination=DREG.MR1,
+                    source=DREG.AX1,
+                ),
+                True,
+            ),
             (_type7(0x32, 1), True),
             (_type17(0x32, 0x00), True),
             (

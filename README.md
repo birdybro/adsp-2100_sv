@@ -48,7 +48,8 @@ banks, the 14,336 source-closed Type 15 immediate LSHIFT/ASHIFT words with
 selected-bank SR writeback, all 507,904 supported Type 7 immediate-to-non-data
 register words with exact-width state, selected-bank SB, and CNTR/count-stack
 effects, and bounded independent-model/native-RTL integration in which NOP,
-legal Type 6/7, all Type 9 conditional ALU/MAC words, all 2,256 legal Type 17
+legal Type 6/7, all 476,672 source-closed Type 8 ALU/MAC-plus-DREG words, all
+Type 9 conditional ALU/MAC words, all 2,256 legal Type 17
 internal MOVE source/destination pairs, all 25,648 canonical Type 14 shifter-
 plus-DREG packets, all eight Type 23 DIVQ words, all sixteen source-closed
 Type 24 DIVS words, the exact Type 25 conditional
@@ -58,7 +59,7 @@ shift words, all 1,792 supported Type 16 conditional shift words, and all Type
 18 MODE CONTROL words
 execute at the current PC while the
 following word is fetched at PC+1 across the sourced state-8 issue/state-7
-retire phases, with 443,607 model/RTL phase clocks and an explicit OQ-016
+retire phases, with 442,392 model/RTL phase clocks and an explicit OQ-016
 provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
 50,003 clocks and 86 complete current-fetch/inhibit/grant/restart handshakes,
 and a separate bounded active-low HALT attachment adds 50,003 clocks and 788
@@ -105,7 +106,8 @@ words, with selected-bank/general-register execution, waited logical
 transactions, and native state-8 issue/state-7 completion,
 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
-writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
+writeback in both the exhaustive standalone slice and the bounded fetched
+owner, all 32,768 Type 9 conditional ALU/MAC words including documented
 AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
 words with a decoder-connected PC register, CALL return stacking, and JUMP
 NOT CE counter transitions, all 262,144 Type 11 DO UNTIL setup words with

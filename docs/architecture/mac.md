@@ -51,7 +51,7 @@ random tests and 50,112 model-versus-RTL cycles cover both signs, both banks,
 false condition, reset unknowns, invalid words, and fail-closed setup
 collisions. The shared ordinary-fetch owner additionally samples the same
 cycle-start state and conditionally commits MR with PC and the next word at
-state 7-to-8; two directed owner tests plus the 443,607-clock fetched
+state 7-to-8; two directed owner tests plus the 442,392-clock fetched
 comparison cover both signs/banks and MV false. Exact interrupt-adjacent
 ordering remains OQ-015.
 
@@ -94,8 +94,11 @@ AMF `0x01`–`0x0f`, all documented X/Y/Z fields, cycle-start MR feedback,
 selected-bank MR/MF writeback, ASTAT.MV, and a simultaneous old-value DREG
 move. Z=0 packets whose move also targets MR0/MR1/MR2 fail closed. All
 476,672 supported Type 8 ALU/MAC words execute in both banks in the combined
-983,386-cycle comparison. AMF zero remains unassigned under OQ-022, and Types
-1/5 plus unimplemented memory bus timing remain open
+983,386-cycle standalone comparison. The bounded fetched owner additionally
+traverses every compute-field tuple and every move source/destination pair in
+both banks within 442,392 clocks, with atomic MAC/MV/move/PC/next-word
+retirement. AMF zero remains unassigned under OQ-022; Type 1 state execution
+and whole-core PM/cache/event ownership remain open
 [ADI-UM-1989, printed pp. 2-13–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
 
 The Type 9 model and RTL select the same original MAC X/Y/Z and MR-feedback

@@ -13,7 +13,7 @@
   Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, Type 24, and Type 25
   decoders/integration slices, the standalone ordinary/PM-data HALT sequencer,
-  the bounded NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/Type 18/Type 23/Type 24/Type 25
+  the bounded NOP/Type 6/Type 7/Type 8/Type 9/Type 14/Type 15/Type 16/Type 17/Type 18/Type 23/Type 24/Type 25
   linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
   compositions plus the Type 5/Type 13 native-PM/HALT attachments,
   the shared-PM-owner selector and its normal-BR/BG composition, the
@@ -35,31 +35,32 @@
   native-PM/HALT plus retained-fetch/Type 5/Type 13 shared-PM/BR-BG synthesis
   scripts are wired into `make synth-yosys` for an equipped host.
 - Quartus 17.0.2 full compilation of the bounded fetched Type
-  9/14/15/16/23/24/25 linear owner passes for Cyclone V `5CSEBA6U23I7`. It
-  uses 2,759 ALMs, 1,191 fitted
-  registers, one DSP block, and no block memory. Against its 25 ns virtual-pin
-  smoke constraint, worst multicorner setup slack is +1.115 ns, worst hold
-  slack is +0.171 ns, worst slow-corner Fmax is 41.87 MHz, and TimeQuest
+  8/9/14/15/16/23/24/25 linear owner passes for Cyclone V `5CSEBA6U23I7`. It
+  uses 3,219 ALMs, 1,204 fitted registers, two DSP blocks, and no block memory.
+  Against its 25 ns virtual-pin smoke constraint, worst multicorner setup
+  slack is +0.255 ns, worst hold slack is +0.168 ns, worst slow-corner Fmax is
+  40.41 MHz, and TimeQuest
   reports zero unconstrained clocks, ports, or paths. The expected warnings
   describe virtual-pin optimization, intentionally uninferred tiny/asynchronous
   register arrays, fixed outputs of the bounded read-only PM interface, and the
-  Quartus Lite LogicLock license. This qualifies the NOP/Type 6/Type 7/Type 9/
+  Quartus Lite LogicLock license. This qualifies the NOP/Type 6/Type 7/Type 8/Type 9/
   Type 14/Type 15/Type 16/Type 17/Type 18/Type 23/Type 24/Type 25 ordinary-fetch owner, not
   reset-first-fetch, interrupts, PM data/cache, physical I/O, or whole-core
   timing closure.
-- Quartus 17.0.2 full compilation of the retained Type 23/24-capable ordinary-
+- Quartus 17.0.2 full compilation of the retained Type 8/23/24-capable ordinary-
   fetch/shared-PM/BR-BG attachment succeeds for Cyclone V `5CSEBA6U23I7`.
-  It uses 2,873 ALMs and 1,220 fitted registers, one DSP block, and no block
+  It uses 3,381 ALMs and 1,256 fitted registers, two DSP blocks, and no block
   memory. Against its stricter 20 ns virtual-pin smoke constraint, worst
-  multicorner setup slack is -3.541 ns, worst hold slack is +0.164 ns, and
-  worst slow-corner Fmax is 42.48 MHz; TimeQuest reports zero unconstrained
+  multicorner setup slack is -5.223 ns, worst hold slack is +0.167 ns, and
+  worst slow-corner Fmax is 39.65 MHz; TimeQuest reports zero unconstrained
   clocks, ports, or paths. The setup miss is open and this composition is not
   timing-closed. Expected non-timing warnings concern virtual-pin optimization,
   intentionally uninferred tiny/asynchronous register arrays, fixed bounded-
   interface outputs, and the Quartus Lite LogicLock license. Retained fetch
   retry/routed completion and BR/BG output masking remain functionally
   verified with raw Type 5/Type 13 descriptors; the unified three-client/cache/
-  HALT composition, physical I/O, and whole-core timing closure remain open.
+  HALT composition, shared Type 8/Type 9 compute-datapath optimization,
+  physical I/O, and whole-core timing closure remain open.
 - Quartus 17.0.2 full compilation of the bounded Type
   5/cache/shared-PM/BR-BG attachment passes for Cyclone V `5CSEBA6U23I7`.
   It uses 1,923 ALMs and 1,756 fitted registers, one DSP and no block memory.
