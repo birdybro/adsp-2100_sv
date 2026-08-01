@@ -84,16 +84,20 @@ not physical state-6/state-7 pin timing, fetch concurrency, or event
 arbitration [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1,
 and A-6].
 
-The bounded Type 13 model/RTL slice verifies 50,070 logical clocks. A cache
-hit completes the PM-data instruction in one clock. A miss or HALT-forced
+The bounded Type 13 model/RTL slice verifies 50,070 logical clocks, and the
+connected cache boundary verifies another 50,086. A pre-cycle monitor hit
+supplies the actual cached word and completes the PM-data instruction in one
+clock. A miss or HALT-forced
 fetch commits the PM read/write, PX, shifter/status, and DAG2 I update in that
 first clock, then emits exactly one pure instruction-fetch clock before the
-instruction-complete/event boundary. The recovery clock never repeats the
-data actions. The exhaustive decoder partitions all 65,536 words into 54,320
+instruction-complete/event boundary. The recovery clock never repeats the data
+actions and fills the monitor with its fetched instruction. Ordinary external
+fetch completion fills that same monitor when Type 13 does not own PM. The
+exhaustive decoder partitions all 65,536 words into 54,320
 source-closed actions, 8,192 unavailable-XOP words, and 3,024 read collisions
 [ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
-5-13–5-16, 6-3–6-7, A-3]. Cache monitoring and physical pin phases remain
-outside this bounded evidence under OQ-008.
+5-13–5-16, 6-3–6-7, A-3]. Hidden monitor/event behavior and physical pin
+phases remain outside this bounded evidence under OQ-008.
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no

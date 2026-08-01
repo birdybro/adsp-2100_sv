@@ -15,9 +15,13 @@ successive program accesses and is inactive only during halt/trap/bus grant
 Original PM has no DMACK-equivalent documented in this interface. The bounded
 Type 13 slice therefore completes a PM-data transfer in one fixed logical
 processor cycle. It exposes PM select, data-versus-instruction classification,
-read/write direction, 14-bit address, and 24-bit write data. A caller-declared
-cache miss schedules one fixed instruction-read recovery cycle; a hit emits no
-extra external fetch [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8]. Exact
-state-by-state PMS/PMDA/PMRD/PMWR pin assertions still require the Figure 5.5
-phase transcriptions and data-sheet AC table; this bounded logical-cycle RTL
-does not claim those electrical substates.
+read/write direction, 14-bit address, and 24-bit write data. The composed cache
+boundary derives the next-instruction decision from its pre-cycle 16-word
+monitor: a valid hit supplies the actual cached word with no external fetch;
+a miss schedules one fixed instruction-read recovery cycle and uses that
+cycle's returned word to fill the monitor. Ordinary external instruction
+completions populate the same monitor when Type 13 does not own PM
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8]. Exact state-by-state PMS/PMDA/
+PMRD/PMWR pin assertions still require the Figure 5.5 phase transcriptions and
+data-sheet AC table; this bounded logical-cycle RTL does not claim those
+electrical substates.

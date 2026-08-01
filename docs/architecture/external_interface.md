@@ -26,6 +26,14 @@ This is traceable transaction-level behavior, not yet the sourced active-low
 DMS/DMRD/DMWR state-6/state-7 pin wrapper or shared-DMD output enable
 [ADI-UM-1989, printed pp. 5-9–5-12].
 
+The bounded Type 13 path exposes distinct logical active-high PM data and
+recovery-fetch cycles. Its connected 16-word cache supplies the actual next
+instruction on a pre-cycle hit and captures each recovery word on a miss; an
+explicit ordinary-fetch-completion input populates the same monitor outside
+Type 13 ownership. This is not yet the sourced active-low PMS/PMDA/PMRD/PMWR
+phase wrapper or unified PC/branch/interrupt bus owner
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
+
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic
 core exposes phase and transaction trace signals without a generic modern bus
 that would erase original PM/DM concurrency.

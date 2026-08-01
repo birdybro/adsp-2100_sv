@@ -50,7 +50,10 @@ multifunction words with old-value parallel semantics, all 2,097,152 original
 Type 2 immediate-DM-write words with captured raw data, waited logical DMACK
 transactions, and completion-only DAG post-modification, 108,640 source-closed
 Type 12 shifter-plus-DM words with ACK-stretched logical bus transactions and
-atomic shifter/DREG/DAG completion, 476,672 Type 8
+atomic shifter/DREG/DAG completion, 54,320 source-closed Type 13
+shifter-plus-PM words with the original 16-word cache monitor now connected
+for pre-cycle hits, one-cycle recovery fetches, recovery fills, and ordinary
+external instruction fills, 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
 AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
@@ -79,9 +82,10 @@ conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
 division-flag conflict is recorded as SC-014. Division exists as bounded
 instruction slices, not yet in the top-level fetch/decode/execute model.
-Type 2 and Type 12 supply logical transaction boundaries, not the original
-active-low pin-phase interface or an integrated fetch/decode/execute bus
-controller.
+Type 2 and Type 12 supply logical DM transaction boundaries, and Type 13
+supplies a cache-integrated logical PM data/recovery boundary. These are not
+the original active-low pin-phase interface or an integrated
+fetch/decode/execute bus controller.
 Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 

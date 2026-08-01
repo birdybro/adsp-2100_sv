@@ -41,8 +41,14 @@ the shifter and selected-I post-modify commit. There is no invented PM
 acknowledge input [ADI-UM-1989, printed pp. 3-6–3-7, 5-5–5-8,
 6-3–6-7]. A cache hit completes in that cycle; a miss adds one instruction
 fetch cycle without repeating the data action [ADI-UM-1989, printed
-pp. 4-26–4-30]. The bounded slice receives cache validity and the next fetch
-address from its caller. A separate source-bounded cache monitor now supplies
-the documented contiguous-region hit/data decision and external-fetch fill
-behavior, but it is not yet connected to Type 13 or whole-core PM ownership;
-that integration remains OQ-008.
+pp. 4-26–4-30]. A composed boundary now connects the separate source-bounded
+monitor: it uses a pre-cycle lookup for the next instruction, routes the actual
+cached 24-bit word on a hit, and fills the monitor from either ordinary
+external instruction-fetch completion or the single recovery cycle after a
+miss. Scheduled recovery owns PM over a conflicting ordinary fill; a
+standalone fill owns PM over a newly requested bounded Type 13/setup action
+and reports the conflict. Ten directed tests and 50,086 integration clocks
+cover this ownership boundary. That conflict priority is a fail-closed harness
+policy for an integration error, not claimed original-device arbitration;
+whole-core issue must prevent the collision. Unified whole-core PM ownership,
+hidden monitor encoding, and self-modifying PM remain OQ-008.

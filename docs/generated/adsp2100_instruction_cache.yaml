@@ -32,11 +32,18 @@
     "model": "sim/reference_models/adsp2100_model/instruction_cache.py",
     "rtl": "rtl/core/adsp2100_instruction_cache.sv",
     "testbench": "sim/unit/tb_adsp2100_instruction_cache.sv",
-    "formal": "formal/instruction_cache.sby"
+    "formal": "formal/instruction_cache.sby",
+    "type_13_integration_model": "sim/reference_models/adsp2100_model/shifter_pm_cache.py",
+    "type_13_integration_rtl": "rtl/core/adsp2100_shifter_pm_cache_slice.sv",
+    "type_13_integration_testbench": "sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv",
+    "type_13_integration_formal": "formal/shifter_pm_cache.sby"
   },
   "verification": {
     "directed_tests": 10,
     "differential_clocks": 50028,
+    "type_13_integration_directed_tests": 10,
+    "type_13_integration_differential_clocks": 50086,
+    "type_13_integration_seed": "0x21c013",
     "seed": "0x2100ca",
     "formal_status": "ASSERTION_SYNTAX_ONLY_WITHOUT_INSTALLED_SOLVER"
   },

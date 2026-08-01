@@ -80,6 +80,18 @@ lint:
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_shifter_pm_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_shifter_pm_cache_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_pm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_shifter_pm_slice.sv \
+			rtl/core/adsp2100_shifter_pm_cache_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_move_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -263,7 +275,8 @@ model-tests:
 	$(PYTHON) -m unittest -v tests.test_model_foundation
 
 cache-tests:
-	$(PYTHON) -m unittest -v tests.test_instruction_cache
+	$(PYTHON) -m unittest -v tests.test_instruction_cache \
+		tests.test_shifter_pm_cache
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_instruction_cache_vectors.py \
@@ -275,6 +288,24 @@ cache-tests:
 			rtl/core/adsp2100_instruction_cache.sv \
 			sim/unit/tb_adsp2100_instruction_cache.sv; \
 		build/obj_instruction_cache/Vtb_adsp2100_instruction_cache; \
+		$(PYTHON) tools/generators/generate_shifter_pm_cache_vectors.py \
+			--output build/shifter_pm_cache_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_shifter_pm_cache_slice \
+			--top-module tb_adsp2100_shifter_pm_cache_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_pm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_shifter_pm_slice.sv \
+			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
+			sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv; \
+		build/obj_shifter_pm_cache_slice/Vtb_adsp2100_shifter_pm_cache_slice; \
 	else \
 		echo "SKIP instruction-cache RTL test: Verilator is not installed"; \
 	fi
@@ -1060,6 +1091,19 @@ formal:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			formal/harnesses/adsp2100_shifter_pm_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_shifter_pm_cache_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_pm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_shifter_pm_slice.sv \
+			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
+			formal/harnesses/adsp2100_shifter_pm_cache_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_move_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_compute_move_decode.sv \
@@ -1286,6 +1330,8 @@ formal:
 		sby -f -d build/formal_shift_move formal/shift_move.sby; \
 		sby -f -d build/formal_shifter_dm formal/shifter_dm.sby; \
 		sby -f -d build/formal_shifter_pm formal/shifter_pm.sby; \
+		sby -f -d build/formal_shifter_pm_cache \
+			formal/shifter_pm_cache.sby; \
 		sby -f -d build/formal_instruction_cache formal/instruction_cache.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_conditional_compute \
@@ -1366,6 +1412,8 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/shifter_pm_cache_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/instruction_cache_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_move_smoke; \
@@ -1424,6 +1472,7 @@ docs:
 
 clean:
 	@find build -maxdepth 1 -type f -name instruction_cache_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name shifter_pm_cache_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
@@ -1534,6 +1583,9 @@ clean:
 	fi
 	@if [ -d build/obj_shifter_pm_slice ]; then \
 		find build/obj_shifter_pm_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_shifter_pm_cache_slice ]; then \
+		find build/obj_shifter_pm_cache_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_instruction_cache ]; then \
 		find build/obj_instruction_cache -depth -delete; \
@@ -1654,6 +1706,9 @@ clean:
 	@if [ -d build/quartus_shifter_pm ]; then \
 		find build/quartus_shifter_pm -depth -delete; \
 	fi
+	@if [ -d build/quartus_shifter_pm_cache ]; then \
+		find build/quartus_shifter_pm_cache -depth -delete; \
+	fi
 	@if [ -d build/quartus_instruction_cache ]; then \
 		find build/quartus_instruction_cache -depth -delete; \
 	fi
@@ -1719,6 +1774,7 @@ clean:
 		build/formal_shift_move \
 		build/formal_shifter_dm \
 		build/formal_shifter_pm \
+		build/formal_shifter_pm_cache \
 		build/formal_instruction_cache \
 		build/formal_compute_move \
 		build/formal_conditional_compute \

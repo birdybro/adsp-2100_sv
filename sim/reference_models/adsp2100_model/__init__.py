@@ -249,6 +249,11 @@ from .shifter_pm import (
     is_shifter_pm_class,
     shifter_pm_unsupported_reason,
 )
+from .shifter_pm_cache import (
+    ShifterPMCacheCycleResult,
+    ShifterPMCacheState,
+    apply_shifter_pm_cache_cycle,
+)
 from .sequencer import (
     ExplicitFlow,
     SequencerFlowResult,
@@ -474,6 +479,8 @@ __all__ = [
     "ShifterPMCycleResult",
     "ShifterPMRecovery",
     "ShifterPMState",
+    "ShifterPMCacheCycleResult",
+    "ShifterPMCacheState",
     "SequencerFlowResult",
     "SequencerStacksCycleResult",
     "SequencerStacksInputs",
@@ -550,6 +557,7 @@ __all__ = [
     "apply_shift_move_cycle",
     "apply_shifter_dm_cycle",
     "apply_shifter_pm_cycle",
+    "apply_shifter_pm_cache_cycle",
     "apply_sequencer_stacks_cycle",
     "apply_sequencer_slice_cycle",
     "compute_alu",

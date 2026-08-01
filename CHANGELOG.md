@@ -102,6 +102,12 @@ semantic versioning after its first release.
   contiguous valid region, discontinuity restart, sequential fill, and
   circular oldest-word replacement; plus deterministic differential vectors,
   invariant harness, machine-readable contract, and Quartus smoke project.
+- A composed Type 13/cache boundary that replaces caller-supplied cache
+  validity with the real pre-cycle monitor lookup, returns the actual cached
+  instruction, fills recovery fetches, accepts ordinary external fetch fills,
+  and reports deterministic PM-fill ownership conflicts; plus an independent
+  composition model, directed/random differential tests, formal invariants,
+  and a constrained Cyclone V project.
 - A primary-backed, class-complete original Type 2 immediate-DM-write action
   database, independent decoder, three hand-derived fixtures, portable RTL
   decoder, algebraic assembler/disassembler support, exhaustive 24-bit
@@ -324,7 +330,15 @@ semantic versioning after its first release.
   no RAM/DSP blocks, +3.590 ns worst setup and +0.165 ns worst multicorner
   hold slack, 60.94 MHz worst slow-corner Fmax, and zero unconstrained clocks,
   ports, or paths.
-- The expanded `make test` passes 455 distinct Python checks, 14 local
+- Type 13/cache integration passes ten directed tests and 50,086 deterministic
+  model/RTL clocks covering prefilled hits, miss/forced-fetch recovery fills,
+  actual 24-bit instruction selection, sequential replacement, unknown
+  entries/addresses, reset, and competing external/recovery fill ownership.
+- Quartus full compilation passes for the cache-integrated Type 13 boundary at
+  20 ns: 1,937 ALMs, 1,446 fitted registers, no RAM/DSP blocks, +2.615 ns
+  worst setup and +0.166 ns worst multicorner hold slack, 57.52 MHz worst
+  slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+- The expanded `make test` passes 465 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   twenty-two exhaustive 24-bit decode traversals, and every existing
   model/RTL vector regression.
@@ -689,9 +703,9 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 29 harnesses,
-  including exact Type 6/Type 17/Type 21 decode and bounded Type 6/Type 8/
-  Type 14/Type 17/Type 21 state execution;
+- `make formal` passes strict assertion syntax lint for all 43 harnesses,
+  including exact Type 6/Type 17/Type 21 decode, bounded Type 6/Type 8/
+  Type 14/Type 17/Type 21 state execution, and Type 13/cache ownership;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
@@ -704,9 +718,10 @@ semantic versioning after its first release.
 - Closed the original Type 13 field partition, PM read/write packing,
   old-value parallel semantics, PM-read collision restriction, fixed PM data
   action, same-cycle cached-next-fetch completion, and exactly one recovery
-  fetch after a miss or forced fetch with exact-device citations; the actual
-  standalone-cache wiring, physical pin phases, and whole-core event
-  arbitration remain open under OQ-008.
+  fetch after a miss or forced fetch with exact-device citations. Connected
+  the standalone monitor for real hit/data selection, ordinary/recovery fills,
+  and explicit ownership; physical pin phases and whole-core event arbitration
+  remain open under OQ-008.
 - Closed the original Type 12 field partition, old-value parallel semantics,
   read-collision restriction, logical DM bus ordering, completion-only DAG
   post-modification, and DMACK wait extension with exact-device citations;
@@ -860,14 +875,11 @@ semantic versioning after its first release.
 - Type 12 now supplies verified logical DM transactions and wait stability,
   but not a native active-low state-phase interface, PM fetch concurrency,
   interrupt/BR/HALT latching during waits, or whole-core instruction issue.
-- Type 13 now supplies verified logical PM data/cache-recovery transactions,
-  but the caller still supplies cache hit/valid information and the following
-  fetch address; it is not yet wired to the standalone monitor, native
-  active-low PM phase interface, or whole-core instruction issue.
-- The functional cache monitor is not yet wired to the Type 13 slice or a
-  whole-core fetch controller. Its exact hidden ahead/behind counter encoding,
-  self-modifying PM behavior, and branch/loop/interrupt/HALT/BR arbitration
-  remain unresolved under OQ-008.
+- Type 13 now supplies cache-integrated logical PM data/recovery transactions,
+  but not the native active-low PM phase interface or whole-core instruction
+  issue. The exact hidden ahead/behind counter encoding, self-modifying PM
+  behavior, and branch/loop/interrupt/HALT/BR arbitration remain unresolved
+  under OQ-008.
 - Open-source synthesis and formal tools are not installed in this environment.
 - Type 8 AMF-zero legality and same-destination results are unresolved and are
   rejected rather than assigned invented behavior. Its standalone combined

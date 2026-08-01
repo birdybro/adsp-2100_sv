@@ -281,18 +281,21 @@ actions, 8,192 unavailable-XOP words, and 3,024 illegal PM-read destination
 collisions. It performs the fixed logical PM data cycle, reads a 24-bit PM
 word into old-selected-bank DREG upper 16 bits plus PX lower 8 bits, writes an
 old `{DREG,PX}` word, and commits DAG2 post-modification with the shifter
-action. A caller-provided next-fetch cache hit completes in the same cycle;
-a miss or forced fetch emits exactly one pure recovery-fetch cycle without
-repeating architectural actions. Connection to the standalone cache monitor,
-physical active-low PM pin phases, and whole-core event arbitration remain
-open under OQ-008.
-A standalone source-bounded cache monitor now implements the documented
+action. A composed cache boundary now derives a hit from the pre-cycle
+standalone monitor, supplies its 24-bit instruction in the same data cycle,
+and feeds every miss/forced-fetch recovery word back into that monitor without
+repeating architectural actions. It also accepts ordinary external fetch
+completions when Type 13 does not own PM; 50,086 integration clocks cover
+lookup/fill ownership. Physical active-low PM pin phases and whole-core event
+arbitration remain open under OQ-008.
+The source-bounded cache monitor implements the documented
 16-by-24 array, PMA[3:0] indexing, single contiguous valid region,
 out-of-region invalidation, sequential extension, and circular oldest-word
 replacement. It preserves authentic invalid data state and passes 50,028
-model/RTL clocks. It is not yet wired to Type 13 or a unified fetch controller;
-the manual's hidden ahead/behind register encoding, self-modifying PM effects,
-and event arbitration remain OQ-008.
+standalone model/RTL clocks. Its Type 13 wrapper now passes a further 50,086
+model/RTL clocks. The manual's hidden ahead/behind register encoding,
+self-modifying PM effects, and unified branch/loop/interrupt/HALT/BR
+arbitration remain OQ-008.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
 tuple. Its logical DM request holds captured address/data over arbitrary

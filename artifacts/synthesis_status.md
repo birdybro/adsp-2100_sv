@@ -6,7 +6,8 @@
   Type 2 action decoder and waited execution slice,
   Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
-  decoders/integration slices, the standalone instruction cache, stack-control
+  decoders/integration slices, the standalone and Type 13-integrated
+  instruction cache, stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
   condition, ALU, MAC, shifter, DAG, sequencer-flow, stateful register-file,
@@ -29,6 +30,14 @@
   slow-corner Fmax is 77.35 MHz, with zero unconstrained clocks, ports, or
   paths. Quartus reports the asynchronous-read 16-by-24 array as uninferred
   RAM; this is bounded cache-block evidence, not whole-core/MiSTer closure.
+- Quartus 17.0.2 full compilation of the cache-integrated Type 13 boundary
+  passes for Cyclone V `5CSEBA6U23I7` at 20 ns. It uses 1,937 ALMs and 1,446
+  fitted registers with no RAM or DSP blocks. Across four timing models, worst
+  setup slack is +2.615 ns, worst hold slack is +0.166 ns, and worst
+  slow-corner Fmax is 57.52 MHz, with zero unconstrained clocks, ports, or
+  paths. Quartus retains the asynchronous-read instruction-cache and DAG
+  arrays in logic/registers; this is bounded composition evidence, not native
+  PM-pin or MiSTer timing closure.
 - Quartus 17.0.2 full compilation of the bounded Type 13 shifter-plus-PM
   transaction/cache-recovery slice passes for Cyclone V `5CSEBA6U23I7` at
   its 21 ns standalone constraint. It uses 1,640 ALMs and 1,002 fitted
@@ -281,7 +290,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 38
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 43
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -292,7 +301,9 @@ internal-move-decode, stack-control-decode, stack-control-integration,
 Type-6 integration,
 Type-8 integration,
 Type-9 integration,
+Type-2 integration,
 Type-12 integration,
+Type-13 base and cache-integrated integration,
 Type-14 integration,
 Type-15 integration,
 Type-16 integration,

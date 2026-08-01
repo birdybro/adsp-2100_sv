@@ -276,8 +276,11 @@ advance beyond research until a page-level primary citation is added.
   assembler/disassembler form, exhaustive 24-bit RTL decode, and 50,070
   state/cache/bus differential clocks pass. The bounded slice covers PX
   packing, old-value PM stores, DAG2 post-modification, same-cycle cache hits,
-  and one pure recovery fetch after a miss; standalone-cache wiring, physical
-  PM pin phases, and whole-core event integration remain open.
+  and one pure recovery fetch after a miss. A composed cache boundary now
+  derives hits from the standalone monitor, supplies the actual cached word,
+  fills recovery and ordinary external fetches, and passes ten integration
+  tests plus 50,086 model/RTL clocks; physical PM pin phases and whole-core
+  event integration remain open.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -378,8 +381,10 @@ advance beyond research until a page-level primary citation is added.
   original PM data action for 54,320 words: old-value `{DREG,PX}` writes,
   24-bit reads split into DREG/PX, DAG2 update, cache-hit completion, and a
   single pure recovery fetch after a miss. Its 50,070 differential clocks
-  pass. Type 1, 4, and 5 action graphs, standalone-cache wiring, PM/DM
-  concurrency, and whole-core event arbitration remain.
+  pass. The integrated monitor boundary adds real pre-cycle hit/data selection,
+  recovery fills, ordinary external fills, explicit ownership conflicts, ten
+  directed tests, and 50,086 model/RTL clocks. Type 1, 4, and 5 action graphs,
+  PM/DM concurrency, and whole-core event arbitration remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, and result forwarding outside the bounded old-value rule
   remain high-risk.
@@ -919,18 +924,22 @@ advance beyond research until a page-level primary citation is added.
   trace assertions and formal properties.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ADI-UM-1989 system-interface chapter
-- **Relevant tests:** `make bus-tests`, `formal/pm_bus.sby`
+- **Relevant tests:** `make bus-tests`, `tests/test_shifter_pm_cache.py`,
+  `sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv`,
+  `formal/shifter_pm_cache.sby`, `formal/pm_bus.sby`
 - **Implementation notes:** keep PM physically/logically distinct from DM.
   The Type 13 slice now exposes a bounded logical PM data/fetch boundary with
   separate 14-bit address, 24-bit read/write data, direction, data-cycle, and
   recovery-fetch observations. It verifies that a cache hit completes the
   next fetch in the data cycle and that a miss/forced fetch emits exactly one
-  pure recovery cycle. This is not the native active-low pin/state wrapper,
-  cache-integrated fetch controller, or whole-core arbitration layer.
-  A separate cache monitor now supplies the documented functional hit/data and
-  fill behavior for one contiguous up-to-16-word PM region. It is intentionally
-  not yet wired into the Type 13 slice until unified fetch/fill ownership and
-  event arbitration are implemented.
+  pure recovery cycle. A composed boundary now connects the functional
+  16-word monitor: pre-cycle hits supply the actual next instruction, recovery
+  fetches fill it, and ordinary external fetches share it under explicit
+  ownership rules. Ten directed tests and 50,086 integration clocks pass.
+  Simultaneous external-fill/Type-13 requests are integration errors; their
+  fail-closed priority is not claimed as original-device arbitration.
+  This is not the native active-low pin/state wrapper or whole-core arbitration
+  layer.
 - **Unresolved questions:** exact original pin timing and wait input behavior.
 - **Confidence:** UNKNOWN
 
@@ -974,12 +983,17 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989 PM transfer and data-move sections
 - **Relevant tests:** `make instruction-tests`, `make bus-tests`,
   `tests/test_shifter_pm.py`, `sim/unit/tb_adsp2100_shifter_pm_slice.sv`,
-  `formal/shifter_pm.sby`
+  `formal/shifter_pm.sby`, `tests/test_shifter_pm_cache.py`,
+  `sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv`,
+  `formal/shifter_pm_cache.sby`
 - **Implementation notes:** Type 13 closes the original shifter-plus-PM form
   for 54,320 source-backed words: reads place PMD bits 23:8 in the selected
   DREG and bits 7:0 in PX; writes use old `{DREG,PX}`; all actions use DAG2
   and commit in the fixed PM data cycle. A cache miss or forced fetch adds one
   external recovery-fetch cycle without repeating the data/shifter/DAG action.
+  The composed monitor boundary supplies actual hit data, fills that recovery
+  word, accepts ordinary external instruction fills, and passes 50,086
+  model/RTL clocks.
 - **Unresolved questions:** exact hidden cache-monitor/event interactions,
   physical PM pin phases, other original PM-transfer forms, and whole-core
   fetch/event arbitration.
@@ -1099,9 +1113,10 @@ advance beyond research until a page-level primary citation is added.
   exactly one recovery-fetch cycle on a miss or forced fetch; the full opcode
   timing table is not. Logical
   phase fidelity is separate from analog delay modeling.
-  The cache monitor separately verifies low-four-bit fills, contiguous-region
-  hits, discontinuity invalidation, and oldest replacement; this does not yet
-  close branch/loop/interrupt/HALT/BR arbitration under OQ-008.
+  The connected cache monitor verifies low-four-bit fills, contiguous-region
+  hits, discontinuity invalidation, oldest replacement, hit-word selection,
+  and recovery fills; this does not yet close branch/loop/interrupt/HALT/BR
+  arbitration under OQ-008.
 - **Unresolved questions:** fetch/decode/execute visibility and PM-data conflict
   penalties.
 - **Confidence:** UNKNOWN
@@ -1172,13 +1187,13 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Forty-two harnesses now pass strict assertion
+  result a complete proof. Forty-three harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 12 shifter-plus-DM decode, wait stability, and atomic completion,
   bounded Type 13 shifter-plus-PM decode, fixed-cycle commit, and one-cycle
-  cache-miss recovery,
+  cache-miss recovery plus connected cache selection/fill ownership,
   source-bounded instruction-cache count, reset, hold, restart, and oldest-
   replacement invariants,
   bounded Type 8 ALU/MAC-plus-DREG execution,
@@ -1248,6 +1263,11 @@ advance beyond research until a page-level primary citation is added.
   +0.168 ns worst multicorner hold slack at 21 ns, 50.43 MHz worst slow-corner
   Fmax, and zero unconstrained clocks, ports, or paths. The standalone virtual
   clock-pin warning and constant DM-access output are expected.
+  The cache-integrated Type 13 boundary fits in 1,937 ALMs and 1,446 fitted
+  registers with no RAM/DSP blocks at 20 ns. Worst multicorner setup is
+  +2.615 ns, worst hold is +0.166 ns, worst slow-corner Fmax is 57.52 MHz,
+  and no clocks, ports, or paths are unconstrained. Quartus retains the
+  asynchronous-read cache and DAG arrays in logic/registers.
   The standalone instruction cache fits in 310 ALMs and 429 fitted registers
   with no RAM/DSP blocks, +7.071 ns worst setup, +0.163 ns worst multicorner
   hold slack at 20 ns, 77.35 MHz worst slow-corner Fmax, and zero unconstrained
@@ -1396,10 +1416,10 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is connecting the standalone original
-instruction-cache monitor to Type 13 and a native PM phase boundary, replacing
-Type 13's bounded caller-provided cache result; constructing the next
-source-closed Type 1/4/5 action graph in `ISA-002`/`ISA-001` and `REF-001`
+The highest-priority unblocked work is constructing the native PM phase
+boundary around the now cache-integrated Type 13 logical transaction;
+constructing the next source-closed Type 1/4/5 action graph in
+`ISA-002`/`ISA-001`; and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field
 placement is closed for the printed Appendix A diagrams, but legality,
 parallel-action, timing, and execution effects are not. `TIME-001` must be

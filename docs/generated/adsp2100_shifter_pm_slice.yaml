@@ -46,8 +46,11 @@
     "recovery_nonrepetition": "SHIFTER_PM_TRANSFER_PX_AND_DAG_ACTIONS_DO_NOT_REPEAT",
     "forced_fetch": "HALT_HANDOFF_FORCES_RECOVERY_FETCH_EVEN_WHEN_CACHE_ENTRY_IS_VALID",
     "event_boundary": "AFTER_DATA_CYCLE_ON_CACHE_HIT_OR_AFTER_RECOVERY_FETCH_ON_MISS",
-    "cache_monitor_input": "CALLER_SUPPLIES_NEXT_FETCH_ADDRESS_AND_CACHE_VALIDITY",
-    "cache_monitor_limitation": "TAG_MONITOR_FILL_REPLACEMENT_BRANCH_LOOP_AND_SELF_MODIFYING_PM_BEHAVIOR_REMAIN_OQ_008"
+    "base_slice_cache_input": "CALLER_SUPPLIES_NEXT_FETCH_ADDRESS_AND_CACHE_VALIDITY",
+    "integrated_monitor": "ADSP2100_SHIFTER_PM_CACHE_SLICE_USES_PRE_CYCLE_16_WORD_MONITOR_LOOKUP_AND_FILLS_EVERY_RECOVERY_FETCH",
+    "ordinary_fetch_fill": "EXPLICIT_EXTERNAL_FETCH_COMPLETION_POPULATES_THE_SAME_MONITOR_WHEN_TYPE_13_DOES_NOT_OWN_PM",
+    "fill_ownership": "BOUNDED_FAIL_CLOSED_INTEGRATION_POLICY_NOT_DEVICE_ARBITRATION: SCHEDULED_RECOVERY_HAS_PRIORITY; STANDALONE_FILL_HAS_PRIORITY_OVER_A_NEW_TYPE_13_OR_SETUP_REQUEST_AND_REPORTS_CONFLICT",
+    "cache_monitor_limitation": "HIDDEN_AHEAD_BEHIND_ENCODING_BRANCH_LOOP_EVENT_AND_SELF_MODIFYING_PM_BEHAVIOR_REMAIN_OQ_008"
   },
   "bus_contract": {
     "pm_data_cycle": "FIXED_ONE_PROCESSOR_CYCLE_WITH_NO_ACKNOWLEDGE_INPUT",
@@ -75,10 +78,14 @@
     "tool_round_trip": "tests/test_assembler_disassembler.py::test_all_source_closed_shifter_pm_forms_round_trip",
     "rtl_decode": "sim/unit/tb_adsp2100_shifter_pm_decode.sv",
     "rtl_state_and_bus": "sim/unit/tb_adsp2100_shifter_pm_slice.sv",
+    "cache_integration_python": "tests/test_shifter_pm_cache.py",
+    "cache_integration_rtl": "sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv",
+    "cache_integration_clocks": 50086,
+    "cache_integration_formal": "formal/shifter_pm_cache.sby",
     "formal": "formal/shifter_pm.sby"
   },
   "unresolved": [
-    "OQ_008_CACHE_TAG_MONITOR_AND_CONTROL_FLOW_INTERACTION",
+    "OQ_008_HIDDEN_MONITOR_CONTROL_FLOW_AND_SELF_MODIFYING_PM_INTERACTION",
     "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_HALT_BR_AND_BUS_ARBITRATION_INTEGRATION",
     "PHYSICAL_PIN_SUBSTATE_WAVEFORMS_BEYOND_LOGICAL_CYCLE_BOUNDARY",
     "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"

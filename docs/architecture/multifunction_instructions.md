@@ -146,13 +146,17 @@ Interrupt/event recognition occurs only after the completing hit cycle or
 after the miss recovery cycle [ADI-UM-1989, printed pp. 4-26–4-30,
 5-5–5-8, 5-13–5-16].
 
-Nine directed model tests and 50,070 deterministic model/RTL clocks cover PM
+Nine directed base-model tests and 50,070 deterministic model/RTL clocks cover PM
 read/write packing, PX, both banks, all DAG2 selections, fixed cache-hit and
 cache-miss timing, forced fetch, unknown operands/data, reset abort, and live
-input conflicts during recovery. The caller still supplies the next fetch
-address and cache-valid decision. Cache tag monitoring, fills/replacement,
-branches, loops, interrupts, self-modifying PM, physical eight-state pin
-phases, and whole-core arbitration remain open under OQ-008.
+input conflicts during recovery. A composed independent-model/RTL boundary
+connects the next-fetch address to the 16-word monitor, returns the actual
+cached word on a hit, fills recovery words on a miss/forced fetch, and accepts
+ordinary external instruction fills while Type 13 does not own PM. Ten
+directed integration tests and 50,086 additional clocks cover selection,
+replacement, unknown entries, reset, and fill ownership. Unified branches,
+loops, interrupts, self-modifying PM, physical eight-state pin phases, and
+whole-core arbitration remain open under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
