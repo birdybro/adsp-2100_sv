@@ -1,8 +1,9 @@
 """Independent bounded original ADSP-2100 HALT control model.
 
-This boundary covers a HALT recognized while the current processor cycle is
-an external program-memory instruction fetch.  Program-memory data cycles,
-bus grant, DMACK waits, TRAP handoff, and analog resynchronization remain
+This boundary covers HALT recognition during an external program-memory
+instruction fetch or a program-memory data cycle.  A data-cycle recognition
+schedules one following forced external instruction fetch before the stop.
+Bus grant, DMACK waits, TRAP handoff, and analog resynchronization remain
 outside this state machine.
 """
 
@@ -18,6 +19,7 @@ class HaltControlMode(IntEnum):
     RUNNING = 0
     STOP_PENDING = 1
     HALTED = 2
+    FORCE_FETCH_PENDING = 3
 
 
 @dataclass(frozen=True)
@@ -31,6 +33,7 @@ class HaltControlCycleResult:
     state_three_boundary: bool = False
     halt_recognized: bool = False
     halt_stop_event: bool = False
+    force_fetch_issue: bool = False
     resume_event: bool = False
     release_blocked: bool = False
     instruction_issue_inhibit: bool = False
@@ -48,6 +51,7 @@ def apply_halt_control_cycle(
     phase_advance: bool = True,
     halt_n: bool = True,
     dmack: bool = True,
+    pm_data_cycle: bool = False,
 ) -> HaltControlCycleResult:
     """Apply one logical-phase boundary to the bounded HALT controller."""
 
@@ -67,6 +71,12 @@ def apply_halt_control_cycle(
         and state.mode is HaltControlMode.STOP_PENDING
         and phase_advance
         and phase == LogicalPhase.STATE_7
+    )
+    force_fetch_issue = bool(
+        not reset
+        and state.mode is HaltControlMode.FORCE_FETCH_PENDING
+        and phase_advance
+        and phase == LogicalPhase.STATE_8
     )
     resume_boundary = bool(
         not reset
@@ -89,6 +99,10 @@ def apply_halt_control_cycle(
             halt_recognized
             or state.mode is HaltControlMode.STOP_PENDING
             or (
+                state.mode is HaltControlMode.FORCE_FETCH_PENDING
+                and not force_fetch_issue
+            )
+            or (
                 state.mode is HaltControlMode.HALTED
                 and not resume_event
             )
@@ -104,6 +118,12 @@ def apply_halt_control_cycle(
     if reset:
         next_state = HaltControlState()
     elif halt_recognized:
+        next_state = HaltControlState(
+            HaltControlMode.FORCE_FETCH_PENDING
+            if pm_data_cycle
+            else HaltControlMode.STOP_PENDING
+        )
+    elif force_fetch_issue:
         next_state = HaltControlState(HaltControlMode.STOP_PENDING)
     elif halt_stop_event:
         next_state = HaltControlState(HaltControlMode.HALTED)
@@ -117,6 +137,7 @@ def apply_halt_control_cycle(
         state_three_boundary=state_three_boundary,
         halt_recognized=halt_recognized,
         halt_stop_event=halt_stop_event,
+        force_fetch_issue=force_fetch_issue,
         resume_event=resume_event,
         release_blocked=release_blocked,
         instruction_issue_inhibit=instruction_issue_inhibit,

@@ -131,9 +131,17 @@ DMACK is high, the next state-8-to-state-1 edge accepts the following fetch.
 
 Seven directed tests and 50,003 deterministic independent-model/RTL clocks
 cover 790 recognize/stop/resume sequences, 161 DMACK-low blocked-release
-observations, and 742 held clocks with stable PM signals. The PM-data case is
-not equivalent: the original requires a forced external instruction fetch
-before stopping, even if the cache held the next word. That ownership handoff,
-HALT during BG or DMACK waits, TRAP/interrupt priority, BR while stopped, and
-reset interaction remain outside this attachment [ADI-UM-1989, printed
-pp. 5-13–5-15].
+observations, and 742 held clocks with stable PM signals.
+
+The PM-data case is not equivalent: the original requires a forced external
+instruction fetch before stopping, even if the cache held the next word. The
+standalone `adsp2100_halt_control` now records this as a four-state sequence:
+recognized PM data completes without a stop, exactly one forced fetch is
+admitted at the next enabled state-8-to-state-1 boundary, and its later
+state-7-to-state-8 completion enters the stopped state. Eight directed tests
+and 50,033 independent-model/RTL clocks cover 335 PM-data recognitions and 335
+forced issue pulses. The Type 5 and Type 13 native-PM owners do not yet consume
+that pulse, so external address/strobe ownership during this handoff remains
+unverified. HALT during BG or DMACK waits, TRAP/interrupt priority, BR while
+stopped, and reset interaction also remain outside this attachment
+[ADI-UM-1989, printed pp. 5-13–5-15].

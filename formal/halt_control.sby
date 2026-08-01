@@ -1,0 +1,17 @@
+[options]
+mode prove
+depth 32
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/packages/adsp2100_pkg.sv
+read -formal -sv rtl/core/adsp2100_halt_control.sv
+read -formal -sv formal/harnesses/adsp2100_halt_control_formal.sv
+prep -top adsp2100_halt_control_formal
+
+[files]
+rtl/packages/adsp2100_pkg.sv
+rtl/core/adsp2100_halt_control.sv
+formal/harnesses/adsp2100_halt_control_formal.sv

@@ -173,6 +173,10 @@ lint:
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_bus_control_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_halt_control \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_halt_control.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_linear_halt_control_slice \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -815,6 +819,16 @@ halt-tests:
 	$(PYTHON) -m unittest -v tests.test_halt_control
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
+		$(PYTHON) tools/generators/generate_halt_control_vectors.py \
+			--output build/halt_control_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_halt_control \
+			--top-module tb_adsp2100_halt_control \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			sim/unit/tb_adsp2100_halt_control.sv; \
+		build/obj_halt_control/Vtb_adsp2100_halt_control; \
 		$(PYTHON) tools/generators/generate_linear_halt_control_vectors.py \
 			--output build/linear_halt_control_vectors.txt; \
 		"$(VERILATOR)" --binary --timing --assert -Wall \
@@ -1716,6 +1730,11 @@ formal:
 			rtl/wrappers/adsp2100_reset_bus_grant.sv \
 			formal/harnesses/adsp2100_bus_control_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_halt_control_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			formal/harnesses/adsp2100_halt_control_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			-Wno-PINCONNECTEMPTY \
 			--top-module adsp2100_linear_core_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -2281,6 +2300,7 @@ formal:
 		sby -f -d build/formal_pm_bus formal/pm_bus.sby; \
 		sby -f -d build/formal_reset_phase formal/reset_phase.sby; \
 		sby -f -d build/formal_bus_control formal/bus_control.sby; \
+		sby -f -d build/formal_halt_control formal/halt_control.sby; \
 		sby -f -d build/formal_linear_core formal/linear_core.sby; \
 		sby -f -d build/formal_linear_bus_control \
 			formal/linear_bus_control.sby; \
@@ -2373,6 +2393,8 @@ synth-yosys:
 			synthesis/yosys/reset_phase.ys; \
 		yosys -q -l build/yosys_bus_control.log \
 			synthesis/yosys/bus_control.ys; \
+		yosys -q -l build/yosys_halt_control.log \
+			synthesis/yosys/halt_control.ys; \
 		yosys -q -l build/yosys_linear_core.log \
 			synthesis/yosys/linear_core.ys; \
 		yosys -q -l build/yosys_linear_bus_control.log \
@@ -2389,6 +2411,7 @@ synth-quartus:
 		set -e; \
 		quartus_sh --flow compile synthesis/quartus/reset_phase_smoke; \
 		quartus_sh --flow compile synthesis/quartus/bus_control_smoke; \
+		quartus_sh --flow compile synthesis/quartus/halt_control_smoke; \
 		quartus_sh --flow compile synthesis/quartus/decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/load_dreg_immediate_smoke; \
@@ -2675,6 +2698,9 @@ clean:
 	@if [ -d build/obj_linear_bus_control ]; then \
 		find build/obj_linear_bus_control -depth -delete; \
 	fi
+	@if [ -d build/obj_halt_control ]; then \
+		find build/obj_halt_control -depth -delete; \
+	fi
 	@if [ -d build/obj_linear_halt_control ]; then \
 		find build/obj_linear_halt_control -depth -delete; \
 	fi
@@ -2811,6 +2837,9 @@ clean:
 	fi
 	@if [ -d build/quartus_linear_bus_control ]; then \
 		find build/quartus_linear_bus_control -depth -delete; \
+	fi
+	@if [ -d build/quartus_halt_control ]; then \
+		find build/quartus_halt_control -depth -delete; \
 	fi
 	@if [ -d build/quartus_linear_halt_control ]; then \
 		find build/quartus_linear_halt_control -depth -delete; \
@@ -2949,6 +2978,7 @@ clean:
 		build/formal_pm_bus \
 		build/formal_reset_phase \
 		build/formal_bus_control \
+		build/formal_halt_control \
 		build/formal_linear_core \
 		build/formal_linear_bus_control \
 		build/formal_linear_halt_control \

@@ -51,7 +51,7 @@ Known cases:
 | interrupt vectoring | two cycles described, including vector jump |
 | DMACK low | extend state 7 by whole processor cycles until high |
 | HALT during ordinary instruction fetch | asserted active-low input is recognized at state 3; the current cycle completes at state 7-to-8, stopped outputs hold state 8, and a DMACK-high release resumes at state 8-to-1 |
-| HALT during PM data | forced instruction-fetch cycle before stop |
+| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling is verified standalone but PM-data-owner attachment remains open |
 
 Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 5-13–5-16, 6-14–6-15, 6-21, A-4, A-8–A-10]. The Type 26
@@ -201,9 +201,12 @@ DM ownership, and interrupt arbitration remain open. The bounded ordinary-
 fetch HALT attachment adds seven directed tests and 50,003 clocks with 790
 recognized stops and restarts: active-low HALT is sampled at state 3, the
 current fetch retires at state 7-to-8, state 8 and its PM levels hold static,
-and release advances only when DMACK is high. This result does not cover the
-PM-data forced-fetch path, HALT during grant/waits, TRAP, BR while stopped,
-interrupts, or reset [ADI-UM-1989, printed
+and release advances only when DMACK is high. The standalone HALT controller
+adds eight directed tests and 50,033 clocks across both cycle classes. Its 335
+PM-data recognitions each schedule one state-8 forced-fetch issue before the
+later state-7 stop. That scheduling output is not yet attached to a PM-data
+owner, so HALT during grant/waits, TRAP, BR while stopped, interrupts, reset,
+and the shared-PM handoff remain outside this evidence [ADI-UM-1989, printed
 pp. 1-5, 2-6, 2-15, 2-18,
 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24, 5-5–5-8,
 5-13–5-14, 6-1–6-2,

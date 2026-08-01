@@ -1346,7 +1346,8 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_linear_bus_control.py`, `make halt-tests`,
   `tests/test_halt_control.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
-  `formal/bus_control.sby`, `formal/linear_bus_control.sby`,
+  `formal/bus_control.sby`, `formal/halt_control.sby`,
+  `formal/linear_bus_control.sby`,
   `formal/linear_halt_control.sby`,
   `formal/conditional_trap.sby`,
   `formal/system_control.sby`
@@ -1385,9 +1386,17 @@ advance beyond research until a page-level primary citation is added.
   clocks pass, covering 790 recognize/stop/resume sequences, 161 blocked
   DMACK-low release attempts, and 742 held clocks. Its formal recipe passes
   strict syntax lint and a constrained Cyclone V fit closes at 25 ns. The
-  forced instruction fetch after a PM-data cycle, HALT while BG or a DMACK
-  wait is active, TRAP handoff, BR requests while halted, interrupts, reset,
-  and analog input synchronization remain explicitly outside this attachment.
+  standalone controller now also implements the source-backed PM-data
+  sequencing rule: recognition completes the data cycle, emits exactly one
+  forced-fetch issue on the following state-8 boundary, and stops after that
+  fetch. Eight directed tests and 50,033 independent-model/RTL clocks cover
+  332 ordinary and 335 PM-data recognitions, 335 forced issues, 667 stops, 665
+  releases, 291 DMACK-blocked releases, and 2,269 held clocks. Its formal
+  recipe passes strict syntax lint; a fully constrained 20 ns Cyclone V fit
+  uses 26 ALMs and 6 registers with no RAM/DSP. The force issue is not yet
+  attached to the Type 5/Type 13 native-PM owners, and HALT while BG or a
+  DMACK wait is active, TRAP handoff, BR requests while halted, interrupts,
+  reset, and analog input synchronization remain explicitly unimplemented.
 - **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
   composition priority among general HALT, TRAP, BR/BG, DMACK waits, reset,
   and interrupts; analog BR setup/metastability behavior and invalid

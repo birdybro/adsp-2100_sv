@@ -1,7 +1,7 @@
 # Reset, halt, trap, and bus request
 
-**Status: reset phase, ordinary-fetch HALT, normal BR/BG, and Type 22
-handshake bounded in RTL**
+**Status: reset phase, HALT sequence control, ordinary-fetch HALT attachment,
+normal BR/BG, and Type 22 handshake bounded in RTL**
 
 RESET is recognized on a CLKIN rising edge, must remain asserted for at least
 four CLKIN cycles, holds state 4 and CLKOUT low, and releases into state 5 on
@@ -92,13 +92,33 @@ model/RTL clocks cover 790 complete recognize/stop/resume sequences, 161
 DMACK-low blocked-release observations, and 742 held state-8 clocks. The
 machine-readable boundary is `docs/generated/adsp2100_halt_control.yaml`.
 
-This evidence is deliberately narrower than general HALT support. It excludes
-the required forced instruction-fetch cycle after PM data, HALT recognition
-while BG is active or a DMACK wait is incomplete, TRAP clear/release handoff,
-BR recognition while already halted, interrupt priority, reset interaction,
-and electrical synchronization/metastability. Those cases require composition
-with their respective owners and are not inferred from the ordinary-fetch
-result [ADI-UM-1989, printed pp. 5-13–5-15].
+## PM-data forced-fetch sequencing boundary
+
+The same standalone controller now represents the distinct PM-data rule. A
+HALT recognized at state 3 during a PM-data cycle enters a forced-fetch-pending
+state. The current data cycle may reach state 7 without producing a stop. At
+the following enabled state-8-to-state-1 issue edge the controller emits
+exactly one forced external instruction-fetch request, then stops only after
+that fetch reaches its state-7-to-state-8 completion. Instruction issue is
+inhibited before and after that single request, so a cache hit cannot suppress
+the required external observation [ADI-UM-1989, printed pp. 5-13–5-14].
+
+Eight directed contract/model tests and a standalone 50,033-clock independent-
+model/RTL comparison cover both ordinary and PM-data recognition, 335 PM-data
+recognitions and forced fetch issues, 667 total stops, 665 releases, 291
+DMACK-low blocked releases, and 2,269 held clocks. Formal invariants cover the
+four control states and require the forced request to occur only on an enabled
+state-8 boundary. The sequence controller is not yet connected to the Type 5
+or Type 13 PM-data/native-bus owners. Consequently this is proof of scheduling
+and issue qualification, not proof that an architectural PM-data transaction
+hands the shared PM pins to the forced fetch.
+
+General HALT support still excludes HALT recognition while BG is active or a
+DMACK wait is incomplete, Type 22 TRAP clear/release composition, BR recognition
+while already halted, interrupt priority, reset interaction, and electrical
+synchronization/metastability. Those cases require composition with their
+respective owners and are not inferred from either bounded result
+[ADI-UM-1989, printed pp. 5-13–5-15].
 
 TRAP is an output asserted by the TRAP instruction at the state 7/8 boundary
 and cleared by asserting HALT; release of HALT resumes

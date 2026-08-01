@@ -1,8 +1,8 @@
 # Pipeline and cache
 
 **Status: one-stage pipeline, bounded ordinary linear fetch/BR/HALT control,
-and bounded cache-integrated PM-data hit/miss timing implemented; unified
-hazards pending**
+standalone PM-data HALT forced-fetch scheduling, and bounded cache-integrated
+PM-data hit/miss timing implemented; unified hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
 following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
@@ -47,8 +47,13 @@ pipeline then remains stopped with the fetched PC/opcode and external PM
 levels stable in state 8, and a DMACK-qualified HALT release issues the next
 fetch at state 8-to-1. The independent-model/RTL comparison covers 50,003
 clocks and 790 stop/restart sequences. The distinct PM-data case still requires
-the documented forced external instruction fetch even on a cache hit and is
-not implemented by this ordinary-fetch attachment [ADI-UM-1989, printed
+the documented forced external instruction fetch even on a cache hit. A
+standalone controller now schedules that path: PM-data recognition completes
+the data cycle, admits one forced fetch at the following state-8 issue edge,
+and stops only after that fetch completes. Eight directed tests and 50,033
+model/RTL clocks cover 335 such recognitions and issue events. The controller
+is not attached to either cache/native-PM data owner, so shared-PM arbitration
+and the architectural handoff remain open [ADI-UM-1989, printed
 pp. 5-13–5-14].
 
 PM data use conflicts with external instruction fetch. The 16×24 cache can

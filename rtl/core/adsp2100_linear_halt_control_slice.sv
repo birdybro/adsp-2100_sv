@@ -73,6 +73,8 @@ module adsp2100_linear_halt_control_slice (
     output logic [23:0] pmd_write_data_o,
     output logic        pmd_write_data_valid_o
 );
+    logic ordinary_force_fetch_issue;
+
     adsp2100_halt_control halt_control (
         .clk_i(clk_i),
         .reset_i(reset_i),
@@ -80,10 +82,12 @@ module adsp2100_linear_halt_control_slice (
         .phase_advance_i(phase_advance_i),
         .halt_n_i(halt_n_i),
         .dmack_i(dmack_i),
+        .pm_data_cycle_i(1'b0),
         .mode_o(halt_mode_o),
         .state_three_boundary_o(state_three_boundary_o),
         .halt_recognized_o(halt_recognized_o),
         .halt_stop_event_o(halt_stop_event_o),
+        .force_fetch_issue_o(ordinary_force_fetch_issue),
         .resume_event_o(resume_event_o),
         .release_blocked_o(release_blocked_o),
         .instruction_issue_inhibit_o(instruction_issue_inhibit_o),
@@ -152,6 +156,9 @@ module adsp2100_linear_halt_control_slice (
 
 `ifndef SYNTHESIS
     always_comb begin
+        // This wrapper owns ordinary instruction fetches only. The PM-data
+        // discriminator is tied low, so the forced-fetch state is unreachable.
+        assert (!ordinary_force_fetch_issue);
         if (instruction_issue_inhibit_o) begin
             assert (!instruction_issue_o);
         end

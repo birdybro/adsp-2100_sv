@@ -234,8 +234,11 @@ that owner. Normal BR/BG and ordinary-fetch HALT are attached separately only
 to this bounded linear
 owner: the current fetch completes, new issue is inhibited, PM output enables
 are masked during grant, HALT instead holds driven PM outputs in state 8, and
-restart occurs at state 8-to-1. PM-data forced fetch and cross-event priority
-remain open. Other bounded
+restart occurs at state 8-to-1. A standalone primary-backed HALT sequencer now
+distinguishes PM-data recognition, admits exactly one forced external fetch on
+the following state-8 boundary, and stops after that fetch; its output is not
+yet attached to the Type 5/Type 13 PM-data owners. Cross-event priority and
+shared-PM ownership remain open. Other bounded
 source-backed RTL
 execution slices implement all
 original Type 2

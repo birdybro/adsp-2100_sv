@@ -55,6 +55,7 @@ def apply_linear_halt_control_cycle(
         phase_advance=phase_advance,
         halt_n=halt_n,
         dmack=dmack,
+        pm_data_cycle=False,
     )
     core = apply_linear_core_cycle(
         state.core,

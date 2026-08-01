@@ -14,7 +14,8 @@ exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 17/Type 18 ordinary-fetch ownership,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
-attached separately to that owner,
+attached separately to that owner, standalone PM-data HALT forced-fetch
+scheduling,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -24,15 +25,25 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- primary-backed standalone HALT sequencing for ordinary and PM-data cycles:
+  a PM-data recognition completes the data cycle, emits one forced external-
+  fetch issue at the following state-8 boundary, and stops after the fetch;
+  eight directed tests and 50,033 independent-model/RTL clocks cover 332
+  ordinary and 335 PM-data recognitions, 335 forced issues, 667 stops, 665
+  releases, 291 blocked releases, and 2,269 held clocks, with a machine-readable
+  contract, formal recipe, Yosys flow, and fully constrained 26-ALM/6-register
+  Cyclone V fit; Type 5/Type 13 PM-owner attachment and cross-event priority
+  remain open;
 - primary-backed bounded ordinary-fetch HALT composition with active-low
   state-3 recognition, latched short requests, current-fetch completion,
   driven and stable stopped state-8 PM outputs, and DMACK-qualified
   state-8-to-state-1 restart; seven directed tests and 50,003 independent-
   model/RTL clocks cover 790 complete recognize/stop/resume sequences, 161
   DMACK-low blocked releases, and 742 held clocks, with a machine-readable
-  contract, formal invariants, Yosys flow, and a fully constrained 914-ALM/
-  1,008-register Cyclone V fit; PM-data forced fetch, HALT during BG/DM waits,
-  TRAP/BR/interrupt/reset arbitration, and analog synchronization remain open;
+  contract, formal invariants, Yosys flow, and a requalified 916-ALM/
+  1,026-register Cyclone V fit; PM-data scheduling is verified separately,
+  while its owner attachment, HALT during BG/DM waits, TRAP/BR/interrupt/reset
+  arbitration, and analog synchronization remain open;
 - bounded structural composition of the ordinary linear PM owner and normal
   BR/BG controller, preserving the current fetch after state-3 recognition,
   inhibiting only the next issue, masking every PM output enable during grant,
@@ -295,7 +306,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 634 distinct Python unit checks plus manifest/hash verification;
+- 635 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -490,8 +501,8 @@ outstanding.
   fitted registers with no RAM or DSP blocks, +12.845 ns setup, +0.166 ns
   worst multicorner hold, 82.27 MHz worst slow-corner Fmax, and no
   unconstrained paths against 25 ns; its ordinary-fetch HALT composition fits
-  in 914 ALMs and 1,008 fitted registers with no RAM or DSP blocks, +12.168 ns
-  setup, +0.169 ns worst multicorner hold, 77.93 MHz worst slow-corner Fmax,
+  in 916 ALMs and 1,026 fitted registers with no RAM or DSP blocks, +12.809 ns
+  setup, +0.164 ns worst multicorner hold, 82.03 MHz worst slow-corner Fmax,
   and no unconstrained paths against 25 ns;
   the native DM pin-phase controller fits in 100 ALMs and 57 fitted registers
   with no RAM or DSP blocks, +11.895 ns worst setup, +0.169 ns worst
@@ -567,7 +578,8 @@ outstanding.
   and Type 3 logical state execution plus exact Type 7 state execution and
   the bounded steady-state Type 6/7/17/18 linear fetch owner and original
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
-  bounded ordinary-fetch HALT attachment invariants (65 total)
+  standalone HALT sequencing and bounded ordinary-fetch HALT attachment
+  invariants (66 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -580,9 +592,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Extend the source-backed HALT boundary beyond ordinary fetch: compose the
-   PM-data forced-fetch path, HALT during DMACK waits or BG, and the documented
-   TRAP/BR/interrupt priority cases without weakening the bounded attachment.
+3. Attach the verified PM-data HALT forced-fetch scheduler to a native Type 5
+   or Type 13 owner, then compose HALT during DMACK waits or BG and the
+   documented TRAP/BR/interrupt priority cases without weakening the bounded
+   attachments.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed

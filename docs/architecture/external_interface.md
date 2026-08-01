@@ -67,8 +67,15 @@ outputs in state 8, and resumes at state 8-to-1 only when HALT is inactive and
 DMACK is high. Seven directed tests and 50,003 model/RTL clocks cover 790
 stops/resumes, including 161 DMACK-low blocked releases and 742 held clocks.
 Unlike BG, HALT does not mask the PM output enables in this stopped ordinary-
-fetch case. PM-data forced fetch, HALT during BG or DM waits, TRAP/interrupt
-priority, reset interaction, and analog input timing remain uncomposed
+fetch case. The standalone HALT controller separately classifies a recognized
+PM-data cycle and exposes one `force_fetch_issue_o` pulse on the following
+enabled state-8 issue boundary, then stops after that fetch reaches state 7.
+Eight directed tests and 50,033 independent-model/RTL clocks cover 335 PM-data
+recognitions and corresponding forced issue pulses. That signal is not yet
+connected to the Type 5/Type 13 native-PM owners, so it establishes control
+sequencing rather than a complete external transaction trace. HALT during BG
+or DM waits, TRAP/interrupt priority, reset interaction, and analog input timing
+remain uncomposed
 [ADI-UM-1989, printed pp. 5-13–5-14, 5-17–5-20].
 
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic

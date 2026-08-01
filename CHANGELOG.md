@@ -8,6 +8,21 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed standalone HALT sequencer for both ordinary instruction-
+  fetch and PM-data recognition. A PM-data recognition completes its current
+  cycle, admits exactly one forced external fetch at the following state-8
+  issue boundary, and stops only after that fetch reaches state 7; issue is
+  inhibited on every intervening boundary. Eight directed tests and 50,033
+  deterministic model/RTL clocks cover 332 ordinary and 335 PM-data
+  recognitions, 335 forced issues, 667 stops, 665 releases, 291 DMACK-blocked
+  releases, and 2,269 held clocks. A machine-readable contract, formal recipe,
+  Yosys flow, and fully constrained Cyclone V project bind the claim. The fit
+  uses 26 ALMs and 6 registers, no RAM/DSP blocks, +12.584 ns worst setup,
+  +0.172 ns worst hold, 134.84 MHz worst slow-corner Fmax, and no unconstrained
+  paths at 20 ns. The Type 5/Type 13 PM-data owners do not yet consume the
+  forced-fetch pulse, so this is sequencing evidence rather than a complete
+  shared-PM transaction attachment.
+
 - A primary-backed bounded ordinary-fetch HALT controller and structural
   attachment in independent Python and portable SystemVerilog. It recognizes
   the active-low input at enabled state 3, latches a short assertion, lets the
@@ -17,11 +32,12 @@ semantic versioning after its first release.
   cover 790 complete recognize/stop/resume sequences, 161 DMACK-low blocked
   releases, and 742 held clocks. A machine-readable contract, formal harness,
   Yosys flow, and fully constrained Cyclone V project bound the attachment.
-  The fit uses 914 ALMs and 1,008 registers, no RAM/DSP blocks, +12.168 ns
-  worst setup, +0.169 ns worst hold, 77.93 MHz worst slow-corner Fmax, and no
-  unconstrained paths at 25 ns. PM-data forced fetch, HALT during BG or DMACK
+  The requalified fit uses 916 ALMs and 1,026 registers, no RAM/DSP blocks,
+  +12.809 ns worst setup, +0.164 ns worst hold, 82.03 MHz worst slow-corner
+  Fmax, and no unconstrained paths at 25 ns. PM-data forced-fetch scheduling is
+  verified separately, but its PM-owner attachment, HALT during BG or DMACK
   waits, TRAP handoff, BR while halted, interrupt/reset priority, and analog
-  synchronization remain explicitly outside this result.
+  synchronization remain explicitly outside this composition.
 
 - A bounded structural composition of the ordinary linear PM owner and the
   source-backed BR/BG controller in independent Python and portable

@@ -56,7 +56,10 @@ provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
 50,003 clocks and 93 complete current-fetch/inhibit/grant/restart handshakes,
 and a separate bounded active-low HALT attachment adds 50,003 clocks and 790
 ordinary-fetch stop/restart sequences with state-8 PM stability and DMACK-
-qualified release,
+while the standalone HALT sequencer adds 50,033 clocks covering both cycle
+classes, including 335 PM-data recognitions that each emit exactly one forced
+external-fetch issue before stop; that pulse is not yet attached to the shared
+PM-data owner,
 25,648 canonical
 Type 14 shifter-plus-DREG
 multifunction words with old-value parallel semantics, all 2,097,152 Type 4
@@ -111,7 +114,8 @@ Type 16 subencodings remain explicitly unresolved or unsupported. Type 12's
 16,384 unavailable-XOP words and 6,048 DM-read destination collisions fail
 closed. The 16,384
 Type 10 and four Type 19 CALL NOT CE words remain fail-closed under OQ-012.
-General HALT composition beyond the ordinary-fetch attachment, BR/BG,
+General HALT owner composition beyond the ordinary-fetch attachment and the
+standalone PM-data forced-fetch scheduler, BR/BG,
 interrupt arbitration, and complete PM strobes remain outside the bounded
 Type 22 controller. Pinned MAME's
 conflicting reserved classification is recorded as SC-013.
@@ -127,7 +131,8 @@ logical PM data/recovery
 boundary attached to the original active-low logical pin phases. These remain
 bounded clients, not an integrated fetch/decode/execute bus owner; ordinary
 fetch arbitration and other PM instruction classes remain unimplemented;
-BR/BG and HALT attach only to the separate bounded ordinary-fetch owner.
+BR/BG and HALT attach only to the separate bounded ordinary-fetch owner; the
+PM-data HALT scheduler remains unattached to the Type 5/Type 13 PM owners.
 Type 1 remains an action boundary rather than executable dual-bus state:
 OQ-023 records the unresolved native PM behavior when DMACK extends the
 simultaneous DM cycle.

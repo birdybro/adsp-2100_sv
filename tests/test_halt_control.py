@@ -29,7 +29,7 @@ def _setup(opcode: int = 0, pc: int = 4) -> LinearHaltControlState:
 
 
 class HaltControlTests(unittest.TestCase):
-    def test_machine_readable_ordinary_fetch_contract(self) -> None:
+    def test_machine_readable_halt_contract(self) -> None:
         contract = json.loads(
             (ROOT / "docs/generated/adsp2100_halt_control.yaml")
             .read_text(encoding="utf-8")
@@ -39,9 +39,48 @@ class HaltControlTests(unittest.TestCase):
         self.assertIn("STATE_3", contract["recognition"])
         self.assertIn("DMACK_HIGH", contract["release_requirement"])
         self.assertIn(
-            "PROGRAM_MEMORY_DATA_CYCLE_FORCED_FETCH",
+            "FORCED_EXTERNAL_INSTRUCTION_FETCH",
+            contract["pm_data_effect"],
+        )
+        self.assertIn(
+            "PROGRAM_MEMORY_DATA_OWNER_ATTACHMENT",
             contract["excluded_claims"],
         )
+
+    def test_pm_data_halt_forces_one_external_fetch_before_stop(self) -> None:
+        recognized = apply_halt_control_cycle(
+            HaltControlState(),
+            phase=LogicalPhase.STATE_3,
+            halt_n=False,
+            pm_data_cycle=True,
+        )
+        self.assertTrue(recognized.halt_recognized)
+        self.assertEqual(
+            recognized.state.mode,
+            HaltControlMode.FORCE_FETCH_PENDING,
+        )
+        data_completion = apply_halt_control_cycle(
+            recognized.state,
+            phase=LogicalPhase.STATE_7,
+            halt_n=False,
+        )
+        self.assertFalse(data_completion.halt_stop_event)
+        self.assertFalse(data_completion.force_fetch_issue)
+        forced = apply_halt_control_cycle(
+            data_completion.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=False,
+        )
+        self.assertTrue(forced.force_fetch_issue)
+        self.assertFalse(forced.instruction_issue_inhibit)
+        self.assertEqual(forced.state.mode, HaltControlMode.STOP_PENDING)
+        stopped = apply_halt_control_cycle(
+            forced.state,
+            phase=LogicalPhase.STATE_7,
+            halt_n=False,
+        )
+        self.assertTrue(stopped.halt_stop_event)
+        self.assertEqual(stopped.state.mode, HaltControlMode.HALTED)
 
     def test_halt_is_recognized_only_at_enabled_state_three(self) -> None:
         state = HaltControlState()
@@ -198,6 +237,7 @@ class HaltControlTests(unittest.TestCase):
         for mode in (
             HaltControlMode.STOP_PENDING,
             HaltControlMode.HALTED,
+            HaltControlMode.FORCE_FETCH_PENDING,
         ):
             result = apply_halt_control_cycle(
                 HaltControlState(mode),
