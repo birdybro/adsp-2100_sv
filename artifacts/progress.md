@@ -2,7 +2,7 @@
 
 **Updated:** 2026-08-01
 
-**Latest verified engineering commit:** `a220071`
+**Latest verified engineering commit:** `04084b3`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -44,8 +44,9 @@ cycle-, or Hard Drivin'-complete
   A fetched CALL followed by Type 26 POP PC proves the return address survives
   in shared PC-stack state. Twenty-eight tests and 442,330 model/RTL phase
   clocks pass; the BR/BG, retained-fetch/shared-PM/BR-BG, and HALT compositions
-  remain green across 50,003 clocks each. Strict lint and all 73 formal recipes
-  pass assertion syntax; SymbiYosys/Yosys are unavailable. Fully constrained
+  remain green across 50,003 clocks each. The full `make test` regression with
+  693 Python checks passes. Strict lint and all 73 formal recipes pass
+  assertion syntax; SymbiYosys/Yosys are unavailable. Fully constrained
   Cyclone V fits have zero unconstrained paths. At 25 ns the 3,518-ALM private
   and 3,528-ALM BR/BG owners close with +0.062/+0.159 ns worst setup; the
   3,511-ALM HALT owner misses by 0.045 ns at 39.93 MHz. At 20 ns the 3,628-ALM
