@@ -50,8 +50,11 @@ pp. 2-36–2-39, parameters 23–60, Figures 14–15; ADI-UM-1989, printed
 pp. 5-5–5-8, Figure 5.5]. Its bounded Type 13/cache client captures a data
 descriptor at state 8-to-1, commits the architectural data action at state
 7-to-8, and accepts a miss recovery back-to-back. Five directed tests and
-50,081 model/RTL clocks cover the attachment. Ordinary fetch, other PM
-instruction classes, and BR/BG recognition remain unattached.
+50,081 model/RTL clocks cover the attachment. A separate phase-aware BR/BG
+controller now provides normal grant/release timing and a RESET-time native-pin
+wrapper provides the documented asynchronous relationship, but neither is yet
+composed with this PM client. Ordinary fetch, other PM instruction classes,
+and whole-core PM arbitration remain unattached.
 
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic
 core exposes phase and transaction trace signals without a generic modern bus

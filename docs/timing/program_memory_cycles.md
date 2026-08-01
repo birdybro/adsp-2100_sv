@@ -102,8 +102,12 @@ behavior remain OQ-008.
 The controller exposes separate address, control, and PMD output enables so an
 FPGA wrapper can implement bidirectional pins. A separate arbiter's
 `bus_relinquished` input masks all three enables while preserving descriptor
-state, matching the sourced external-bus release effect but not implementing
-BR/BG recognition timing [ADI-UM-1989, printed p. 5-5]. Nanosecond delays,
+state, matching the sourced external-bus release effect. The separate
+`adsp2100_bus_control` owner recognizes BR at enabled state 3, asserts BG one
+complete eight-state cycle later, recognizes release at state 3, removes BG
+one complete cycle later, and resumes issue at the following state 8-to-1;
+the native-pin wrapper supplies the special asynchronous RESET-time relation
+[ADI-UM-1989, printed pp. 5-3–5-6, Figure 5.3]. Nanosecond delays,
 electrical setup/hold requirements, ordinary fetch/PC ownership, other PM
-instruction classes, HALT/TRAP behavior, and BR/BG arbitration remain outside
-this bounded attachment.
+instruction classes, HALT/TRAP behavior, and composition of BR/BG with every
+PM owner remain outside this bounded attachment.

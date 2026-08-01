@@ -1,6 +1,12 @@
 """Independent, deliberately partial ADSP-2100 architectural model."""
 
 from .alu import ALUResult, compute_alu
+from .bus_control import (
+    BusControlCycleResult,
+    BusControlMode,
+    BusControlState,
+    apply_bus_control_cycle,
+)
 from .conditions import (
     ConditionInputs,
     DO_TERMINATION_MNEMONICS,

@@ -64,9 +64,11 @@ propagation, reset, and bus relinquishment. The bounded Type 4 native wrapper
 adds the same physical boundary for memory-only and
 ALU/MAC reads/writes. Six directed tests and 50,082 clocks verify state-8
 issue, old-value stores, full-cycle waits, state-7 atomic compute/read/I
-commit, reset, late-ACK and off-boundary rejection, and relinquishment. PM
-concurrency, multi-owner DM arbitration, event latching
-during waits, and BR/BG recognition are still unimplemented.
+commit, reset, late-ACK and off-boundary rejection, and relinquishment. The
+separate normal BR/BG controller now supplies sourced recognition, grant,
+release, and restart timing, but it is not yet composed with these clients.
+PM concurrency, multi-owner DM arbitration, and event latching during waits
+remain unimplemented.
 
 The bounded Type 3 native wrapper accepts an absolute-address descriptor and
 cycle-start general-register write source at state 8-to-1. Its five directed

@@ -1,6 +1,6 @@
 # Reset, halt, trap, and bus request
 
-**Status: reset recognition/phase owner and Type 22 handshake bounded in RTL**
+**Status: reset phase, normal BR/BG, and Type 22 handshake bounded in RTL**
 
 RESET is recognized on a CLKIN rising edge, must remain asserted for at least
 four CLKIN cycles, holds state 4 and CLKOUT low, and releases into state 5 on
@@ -81,7 +81,39 @@ bounded slice [ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, Figure
 Pinned MAME treats the exact original Type 22 words as reserved; SC-013 records
 that reference divergence.
 
-BR recognition halts after the current instruction, then BG asserts and all PM
-and DM drive signals tristate. Release restores the same internal state and
-resumes [ADI-UM-1989, printed pp. 5-3–5-5]. Reset-time BR is asynchronous and
-has special ordering constraints [ADI-UM-1989, printed p. 5-6].
+## Normal BR/BG sequence
+
+BR and BG are active low. A BR level meeting setup at the end of state 3 is
+recognized there; the current instruction finishes and the processor stops in
+state 8. BG asserts at the end of state 3 of what would have been the following
+instruction, exactly four CLKIN cycles (one complete eight-state processor
+cycle) after recognition. While BG is low, every PM and DM address, control,
+and data-driver signal is tristated and internal processor state is preserved
+[ADI-UM-1989, printed pp. 5-3–5-6, Figure 5.3; ADI-DATABOOK-1987, printed
+pp. 2-17, 2-33–2-35].
+
+BR release is recognized at the corresponding enabled end-of-state-3 sample.
+BG deasserts four CLKIN cycles later and instruction issue resumes at the next
+state-8-to-state-1 boundary [ADI-UM-1989, printed pp. 5-4–5-5, Figure 5.3].
+`rtl/core/adsp2100_bus_control.sv` implements this normal-operation sequence
+without gated clocks. It inhibits only new instruction issue after recognition
+so a transaction belonging to the current instruction can finish, exposes
+the grant interval separately for PM/DM output-enable masking, and re-enables
+issue on the state-8 restart edge.
+
+The machine-readable contract is
+`docs/generated/adsp2100_bus_control.yaml`. Seven directed tests and 50,084
+deterministic model/RTL clocks cover request/grant and release/restart latency,
+phase holds, reset, the output-enable mask, and invalid early withdrawal or
+reassertion. Invalid handshake changes fail closed with explicit protocol
+events; that protective behavior is an implementation contract, not a claim
+about unspecified real-device input sequences.
+
+The original RESET-time BR/BG path is asynchronous: BG follows an asserted BR
+without waiting for the normal state-3 sequence, and BR must be removed before
+or with RESET release [ADI-UM-1989, printed p. 5-6].
+`rtl/wrappers/adsp2100_reset_bus_grant.sv` confines that direct native-pin path
+to a wrapper and does not feed asynchronous control into architectural state.
+It models the logical relationship, not analog propagation delay. The normal
+controller assumes BR satisfies the documented sampling boundary; metastability
+and board-level synchronization remain integration responsibilities.

@@ -3,13 +3,13 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests reset-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
 test: lint reference-check repository-check decode-tests assembler-tests model-tests \
-	cache-tests reset-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests \
+	cache-tests reset-tests bus-control-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests \
 	bus-tests
 	@echo "PASS implemented foundation regression"
 
@@ -29,6 +29,13 @@ lint:
 			--top-module adsp2100_reset_phase \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_reset_phase.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_bus_control \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_bus_control.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_reset_bus_grant \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_data_bus \
 			rtl/packages/adsp2100_pkg.sv \
@@ -523,6 +530,25 @@ reset-tests:
 		build/obj_reset_phase/Vtb_adsp2100_reset_phase; \
 	else \
 		echo "SKIP reset/phase RTL test: Verilator is not installed"; \
+	fi
+
+bus-control-tests:
+	$(PYTHON) -m unittest -v tests.test_bus_control
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_bus_control_vectors.py \
+			--output build/bus_control_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_bus_control \
+			--top-module tb_adsp2100_bus_control \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
+			sim/unit/tb_adsp2100_bus_control.sv; \
+		build/obj_bus_control/Vtb_adsp2100_bus_control; \
+	else \
+		echo "SKIP BR/BG RTL test: Verilator is not installed"; \
 	fi
 
 dm-bus-tests:
@@ -1578,6 +1604,12 @@ formal:
 			rtl/core/adsp2100_reset_phase.sv \
 			formal/harnesses/adsp2100_reset_phase_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_bus_control_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
+			formal/harnesses/adsp2100_bus_control_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			-Wno-PINCONNECTEMPTY \
 			--top-module adsp2100_linear_core_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -2099,6 +2131,7 @@ formal:
 		sby -f -d build/formal_instruction_cache formal/instruction_cache.sby; \
 		sby -f -d build/formal_pm_bus formal/pm_bus.sby; \
 		sby -f -d build/formal_reset_phase formal/reset_phase.sby; \
+		sby -f -d build/formal_bus_control formal/bus_control.sby; \
 		sby -f -d build/formal_linear_core formal/linear_core.sby; \
 		sby -f -d build/formal_dm_bus formal/dm_bus.sby; \
 		sby -f -d build/formal_dm_write_immediate_native \
@@ -2185,9 +2218,11 @@ synth-yosys:
 		set -e; \
 		yosys -q -l build/yosys_reset_phase.log \
 			synthesis/yosys/reset_phase.ys; \
+		yosys -q -l build/yosys_bus_control.log \
+			synthesis/yosys/bus_control.ys; \
 		yosys -q -l build/yosys_linear_core.log \
 			synthesis/yosys/linear_core.ys; \
-		echo "PASS bounded reset/phase and linear-core Yosys synthesis"; \
+		echo "PASS bounded reset/phase, BR/BG, and linear-core Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
 	fi
@@ -2196,6 +2231,7 @@ synth-quartus:
 	@if command -v quartus_sh >/dev/null 2>&1; then \
 		set -e; \
 		quartus_sh --flow compile synthesis/quartus/reset_phase_smoke; \
+		quartus_sh --flow compile synthesis/quartus/bus_control_smoke; \
 		quartus_sh --flow compile synthesis/quartus/decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/load_dreg_immediate_smoke; \
@@ -2739,6 +2775,7 @@ clean:
 		build/formal_instruction_cache \
 		build/formal_pm_bus \
 		build/formal_reset_phase \
+		build/formal_bus_control \
 		build/formal_linear_core \
 		build/formal_dm_bus \
 		build/formal_dm_write_immediate_native \

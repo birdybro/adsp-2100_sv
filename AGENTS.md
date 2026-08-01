@@ -369,8 +369,12 @@ drives write data for states 5–8. It preserves PMS across back-to-back request
 and masks all FPGA output enables during externally directed bus
 relinquishment. Ten directed tests and 50,032 model/RTL clocks pass. This block
 now has one bounded Type 13/cache client, but it does not yet arbitrate ordinary
-whole-core fetches or other PM instruction classes, recognize BR/BG, or model
-analog delays; the request boundary is not a claim about a hidden device latch.
+whole-core fetches or other PM instruction classes, attach the separate
+phase-aware BR/BG controller, or model analog delays; the request boundary is
+not a claim about a hidden device latch. The normal BR/BG controller separately
+passes 50,084 model/RTL clocks for state-3 recognition, one-cycle grant/release
+latency, bus-driver masking, and state-1 resume; its RESET-time direct pin path
+is confined to a wrapper.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
 tuple. Its logical DM request holds captured address/data over arbitrary
@@ -433,8 +437,8 @@ Type 22 is the first decoder-connected phase-aware instruction boundary: it
 retains a condition decision through logical phases, asserts TRAP at the
 state-7/state-8 transition, holds state 8, and implements the recognized-HALT
 clear/release handshake. General HALT synchronization, BR/BG, interrupt/loop
-arbitration, and attachment to the separate PM strobe controller remain
-unconnected. SC-013 records that pinned
+arbitration, and attachment to the separate PM strobe and BR/BG controllers
+remain unconnected. SC-013 records that pinned
 MAME incorrectly classifies these original-device words reserved.
 The bounded Type 23/24 division boundaries implement all eight ALU-X divisor
 sources, DIVS AY1/AF upper-dividend selection and sign seeding, DIVQ old-AQ

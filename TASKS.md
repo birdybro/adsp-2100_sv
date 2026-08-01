@@ -1332,9 +1332,11 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ATARI-ADSP-SCHEM
 - **Relevant tests:** `make bus-tests`, `make interrupt-tests`,
-  `make reset-tests`, `tests/test_reset_phase.py`,
+  `make reset-tests`, `make bus-control-tests`, `tests/test_reset_phase.py`,
+  `tests/test_bus_control.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
-  `formal/conditional_trap.sby`, `formal/system_control.sby`
+  `formal/bus_control.sby`, `formal/conditional_trap.sby`,
+  `formal/system_control.sby`
 - **Implementation notes:** use clock enables and phase state, never gated
   clocks. A standalone phase owner now implements rising-edge RESET
   recognition, four-sample qualification, state-4/CLKOUT-low hold, exact
@@ -1345,11 +1347,20 @@ advance beyond research until a page-level primary citation is added.
   reset-specific PM strobe onset is withheld under OQ-024. The Type 22
   boundary implements the source-backed TRAP half of
   system control, including state-8 hold and an input explicitly representing
-  HALT after recognition. The raw asynchronous HALT synchronizer, general
-  pin-driven halt, BR/BG, and bus tristate control remain unimplemented.
+  HALT after recognition. A structurally independent model and portable
+  phase-aware controller now implement normal active-low BR/BG: state-3
+  recognition, one-full-cycle grant/release delays, current-instruction
+  completion via new-issue inhibit, tristate-mask output, and state-8-to-1
+  restart. Seven directed tests and 50,084 model/RTL clocks pass. A separate
+  native wrapper confines the documented asynchronous RESET-time BR-to-BG
+  path outside architectural state. Invalid early withdrawal/reassertion
+  fails closed and is explicitly an implementation contract. The raw
+  asynchronous HALT synchronizer, general pin-driven halt, and whole-core
+  PM/DM attachment remain unimplemented.
 - **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
   composition priority among general HALT, TRAP, BR/BG, DMACK waits, reset,
-  and interrupts.
+  and interrupts; analog BR setup/metastability behavior and invalid
+  RESET-release ordering remain wrapper/system responsibilities.
 - **Confidence:** UNKNOWN
 
 ## M24 — Pipeline and instruction timing

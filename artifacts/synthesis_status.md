@@ -4,6 +4,7 @@
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
   original RESET/logical-phase owner,
+  normal BR/BG phase controller and RESET-time native-pin wrapper,
   Type 1 dual-read action decoder,
   Type 2 action decoder and waited execution slice, Type 4 action and waited
   logical-DM slices,
@@ -22,9 +23,16 @@
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
-- Yosys is not installed in this environment. Original RESET/phase and bounded
-  linear-owner synthesis scripts are wired into `make synth-yosys` for an
-  equipped host.
+- Yosys is not installed in this environment. Original RESET/phase, normal
+  BR/BG, and bounded linear-owner synthesis scripts are wired into
+  `make synth-yosys` for an equipped host.
+- Quartus 17.0.2 full compilation of the normal BR/BG controller passes for
+  Cyclone V `5CSEBA6U23I7`. It uses 27 ALMs, 7 fitted registers, no block
+  memory, and no DSP blocks. Against its 20 ns virtual-pin smoke constraint,
+  worst multicorner setup slack is +12.350 ns, worst hold slack is +0.172 ns,
+  worst slow-corner Fmax is 131.58 MHz, and TimeQuest reports zero
+  unconstrained clocks, ports, or paths. The RESET-time asynchronous pin mux
+  is intentionally a separate wrapper and this is not a whole-core result.
 - Quartus 17.0.2 full compilation of the original RESET/logical-phase owner
   passes for Cyclone V `5CSEBA6U23I7`. It uses 26 ALMs, 15 registers, no block
   memory, and no DSP blocks. Against its 20 ns virtual-pin smoke constraint,
@@ -435,7 +443,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 61
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 63
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -444,6 +452,7 @@ timing-closure claim. `make synth-yosys` reports an explicit tool-availability
 skip; `make synth-quartus` runs the bounded class-decode,
 internal-move-decode, stack-control-decode, stack-control-integration,
 Type-6 integration,
+normal BR/BG bus control,
 bounded NOP/Type-6/Type-7/Type-18 linear ownership,
 Type-8 integration,
 Type-9 integration,

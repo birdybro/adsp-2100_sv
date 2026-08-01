@@ -8,6 +8,7 @@
 | Four input clocks/eight logical states per instruction | VERIFIED_PRIMARY | original 1989 manual |
 | Reset PC `0x0004`, MSTAT/IMASK zero, ICNTL undefined | VERIFIED_PRIMARY | original 1989 manual |
 | RESET recognition and logical phase release | VERIFIED_PRIMARY, BOUNDED | original 1989 manual p. 5-13 establishes rising-edge recognition, four-CLKIN-cycle minimum, state-4/CLKOUT-low hold, and second-rising-edge release to state 5; six directed tests and 50,034 model/RTL clocks pass, while reset-specific PM strobe onset remains OQ-024 |
+| Normal BR/BG request, grant, release, and resume | VERIFIED_PRIMARY, BOUNDED | original 1989 manual pp. 5-3–5-6/Figure 5.3 and the original 1987 data book pp. 2-17/2-33–2-35 close active-low polarity, state-3 recognition, current-instruction completion, one-full-eight-state-cycle grant/release latency, all-PM/DM-driver tristate, state preservation, and state-1 resume; seven directed tests and 50,084 model/RTL clocks pass, while whole-core owner composition, analog setup/metastability, HALT/interrupt priority, and invalid input ordering remain open; the RESET-time direct wrapper is a logical pin relationship, not an analog timing model |
 | Original four-bit MSTAT boundary | VERIFIED_PRIMARY | original manual; later modes explicitly excluded |
 | NOP `0x000000` | VERIFIED_PRIMARY | original Appendix A diagram |
 | All 30 top-level opcode masks | CORROBORATED | primary diagrams transcribed, algebraically checked, and compared to pinned MAME layout |

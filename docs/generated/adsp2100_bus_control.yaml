@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "pin_polarity": {
+    "BR": "ACTIVE_LOW",
+    "BG": "ACTIVE_LOW"
+  },
+  "normal_request_recognition": "ENABLED_END_OF_STATE_3_SAMPLE",
+  "current_instruction_completion": "HALT_IN_STATE_8_OF_RECOGNITION_CYCLE",
+  "grant_assertion": "ENABLED_END_OF_STATE_3_ONE_FULL_EIGHT_STATE_CYCLE_AFTER_RECOGNITION",
+  "grant_effect": "ALL_PM_AND_DM_DRIVE_SIGNALS_TRISTATED_WITH_INTERNAL_STATE_PRESERVED",
+  "normal_release_recognition": "ENABLED_END_OF_STATE_3_SAMPLE",
+  "grant_release": "ENABLED_END_OF_STATE_3_ONE_FULL_EIGHT_STATE_CYCLE_AFTER_RELEASE_RECOGNITION",
+  "resume": "ENABLED_STATE_8_TO_STATE_1_BOUNDARY_AFTER_GRANT_RELEASE",
+  "early_request_withdrawal": "FAIL_CLOSED_CANCEL_WITH_OBSERVABLE_PROTOCOL_EVENT",
+  "release_reassertion": "FAIL_CLOSED_CANCEL_RELEASE_AND_RETAIN_GRANT",
+  "reset_time_path": "SEPARATE_ASYNCHRONOUS_NATIVE_PIN_WRAPPER",
+  "sources": [
+    "ADI-UM-1989 printed pp. 5-3 through 5-6 and Figure 5.3",
+    "ADI-DATABOOK-1987 printed pp. 2-17 and 2-33 through 2-35"
+  ],
+  "confidence": "VERIFIED_PRIMARY_BOUNDED"
+}

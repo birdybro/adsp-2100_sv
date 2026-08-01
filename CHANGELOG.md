@@ -8,6 +8,21 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original normal-operation BR/BG controller in structurally
+  independent Python and portable SystemVerilog. It recognizes active-low BR
+  at enabled state 3, inhibits new issue while allowing the current instruction
+  to finish, asserts BG one complete eight-state cycle later, masks all PM/DM
+  drivers during grant, delays release by the same interval, and resumes issue
+  on the following state-8-to-state-1 edge. A separate native-pin wrapper
+  confines the documented asynchronous RESET-time BR/BG relationship outside
+  architectural state. Seven directed tests and 50,084 deterministic
+  differential clocks, a machine-readable timing contract, formal harness,
+  Yosys flow, and fully constrained Cyclone V project bound the claim. The fit
+  uses 27 ALMs and 7 registers with no RAM/DSP blocks, +12.350 ns worst setup,
+  +0.172 ns worst hold, 131.58 MHz worst slow-corner Fmax, and no unconstrained
+  paths at 20 ns. Invalid early request changes fail closed with observable
+  protocol events and are not presented as device behavior.
+
 - A primary-backed original RESET/logical-phase owner in structurally
   independent Python and portable SystemVerilog. It recognizes RESET only on
   represented rising CLKIN edges, qualifies four asserted samples, holds

@@ -12,6 +12,7 @@ exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 17/Type 18 ordinary-fetch ownership,
+normal-operation BR/BG request/grant/release/restart control,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -21,6 +22,13 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- primary-backed normal-operation BR/BG controller with active-low state-3
+  recognition, complete-current/inhibit-next behavior, one-full-eight-state-
+  cycle grant and release delays, all-bus-driver mask, state-8-to-state-1
+  restart, separate asynchronous RESET-time native-pin wrapper, seven directed
+  tests, 50,084 model/RTL clocks, formal invariants, a portable Yosys flow, and
+  a fully constrained 27-ALM Cyclone V fit; whole-core PM/DM composition and
+  analog input timing remain open;
 - source-backed original RESET/logical-phase owner with rising-edge-only
   recognition, four-sample qualification, state-4/CLKOUT-low hold, exact
   second-rising-edge release to state 5, ordinary eight-state traversal,
@@ -268,7 +276,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 614 distinct Python unit checks plus manifest/hash verification;
+- 621 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -525,7 +533,7 @@ outstanding.
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
   the bounded steady-state Type 6/7/17/18 linear fetch owner and original
-  RESET/logical-phase invariants (62 total)
+  RESET/logical-phase and normal BR/BG invariants (63 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -538,10 +546,13 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach reset-time PMA `0x0004` and first fetch only after resolving or
+3. Compose normal BR/BG new-issue inhibition and bus-driver masking with the
+   bounded linear/native PM owner, retaining the current transaction through
+   grant recognition and restarting issue exactly at state 8-to-1.
+4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed
    non-memory classes.
-4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
-5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
+5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
+6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.
