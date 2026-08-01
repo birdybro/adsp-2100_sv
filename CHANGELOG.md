@@ -8,6 +8,22 @@ semantic versioning after its first release.
 
 ### Added
 
+- A preservation-oriented `adsp2100_architectural_state` owner extracted from
+  the bounded Type 17 implementation. It now exclusively owns the two banked
+  computational register sets, both DAG register sets, status/control state,
+  CNTR/count-stack state, sequencer/status-stack fragments, PX, and the
+  complete original general-register selector boundary; the Type 17 slice is
+  a decode/action compatibility wrapper around that owner. All 44 focused
+  model tests, 59,430 Type 17 RTL comparison clocks, 150,654 dependent Type
+  3/6/7 clocks, and the 53,985/50,003/50,003-clock linear/private-PM,
+  linear/BR-BG, and retained-fetch/shared-PM regressions remain unchanged.
+  Strict lint passes, the existing formal recipes include the extracted
+  source, and a fully constrained 50 MHz Cyclone V re-fit uses 808 ALMs, 892
+  registers, no RAM/DSP blocks, +5.503 ns worst setup, +0.168 ns worst
+  multicorner hold, 68.98 MHz worst slow-corner Fmax, and no unconstrained
+  paths. This is a shared-state foundation only: direct ALU/MAC/shifter/DAG
+  action ports and a single cache serving all real PM clients remain open.
+
 - An extracted, retained ordinary-fetch architectural client attached to the
   single shared PM owner and normal BR/BG composition. The compatibility
   `adsp2100_linear_core_slice` now composes that same client with a private PM

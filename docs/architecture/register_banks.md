@@ -69,12 +69,17 @@ change BR, OL, or AS. It does not yet connect a same-instruction
 computational-register access or interrupt recognition, so OQ-015 and full
 multifunction legality remain unchanged.
 
-`adsp2100_internal_move_slice` also composes general Type 17 access with this
-bank boundary. Source and bank selection come from cycle-start MSTAT; a MOVE
-to MSTAT changes the selected bank only after its source has been read. The
-slice covers all legal computational-register source/destination pairs and
-retains the MR1-to-MR2 side effect. Its 59,430-cycle comparison initializes
-both banks independently and checks the complete register cross-product.
+`adsp2100_architectural_state` now owns this bank boundary together with the
+general-register selector, both DAG register files, status/control state,
+CNTR/count-stack state, stack-status fragments, and PX. The
+`adsp2100_internal_move_slice` is a Type 17 decode/action compatibility wrapper
+around that single state owner. Source and bank selection come from
+cycle-start MSTAT; a MOVE to MSTAT changes the selected bank only after its
+source has been read. The 59,430-cycle comparison initializes both banks
+independently and checks the complete register cross-product. This extraction
+does not yet expose ALU/MAC/shifter or memory-completion write intents, so the
+standalone compute and PM-data slices still own private state and must not be
+composed as if they formed one processor.
 
 `adsp2100_direct_dm_slice` reuses the same general-register state for every
 legal Type 3 absolute DM transfer. It captures selected-bank write sources at

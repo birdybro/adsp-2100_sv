@@ -224,7 +224,13 @@ A commit message must state the engineering change and its verification.
 
 ## Current architectural status and risk
 
-No integrated multi-owner fetch/decode/execute instruction core exists. A
+No integrated multi-owner fetch/decode/execute instruction core exists. The
+complete general-register storage formerly embedded in the Type 17 slice is
+now isolated in one reusable `adsp2100_architectural_state` owner; Type 17 and
+its dependent Type 3/6/7/linear paths retain their verified behavior through
+a compatibility action wrapper. Direct ALU/MAC/shifter/DAG action ports and a
+single cache shared by real Type 5/Type 13/fetch clients remain open, so this
+structural extraction is not yet a unified core. A
 bounded steady-state owner now executes NOP, legal Type 6/7, every legal Type
 17 internal MOVE, and every Type 18 MODE CONTROL word while fetching PC+1
 through the native PM phase controller. Type 17 narrow status/control-source

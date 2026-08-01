@@ -1042,7 +1042,14 @@ advance beyond research until a page-level primary citation is added.
   476,672 source-closed words plus deterministic setup/error cases.
   The Type 9 slice uses the same selected-bank computational destinations,
   suppresses every false/AMF-zero write, and passes 283,996 cycles over all
-  32,768 words in both banks.
+  32,768 words in both banks. The complete general-register state previously
+  embedded in the Type 17 slice is now owned by the reusable
+  `adsp2100_architectural_state` boundary; Type 17 is a compatibility action
+  wrapper around it. The preservation regression passes 44 focused model
+  tests, 59,430 Type 17 clocks, 150,654 dependent Type 3/6/7 clocks, and the
+  existing linear-owner compositions. Direct computational-unit, DAG-update,
+  and interrupt/sequencer action ports remain to be exposed before the Type 5
+  and Type 13 clients can share this owner.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015
@@ -1661,7 +1668,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Sixty-eight harnesses now pass strict assertion
+  result a complete proof. Seventy-three harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 and Type 7 immediate loads, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
@@ -1713,9 +1720,11 @@ advance beyond research until a page-level primary citation is added.
   multicorner setup/hold slack, and zero unconstrained paths. The Type 17
   decoder fits in 42 ALMs and 24 combinational ALUTs with no
   registers/RAM/DSPs, positive multicorner setup/hold slack, and zero
-  unconstrained paths. The bounded Type 17 state slice fits in 816 ALMs and
-  906 registers with no RAM/DSPs, +6.401 ns worst setup, +0.151 ns worst hold,
-  and zero unconstrained clocks, ports, or paths. The bounded Type 6 slice
+  unconstrained paths. After extracting its reusable architectural-state
+  owner, the bounded Type 17 state slice fits in 808 ALMs and 892 registers
+  with no RAM/DSPs, +5.503 ns worst setup, +0.168 ns worst multicorner hold,
+  68.98 MHz worst slow-corner Fmax, and zero unconstrained clocks, ports, or
+  paths. The bounded Type 6 slice
   fits in 302 ALMs and 484 registers with no RAM/DSPs, +8.167 ns worst setup,
   +0.133 ns worst hold, and zero unconstrained clocks, ports, or paths.
   The bounded Type 7 slice fits in 572 ALMs and 886 fitted registers with no

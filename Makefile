@@ -71,6 +71,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_program_bus.sv \
@@ -138,6 +139,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_direct_dm_slice.sv \
 			rtl/core/adsp2100_data_bus.sv \
@@ -227,6 +229,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
@@ -243,6 +246,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_linear_fetch_client.sv \
@@ -261,6 +265,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_bus_control.sv \
@@ -286,6 +291,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_halt_control.sv \
@@ -559,6 +565,7 @@ lint:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_modify_address_decode.sv; \
@@ -738,6 +745,7 @@ linear-owner-control-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_program_bus.sv \
@@ -920,6 +928,7 @@ dm-direct-native-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_direct_dm_slice.sv \
 			rtl/core/adsp2100_data_bus.sv \
@@ -1037,6 +1046,7 @@ linear-core-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_linear_fetch_client.sv \
@@ -1069,6 +1079,7 @@ linear-bus-control-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_bus_control.sv \
@@ -1115,6 +1126,7 @@ halt-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_halt_control.sv \
@@ -1874,6 +1886,7 @@ register-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			sim/unit/tb_adsp2100_internal_move_slice.sv; \
 		build/obj_internal_move_slice/Vtb_adsp2100_internal_move_slice; \
@@ -1892,6 +1905,7 @@ register-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_direct_dm_slice.sv \
 			sim/unit/tb_adsp2100_direct_dm_slice.sv; \
@@ -1924,6 +1938,7 @@ register-tests:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv \
 			sim/unit/tb_adsp2100_load_non_dreg_immediate_slice.sv; \
@@ -2066,6 +2081,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_program_bus.sv \
@@ -2150,6 +2166,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_linear_fetch_client.sv \
@@ -2170,6 +2187,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_bus_control.sv \
@@ -2193,6 +2211,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_halt_control.sv \
@@ -2308,6 +2327,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv \
 			formal/harnesses/adsp2100_load_non_dreg_immediate_formal.sv; \
@@ -2524,6 +2544,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_direct_dm_slice.sv \
 			formal/harnesses/adsp2100_direct_dm_slice_formal.sv; \
@@ -2539,6 +2560,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_direct_dm_slice.sv \
 			rtl/core/adsp2100_data_bus.sv \
@@ -2554,6 +2576,7 @@ formal:
 			rtl/core/adsp2100_counter.sv \
 			rtl/core/adsp2100_sequencer_stacks.sv \
 			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			formal/harnesses/adsp2100_internal_move_slice_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \

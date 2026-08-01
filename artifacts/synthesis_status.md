@@ -424,11 +424,13 @@
   setup slack is +15.704 ns and worst hold slack is +0.462 ns against 20 ns,
   with zero unconstrained clocks, ports, or paths.
 - Quartus 17.0.2 full compilation of the bounded Type 17 state slice passes
-  for Cyclone V `5CSEBA6U23I7`. It uses 816 ALMs and 906 registers with no
-  M10K or DSP blocks. Across four timing models, worst setup slack is +6.401
-  ns and worst hold slack is +0.151 ns against 20 ns, with zero unconstrained
-  clocks, ports, or paths. Constant no-PM/no-DM outputs and untouched stack
-  status fragments are expected properties of this bounded instruction slice.
+  after extracting its reusable architectural-state owner for Cyclone V
+  `5CSEBA6U23I7`. It uses 808 ALMs and 892 registers with no M10K or DSP
+  blocks. Across four timing models, worst setup slack is +5.503 ns and worst
+  hold slack is +0.168 ns against 20 ns; worst slow-corner Fmax is 68.98 MHz,
+  with zero unconstrained clocks, ports, or paths. Constant no-PM/no-DM
+  outputs and untouched stack-status fragments are expected properties of
+  this bounded instruction slice.
 - Quartus 17.0.2 full compilation of the Type 26 stack-control decoder passes
   for Cyclone V `5CSEBA6U23I7`. The constrained virtual-pin fit uses 25 ALMs,
   12 combinational ALUTs, 0 registers, 0 RAM blocks, and 0 DSP blocks. Across

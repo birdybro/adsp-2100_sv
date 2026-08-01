@@ -165,10 +165,12 @@ Appendix A visual review and mechanical audit are complete for Type 17. All 48
 nonblank REG codes are legal sources; all except read-only SSTAT are legal
 destinations. The exact action decoder therefore accepts 2,256 source/
 destination pairs and rejects 1,840 reserved or read-only-destination
-subencodings. The bounded cross-store slice connects both computational banks,
-both DAGs, exact-width status/control, PX, CNTR/count-stack, and SSTAT with
-cycle-start read/cycle-end write ordering. The Type 3 direct-DM slice reuses
-that same complete destination behavior and explicit validity state, including
+subencodings. The reusable `adsp2100_architectural_state` owner connects both
+computational banks, both DAGs, exact-width status/control, PX,
+CNTR/count-stack, and SSTAT with cycle-start read/cycle-end write ordering;
+the bounded Type 17 cross-store slice now supplies only decode and action
+selection. The Type 3 direct-DM slice reuses that same complete destination
+behavior and explicit validity state through its compatibility wrapper, including
 CNTR load/push and unknown-data invalidation, and adds 50,151 logical plus
 50,077 native clocks. Both slices remain outside whole-core
 fetch/interrupt/bus sequencing

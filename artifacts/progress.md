@@ -30,6 +30,18 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- reusable shared architectural-state owner extracted from the bounded Type
+  17 slice without changing its public behavior: it exclusively holds both
+  computational banks, both DAG register sets, status/control, CNTR/count
+  stack, SSTAT stack fragments, and PX behind the complete general selector;
+  44 focused model tests, 210,084 Type 17/3/6/7 RTL clocks, and the existing
+  53,985/50,003/50,003-clock linear/private-PM, linear/BR-BG, and retained-
+  fetch/shared-PM regressions pass, strict lint is clean, and the re-fit uses
+  808 ALMs/892 registers/no RAM or DSP at 50 MHz with +5.503 ns setup,
+  +0.168 ns worst multicorner hold, 68.98 MHz worst slow-corner Fmax, and zero
+  unconstrained paths; direct compute/DAG action ports and unified cache/PM
+  client state remain open;
+
 - extracted retained ordinary-fetch architectural client attached to the
   shared PM owner and normal BR/BG composition, while the prior linear-core
   API now wraps the same client with a private PM controller; six directed
@@ -550,8 +562,9 @@ outstanding.
   architectural DAG data/valid registers, positive setup/hold slack, and no
   unconstrained paths; the Type 17 decoder fits in 42 ALMs and 24
   combinational ALUTs with positive multicorner slack and no unconstrained
-  paths, while the Type 17 state slice fits in 816 ALMs and 906 registers with
-  +6.401 ns setup, +0.151 ns hold, and no unconstrained paths; the Type 6 slice
+  paths, while the extracted-owner Type 17 state slice fits in 808 ALMs and
+  892 registers with +5.503 ns setup, +0.168 ns hold, and no unconstrained
+  paths; the Type 6 slice
   fits in 302 ALMs and 484 registers with +8.167 ns setup, +0.133 ns hold, and
   no unconstrained paths; the Type 7 slice fits in 572 ALMs and 886 fitted
   registers at 25 ns with +13.448 ns worst setup, +0.185 ns worst hold,
@@ -704,10 +717,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Compose the now-separately attached ordinary-fetch, Type 5, and Type 13
-   architectural clients on one shared selector, then compose HALT, DMACK
-   waits, TRAP, interrupts, and reset without inventing priority or weakening
-   the bounded attachments.
+3. Extend the extracted architectural-state owner with the already-verified
+   ALU/MAC/shifter/DAG action intents, then attach ordinary fetch, Type 5, and
+   Type 13 to that one owner and one cache before composing HALT, DMACK waits,
+   TRAP, interrupts, and reset.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed

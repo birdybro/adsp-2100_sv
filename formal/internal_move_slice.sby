@@ -14,6 +14,7 @@ read -formal -sv rtl/core/adsp2100_status_registers.sv
 read -formal -sv rtl/core/adsp2100_counter.sv
 read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
 read -formal -sv rtl/core/adsp2100_status_stack.sv
+read -formal -sv rtl/core/adsp2100_architectural_state.sv
 read -formal -sv rtl/core/adsp2100_internal_move_slice.sv
 read -formal -sv formal/harnesses/adsp2100_internal_move_slice_formal.sv
 prep -top adsp2100_internal_move_slice_formal
@@ -27,5 +28,6 @@ rtl/core/adsp2100_status_registers.sv
 rtl/core/adsp2100_counter.sv
 rtl/core/adsp2100_sequencer_stacks.sv
 rtl/core/adsp2100_status_stack.sv
+rtl/core/adsp2100_architectural_state.sv
 rtl/core/adsp2100_internal_move_slice.sv
 formal/harnesses/adsp2100_internal_move_slice_formal.sv

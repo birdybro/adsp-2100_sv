@@ -140,8 +140,11 @@ A separate exact four-by-sixteen status stack and a combined exact
 storage, pointer saturation, loss of the newest overflowing push, sticky
 overflow, and all eight SSTAT sources [ADI-DATABOOK-1987, printed
 pp. 2-21–2-22; ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. The two SSTAT
-fragments are now composed in the bounded Type 17 and Type 26 execution
-slices. This is not yet a whole-core fetch/execute path.
+fragments are composed inside the extracted `adsp2100_architectural_state`
+owner used by bounded Type 17, while Type 26 retains a separate verification
+slice. This is not yet a whole-core fetch/execute path: computational-unit,
+memory-completion, and sequencer-event writes have not converged on the
+extracted owner.
 
 CNTR has 14 value bits plus a separate validity state. Reset invalidates CNTR
 without assigning a documented value. A load pushes the old count only when
