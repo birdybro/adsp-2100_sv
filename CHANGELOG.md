@@ -8,6 +8,11 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original Type 4 action database, independent model,
+  synthesizable exact decoder, two manual-derived fixtures, exhaustive Python
+  and RTL partitions, algebraic assembler/disassembler support, formal
+  assertions, and a constrained Cyclone V decoder project.
+
 - A bounded Type 12/native-DM composition in independent Python and portable
   RTL, connecting old-value shifter/DREG/DAG issue at state 8-to-1 to native
   read/write phases and atomic state-7 completion, with directed/random
@@ -355,6 +360,13 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- All 2,097,152 Type 4 words partition into 2,034,688 supported actions and
+  62,464 prohibited compute/read destination collisions; AMF-zero memory-only
+  actions and old-value same-register writes remain supported. Quartus fits
+  the combinational decoder in 53 ALMs at 20 ns with +15.103 ns worst setup,
+  +0.286 ns worst multicorner hold, 204.21 MHz worst slow-corner Fmax, and no
+  unconstrained paths.
 
 - Type 12/native-DM attachment passes six directed tests and 50,064 connected
   model/RTL clocks spanning reads, writes, old-value store data, state-7 read
@@ -796,6 +808,11 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Closed original Type 4 field placement, memory-only AMF-zero behavior,
+  cycle-start/cycle-end ordering, read-collision rule, and legal old-value
+  write overlap from the 1989 primary manual while keeping stateful/waited
+  execution explicitly open.
+
 - Distinguished the now-attached bounded Type 12 native read/write path from
   still-open whole-core DM/PM ownership, event arbitration, BR/BG, and analog
   I/O timing throughout memory, cycle, wait-state, DAG, confidence, synthesis,
@@ -964,6 +981,10 @@ semantic versioning after its first release.
   arbitration and empty-stack effects remain explicitly outside this boundary.
 
 ### Known Issues
+
+- Type 4 currently stops at exact action decode and toolchain support; selected
+  register/DAG state, waited logical DM execution, native phases, fetch, and
+  control events are not attached.
 
 - Type 2 and Type 12 are independently attached to the native DM controller,
   but no whole-core owner selects among them or coordinates simultaneous PM,

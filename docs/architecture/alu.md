@@ -1,7 +1,8 @@
 # Arithmetic/logic unit
 
 **Status: standard function and both division primitives implemented in
-bounded model/RTL; Type 8, Type 9, Type 23, and Type 24 integrations complete**
+bounded model/RTL; Type 4 action decode closed; Type 8, Type 9, Type 23, and
+Type 24 integrations complete**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
 from ASTAT.AC. It generates AZ, AN, AV, AC, AS, and AQ
@@ -37,10 +38,11 @@ and AR saturation, routes a valid result to cycle-end AR/AF writeback in the
 MSTAT-selected bank, and commits AZ/AN/AV/AC plus the ABS-only AS update at the
 same boundary. A mode change becomes effective for ALU behavior on the next
 cycle, consistent with cycle-start operand use and cycle-end register writes
-[ADI-UM-1989, printed pp. 2-6–2-9]. Outside the bounded Type 8 and Type 9
-slices, memory multifunction operand selection and complete multifunction
-legality remain excluded. Type 23 DIVQ and Type 24 DIVS are implemented in
-separate bounded execution slices.
+[ADI-UM-1989, printed pp. 2-6–2-9]. Type 4 action decode now selects every
+ALU X/Y/Z field and rejects AR read-load collisions, but does not yet connect
+operands or commit state. Outside the bounded Type 8 and Type 9 slices,
+memory multifunction execution remains excluded. Type 23 DIVQ and Type 24
+DIVS are implemented in separate bounded execution slices.
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover

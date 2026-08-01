@@ -4,7 +4,12 @@ import json
 from pathlib import Path
 import unittest
 
-from tools.assembler.adsp2100_assembler import AssemblyError, assemble_statement
+from tools.assembler.adsp2100_assembler import (
+    AssemblyError,
+    _dreg_name_to_code,
+    _format_compute_operation,
+    assemble_statement,
+)
 from tools.disassembler.adsp2100_disassembler import disassemble_word
 from tools.generators.validate_internal_move import register_map
 from tools.generators.validate_condition_codes import EXPECTED_IF_MNEMONICS
@@ -220,6 +225,125 @@ class AssemblerDisassemblerTests(unittest.TestCase):
                             self.assertEqual(decoded.text, statement)
                             count += 1
         self.assertEqual(count, 20_513)
+
+    def test_type_4_hand_fixtures_and_memory_only_forms_round_trip(self) -> None:
+        fixture_data = json.loads(
+            (ROOT / "tests/vectors/compute_dm_fixtures.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for fixture in fixture_data["fixtures"]:
+            opcode = int(fixture["opcode"], 16)
+            self.assertEqual(
+                assemble_statement(fixture["statement"]).value,
+                opcode,
+            )
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, "TYPE_04_BOUNDED_ACTION")
+            self.assertEqual(decoded.text, fixture["statement"])
+
+        dregs = [
+            name
+            for name, _ in sorted(
+                _dreg_name_to_code().items(),
+                key=lambda item: item[1],
+            )
+        ]
+        count = 0
+        for dag in range(2):
+            for i_local in range(4):
+                for m_local in range(4):
+                    i_address = dag * 4 + i_local
+                    m_address = dag * 4 + m_local
+                    memory = f"DM(I{i_address}, M{m_address})"
+                    for register, name in enumerate(dregs):
+                        for write in range(2):
+                            statement = (
+                                f"{memory} = {name};"
+                                if write
+                                else f"{name} = {memory};"
+                            )
+                            opcode = (
+                                0x600000
+                                | (dag << 20)
+                                | (write << 19)
+                                | (register << 4)
+                                | (i_local << 2)
+                                | m_local
+                            )
+                            self.assertEqual(
+                                assemble_statement(statement).value,
+                                opcode,
+                            )
+                            decoded = disassemble_word(opcode)
+                            self.assertEqual(decoded.text, statement)
+                            self.assertEqual(
+                                decoded.classification,
+                                "TYPE_04_BOUNDED_ACTION",
+                            )
+                            count += 1
+        self.assertEqual(count, 1_024)
+
+    def test_type_4_canonical_compute_forms_and_aliases(self) -> None:
+        dregs = [
+            name
+            for name, _ in sorted(
+                _dreg_name_to_code().items(),
+                key=lambda item: item[1],
+            )
+        ]
+        count = 0
+        for z in range(2):
+            for amf in range(1, 32):
+                for yop in range(4):
+                    for xop in range(8):
+                        computation = _format_compute_operation(z, amf, yop, xop)
+                        if computation is None:
+                            continue
+                        for write in range(2):
+                            register = (z + amf + yop + xop + write) & 0xF
+                            collision = not write and not z and (
+                                (amf >= 0x10 and register == 0xA)
+                                or (amf < 0x10 and register in (0xB, 0xC, 0xD))
+                            )
+                            if collision:
+                                continue
+                            memory = "DM(I4, M7)"
+                            statement = (
+                                f"{memory} = {dregs[register]}, {computation};"
+                                if write
+                                else f"{computation}, {dregs[register]} = {memory};"
+                            )
+                            opcode = (
+                                0x700003
+                                | (write << 19)
+                                | (z << 18)
+                                | (amf << 13)
+                                | (yop << 11)
+                                | (xop << 8)
+                                | (register << 4)
+                            )
+                            self.assertEqual(
+                                assemble_statement(statement).value,
+                                opcode,
+                            )
+                            decoded = disassemble_word(opcode)
+                            self.assertEqual(decoded.text, statement)
+                            count += 1
+        self.assertEqual(count, 2_649)
+
+        aliases = (0x640100, 0x620100)
+        for opcode in aliases:
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, "TYPE_04_BOUNDED_ALIAS")
+            self.assertEqual(assemble_statement(decoded.text).value, opcode)
+
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AR = AX0 + AY0, AR = DM(I0, M0);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AX0 = DM(I0, M4);")
 
     def test_all_canonical_conditional_compute_forms_round_trip(self) -> None:
         from tools.assembler.adsp2100_assembler import _format_compute_operation

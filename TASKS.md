@@ -164,7 +164,8 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
   `tests/test_shifter_pm.py`,
-  `tests/test_compute_move.py`, `tests/test_direct_jump.py`,
+  `tests/test_compute_move.py`, `tests/test_compute_dm.py`,
+  `tests/test_direct_jump.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
@@ -180,6 +181,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_shifter_dm_decode.sv`,
   `sim/unit/tb_adsp2100_shifter_pm_decode.sv`,
   `sim/unit/tb_adsp2100_compute_move_decode.sv`,
+  `sim/unit/tb_adsp2100_compute_dm_decode.sv`,
   `sim/unit/tb_adsp2100_direct_jump_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
@@ -189,7 +191,8 @@ advance beyond research until a page-level primary citation is added.
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
   `formal/shift_move.sby`, `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
-  `formal/compute_move.sby`, `formal/direct_jump.sby`,
+  `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
+  `formal/direct_jump.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
   classes with primary-transcribed, non-overlapping masks, explicitly covers
@@ -285,6 +288,13 @@ advance beyond research until a page-level primary citation is added.
   fills recovery and ordinary external fetches, and passes ten integration
   tests plus 50,086 model/RTL clocks; attachment to the separately verified
   native PM pin phases and whole-core event integration remain open.
+  Type 4 action selection exhaustively partitions all 2,097,152 class words
+  into 2,034,688 source-closed compute/memory or memory-only actions and
+  62,464 prohibited DM-read destination collisions. Two independent
+  manual-derived fixtures, six model checks, exhaustive 24-bit RTL decode,
+  canonical/raw assembler-disassembler preservation, a formal harness, and a
+  constrained decoder fit pass. Waited state execution and native DM
+  attachment remain explicitly incomplete.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -360,13 +370,13 @@ advance beyond research until a page-level primary citation is added.
   ADI-ASM-1994
 - **Relevant tests:** `make compute-tests`, `tests/test_shift_move.py`,
   `tests/test_shifter_dm.py`, `tests/test_compute_move.py`,
-  `tests/test_shifter_pm.py`,
+  `tests/test_compute_dm.py`, `tests/test_shifter_pm.py`,
   `sim/unit/tb_adsp2100_shift_move_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_pm_slice.sv`,
   `sim/unit/tb_adsp2100_compute_move_slice.sv`, `formal/shift_move.sby`,
   `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
-  `formal/compute_move.sby`
+  `formal/compute_move.sby`, `formal/compute_dm_decode.sby`
 - **Implementation notes:** the bounded Type 14 action graph implements the
   first complete source-backed parallel execution boundary. Shifter X and
   DREG-move source read cycle-start selected-bank state; noncolliding DREG,
@@ -387,8 +397,12 @@ advance beyond research until a page-level primary citation is added.
   single pure recovery fetch after a miss. Its 50,070 differential clocks
   pass. The integrated monitor boundary adds real pre-cycle hit/data selection,
   recovery fills, ordinary external fills, explicit ownership conflicts, ten
-  directed tests, and 50,086 model/RTL clocks. Type 1, 4, and 5 action graphs,
-  PM/DM concurrency, and whole-core event arbitration remain.
+  directed tests, and 50,086 model/RTL clocks. Type 4 now has a source-closed
+  action graph: all computation/memory operands are cycle-start selections,
+  writes use the old DREG, AMF zero is memory-only, and colliding reads fail
+  closed. Its 2,097,152 words partition exhaustively in Python and RTL.
+  Stateful/waited Type 4 execution, Type 1/5 action graphs, PM/DM concurrency,
+  and whole-core event arbitration remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, and result forwarding outside the bounded old-value rule
   remain high-risk.
@@ -537,6 +551,12 @@ advance beyond research until a page-level primary citation is added.
   packets, preserves non-unique supported aliases as raw `.WORD` encodings,
   and visibly rejects AMF-zero and same-destination words. Two hand-derived
   Type 8 fixtures and 20,513 representative canonical packets round trip.
+  Type 4 accepts memory-only and computation-plus-DM forms in documented
+  clause order, round trips 1,024 canonical memory-only forms plus 2,649
+  representative canonical compute forms and two hand-derived fixtures,
+  preserves field-valid aliases as raw `.WORD`, rejects cross-DAG syntax,
+  and rejects compute/read destination collisions while allowing the
+  documented same-register write overlap.
   Type 9 round trips all 21,920 uniquely spellable conditional/unconditional
   computations, preserves every field-valid alias with raw `.WORD` syntax,
   and includes two hand-derived primary examples. Type 10 accepts all 507,904
@@ -1483,11 +1503,11 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is constructing the next source-closed
-Type 1/4/5 action graph in
-`ISA-002`/`ISA-001`; and `REF-001`
-acquisition of the exact original Cross-Software/opcode reference. Field
-placement is closed for the printed Appendix A diagrams, but legality,
-parallel-action, timing, and execution effects are not. `TIME-001` must be
-completed before architectural execution RTL is permitted to claim cycle
-accuracy.
+The highest-priority unblocked work is attaching the now source-closed Type 4
+action graph to selected-bank ALU/MAC, DAG, waited logical DM, and native DM
+execution in `ISA-002`/`MODEL-001`; then constructing Type 1/5 action graphs.
+`REF-001` retains acquisition of the exact original Cross-Software/opcode
+reference. Field placement and Type 4 action legality are closed, while its
+state/bus execution and the remaining multifunction classes are not.
+`TIME-001` must be completed before architectural execution RTL is permitted
+to claim cycle accuracy.

@@ -16,6 +16,14 @@ The architectural model exposes separate PM instruction fetch, PM data read,
 PM data write, DM read, and DM write transactions. It does not embed RAM into
 the CPU. Uninitialized memory is a model input, not silently zero.
 
+The original Type 4 action boundary now decodes both DM directions, both DAGs,
+every DREG, and all standard ALU/MAC fields. AMF zero supplies memory-only
+indirect moves; compute-plus-write captures the old DREG, and a colliding
+compute-plus-read fails closed. This is a descriptor/action decode only: it
+does not yet issue or wait for DMACK, sample DMD, post-modify I, or commit
+computation/status state [ADI-UM-1989, printed pp. 5-9–5-12,
+6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
+
 The bounded Type 2 immediate-write path drives the old selected I (or DAG1
 bit reversal), raw 16-bit immediate, and write direction. It holds those
 signals over every DMACK-low extension and commits only the selected-I

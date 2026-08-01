@@ -115,6 +115,7 @@ def validate_database(data: dict[str, Any]) -> None:
         "docs/generated/adsp2100_indirect_jump_slice.yaml",
         "docs/generated/adsp2100_conditional_return_slice.yaml",
         "docs/generated/adsp2100_conditional_trap_slice.yaml",
+        "docs/generated/adsp2100_compute_dm.yaml",
         "docs/generated/adsp2100_shifter_dm_slice.yaml",
         "docs/generated/adsp2100_shifter_pm_slice.yaml",
         "docs/generated/adsp2100_divide_quotient_slice.yaml",

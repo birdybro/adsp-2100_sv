@@ -29,6 +29,14 @@ from .compute_move import (
     decode_compute_move,
     is_compute_move_class,
 )
+from .compute_dm import (
+    COMPUTE_DM_CLASS_MASK,
+    COMPUTE_DM_CLASS_VALUE,
+    ComputeDMAction,
+    compute_dm_unsupported_reason,
+    decode_compute_dm,
+    is_compute_dm_class,
+)
 from .conditional_compute import (
     CONDITIONAL_COMPUTE_CLASS_MASK,
     CONDITIONAL_COMPUTE_CLASS_VALUE,
@@ -400,6 +408,9 @@ __all__ = [
     "ConditionalTrapCycleResult",
     "ConditionalTrapState",
     "ComputationalWriteConflict",
+    "COMPUTE_DM_CLASS_MASK",
+    "COMPUTE_DM_CLASS_VALUE",
+    "ComputeDMAction",
     "COMPUTE_MOVE_CLASS_MASK",
     "COMPUTE_MOVE_CLASS_VALUE",
     "ComputeMoveAction",
@@ -583,6 +594,7 @@ __all__ = [
     "decode_direct_jump",
     "decode_divide_quotient",
     "decode_divide_sign",
+    "decode_compute_dm",
     "decode_compute_move",
     "decode_mr_saturation",
     "decode_mode_control",
@@ -601,6 +613,7 @@ __all__ = [
     "apply_load_dreg_immediate_cycle",
     "is_conditional_shift_class",
     "is_conditional_compute_class",
+    "is_compute_dm_class",
     "is_compute_move_class",
     "is_direct_jump_class",
     "is_divide_quotient_class",
@@ -615,6 +628,7 @@ __all__ = [
     "apply_sequencer_stacks_cycle",
     "apply_sequencer_slice_cycle",
     "compute_alu",
+    "compute_dm_unsupported_reason",
     "compute_move_unsupported_reason",
     "compute_dag",
     "decode_dm_write_immediate",

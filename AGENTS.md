@@ -232,6 +232,7 @@ MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, 108,640 source-closed Type 12 shifter-plus-DM words,
 54,320 source-closed Type 13 shifter-plus-PM words,
+2,034,688 source-closed Type 4 action words (decode only),
 all 1,792 source-backed Type 16 conditional shifter words, 476,672
 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
 conditional ALU/MAC words, 507,904 source-closed Type 10 direct JUMP/CALL
@@ -248,6 +249,10 @@ with authentic reset-invalid state and cycle-start-read/cycle-end-write
 ordering; ordinary data transfers and multifunction DAG updates are not yet
 attached except for the bounded Type 12 shifter-plus-DM and Type 13
 shifter-plus-PM transaction paths.
+Type 4 field/action decode is exhaustive and primary-backed, including
+AMF-zero memory-only moves, old-value write overlap, and fail-closed read
+destination collisions. It is not a stateful instruction implementation and
+has not yet been attached to logical or native DM timing.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at

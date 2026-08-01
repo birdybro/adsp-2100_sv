@@ -13,6 +13,7 @@ Known cases:
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
+| Type 4 ALU/MAC plus DM read/write | documented as one processor cycle when DMACK is asserted, with whole-cycle state-seven extensions while low; action decode and old-value ordering are verified, but the waited execution/native attachment is not yet implemented |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |

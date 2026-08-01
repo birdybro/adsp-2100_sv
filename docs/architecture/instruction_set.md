@@ -22,7 +22,8 @@ and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
 loads, the source-closed Type 15
-immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
+immediate-shift subset, 2,034,688 source-closed Type 4 action words,
+25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
 507,904 source-closed Type 10 direct JUMP/CALL words, all 262,144 Type 11
@@ -60,6 +61,20 @@ request conflicts, immediate completion, and multi-clock waits.
 Native active-low phases, fetch/event concurrency, and whole-core arbitration
 remain implementation work
 [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
+
+Type 4 encodes `011 G D Z AMF[4:0] YOP[1:0] XOP[2:0] DREG[3:0]
+I[1:0] M[1:0]`. G maps I/M to DAG1 or DAG2 and D selects a DM read or write.
+AMF zero is the documented no-operation computation and therefore closes the
+memory-only indirect forms; otherwise AMF selects the standard ALU or MAC
+action. The complete 2,097,152-word class partitions into 2,034,688 supported
+parallel actions and 62,464 prohibited read-destination collisions. A write
+from the computation destination remains supported and supplies the old DREG
+value. The independent model, synthesizable exact decoder, two manual-derived
+fixtures, exhaustive Python and RTL partitions, assembler/disassembler, and
+formal assertions close action selection only. Waited DM execution, atomic
+register/status/DAG commit, native phases, fetch, and events are not yet
+implemented [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12,
+6-1, 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
 
 Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded
 computational registers. Its exact format is `0100 DATA[19:4] DREG[3:0]`, so

@@ -27,6 +27,7 @@
     "docs/generated/adsp2100_indirect_jump_slice.yaml",
     "docs/generated/adsp2100_conditional_return_slice.yaml",
     "docs/generated/adsp2100_conditional_trap_slice.yaml",
+    "docs/generated/adsp2100_compute_dm.yaml",
     "docs/generated/adsp2100_shifter_dm_slice.yaml",
     "docs/generated/adsp2100_shifter_pm_slice.yaml",
     "docs/generated/adsp2100_divide_quotient_slice.yaml",
@@ -117,9 +118,9 @@
       "encoding_pattern": "011xxxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xe00000",
       "opcode_value": "0x600000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
-      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+      "status": "COMPLETE_BOUNDED_ACTION_DECODE_EXECUTION_PENDING",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed pp. 6-3–6-7, 6-12–6-13, A-1, and A-5–A-11"
     },
     {
       "original_type": 5,

@@ -1,8 +1,8 @@
 # Multifunction execution semantics
 
-**Status: key ordering rule verified; bounded Type 8 ALU/MAC-plus-DREG,
-Type 12 shifter-plus-DM, Type 13 shifter-plus-PM/cache, and Type 14
-shifter-plus-DREG forms integrated**
+**Status: key ordering rule verified; Type 4 action decode closed; bounded
+Type 8 ALU/MAC-plus-DREG, Type 12 shifter-plus-DM, Type 13
+shifter-plus-PM/cache, and Type 14 shifter-plus-DREG forms integrated**
 
 All computational register reads take their values at the beginning of a cycle
 and all writes become visible at the end. Therefore a simultaneous memory load
@@ -11,10 +11,9 @@ computation [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 2-28].
 
 For a compute-plus-write using the computation's destination as the store
 source, memory receives the old register value and the computation result
-becomes the new register value [ADI-UM-FAMILY-1995, printed p. 15-6]. This
-later explanation is corroborated by the original generic read/write rule above
-and remains `CORROBORATED` until an original instruction-reference example is
-located.
+becomes the new register value. The original manual illustrates this exact
+Type 4 overlap with `DM(I0,M0)=AR, AR=AX0+AY0` and states that the old AR is
+written before AR is updated [ADI-UM-1989, printed pp. 6-5–6-6].
 
 The original explicitly supports:
 
@@ -25,6 +24,27 @@ The original explicitly supports:
 - compute plus an internal data-register move.
 
 [ADI-UM-1989, printed pp. 6-3–6-7 and Appendix A types 1, 4, 5, 8, 12–14.]
+
+## Source-closed Type 4 action decode
+
+Original Type 4 has fixed class `011`, DAG selector G, memory direction D,
+result selector Z, AMF/YOP/XOP computation fields, one memory DREG, and
+same-DAG I/M selectors. AMF zero selects the documented no-operation compute
+function, leaving a memory-only indirect read or write. Every operation is
+unconditional. A read may not load AR while a Z=0 ALU operation writes AR, or
+load MR0/MR1/MR2 while a Z=0 MAC operation writes MR; the corresponding write
+overlap is legal because memory observes the cycle-start DREG value
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12, 6-1,
+6-3–6-7, Tables 6.1–6.2 and 6.7, A-1, A-5–A-11].
+
+The independent action model and portable RTL decoder exhaustively partition
+all 2,097,152 class words into 2,034,688 supported actions and 62,464 read
+destination collisions. They expose both computation operands, direction,
+memory DREG, and exact I/M selections. Two manual-derived opcode fixtures,
+canonical assembler/disassembler forms, lossless raw alias handling, a
+24-bit RTL traversal, and a bounded assertion harness verify this action
+boundary. No architectural register, DAG, DMACK transaction, native bus
+phase, or fetch state changes here yet; those execution layers remain open.
 
 ## Bounded Type 8 execution
 
@@ -171,8 +191,8 @@ arbitration remain open under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap for Types 1, 4, and 5;
-- old store value versus new computation result outside Types 12 and 13;
+- source/destination overlap execution for Types 1, 4, and 5;
+- old store value versus new computation result execution outside Types 12 and 13;
 - dual PM/DM loads and independent DAG post-modifies;
 - status from the computation visible only to the next cycle;
 - condition-false preservation and cycle/bus activity;

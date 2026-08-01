@@ -6,7 +6,8 @@
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
-bounded semantic instruction decode, logical DM/PM transactions, a Type 13/
+bounded semantic instruction decode including Type 4 action selection,
+logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2 plus Type 12 clients
 attached to native DM pin phases
 
@@ -24,6 +25,11 @@ cycle-, or Hard Drivin'-complete
 - complete 30-class mask inventory, all 106 diagrammed fields across 393
   variable bit positions, explicit unshown-reserved fallback, and one
   hand-verified NOP semantic fixture;
+- complete original Type 4 action partition: 2,034,688 supported
+  computation-plus-DM or memory-only words and 62,464 prohibited read
+  collisions, with two manual-derived fixtures, independent model, exact RTL
+  decoder, algebraic/raw toolchain paths, bounded formal assertions, and a
+  fully constrained 53-ALM Cyclone V fit; stateful waited execution remains;
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
@@ -437,7 +443,8 @@ outstanding.
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
   Type 2 action/execution, Type 23, Type 24, standalone instruction-cache, and
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
-  Type 13, Type 2, and Type 12 native-attachment invariants (48 total)
+  Type 13, Type 2, and Type 12 native-attachment invariants, plus Type 4
+  action-decode invariants (49 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -450,9 +457,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Build the next source-closed Type 1/4/5 action graph, then add whole-core
-   transaction arbitration when its ownership and parallel-ordering rules are
-   sufficiently sourced.
+3. Attach the source-closed Type 4 action graph to selected-bank compute/DAG
+   state and waited logical/native DM transactions, then close Type 1/5.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

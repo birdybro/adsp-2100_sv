@@ -46,8 +46,12 @@ integration, plus exact Type 18 mode-control and Type 21 address-modify
 execution, exact Type 6 immediate-to-DREG execution across both computational
 banks, the 14,336 source-closed Type 15 immediate LSHIFT/ASHIFT words with
 selected-bank SR writeback, 25,648 canonical Type 14 shifter-plus-DREG
-multifunction words with old-value parallel semantics, all 2,097,152 original
-Type 2 immediate-DM-write words with captured raw data, waited logical DMACK
+multifunction words with old-value parallel semantics, all 2,097,152 Type 4
+words partitioned at the action boundary into 2,034,688 source-closed
+compute/memory or memory-only actions and 62,464 fail-closed DM-read
+destination collisions, with exact decode and toolchain support but no
+stateful/waited execution yet, all 2,097,152 original Type 2
+immediate-DM-write words with captured raw data, waited logical DMACK
 transactions, and completion-only DAG post-modification, 108,640 source-closed
 Type 12 shifter-plus-DM words with ACK-stretched logical bus transactions and
 atomic shifter/DREG/DAG completion, plus bounded source-backed native DM

@@ -1,7 +1,8 @@
 # Multiplier/accumulator
 
-**Status: standard fractional compute model and RTL implemented; exact Type 25
-saturation and bounded Type 8/Type 9 integrations complete**
+**Status: standard fractional compute model and RTL implemented; Type 4 action
+decode closed; exact Type 25 saturation and bounded Type 8/Type 9 integrations
+complete**
 
 The multiplier has two 16-bit inputs and a 32-bit product. A 40-bit
 adder/subtractor accumulates into MR, segmented as 16-bit MR0, 16-bit MR1, and
@@ -54,8 +55,10 @@ The separate register file accepts a full MAC result for atomic MR or
 MF-middle-word writeback in the selected bank.
 The separate status block accepts MV at the documented cycle-end boundary.
 The combinational compute block alone does not select architectural operands.
-Outside the bounded Type 8 and Type 9 slices, Type 1/4/5 memory selection plus
-complete multifunction legality/timing remain unimplemented.
+Type 4 action decode now distinguishes all MAC AMFs, X/Y/Z fields, and the
+MR0/MR1/MR2 read-load collisions. It does not yet connect MR feedback,
+writeback, status, DAG state, or the DM transaction. Type 1/5 action selection
+and all remaining memory multifunction execution/timing remain unimplemented.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the

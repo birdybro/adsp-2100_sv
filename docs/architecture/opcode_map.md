@@ -48,6 +48,14 @@ The masks are not instruction completeness. Function meanings, register
 effects, legality constraints, timing, and parallel-action semantics remain to
 be independently transcribed into complete semantic instruction records.
 
+Type 4 has mask/value `0xe00000`/`0x600000`. Its G, D, Z, AMF, YOP,
+XOP, DREG, I, and M fields occupy bits 20 through 0 without gaps. The sourced
+destination rule partitions all 2,097,152 class words into 2,034,688 bounded
+actions and 62,464 prohibited DM-read/computation destination collisions;
+AMF zero retains memory-only transfers. Exhaustive model and RTL checks close
+this field/action partition, not stateful or bus execution
+[ADI-UM-1989, printed pp. 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
+
 The 19 finite abbreviation tables for AMF, data registers, DAG selectors,
 stack controls, jump/return types, shifter functions, and X/Y/Z operands are
 now fully transcribed in `docs/generated/adsp2100_isa_fields.yaml`

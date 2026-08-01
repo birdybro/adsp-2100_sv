@@ -270,6 +270,70 @@ def _assemble_compute_move(statement: str) -> int | None:
     )
 
 
+def _assemble_compute_dm(statement: str) -> int | None:
+    """Assemble the source-closed original Type 4 action forms."""
+
+    read = re.fullmatch(
+        r"(?:(.+)\s*,\s*)?([A-Z][A-Z0-9]*)\s*=\s*"
+        r"DM\s*\(\s*I([0-7])\s*,\s*M([0-7])\s*\)",
+        statement,
+    )
+    write = re.fullmatch(
+        r"DM\s*\(\s*I([0-7])\s*,\s*M([0-7])\s*\)\s*=\s*"
+        r"([A-Z][A-Z0-9]*)(?:\s*,\s*(.+))?",
+        statement,
+    )
+    if read is None and write is None:
+        return None
+
+    registers = _dreg_name_to_code()
+    if read is not None:
+        computation, register_name, i_text, m_text = read.groups()
+        write_direction = 0
+    else:
+        assert write is not None
+        i_text, m_text, register_name, computation = write.groups()
+        write_direction = 1
+    if register_name not in registers:
+        return None
+
+    i_address = int(i_text)
+    m_address = int(m_text)
+    if i_address // 4 != m_address // 4:
+        raise AssemblyError("Type 4 I and M registers must use the same DAG")
+
+    if computation is None:
+        z, amf, yop, xop = 0, 0, 0, 0
+    else:
+        computation_fields = _compute_operation_codes().get(computation)
+        if computation_fields is None:
+            return None
+        z, amf, yop, xop = computation_fields
+
+    register = registers[register_name]
+    if not write_direction and amf != 0 and _compute_move_destination_collision(
+        z,
+        amf,
+        register,
+    ):
+        raise AssemblyError(
+            "Type 4 read destination collides with computation destination"
+        )
+
+    return (
+        0x600000
+        | ((i_address // 4) << 20)
+        | (write_direction << 19)
+        | (z << 18)
+        | (amf << 13)
+        | (yop << 11)
+        | (xop << 8)
+        | (register << 4)
+        | ((i_address & 3) << 2)
+        | (m_address & 3)
+    )
+
+
 @lru_cache(maxsize=1)
 def _if_condition_codes() -> dict[str, int]:
     database = load_condition_database()
@@ -805,6 +869,9 @@ def assemble_statement(source: str) -> AssembledWord:
     compute_move = _assemble_compute_move(statement)
     if compute_move is not None:
         return AssembledWord(compute_move)
+    compute_dm = _assemble_compute_dm(statement)
+    if compute_dm is not None:
+        return AssembledWord(compute_dm)
     shifter_dm = _assemble_shifter_dm(statement)
     if shifter_dm is not None:
         return AssembledWord(shifter_dm)

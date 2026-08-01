@@ -17,6 +17,13 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the combinational Type 4 action decoder
+  passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual constraint. It uses
+  53 ALMs and no registers, RAM, or DSP blocks. Across four timing models,
+  worst setup slack is +15.103 ns, worst hold slack is +0.286 ns, worst
+  slow-corner Fmax is 204.21 MHz, and no paths are unconstrained. The
+  constant-output and virtual-pin warnings are expected for this decoder-only
+  project; this is not stateful execution or whole-core timing closure.
 - Quartus 17.0.2 full compilation of the native DM phase controller passes
   for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It uses
   100 ALMs and 57 fitted registers with no RAM or DSP blocks. Across four
