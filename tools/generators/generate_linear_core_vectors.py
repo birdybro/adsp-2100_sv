@@ -16,12 +16,14 @@ if str(ROOT) not in sys.path:
 from sim.reference_models.adsp2100_model import (  # noqa: E402
     DREG,
     ExactWord,
+    INTERNAL_MOVE_VALUE,
     LinearCoreState,
     LogicalPhase,
     MODE_CONTROL_VALUE,
     UNKNOWN,
     apply_linear_core_cycle,
     read_dreg,
+    register_code_by_name,
 )
 
 
@@ -48,6 +50,41 @@ def _type6(destination: int, data: int) -> int:
 
 def _type7(code: int, data: int) -> int:
     return 0x300000 | ((code >> 4) << 18) | ((data & 0x3FFF) << 4) | (code & 0xF)
+
+
+def _type17(destination: int, source: int) -> int:
+    return (
+        INTERNAL_MOVE_VALUE
+        | ((destination >> 4) << 10)
+        | ((source >> 4) << 8)
+        | ((destination & 0xF) << 4)
+        | (source & 0xF)
+    )
+
+
+def _directed_opcodes() -> tuple[int, ...]:
+    readable = register_code_by_name(writable=False)
+    writable = register_code_by_name(writable=True)
+    opcodes = [MODE_CONTROL_VALUE | (payload << 4) for payload in range(256)]
+
+    opcodes.append(_type7(writable["MSTAT"], 0))
+    opcodes.extend(_type6(destination, 0x1100 + destination) for destination in range(16))
+    opcodes.append(_type7(writable["SB"], 0x0007))
+    opcodes.append(_type7(writable["MSTAT"], 1))
+    opcodes.extend(_type6(destination, 0xA100 + destination) for destination in range(16))
+    opcodes.append(_type7(writable["SB"], 0x0017))
+    opcodes.extend(
+        _type7(code, (code * 0x91 + 0x123) & 0x3FFF)
+        for code in LEGAL_TYPE7_CODES
+        if code not in (writable["MSTAT"], writable["SB"])
+    )
+    opcodes.append(_type7(writable["MSTAT"], 1))
+    opcodes.extend(
+        _type17(destination, source)
+        for destination in sorted(writable.values())
+        for source in sorted(readable.values())
+    )
+    return tuple(opcodes)
 
 
 def _legal_opcode(rng: random.Random) -> int:
@@ -111,9 +148,11 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
     rng = random.Random(seed)
     state = LinearCoreState.reset()
     lines: list[str] = []
-    directed_mode_opcodes = tuple(
-        MODE_CONTROL_VALUE | (payload << 4) for payload in range(256)
-    )
+    directed_opcodes = _directed_opcodes()
+    if instruction_count < len(directed_opcodes):
+        raise ValueError(
+            f"instruction count must be at least {len(directed_opcodes)}"
+        )
 
     def emit(
         phase: LogicalPhase,
@@ -173,6 +212,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (result.phase_conflict, 1),
             (result.integration_conflict, 1),
             (False, 1),
+            (result.provisional_source_extension, 1),
             (state.architecture.pc.value, 14),
             (
                 state.instruction.value
@@ -239,7 +279,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
         state = post_state
 
     emit(LogicalPhase.STATE_8, reset=True, pmd_valid=False)
-    current_opcode = directed_mode_opcodes[0]
+    current_opcode = directed_opcodes[0]
     emit(LogicalPhase.STATE_8, setup=(4, current_opcode))
 
     completed = 0
@@ -281,8 +321,8 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             emit(LogicalPhase.STATE_7, relinquished=True)
 
         choice = rng.randrange(100)
-        if completed + 1 < len(directed_mode_opcodes):
-            next_opcode = directed_mode_opcodes[completed + 1]
+        if completed + 1 < len(directed_opcodes):
+            next_opcode = directed_opcodes[completed + 1]
             next_valid = True
         elif choice < 93:
             next_opcode = _legal_opcode(rng)

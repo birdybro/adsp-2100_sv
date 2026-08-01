@@ -9,15 +9,18 @@ semantic versioning after its first release.
 ### Added
 
 - A bounded steady-state linear instruction owner in structurally independent
-  Python and portable SystemVerilog. It executes NOP, legal Type 6/7, and all
-  Type 18 MODE CONTROL words at the current PC while the native PM controller
+  Python and portable SystemVerilog. It executes NOP, legal Type 6/7, all
+  2,256 legal Type 17 internal MOVE words, and all Type 18 MODE CONTROL words
+  at the current PC while the native PM controller
   fetches PC+1, admits the fetch at state 8-to-1, atomically retires state/PC/
   next word at state 7-to-8, and fails closed for unsupported or reserved
-  words. Ten directed tests and 53,427 deterministic differential clocks,
-  including every Type 18 encoding, a formal recipe, a machine-readable
-  boundary contract, Yosys flow, and a fully constrained Cyclone V project
-  bound the claim; reset first-fetch and all multi-owner/event/cache
-  arbitration remain explicitly excluded.
+  words. Twelve directed tests and 52,763 deterministic differential clocks,
+  including every Type 17 source/destination pair and Type 18 encoding, a
+  formal recipe, a machine-readable boundary contract, Yosys flow, and a fully
+  constrained Cyclone V project bound the claim. Type 17 status/control-source
+  extension is exposed on a dedicated retirement pulse under OQ-016; reset
+  first-fetch and all multi-owner/event/cache arbitration remain explicitly
+  excluded.
 
 - A primary-backed original Type 7 immediate-to-non-data-register database,
   independent decoder and state model, exact assembler/disassembler support,

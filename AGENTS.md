@@ -225,9 +225,11 @@ A commit message must state the engineering change and its verification.
 ## Current architectural status and risk
 
 No integrated multi-owner fetch/decode/execute instruction core exists. A
-bounded steady-state owner now executes NOP, legal Type 6/7, and every Type 18
-MODE CONTROL word while fetching PC+1 through the native PM phase controller;
-reset first-fetch, transfers, loops, interrupts, PM-data/cache, HALT, and BR/BG
+bounded steady-state owner now executes NOP, legal Type 6/7, every legal Type
+17 internal MOVE, and every Type 18 MODE CONTROL word while fetching PC+1
+through the native PM phase controller. Type 17 narrow status/control-source
+extension remains an observable OQ-016 provisional behavior; reset
+first-fetch, transfers, loops, interrupts, PM-data/cache, HALT, and BR/BG
 arbitration remain outside that owner. Other bounded source-backed RTL
 execution slices implement all
 original Type 2

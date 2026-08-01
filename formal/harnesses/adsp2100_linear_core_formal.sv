@@ -24,6 +24,7 @@ module adsp2100_linear_core_formal (
     logic phase_conflict;
     logic integration_conflict;
     logic internal_conflict;
+    logic provisional_source_extension;
     logic [13:0] pc;
     logic [23:0] opcode;
     logic [3:0] mstat;
@@ -69,6 +70,7 @@ module adsp2100_linear_core_formal (
         .phase_conflict_o(phase_conflict),
         .integration_conflict_o(integration_conflict),
         .internal_conflict_o(internal_conflict),
+        .provisional_source_extension_o(provisional_source_extension),
         .pc_o(pc),
         .opcode_o(opcode),
         .probe_data_o(),
@@ -123,6 +125,9 @@ module adsp2100_linear_core_formal (
             assert (transaction_pending);
             assert (pm_completion_event && pm_read_sample_event);
         end
+        if (provisional_source_extension) begin
+            assert (retire_event);
+        end
         if (pma_valid && transaction_pending) begin
             assert (pma == pc + 14'h0001);
         end
@@ -140,6 +145,7 @@ module adsp2100_linear_core_formal (
         cover (unsupported_instruction);
         cover (phase_conflict);
         cover (integration_conflict);
+        cover (provisional_source_extension);
     end
 
     always_ff @(posedge clk) begin

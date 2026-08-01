@@ -41,7 +41,7 @@ Known cases:
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
 | Type 16 conditional shifter | one processor cycle whether true or false; no PM-data or DM transfer |
-| Type 17 internal data MOVE | one processor cycle; no PM-data or DM transfer |
+| Type 17 internal data MOVE | one processor cycle; no PM-data or DM transfer; bounded integrated linear flow executes the current word while fetching PC+1 |
 | Type 18 combined MODE CONTROL | one processor cycle for all selected original mode fields |
 | Type 21 `MODIFY (Ix, My);` | one processor cycle; no PM-data or DM transfer |
 | Type 25 `IF MV SAT MR;` | one processor cycle whether MV is true or false |
@@ -176,20 +176,26 @@ active-loop/interrupt arbitration, or external PM fetch phases
 [ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and A-9].
 
 The top-level independent model additionally composes NOP, legal Type 6/7,
-and all Type 18 MODE CONTROL words with ordinary linear PC progression and the
-overlapped next-instruction fetch. Seventeen foundation tests verify PC/fetch
+known-source legal Type 17 internal MOVE, and all Type 18 MODE CONTROL words
+with ordinary linear PC progression and the overlapped next-instruction fetch.
+Nineteen foundation tests verify PC/fetch
 separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
 changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
-stack saturation/SSTAT, and fail-closed reserved Type 7 destinations. A
-separate phase-level composition and bounded RTL owner add ten directed tests
-and 53,427 differential clocks: every Type 18 encoding executes, the next
+stack saturation/SSTAT, fail-closed reserved Type 7 destinations, legal Type
+17 execution, and unknown-source/reserved-selector rejection. A separate
+phase-level composition and bounded RTL owner add twelve directed tests and
+52,763 differential clocks: all 2,256 legal Type 17 source/destination pairs
+execute from fully initialized state, every Type 18 encoding executes, the next
 fetch is admitted only at enabled state 8-to-1, PM pins follow the native
 controller, and the current action plus PC/next-word state retire only at
-state 7-to-8. Phase holds preserve the transaction and bus relinquishment
-masks outputs without mutating it. This still is not a multi-owner core; reset
+state 7-to-8. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source use raises a
+dedicated OQ-016 provisional-behavior pulse at retirement. Phase holds preserve
+the transaction and bus relinquishment masks outputs without mutating it. This
+still is not a multi-owner core; reset
 first-fetch, loop/transfer/event selection, PM-data/cache, HALT, and BR/BG
-arbitration remain open [ADI-UM-1989, printed pp. 1-5, 4-3, 4-10, 4-22–4-23,
-5-5–5-8, and 6-14–6-15].
+arbitration remain open [ADI-UM-1989, printed pp. 1-5, 2-6, 2-15, 2-18,
+2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24, 5-5–5-8, 6-1–6-2,
+6-12, 6-14–6-15, A-3, and A-9].
 
 The bounded Type 15 model/RTL slice verifies a cycle-start selected-bank
 operand read, optional old-SR read for OR forms, and one cycle-end SR write.

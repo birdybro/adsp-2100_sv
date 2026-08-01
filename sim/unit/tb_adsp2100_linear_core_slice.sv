@@ -4,7 +4,7 @@
 module tb_adsp2100_linear_core_slice;
     logic clk;
     logic [75:0] stimulus;
-    logic [100:0] expected_pre;
+    logic [101:0] expected_pre;
     logic [117:0] expected_post;
 
     logic reset;
@@ -29,6 +29,7 @@ module tb_adsp2100_linear_core_slice;
     logic phase_conflict;
     logic integration_conflict;
     logic internal_conflict;
+    logic provisional_source_extension;
     logic [13:0] pc;
     logic [23:0] opcode;
     logic [15:0] probe_data;
@@ -71,6 +72,7 @@ module tb_adsp2100_linear_core_slice;
     logic exp_phase_conflict;
     logic exp_integration_conflict;
     logic exp_internal_conflict;
+    logic exp_provisional_source_extension;
     logic [13:0] exp_pre_pc;
     logic [23:0] exp_pre_opcode;
     logic exp_pm_request_accepted;
@@ -127,7 +129,8 @@ module tb_adsp2100_linear_core_slice;
         exp_retire_event, exp_pre_instruction_valid, exp_pre_pending,
         exp_unsupported_instruction, exp_reserved_subencoding,
         exp_phase_conflict, exp_integration_conflict,
-        exp_internal_conflict, exp_pre_pc, exp_pre_opcode,
+        exp_internal_conflict, exp_provisional_source_extension,
+        exp_pre_pc, exp_pre_opcode,
         exp_pm_request_accepted, exp_pm_completion_event,
         exp_pm_read_sample_event, exp_pre_pm_active,
         exp_pm_address_oe, exp_pm_control_oe, exp_pm_data_oe,
@@ -170,6 +173,7 @@ module tb_adsp2100_linear_core_slice;
         .phase_conflict_o(phase_conflict),
         .integration_conflict_o(integration_conflict),
         .internal_conflict_o(internal_conflict),
+        .provisional_source_extension_o(provisional_source_extension),
         .pc_o(pc),
         .opcode_o(opcode),
         .probe_data_o(probe_data),
@@ -227,6 +231,7 @@ module tb_adsp2100_linear_core_slice;
                     retire_event, instruction_valid, transaction_pending,
                     unsupported_instruction, reserved_subencoding,
                     phase_conflict, integration_conflict, internal_conflict,
+                    provisional_source_extension,
                     pm_request_accepted, pm_completion_event,
                     pm_read_sample_event, pm_bus_active,
                     pm_address_oe, pm_control_oe, pm_data_oe,
@@ -238,7 +243,7 @@ module tb_adsp2100_linear_core_slice;
                     exp_pre_instruction_valid, exp_pre_pending,
                     exp_unsupported_instruction, exp_reserved_subencoding,
                     exp_phase_conflict, exp_integration_conflict,
-                    exp_internal_conflict,
+                    exp_internal_conflict, exp_provisional_source_extension,
                     exp_pm_request_accepted, exp_pm_completion_event,
                     exp_pm_read_sample_event, exp_pre_pm_active,
                     exp_pm_address_oe, exp_pm_control_oe, exp_pm_data_oe,
@@ -256,7 +261,9 @@ module tb_adsp2100_linear_core_slice;
                             instruction_valid, transaction_pending,
                             unsupported_instruction, reserved_subencoding,
                             phase_conflict, integration_conflict,
-                            internal_conflict, pm_request_accepted,
+                            internal_conflict,
+                            provisional_source_extension,
+                            pm_request_accepted,
                             pm_completion_event, pm_read_sample_event,
                             pm_bus_active, pm_address_oe, pm_control_oe,
                             pm_data_oe, pma_valid, pmda, pmda_valid,
@@ -271,6 +278,7 @@ module tb_adsp2100_linear_core_slice;
                             exp_reserved_subencoding, exp_phase_conflict,
                             exp_integration_conflict,
                             exp_internal_conflict,
+                            exp_provisional_source_extension,
                             exp_pm_request_accepted,
                             exp_pm_completion_event,
                             exp_pm_read_sample_event, exp_pre_pm_active,
@@ -328,7 +336,7 @@ module tb_adsp2100_linear_core_slice;
             $fatal(1, "insufficient linear-core vectors: %0d", vector_count);
         end
         $display(
-            "PASS bounded NOP/Type 6/Type 7/Type 18 linear core: %0d clocks",
+            "PASS bounded NOP/Type 6/Type 7/Type 17/Type 18 linear core: %0d clocks",
             vector_count
         );
         $finish;

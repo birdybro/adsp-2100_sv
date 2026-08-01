@@ -1,9 +1,9 @@
 """Exact-width foundation for an independent original ADSP-2100 model.
 
 The integrated instruction boundary currently covers linear-flow NOP, the
-source-closed Type 6/7 immediate-load classes, and original Type 18 mode
-control. Unsupported behavior fails closed instead of becoming an accidental
-no-op.
+source-closed Type 6/7 immediate-load classes, original Type 18 mode control,
+and legal Type 17 internal moves from known sources. Unsupported behavior
+fails closed instead of becoming an accidental no-op.
 """
 
 from __future__ import annotations
@@ -357,6 +357,30 @@ class ADSP2100Model:
                 self.state,
                 mstat=apply_mode_control(self.state.mstat, action),
             )
+        elif instruction.value & 0xFFF000 == 0x0D0000:
+            from .internal_move import decode_internal_move
+
+            action = decode_internal_move(instruction.value)
+            assert action is not None
+            if not action.legal:
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} has reserved Type 17 selectors: "
+                    f"{action.invalid_reason}"
+                )
+            assert action.source_register is not None
+            assert action.destination_register is not None
+            source = _read_type17_source(self.state, action.source_register)
+            if source is UNKNOWN:
+                raise UnsupportedFeature(
+                    "integrated Type 17 execution requires a known source; "
+                    "the bounded state model retains unknown propagation"
+                )
+            assert isinstance(source, ExactWord)
+            next_state = _apply_type17_destination(
+                self.state,
+                action.destination_register,
+                source,
+            )
         else:
             database = load_database()
             classes = classify_opcode(database, instruction.value)
@@ -466,3 +490,77 @@ def _apply_type7_immediate(
     if register == "PX":
         return replace(state, px=ExactWord(8, data.value & 0xFF))
     raise AssertionError(f"validated Type 7 destination {register} was not handled")
+
+
+def _read_type17_source(
+    state: ArchitecturalState,
+    register: str,
+) -> KnownOrUnknown:
+    """Read one Type 17 source without reusing the bounded slice model."""
+
+    from .registers import DREG, read_dreg
+
+    if register in DREG.__members__:
+        bank = state.alternate if state.mstat.value & 1 else state.primary
+        return read_dreg(bank, DREG[register])
+    if len(register) == 2 and register[0] in "IML" and register[1].isdigit():
+        index = int(register[1])
+        value = getattr(state.dag, register[0].lower())[index]
+        if value is UNKNOWN:
+            return UNKNOWN
+        assert isinstance(value, ExactWord)
+        if register[0] == "M" and value.value & 0x2000:
+            return ExactWord(16, value.value | 0xC000)
+        return ExactWord(16, value.value)
+    if register == "ASTAT":
+        return UNKNOWN if state.astat is UNKNOWN else ExactWord(16, state.astat.value)
+    if register == "MSTAT":
+        return ExactWord(16, state.mstat.value)
+    if register == "SSTAT":
+        return ExactWord(16, state.sstat.value)
+    if register == "IMASK":
+        return ExactWord(16, state.imask.value)
+    if register == "ICNTL":
+        return UNKNOWN if state.icntl is UNKNOWN else ExactWord(16, state.icntl.value)
+    if register == "CNTR":
+        return UNKNOWN if state.cntr is UNKNOWN else ExactWord(16, state.cntr.value)
+    if register == "SB":
+        bank = state.alternate if state.mstat.value & 1 else state.primary
+        if bank.sb is UNKNOWN:
+            return UNKNOWN
+        assert isinstance(bank.sb, ExactWord)
+        value = bank.sb.value | (0xFFE0 if bank.sb.value & 0x10 else 0)
+        return ExactWord(16, value)
+    if register == "PX":
+        return UNKNOWN if state.px is UNKNOWN else ExactWord(16, state.px.value)
+    raise AssertionError(f"validated Type 17 source {register} was not handled")
+
+
+def _apply_type17_destination(
+    state: ArchitecturalState,
+    register: str,
+    data: ExactWord,
+) -> ArchitecturalState:
+    """Commit one known Type 17 value through independent shared state."""
+
+    from .registers import DREG, DREGWrite, apply_dreg_cycle
+
+    if data.width != 16:
+        raise ValueError("Type 17 internal move data must be exactly 16 bits")
+    if register in DREG.__members__:
+        registers = apply_dreg_cycle(
+            state.primary,
+            state.alternate,
+            alternate_selected=bool(state.mstat.value & 1),
+            writes=(DREGWrite(DREG[register], data),),
+        )
+        return replace(
+            state,
+            primary=registers.primary,
+            alternate=registers.alternate,
+        )
+    return _apply_type7_immediate(
+        state,
+        register,
+        ExactWord(14, data.value & 0x3FFF),
+    )

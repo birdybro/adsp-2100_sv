@@ -31,6 +31,16 @@ def _type18(payload: int) -> int:
     return 0x0C0000 | ((payload & 0xFF) << 4)
 
 
+def _type17(destination: int, source: int) -> int:
+    return (
+        0x0D0000
+        | ((destination >> 4) << 10)
+        | ((source >> 4) << 8)
+        | ((destination & 0xF) << 4)
+        | (source & 0xF)
+    )
+
+
 class ExactWidthTests(unittest.TestCase):
     def test_exact_word_rejects_truncation(self) -> None:
         with self.assertRaises(ValueError):
@@ -165,6 +175,27 @@ class ArchitecturalFoundationTests(unittest.TestCase):
         self.assertEqual(model.state.mstat, ExactWord(4, 0x5))
         model.step(_type18(0x55))
         self.assertEqual(model.state.mstat, ExactWord(4, 0x5))
+
+    def test_type17_executes_known_internal_move_in_linear_flow(self) -> None:
+        model = ADSP2100Model()
+        model.step(_type6(DREG.AX0, 0xA55A))
+        frame = model.step(_type17(int(DREG.AR), int(DREG.AX0)))
+        self.assertEqual(frame.pc_before, ExactWord(14, 5))
+        self.assertEqual(frame.pc_after, ExactWord(14, 6))
+        self.assertEqual(
+            read_dreg(model.state.primary, DREG.AR),
+            ExactWord(16, 0xA55A),
+        )
+
+    def test_type17_unknown_source_and_reserved_destination_fail_closed(self) -> None:
+        model = ADSP2100Model()
+        before = model.state
+        with self.assertRaises(UnsupportedFeature):
+            model.step(_type17(int(DREG.AR), int(DREG.AX0)))
+        self.assertEqual(model.state, before)
+        with self.assertRaises(ReservedOpcode):
+            model.step(_type17(0x32, int(DREG.AX0)))
+        self.assertEqual(model.state, before)
 
     def test_reserved_type7_destination_fails_without_state_change(self) -> None:
         for code in (0x00, 0x32, 0x38):

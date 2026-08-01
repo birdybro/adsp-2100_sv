@@ -3,9 +3,9 @@
 // Bounded steady-state instruction owner for ordinary linear flow.
 //
 // This slice intentionally supports only NOP, legal Type 6/7 immediate loads,
-// and original Type 18 mode control. A deterministic instruction preload
-// establishes the current executing word; it is not an architectural host
-// interface. The special
+// legal Type 17 internal moves, and original Type 18 mode control. A
+// deterministic instruction preload establishes the current executing word;
+// it is not an architectural host interface. The special
 // reset-to-first-fetch waveform, loops, transfers, interrupts, PM data,
 // HALT, and BR/BG arbitration remain outside this boundary.
 module adsp2100_linear_core_slice (
@@ -34,6 +34,7 @@ module adsp2100_linear_core_slice (
     output logic        phase_conflict_o,
     output logic        integration_conflict_o,
     output logic        internal_conflict_o,
+    output logic        provisional_source_extension_o,
     output logic [13:0] pc_o,
     output logic [23:0] opcode_o,
 
@@ -98,6 +99,18 @@ module adsp2100_linear_core_slice (
     logic type18_has_effect_unused;
     logic type18_has_alias_unused;
     logic [3:0] type18_mstat_next;
+    logic type17_class_valid;
+    logic type17_action_valid;
+    logic type17_invalid_subencoding;
+    logic [1:0] type17_destination_group_unused;
+    logic [1:0] type17_source_group_unused;
+    logic [3:0] type17_destination_index_unused;
+    logic [3:0] type17_source_index_unused;
+    logic [5:0] type17_destination_code_unused;
+    logic [5:0] type17_source_code_unused;
+    logic type17_destination_present_unused;
+    logic type17_destination_writable_unused;
+    logic type17_source_valid_unused;
     logic supported_instruction;
     logic fetch_request;
     logic [13:0] fetch_address;
@@ -114,7 +127,7 @@ module adsp2100_linear_core_slice (
     logic [5:0] state_source_code_unused;
     logic [5:0] state_destination_code_unused;
     logic [15:0] state_source_data_unused;
-    logic state_source_extension_unused;
+    logic state_source_extension;
     logic state_count_push_unused;
     logic [13:0] state_count_push_data_unused;
     logic state_pm_data_access_unused;
@@ -151,11 +164,15 @@ module adsp2100_linear_core_slice (
 
     assign nop_valid = opcode_q == 24'h000000;
     assign supported_instruction = (
-        nop_valid || type6_valid || type7_action_valid || type18_valid
+        nop_valid || type6_valid || type7_action_valid || type17_action_valid
+        || type18_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
-        && type7_class_valid && type7_invalid_subencoding
+        && (
+            (type7_class_valid && type7_invalid_subencoding)
+            || (type17_class_valid && type17_invalid_subencoding)
+        )
     );
     assign unsupported_instruction_o = (
         issue_boundary_o && instruction_valid_q
@@ -189,6 +206,7 @@ module adsp2100_linear_core_slice (
     assign pc_o = pc_q;
     assign opcode_o = opcode_q;
     assign alternate_bank_o = mstat_o[0];
+    assign provisional_source_extension_o = state_source_extension;
 
     adsp2100_load_dreg_immediate_decode type6_decode (
         .opcode_i(opcode_q),
@@ -224,6 +242,22 @@ module adsp2100_linear_core_slice (
         .has_no_change_one_alias_o(type18_has_alias_unused)
     );
 
+    adsp2100_internal_move_decode type17_decode (
+        .opcode_i(opcode_q),
+        .class_valid_o(type17_class_valid),
+        .move_valid_o(type17_action_valid),
+        .invalid_subencoding_o(type17_invalid_subencoding),
+        .destination_group_o(type17_destination_group_unused),
+        .source_group_o(type17_source_group_unused),
+        .destination_index_o(type17_destination_index_unused),
+        .source_index_o(type17_source_index_unused),
+        .destination_code_o(type17_destination_code_unused),
+        .source_code_o(type17_source_code_unused),
+        .destination_present_o(type17_destination_present_unused),
+        .destination_writable_o(type17_destination_writable_unused),
+        .source_valid_o(type17_source_valid_unused)
+    );
+
     always_comb begin
         type18_mstat_next = mstat_o;
         if (type18_mode_sr[1]) begin
@@ -243,8 +277,8 @@ module adsp2100_linear_core_slice (
     adsp2100_internal_move_slice state (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .execute_i(1'b0),
-        .opcode_i(24'h000000),
+        .execute_i(retire_event_o && type17_action_valid),
+        .opcode_i(opcode_q),
         .setup_write_i(state_write),
         .setup_data_valid_i(1'b1),
         .setup_code_i(state_write_code),
@@ -261,7 +295,7 @@ module adsp2100_linear_core_slice (
         .source_code_o(state_source_code_unused),
         .destination_code_o(state_destination_code_unused),
         .source_data_o(state_source_data_unused),
-        .source_extension_provisional_o(state_source_extension_unused),
+        .source_extension_provisional_o(state_source_extension),
         .count_stack_push_o(state_count_push_unused),
         .count_stack_push_data_o(state_count_push_data_unused),
         .count_stack_depth_o(count_stack_depth_o),
@@ -353,12 +387,17 @@ module adsp2100_linear_core_slice (
         type7_group_unused, type7_index_unused, type7_present_unused,
         type7_writable_unused, type7_dreg_unused, type7_reserved_unused,
         type7_read_only_unused, type18_has_effect_unused,
-        type18_has_alias_unused, state_class_valid_unused,
+        type18_has_alias_unused, type17_destination_group_unused,
+        type17_source_group_unused, type17_destination_index_unused,
+        type17_source_index_unused, type17_destination_code_unused,
+        type17_source_code_unused, type17_destination_present_unused,
+        type17_destination_writable_unused, type17_source_valid_unused,
+        state_class_valid_unused,
         state_boundary_valid_unused, state_invalid_opcode_unused,
         state_invalid_subencoding_unused, state_invalid_setup,
         state_integration_conflict_unused, state_source_code_unused,
         state_destination_code_unused, state_source_data_unused,
-        state_source_extension_unused, state_count_push_unused,
+        state_count_push_unused,
         state_count_push_data_unused, state_pm_data_access_unused,
         state_dm_access_unused, pm_request_ready_unused,
         pm_response_valid_unused, pm_response_write_unused,
@@ -383,6 +422,9 @@ module adsp2100_linear_core_slice (
         if (retire_event_o) begin
             assert (phase_i == PHASE_STATE_7 && phase_advance_i);
             assert (pm_read_sample_event_o);
+        end
+        if (provisional_source_extension_o) begin
+            assert (retire_event_o);
         end
         if (reserved_subencoding_o || unsupported_instruction_o) begin
             assert (!instruction_issue_o);

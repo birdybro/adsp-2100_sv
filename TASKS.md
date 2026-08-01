@@ -530,24 +530,31 @@ advance beyond research until a page-level primary citation is added.
   register state, preserves reset unknowns, performs selected-bank SB and
   CNTR/count-stack writes, and fails closed for computational-group, reserved,
   and read-only-SSTAT destinations.
-  The integrated model now retires NOP, legal Type 6/7, and all Type 18 MODE
-  CONTROL words in a bounded linear-flow context. It applies their state
+  The integrated model now retires NOP, legal Type 6/7, known-source legal Type
+  17 internal MOVE, and all Type 18 MODE CONTROL words in a bounded linear-flow
+  context. It applies their state
   actions, advances the PC, records the overlapped fetch at PC+1 rather than
   at the retiring address, and rejects the former synthetic PM-fetch wait
-  extension. Seventeen foundation tests cover this boundary, including atomic
+  extension. Nineteen foundation tests cover this boundary, including atomic
   Type 18 MSTAT changes, selected-bank loads, narrow registers, DAG/status,
-  count-stack saturation/SSTAT, and reserved Type 7 selectors. Reset-first-
+  count-stack saturation/SSTAT, all Type 17 register-store classes, and
+  reserved Type 7/Type 17 selectors. Unknown Type 17 source state fails closed
+  in this integrated model rather than silently choosing a value; deterministic
+  exhaustive comparison initializes all movable state first. Reset-first-
   fetch and multi-owner RTL attachment, active loops, control transfers,
   interrupts, PM-data/cache, HALT, and BR/BG remain outside this model
   increment.
   A structurally separate phase model now composes that architectural state
-  with the native PM transaction model. Ten directed tests and 53,427
+  with the native PM transaction model. Twelve directed tests and 52,763
   deterministic model/RTL clocks cover enabled state-8 issue, state-7 retire,
   phase holds, bus-output relinquishment, PC wrap, invalid fetched data,
-  selected-bank Type 6/7/18 ordering, every Type 18 encoding, CNTR stack
-  saturation, and fail-closed unsupported/reserved words. Its instruction
-  preload is explicitly a deterministic test hook rather than an
-  architectural loading mechanism.
+  selected-bank Type 6/7/17/18 ordering, every legal Type 17 pair, every Type
+  18 encoding, CNTR stack saturation, and fail-closed unsupported/reserved
+  words. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source extension raises a
+  dedicated retirement pulse so the OQ-016 provisional boundary is
+  observable. Its instruction preload and complete-state initialization are
+  explicitly deterministic test hooks rather than architectural loading or
+  reset mechanisms.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
   an independently structured compute model, commits SR at cycle end, and
@@ -1133,12 +1140,15 @@ advance beyond research until a page-level primary citation is added.
   relinquishment; its fully constrained 25 ns native fit uses 1,894 ALMs,
   1,746 registers, one DSP, and no RAM. Whole-core fetch/control arbitration
   remains open. A bounded ordinary linear-fetch owner now shares the native PM
-  controller with NOP, legal Type 6/7, and every Type 18 MODE CONTROL word. It
+  controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
+  source/destination pairs, and every Type 18 MODE CONTROL word. It
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
   and loaded next word at state 7-to-8, preserves pending state through phase
   holds/relinquishment, and fails closed for unsupported or reserved current
-  words. Ten directed tests and 53,427 phase clocks pass, with each Type 18
-  encoding exercised in the integrated flow. Reset's special first-fetch
+  words. Twelve directed tests and 52,763 phase clocks pass, with each legal
+  Type 17 pair and each Type 18 encoding exercised in the integrated flow.
+  Narrow Type 17 status/control sources raise an OQ-016 provisional retirement
+  pulse. Reset's special first-fetch
   waveform, PM-data/cache ownership, transfers, loops, interrupts, HALT, and
   BR/BG arbitration remain separate work.
 - **Unresolved questions:** whole-core PM ownership, BR/BG recognition timing,
@@ -1359,12 +1369,15 @@ advance beyond research until a page-level primary citation is added.
   and recovery fills; this does not yet close branch/loop/interrupt/HALT/BR
   arbitration under OQ-008.
   The independent top-level model and a bounded native RTL owner now enforce
-  the sourced ordinary-flow overlap for NOP, legal Type 6/7, and all Type 18
-  MODE CONTROL words: the current-PC instruction executes while PC+1 is
+  the sourced ordinary-flow overlap for NOP, legal Type 6/7, all legal Type 17
+  internal MOVE words from initialized state, and all Type 18 MODE CONTROL
+  words: the current-PC instruction executes while PC+1 is
   fetched, then action/PC/next-word state retires at state 7-to-8. The phase
-  model and RTL agree for 53,427 clocks, including every Type 18 encoding, and
-  no longer permit an invented ordinary-PM wait extension. Reset first-fetch,
-  all other instruction owners, control events, and arbitration are pending.
+  model and RTL agree for 52,763 clocks, including every legal Type 17 pair and
+  every Type 18 encoding, and no longer permit an invented ordinary-PM wait
+  extension. OQ-016 narrow-source extension is exposed at retirement. Reset
+  first-fetch, all other instruction owners, control events, and arbitration
+  are pending.
 - **Unresolved questions:** fetch/decode/execute visibility and PM-data conflict
   penalties.
 - **Confidence:** UNKNOWN
@@ -1715,11 +1728,11 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is extending the bounded
-steady-state NOP/Type 6/Type 7/Type 18 owner with additional source-closed,
-non-memory linear instruction classes, followed by replacing its deterministic
+The highest-priority unblocked implementation work is replacing the bounded
+steady-state NOP/Type 6/Type 7/Type 17/Type 18 owner's deterministic
 preload with the sourced reset-release/first-fetch sequence and a documented
-next-PC/PM-owner arbiter. Type 7 immediate non-data-register execution and
+next-PC/PM-owner arbiter, followed by additional source-closed non-memory
+linear instruction classes. Type 7 immediate non-data-register execution and
 Type 3 state/native-DM execution are bounded and verified. The Type 1
 dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM

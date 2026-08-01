@@ -12,22 +12,28 @@ The PC names the instruction currently executing. During ordinary linear
 flow, the PC incrementer drives the following address onto PMA and that value
 is loaded into the PC at cycle end [ADI-UM-1989, printed pp. 4-3, 4-10]. The
 integrated Python model and bounded steady-state RTL owner now enforce this
-distinction for NOP, legal Type 6/7, and all Type 18 MODE CONTROL words:
+distinction for NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
+source/destination pairs from fully initialized state, and all Type 18 MODE
+CONTROL words:
 address `N` executes while an ordinary fetch for `N+1` occupies the native PM
 phases, then the state-7-to-8 edge commits the current action, PC=`N+1`, and
 the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
 that completion edge and its bank-select effect is visible to the following
 instruction. The request is admitted at the enabled state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Ten directed tests and 53,427
-phase clocks compare the independent model with RTL, including every Type 18
-encoding, phase holds, bus-output relinquishment, PC wrap, selected-bank
-state, CNTR-stack effects, invalid fetched data, and fail-closed unsupported
-words. The deterministic instruction preload is a verification hook, not an
-architectural interface. Reset release/first fetch, active-loop and branch
+interface exposes no PM acknowledge input. Twelve directed tests and 52,763
+phase clocks compare the independent model with RTL, including every legal
+Type 17 pair, every Type 18 encoding, phase holds, bus-output relinquishment,
+PC wrap, selected-bank state, CNTR-stack effects, invalid fetched data, and
+fail-closed unsupported words. A Type 17 move sourced from ASTAT, MSTAT,
+SSTAT, IMASK, or ICNTL raises a dedicated retirement pulse so the OQ-016
+zero-extension hypothesis cannot become invisible. The deterministic
+instruction preload and complete state initialization are verification hooks,
+not architectural interfaces. Reset release/first fetch, active-loop and branch
 selection, interrupt abort, PM-data/cache ownership, HALT, and BR/BG
 arbitration remain outside this bounded result [ADI-UM-1989, printed pp. 1-5,
-4-3, 4-10, 4-22–4-23, 5-5–5-8, and 6-14–6-15].
+2-6, 2-15, 2-18, 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24,
+5-5–5-8, 6-1–6-2, 6-12, 6-14–6-15, A-3, and A-9].
 
 PM data use conflicts with external instruction fetch. The 16×24 cache can
 supply a valid next instruction; otherwise an additional external fetch cycle

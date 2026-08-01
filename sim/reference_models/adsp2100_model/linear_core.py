@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, replace
 
 from .load_dreg_immediate import decode_load_dreg_immediate
 from .load_non_dreg_immediate import decode_load_non_dreg_immediate
+from .internal_move import decode_internal_move
 from .mode_control import decode_mode_control
 from .model import (
     ADSP2100Model,
@@ -49,6 +50,7 @@ class LinearCoreCycleResult:
     supported_instruction: bool = False
     unsupported_instruction: bool = False
     reserved_subencoding: bool = False
+    provisional_source_extension: bool = False
     phase_conflict: bool = False
     integration_conflict: bool = False
 
@@ -57,7 +59,7 @@ def _instruction_class(
     instruction: ExactWord | _UnknownValue,
     valid: bool,
 ) -> tuple[bool, bool]:
-    """Return (supported, reserved Type-7 subencoding)."""
+    """Return (supported, reserved bounded-owner subencoding)."""
 
     if not valid or not isinstance(instruction, ExactWord):
         return (False, False)
@@ -67,6 +69,9 @@ def _instruction_class(
         return (True, False)
     if decode_mode_control(instruction.value) is not None:
         return (True, False)
+    type17 = decode_internal_move(instruction.value)
+    if type17 is not None:
+        return (type17.legal, not type17.legal)
     type7 = decode_load_non_dreg_immediate(instruction.value)
     if type7 is not None:
         return (type7.legal, not type7.legal)
@@ -156,6 +161,7 @@ def apply_linear_core_cycle(
         bus_relinquished=bus_relinquished,
     )
     retire_event = bool(state.pending and bus_result.completion_event)
+    provisional_source_extension = False
 
     if reset:
         next_state = LinearCoreState.reset()
@@ -165,6 +171,13 @@ def apply_linear_core_cycle(
             next_state = replace(next_state, pending=True)
         if retire_event:
             assert isinstance(state.instruction, ExactWord)
+            type17 = decode_internal_move(state.instruction.value)
+            provisional_source_extension = bool(
+                type17 is not None
+                and type17.legal
+                and type17.source_group == 3
+                and type17.source_index <= 4
+            )
             executor = ADSP2100Model(state=state.architecture)
             executor.step(state.instruction.value)
             next_state = replace(
@@ -195,6 +208,7 @@ def apply_linear_core_cycle(
         supported_instruction=supported,
         unsupported_instruction=unsupported_event,
         reserved_subencoding=reserved_event,
+        provisional_source_extension=provisional_source_extension,
         phase_conflict=phase_conflict,
         integration_conflict=integration_conflict,
     )

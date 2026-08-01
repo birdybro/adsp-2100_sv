@@ -30,6 +30,16 @@ def _type18(payload: int) -> int:
     return 0x0C0000 | ((payload & 0xFF) << 4)
 
 
+def _type17(destination: int, source: int) -> int:
+    return (
+        0x0D0000
+        | ((destination >> 4) << 10)
+        | ((source >> 4) << 8)
+        | ((destination & 0xF) << 4)
+        | (source & 0xF)
+    )
+
+
 def _setup(state: LinearCoreState, opcode: int, *, pc: int = 4) -> LinearCoreState:
     result = apply_linear_core_cycle(
         state,
@@ -83,6 +93,11 @@ class LinearCoreTests(unittest.TestCase):
             "ALL_TYPE_18_MODE_CONTROL_WORDS",
             contract["supported_current_instructions"],
         )
+        self.assertIn(
+            "ALL_2256_LEGAL_TYPE_17_INTERNAL_MOVES",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn("OQ_016", contract["provisional_behavior"])
 
     def test_nop_fetches_pc_plus_one_and_retires_at_state_seven(self) -> None:
         state = _setup(LinearCoreState.reset(), 0)
@@ -126,6 +141,35 @@ class LinearCoreTests(unittest.TestCase):
             UNKNOWN,
         )
 
+    def test_type17_move_commits_before_following_bank_selected_load(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type6(DREG.AX0, 1))
+        loaded = _complete(_issue(state).state, _type17(0x31, int(DREG.AX0)))
+        moved = _complete(
+            _issue(loaded.state).state,
+            _type6(DREG.AX1, 0xA55A),
+        )
+        self.assertEqual(moved.state.architecture.mstat, ExactWord(4, 1))
+        self.assertFalse(moved.provisional_source_extension)
+        written = _complete(_issue(moved.state).state, 0)
+        self.assertEqual(
+            read_dreg(written.state.architecture.alternate, DREG.AX1),
+            ExactWord(16, 0xA55A),
+        )
+        self.assertIs(
+            read_dreg(written.state.architecture.primary, DREG.AX1),
+            UNKNOWN,
+        )
+
+    def test_type17_provisional_narrow_source_is_observable(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type7(0x31, 0xB))
+        loaded = _complete(_issue(state).state, _type17(0x00, 0x31))
+        moved = _complete(_issue(loaded.state).state, 0)
+        self.assertTrue(moved.provisional_source_extension)
+        self.assertEqual(
+            read_dreg(moved.state.architecture.alternate, DREG.AX0),
+            ExactWord(16, 0x000B),
+        )
+
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))
         for value in range(1, 7):
@@ -136,7 +180,11 @@ class LinearCoreTests(unittest.TestCase):
         self.assertEqual(state.architecture.sstat.value & 0x0C, 0x08)
 
     def test_unsupported_and_reserved_words_never_start_fetch(self) -> None:
-        for opcode, reserved in ((0x000001, False), (_type7(0x32, 1), True)):
+        for opcode, reserved in (
+            (0x000001, False),
+            (_type7(0x32, 1), True),
+            (_type17(0x32, 0x00), True),
+        ):
             state = _setup(LinearCoreState.reset(), opcode)
             result = _issue(state)
             self.assertEqual(result.reserved_subencoding, reserved)

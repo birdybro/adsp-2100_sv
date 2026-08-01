@@ -48,9 +48,11 @@ banks, the 14,336 source-closed Type 15 immediate LSHIFT/ASHIFT words with
 selected-bank SR writeback, all 507,904 supported Type 7 immediate-to-non-data
 register words with exact-width state, selected-bank SB, and CNTR/count-stack
 effects, and bounded independent-model/native-RTL integration in which NOP,
-legal Type 6/7, and all Type 18 MODE CONTROL words execute at the current PC
-while the following word is fetched at PC+1 across the sourced state-8 issue/
-state-7 retire phases, with 53,427 model/RTL phase clocks, 25,648 canonical
+legal Type 6/7, all 2,256 legal Type 17 internal MOVE source/destination pairs,
+and all Type 18 MODE CONTROL words execute at the current PC while the
+following word is fetched at PC+1 across the sourced state-8 issue/state-7
+retire phases, with 52,763 model/RTL phase clocks and an explicit OQ-016
+provisional-source retirement pulse, 25,648 canonical
 Type 14 shifter-plus-DREG
 multifunction words with old-value parallel semantics, all 2,097,152 Type 4
 words partitioned at the action boundary into 2,034,688 source-closed
