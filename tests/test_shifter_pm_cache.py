@@ -187,6 +187,56 @@ class ShifterPMCacheTests(unittest.TestCase):
         )
         self.assertEqual(lookup.instruction, ExactWord(24, 0x222222))
 
+    def test_late_force_replaces_pending_hit_without_replaying_data(self):
+        state = _fill(_known_state(), 0x0101, 0x111111)
+        issued = apply_shifter_pm_cache_cycle(
+            state,
+            execute=True,
+            opcode=_opcode(write=True),
+            next_fetch_address=ExactWord(14, 0x0101),
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(issued.core.cache_instruction_selected)
+        self.assertEqual(
+            issued.state.pending_cache_instruction,
+            ExactWord(24, 0x111111),
+        )
+
+        forced = apply_shifter_pm_cache_cycle(
+            issued.state,
+            force_instruction_fetch=True,
+            pm_cycle_complete=False,
+        )
+        self.assertIsNotNone(forced.state.core.pending)
+        assert forced.state.core.pending is not None
+        self.assertTrue(forced.state.core.pending.recovery_required)
+        self.assertFalse(forced.core.data_action_complete)
+
+        data_done = apply_shifter_pm_cache_cycle(
+            forced.state,
+            pm_read_data=ExactWord(24, 0xAAAAAA),
+            pm_cycle_complete=True,
+        )
+        self.assertTrue(data_done.core.data_action_complete)
+        self.assertFalse(data_done.core.instruction_complete)
+        self.assertFalse(data_done.instruction_from_cache)
+        self.assertFalse(data_done.next_instruction_known)
+        self.assertIsNotNone(data_done.state.core.recovery)
+
+        recovered = apply_shifter_pm_cache_cycle(
+            data_done.state,
+            pm_read_data=ExactWord(24, 0x222222),
+            pm_cycle_complete=True,
+        )
+        self.assertTrue(recovered.core.recovery_fetch)
+        self.assertTrue(recovered.core.instruction_complete)
+        self.assertTrue(recovered.instruction_from_external)
+        self.assertEqual(recovered.next_instruction, 0x222222)
+        lookup = lookup_instruction_cache(
+            recovered.state.cache, ExactWord(14, 0x0101)
+        )
+        self.assertEqual(lookup.instruction, ExactWord(24, 0x222222))
+
     def test_address_hit_with_unknown_data_still_requires_recovery(self):
         state = _fill(_known_state(), 0x0033, 0, known=False)
         result = apply_shifter_pm_cache_cycle(

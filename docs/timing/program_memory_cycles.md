@@ -140,8 +140,11 @@ recognized PM data completes without a stop, exactly one forced fetch is
 admitted at the next enabled state-8-to-state-1 boundary, and its later
 state-7-to-state-8 completion enters the stopped state. Eight directed tests
 and 50,033 independent-model/RTL clocks cover 335 PM-data recognitions and 335
-forced issue pulses. The Type 5 and Type 13 native-PM owners do not yet consume
-that pulse, so external address/strobe ownership during this handoff remains
-unverified. HALT during BG or DMACK waits, TRAP/interrupt priority, BR while
+forced issue pulses. The Type 13/native-PM owner now consumes that pulse in a
+bounded composition: five tests and 50,124 clocks verify that a late request
+overrides the issue-time hit, data commits once, one following external fetch
+owns the sourced pin phases, and stop occurs at its state-7 completion. Type 5
+and shared-PM arbitration remain open. HALT during BG or DMACK waits,
+TRAP/interrupt priority, BR while
 stopped, and reset interaction also remain outside this attachment
 [ADI-UM-1989, printed pp. 5-13–5-15].

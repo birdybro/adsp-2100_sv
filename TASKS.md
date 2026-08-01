@@ -1145,7 +1145,14 @@ advance beyond research until a page-level primary citation is added.
   DAG2 capture, state-7 atomic completion, hit/miss recovery, and
   relinquishment; its fully constrained 25 ns native fit uses 1,894 ALMs,
   1,746 registers, one DSP, and no RAM. Whole-core fetch/control arbitration
-  remains open. A bounded ordinary linear-fetch owner now shares the native PM
+  remains open. The Type 13 owner now also consumes the HALT controller's
+  late forced-fetch request. Five directed tests and 50,124 clocks verify
+  issue-time cache-hit override, one-time data/shifter/PX/DAG completion, one
+  following native fetch, cache refill, state-7 stop, held driven outputs, and
+  DMACK-qualified resume. Its formal recipe syntax-checks and a fully
+  constrained 25 ns Cyclone V fit uses 2,094 ALMs and 1,655 registers with no
+  RAM/DSP blocks. Type 5 HALT attachment and shared event arbitration remain
+  open. A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
@@ -1345,10 +1352,12 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_bus_control.py`, `make linear-bus-control-tests`,
   `tests/test_linear_bus_control.py`, `make halt-tests`,
   `tests/test_halt_control.py`,
+  `tests/test_shifter_pm_halt.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
   `formal/bus_control.sby`, `formal/halt_control.sby`,
   `formal/linear_bus_control.sby`,
   `formal/linear_halt_control.sby`,
+  `formal/shifter_pm_halt.sby`,
   `formal/conditional_trap.sby`,
   `formal/system_control.sby`
 - **Implementation notes:** use clock enables and phase state, never gated
@@ -1393,10 +1402,15 @@ advance beyond research until a page-level primary citation is added.
   332 ordinary and 335 PM-data recognitions, 335 forced issues, 667 stops, 665
   releases, 291 DMACK-blocked releases, and 2,269 held clocks. Its formal
   recipe passes strict syntax lint; a fully constrained 20 ns Cyclone V fit
-  uses 26 ALMs and 6 registers with no RAM/DSP. The force issue is not yet
-  attached to the Type 5/Type 13 native-PM owners, and HALT while BG or a
-  DMACK wait is active, TRAP handoff, BR requests while halted, interrupts,
-  reset, and analog input synchronization remain explicitly unimplemented.
+  uses 26 ALMs and 6 registers with no RAM/DSP. A bounded Type 13 composition
+  now consumes the force issue: five directed tests and 50,124 clocks cover
+  210 PM-data recognitions/cache-hit overrides/forced fetches, 397 stops and
+  resumes, no architectural replay, and DMACK-qualified held-state release.
+  Its fully constrained 25 ns Cyclone V fit uses 2,094 ALMs and 1,655
+  registers with no RAM/DSP blocks. Type 5 remains unattached, and HALT while
+  BG or a DMACK wait is active, TRAP handoff, BR requests while halted,
+  interrupts, reset, and analog input synchronization remain explicitly
+  unimplemented.
 - **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
   composition priority among general HALT, TRAP, BR/BG, DMACK waits, reset,
   and interrupts; analog BR setup/metastability behavior and invalid

@@ -413,7 +413,12 @@ module adsp2100_shifter_pm_slice (
             active_ss_result = pending_ss_result_q;
             active_sf = pending_sf_q;
             active_exp_lo_destination = pending_exp_lo_destination_q;
-            active_needs_recovery = pending_needs_recovery_q;
+            // The original HALT input is recognized at state 3, after this
+            // PM-data descriptor was captured at state 8-to-1. A force request
+            // may therefore arrive while the descriptor is pending.
+            active_needs_recovery = (
+                pending_needs_recovery_q || force_instruction_fetch_i
+            );
             active_next_fetch_address = pending_next_fetch_address_q;
             active_next_fetch_address_valid =
                 pending_next_fetch_address_valid_q;
@@ -752,6 +757,8 @@ module adsp2100_shifter_pm_slice (
                 pending_next_fetch_address_q <= next_fetch_address_i;
                 pending_next_fetch_address_valid_q <=
                     next_fetch_address_valid_i;
+            end else if (pending_q && force_instruction_fetch_i) begin
+                pending_needs_recovery_q <= 1'b1;
             end
 
             if (astat_setup_enable) begin

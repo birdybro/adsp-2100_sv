@@ -388,6 +388,11 @@ from .shifter_pm_native import (
     ShifterPMNativeState,
     apply_shifter_pm_native_cycle,
 )
+from .shifter_pm_halt import (
+    ShifterPMHaltCycleResult,
+    ShifterPMHaltState,
+    apply_shifter_pm_halt_cycle,
+)
 from .sequencer import (
     ExplicitFlow,
     SequencerFlowResult,
@@ -671,6 +676,8 @@ __all__ = [
     "ShifterPMCacheState",
     "ShifterPMNativeCycleResult",
     "ShifterPMNativeState",
+    "ShifterPMHaltCycleResult",
+    "ShifterPMHaltState",
     "SequencerFlowResult",
     "SequencerStacksCycleResult",
     "SequencerStacksInputs",
@@ -703,6 +710,7 @@ __all__ = [
     "evaluate_do_termination",
     "evaluate_if_condition",
     "apply_conditional_shift_cycle",
+    "apply_shifter_pm_halt_cycle",
     "apply_conditional_compute_cycle",
     "apply_compute_move_cycle",
     "apply_counter_cycle",

@@ -134,3 +134,13 @@ rejection, and externally directed relinquishment. This closes only the Type
 control arbitration [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
 pp. 2-36–2-39, Figures 14–15; ADI-UM-1989, printed pp. 5-5–5-8,
 Figure 5.5].
+
+The bounded Type 13/HALT composition adds the exceptional late owner handoff
+specified for a state-3 stop request during PM data. It records recovery in
+the active descriptor, suppresses an issue-time cached instruction, commits
+the PM data action once, then accepts exactly one native external fetch at the
+next state-8 boundary. That fetch fills the monitor and its state-7 completion
+enters stopped state 8. Five tests and 50,124 model/RTL clocks verify this
+sequence, including stable halted outputs and DMACK-qualified release. Type 5
+and shared PM-event arbitration remain outside this boundary
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-13–5-14].

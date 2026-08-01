@@ -1,0 +1,43 @@
+[options]
+mode prove
+depth 48
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/packages/adsp2100_pkg.sv
+read -formal -sv rtl/packages/adsp2100_register_pkg.sv
+read -formal -sv rtl/core/adsp2100_shifter_pm_decode.sv
+read -formal -sv rtl/core/adsp2100_shifter.sv
+read -formal -sv rtl/core/adsp2100_dag.sv
+read -formal -sv rtl/core/adsp2100_dag_register_file.sv
+read -formal -sv rtl/core/adsp2100_register_file.sv
+read -formal -sv rtl/core/adsp2100_status_registers.sv
+read -formal -sv rtl/core/adsp2100_instruction_cache.sv
+read -formal -sv rtl/core/adsp2100_shifter_pm_slice.sv
+read -formal -sv rtl/core/adsp2100_shifter_pm_cache_slice.sv
+read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv rtl/core/adsp2100_shifter_pm_native_slice.sv
+read -formal -sv rtl/core/adsp2100_halt_control.sv
+read -formal -sv rtl/core/adsp2100_shifter_pm_halt_slice.sv
+read -formal -sv formal/harnesses/adsp2100_shifter_pm_halt_formal.sv
+prep -top adsp2100_shifter_pm_halt_formal
+
+[files]
+rtl/packages/adsp2100_pkg.sv
+rtl/packages/adsp2100_register_pkg.sv
+rtl/core/adsp2100_shifter_pm_decode.sv
+rtl/core/adsp2100_shifter.sv
+rtl/core/adsp2100_dag.sv
+rtl/core/adsp2100_dag_register_file.sv
+rtl/core/adsp2100_register_file.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_instruction_cache.sv
+rtl/core/adsp2100_shifter_pm_slice.sv
+rtl/core/adsp2100_shifter_pm_cache_slice.sv
+rtl/core/adsp2100_program_bus.sv
+rtl/core/adsp2100_shifter_pm_native_slice.sv
+rtl/core/adsp2100_halt_control.sv
+rtl/core/adsp2100_shifter_pm_halt_slice.sv
+formal/harnesses/adsp2100_shifter_pm_halt_formal.sv

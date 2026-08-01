@@ -72,8 +72,13 @@ PM-data cycle and exposes one `force_fetch_issue_o` pulse on the following
 enabled state-8 issue boundary, then stops after that fetch reaches state 7.
 Eight directed tests and 50,033 independent-model/RTL clocks cover 335 PM-data
 recognitions and corresponding forced issue pulses. That signal is not yet
-connected to the Type 5/Type 13 native-PM owners, so it establishes control
-sequencing rather than a complete external transaction trace. HALT during BG
+connected to the Type 5 native-PM owner. It is connected to the bounded
+Type 13 owner: a late recognition discards an issue-time cache hit, commits
+the data action once, drives one following external fetch, fills the cache,
+and stops after its state-7 completion. Five directed tests and 50,124
+independent-model/RTL clocks cover 210 such handoffs, including stable driven
+halted outputs and DMACK-qualified resume. Shared-PM arbitration is not yet a
+complete external transaction owner. HALT during BG
 or DM waits, TRAP/interrupt priority, reset interaction, and analog input timing
 remain uncomposed
 [ADI-UM-1989, printed pp. 5-13–5-14, 5-17–5-20].

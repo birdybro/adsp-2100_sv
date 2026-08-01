@@ -108,10 +108,18 @@ model/RTL comparison cover both ordinary and PM-data recognition, 335 PM-data
 recognitions and forced fetch issues, 667 total stops, 665 releases, 291
 DMACK-low blocked releases, and 2,269 held clocks. Formal invariants cover the
 four control states and require the forced request to occur only on an enabled
-state-8 boundary. The sequence controller is not yet connected to the Type 5
-or Type 13 PM-data/native-bus owners. Consequently this is proof of scheduling
-and issue qualification, not proof that an architectural PM-data transaction
-hands the shared PM pins to the forced fetch.
+state-8 boundary.
+
+`rtl/core/adsp2100_shifter_pm_halt_slice.sv` now attaches this scheduler to
+the bounded Type 13 cache/native-PM owner. A late recognition latches recovery
+even if issue-time lookup hit, suppresses release of that stale hit, commits
+the shifter/PM/PX/DAG action once at the data-cycle state-7 edge, accepts one
+external fetch at the following state-8 edge, fills the cache from that fetch,
+and enters the stopped state only at its state-7 completion. Five directed
+tests and 50,124 independent-model/RTL clocks cover 210 late recognitions,
+210 hit overrides/forced fetches, 397 stops/resumes, 209 DMACK-blocked
+releases, and 580 held clocks. Type 5 and shared-PM event arbitration remain
+unattached.
 
 General HALT support still excludes HALT recognition while BG is active or a
 DMACK wait is incomplete, Type 22 TRAP clear/release composition, BR recognition

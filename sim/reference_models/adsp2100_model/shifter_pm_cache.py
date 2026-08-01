@@ -171,6 +171,7 @@ def apply_shifter_pm_cache_cycle(
     )
     instruction_from_cache = bool(
         core_result.data_action_complete
+        and core_result.instruction_complete
         and (
             issue_cache_instruction is not None
             or state.pending_cache_instruction is not None

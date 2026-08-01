@@ -43,8 +43,12 @@ class HaltControlTests(unittest.TestCase):
             contract["pm_data_effect"],
         )
         self.assertIn(
-            "PROGRAM_MEMORY_DATA_OWNER_ATTACHMENT",
+            "TYPE_5_PROGRAM_MEMORY_DATA_OWNER_ATTACHMENT",
             contract["excluded_claims"],
+        )
+        self.assertIn(
+            "TYPE_13_SHIFTER_PM_NATIVE_OWNER",
+            contract["implemented_attachments"],
         )
 
     def test_pm_data_halt_forces_one_external_fetch_before_stop(self) -> None:

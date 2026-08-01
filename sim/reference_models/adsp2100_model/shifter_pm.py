@@ -518,6 +518,13 @@ def apply_shifter_pm_cycle(
     if state.pending is not None:
         conflict = execute or setup_count != 0
         pending = state.pending
+        # HALT is recognized at state 3, after the PM-data descriptor was
+        # accepted at state 8-to-1. Retain a late force request while the data
+        # cycle is pending so its state-7 completion schedules the required
+        # external fetch instead of releasing the issue-time cache hit.
+        if force_instruction_fetch and not pending.recovery_required:
+            pending = replace(pending, recovery_required=True)
+            state = replace(state, pending=pending)
         if not pm_cycle_complete:
             held = _data_result(
                 state,

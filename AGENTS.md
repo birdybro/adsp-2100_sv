@@ -236,9 +236,11 @@ owner: the current fetch completes, new issue is inhibited, PM output enables
 are masked during grant, HALT instead holds driven PM outputs in state 8, and
 restart occurs at state 8-to-1. A standalone primary-backed HALT sequencer now
 distinguishes PM-data recognition, admits exactly one forced external fetch on
-the following state-8 boundary, and stops after that fetch; its output is not
-yet attached to the Type 5/Type 13 PM-data owners. Cross-event priority and
-shared-PM ownership remain open. Other bounded
+the following state-8 boundary, and stops after that fetch. A bounded Type 13
+attachment now consumes this late request, discards any issue-time cache hit,
+completes the PM data action once, fills the cache from the forced external
+fetch, and stops after its state-7 completion. Type 5, cross-event priority,
+and shared-PM ownership remain open. Other bounded
 source-backed RTL
 execution slices implement all
 original Type 2
@@ -361,7 +363,10 @@ operands through all eight pin phases, commits the architectural action only
 on the state-7-to-state-8 completion edge, and issues a miss recovery fetch on
 the following state-8-to-state-1 edge. Five directed tests and 50,081
 model/RTL clocks cover that attachment. Unified fetch/PC/control-event
-arbitration remains open under OQ-008.
+arbitration remains open under OQ-008. A further Type 13/HALT composition adds
+five directed tests and 50,124 deterministic clocks covering 210 late
+PM-data recognitions, 210 cache-hit overrides and forced issues, 397 stops and
+resumes, and no replay of shifter, PM-data, PX, or DAG actions.
 The source-bounded cache monitor implements the documented
 16-by-24 array, PMA[3:0] indexing, single contiguous valid region,
 out-of-region invalidation, sequential extension, and circular oldest-word
@@ -387,8 +392,9 @@ The separate ordinary-fetch HALT composition passes seven directed tests and
 release, and stable driven state-8 PM outputs.
 No PM-data/cache or DM client is attached to BR/BG, analog delays are not
 modeled, and the request boundaries are not claims about hidden device
-latches. HALT after PM data, during BG or DMACK waits, and in TRAP/interrupt/
-reset arbitration remains unimplemented.
+latches. HALT after Type 13 PM data is bounded and attached; Type 5, HALT
+during BG or DMACK waits, and TRAP/interrupt/reset arbitration remain
+unimplemented.
 The RESET-time direct pin path is confined to a wrapper.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L

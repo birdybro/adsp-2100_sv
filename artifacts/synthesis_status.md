@@ -14,7 +14,7 @@
   decoders/integration slices, the standalone ordinary/PM-data HALT sequencer,
   the bounded NOP/Type 6/Type 7/Type 17/Type 18
   linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
-  compositions,
+  compositions plus the Type 13/native-PM/HALT attachment,
   the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
@@ -26,8 +26,8 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment. Original RESET/phase, normal
-  BR/BG, standalone HALT sequencing, bounded linear-owner, and linear-owner/BR/BG and
-  linear-owner/HALT composition synthesis scripts are wired into
+  BR/BG, standalone HALT sequencing, bounded linear-owner, linear-owner/BR/BG,
+  linear-owner/HALT, and Type 13/native-PM/HALT synthesis scripts are wired into
   `make synth-yosys` for an equipped host.
 - Quartus 17.0.2 full compilation of the normal BR/BG controller passes for
   Cyclone V `5CSEBA6U23I7`. It uses 27 ALMs, 7 fitted registers, no block
@@ -192,6 +192,15 @@
   arrays in logic/registers; the sole warning is the expected Quartus Lite
   LogicLock license warning. This is bounded Type 13 phase-attachment
   evidence, not whole-core, physical-I/O, or MiSTer closure.
+- Quartus 17.0.2 Standard Fit of the bounded Type 13/cache/native-PM/HALT
+  attachment passes for Cyclone V `5CSEBA6U23I7` at its 25 ns constraint. It
+  uses 2,094 ALMs and 1,655 fitted registers with no RAM or DSP blocks. Across
+  four timing models, worst setup slack is +7.946 ns, worst hold slack is
+  +0.168 ns, and worst slow-corner Fmax is 58.64 MHz, with zero unconstrained
+  clocks, ports, or paths. The expected warning is the Quartus Lite LogicLock
+  license; asynchronous cache/DAG arrays remain in logic/registers. This is
+  bounded Type 13/HALT handoff evidence, not shared-owner, physical-I/O, or
+  MiSTer closure.
 - Quartus 17.0.2 full compilation of the bounded Type 2 immediate-DM-write
   slice passes for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone
   constraint. It uses 581 ALMs and 430 fitted registers with no RAM or DSP

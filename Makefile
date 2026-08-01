@@ -108,6 +108,23 @@ lint:
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_shifter_pm_halt_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_pm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_shifter_pm_slice.sv \
+			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_shifter_pm_native_slice.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_shifter_pm_halt_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			-Wno-UNUSEDPARAM \
 			--top-module adsp2100_class_decode \
@@ -816,7 +833,7 @@ linear-bus-control-tests:
 	fi
 
 halt-tests:
-	$(PYTHON) -m unittest -v tests.test_halt_control
+	$(PYTHON) -m unittest -v tests.test_halt_control tests.test_shifter_pm_halt
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
 		$(PYTHON) tools/generators/generate_halt_control_vectors.py \
@@ -854,8 +871,31 @@ halt-tests:
 			rtl/core/adsp2100_linear_halt_control_slice.sv \
 			sim/unit/tb_adsp2100_linear_halt_control_slice.sv; \
 		build/obj_linear_halt_control/Vtb_adsp2100_linear_halt_control_slice; \
+		$(PYTHON) tools/generators/generate_shifter_pm_halt_vectors.py \
+			--output build/shifter_pm_halt_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_shifter_pm_halt_slice \
+			--top-module tb_adsp2100_shifter_pm_halt_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_pm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_shifter_pm_slice.sv \
+			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_shifter_pm_native_slice.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_shifter_pm_halt_slice.sv \
+			sim/unit/tb_adsp2100_shifter_pm_halt_slice.sv; \
+		build/obj_shifter_pm_halt_slice/Vtb_adsp2100_shifter_pm_halt_slice; \
 	else \
-		echo "SKIP bounded linear-fetch/HALT RTL test: Verilator is not installed"; \
+		echo "SKIP bounded HALT attachment RTL tests: Verilator is not installed"; \
 	fi
 
 decode-tests:
@@ -1858,6 +1898,24 @@ formal:
 			rtl/core/adsp2100_shifter_pm_native_slice.sv \
 			formal/harnesses/adsp2100_shifter_pm_native_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_shifter_pm_halt_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_shifter_pm_decode.sv \
+			rtl/core/adsp2100_shifter.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_shifter_pm_slice.sv \
+			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_shifter_pm_native_slice.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_shifter_pm_halt_slice.sv \
+			formal/harnesses/adsp2100_shifter_pm_halt_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_class_decode_formal \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/packages/adsp2100_decode_pkg.sv \
@@ -2313,6 +2371,8 @@ formal:
 			formal/shifter_dm_native.sby; \
 		sby -f -d build/formal_shifter_pm_native \
 			formal/shifter_pm_native.sby; \
+		sby -f -d build/formal_shifter_pm_halt \
+			formal/shifter_pm_halt.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_compute_dual_decode \
 			formal/compute_dual_decode.sby; \
@@ -2401,7 +2461,9 @@ synth-yosys:
 			synthesis/yosys/linear_bus_control.ys; \
 		yosys -q -l build/yosys_linear_halt_control.log \
 			synthesis/yosys/linear_halt_control.ys; \
-		echo "PASS bounded reset/phase, BR/BG, HALT, linear, and composed Yosys synthesis"; \
+		yosys -q -l build/yosys_shifter_pm_halt.log \
+			synthesis/yosys/shifter_pm_halt.ys; \
+		echo "PASS bounded reset/phase, BR/BG, HALT, linear, and Type 13/HALT Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
 	fi
@@ -2447,6 +2509,8 @@ synth-quartus:
 			synthesis/quartus/shifter_dm_native_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_native_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/shifter_pm_halt_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_move_smoke; \
 		quartus_sh --flow compile \
@@ -2533,9 +2597,12 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_native_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name shifter_pm_halt_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name linear_core_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name yosys_linear_core.log -delete
 	@find build -maxdepth 1 -type f -name yosys_linear_core.json -delete
+	@find build -maxdepth 1 -type f -name yosys_shifter_pm_halt.log -delete
+	@find build -maxdepth 1 -type f -name yosys_shifter_pm_halt.json -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
@@ -2691,6 +2758,9 @@ clean:
 	fi
 	@if [ -d build/obj_shifter_pm_native_debug ]; then \
 		find build/obj_shifter_pm_native_debug -depth -delete; \
+	fi
+	@if [ -d build/obj_shifter_pm_halt_slice ]; then \
+		find build/obj_shifter_pm_halt_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_linear_core_slice ]; then \
 		find build/obj_linear_core_slice -depth -delete; \
@@ -2883,6 +2953,9 @@ clean:
 	@if [ -d build/quartus_shifter_pm_native ]; then \
 		find build/quartus_shifter_pm_native -depth -delete; \
 	fi
+	@if [ -d build/quartus_shifter_pm_halt ]; then \
+		find build/quartus_shifter_pm_halt -depth -delete; \
+	fi
 	@if [ -d build/quartus_compute_move ]; then \
 		find build/quartus_compute_move -depth -delete; \
 	fi
@@ -2986,6 +3059,7 @@ clean:
 		build/formal_dm_write_immediate_native \
 		build/formal_shifter_dm_native \
 		build/formal_shifter_pm_native \
+		build/formal_shifter_pm_halt \
 		build/formal_compute_move \
 		build/formal_compute_dual_decode \
 		build/formal_compute_dm_decode \

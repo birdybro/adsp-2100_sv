@@ -191,6 +191,7 @@ module adsp2100_shifter_pm_cache_slice (
     );
     assign instruction_from_cache_o = (
         data_action_complete_o
+        && instruction_complete_o
         && (issue_cache_instruction_valid || pending_cache_q)
     );
     assign instruction_from_external_o = (

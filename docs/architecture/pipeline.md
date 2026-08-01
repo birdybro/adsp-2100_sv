@@ -1,7 +1,7 @@
 # Pipeline and cache
 
 **Status: one-stage pipeline, bounded ordinary linear fetch/BR/HALT control,
-standalone PM-data HALT forced-fetch scheduling, and bounded cache-integrated
+bounded Type 13 PM-data/HALT forced-fetch attachment, and cache-integrated
 PM-data hit/miss timing implemented; unified hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
@@ -51,9 +51,12 @@ the documented forced external instruction fetch even on a cache hit. A
 standalone controller now schedules that path: PM-data recognition completes
 the data cycle, admits one forced fetch at the following state-8 issue edge,
 and stops only after that fetch completes. Eight directed tests and 50,033
-model/RTL clocks cover 335 such recognitions and issue events. The controller
-is not attached to either cache/native-PM data owner, so shared-PM arbitration
-and the architectural handoff remain open [ADI-UM-1989, printed
+model/RTL clocks cover 335 such recognitions and issue events. A bounded
+Type 13/native-PM composition now attaches the handoff: late recognition
+overrides a captured cache hit, data actions commit exactly once, one external
+fetch fills the monitor, and the stop follows that fetch's state-7 completion.
+Five directed tests and 50,124 clocks cover 210 such attached handoffs.
+Type 5 and shared-PM/event arbitration remain open [ADI-UM-1989, printed
 pp. 5-13–5-14].
 
 PM data use conflicts with external instruction fetch. The 16×24 cache can
@@ -96,5 +99,15 @@ instruction release occur at state 7-to-8. On a miss, the recovery descriptor
 is accepted at the immediately following state 8-to-1 and completes at its
 state 7-to-8 edge. Five directed tests and 50,081 model/RTL clocks verify this
 mapping without claiming ordinary-PC fetch arbitration, branch/loop flushes,
-interrupt/HALT recognition, or BR/BG ownership
+interrupt recognition or BR/BG ownership
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
+
+The Type 13/HALT wrapper adds the late-recognition path without changing the
+ordinary hit/miss contract. It withholds the issue-time cached word when HALT
+arrives at state 3, records recovery in the already-pending descriptor, and
+hands the native PM bus to exactly one recovery fetch after data completion.
+The recovery fills the monitor and provides the stopped instruction word; no
+shifter, PM transfer, PX, or DAG write is replayed. Halted state 8 retains the
+driven PM levels, and release requires HALT inactive with DMACK high. Idle
+ordinary-fetch HALT, Type 5, BG/DM waits, TRAP, interrupts, reset release, and
+multi-owner priority remain outside this owner.

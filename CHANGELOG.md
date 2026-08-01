@@ -8,6 +8,21 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed bounded Type 13/native-PM/HALT composition in an
+  independent Python model and portable SystemVerilog. HALT recognized during
+  the PM-data cycle now latches a late recovery request, discards an
+  issue-time cache hit, commits the shifter/PM/PX/DAG action exactly once,
+  accepts one external fetch at the next state-8 boundary, fills the cache,
+  and stops after that fetch completes at state 7. Five directed tests and
+  50,124 deterministic model/RTL clocks cover 210 PM-data recognitions, 210
+  hit overrides and forced fetches, 397 stops/resumes, 209 DMACK-blocked
+  releases, and 580 held clocks. A formal harness, Yosys recipe, and fully
+  constrained Cyclone V project bind the claim. Quartus fit uses 2,094 ALMs
+  and 1,655 registers, no RAM/DSP blocks, +7.946 ns worst setup, +0.168 ns
+  worst hold, 58.64 MHz worst slow-corner Fmax, and no unconstrained paths at
+  25 ns. Type 5 attachment and shared PM/BR/BG/interrupt/TRAP/reset priority
+  remain outside this bounded composition.
+
 - A primary-backed standalone HALT sequencer for both ordinary instruction-
   fetch and PM-data recognition. A PM-data recognition completes its current
   cycle, admits exactly one forced external fetch at the following state-8
@@ -19,9 +34,8 @@ semantic versioning after its first release.
   Yosys flow, and fully constrained Cyclone V project bind the claim. The fit
   uses 26 ALMs and 6 registers, no RAM/DSP blocks, +12.584 ns worst setup,
   +0.172 ns worst hold, 134.84 MHz worst slow-corner Fmax, and no unconstrained
-  paths at 20 ns. The Type 5/Type 13 PM-data owners do not yet consume the
-  forced-fetch pulse, so this is sequencing evidence rather than a complete
-  shared-PM transaction attachment.
+  paths at 20 ns. Type 13 now consumes the forced-fetch pulse in a separate
+  bounded composition; Type 5 and shared-PM arbitration remain open.
 
 - A primary-backed bounded ordinary-fetch HALT controller and structural
   attachment in independent Python and portable SystemVerilog. It recognizes

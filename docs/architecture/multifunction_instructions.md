@@ -262,9 +262,18 @@ back-to-back PM transaction and its completion alone fills the monitor and
 exposes the next instruction. Five directed tests and 50,081 deterministic
 model/RTL clocks exercise read/write drive windows, hit/miss ownership, held
 phases, off-boundary rejection, reset, and relinquishment
-[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8]. Unified branches, loops,
-interrupts, self-modifying PM, ordinary fetch ownership, and whole-core
-arbitration remain open under OQ-008.
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
+
+A bounded HALT wrapper composes this same owner with the primary-backed
+PM-data stop sequence. HALT recognized at state 3 sets recovery on the
+in-flight descriptor even when lookup hit at issue. The cached word is not
+released, the Type 13 data/shifter/PX/DAG action commits exactly once, and one
+external instruction fetch follows without replay. Its completion fills the
+cache and enters held state 8. Five directed tests and 50,124 deterministic
+model/RTL clocks cover 210 hit overrides/forced fetches and 397 complete
+stop/resume sequences. Unified branches, loops, interrupts, self-modifying PM,
+ordinary fetch ownership, Type 5 HALT, and whole-core arbitration remain open
+under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
