@@ -44,7 +44,7 @@ descriptor into the source-defined logical pin phases: PMA/PMDA/PMS through
 states 1–8, active-low PMRD or PMWR through states 4–7, read sampling on the
 7-to-8 edge, and write-data drive through states 5–8. It preserves active-low
 PMS across back-to-back requests and exposes independent address, control, and
-PMD output enables for bus relinquishment. Ten directed tests and 50,032
+PMD output enables for bus relinquishment. Eleven directed tests and 50,032
 model/RTL clocks pass [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
 pp. 2-36–2-39, parameters 23–60, Figures 14–15; ADI-UM-1989, printed
 pp. 5-5–5-8, Figure 5.5]. Its bounded Type 13/cache client captures a data
@@ -59,6 +59,21 @@ issue, masks all PM output enables during grant, and restarts issue at state
 8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 93
 complete handshakes. It is not yet composed with the Type 13 or Type 5
 PM-data clients, other PM instruction classes, or a whole-core PM arbiter.
+
+The bounded `adsp2100_program_owner_bus` now provides one physical PM
+controller for three descriptor classes: ordinary fetch, Type 5 PM data, and
+Type 13 PM data. Exactly one request on an enabled state-8-to-state-1 boundary
+is accepted; the two-bit owner is retained through completion; and accepted,
+read-sample, and completion pulses are routed one-hot. Multiple simultaneous
+requests are rejected without an invented priority, and off-boundary requests
+are rejected and reported. Eight directed tests and 50,007 independent-model/
+RTL clocks cover all owners, 1,100 collision rejections, 1,328 out-of-phase
+rejections, 3,240 completions, 2,595 owner switches, and 606 relinquished
+active holds. This proves a shared electrical transaction owner and mutual
+exclusion, but the existing architectural clients are not yet wired into the
+selector and branch/loop/interrupt/HALT/BR priority is not claimed
+[ADI-UM-1989, printed pp. 1-5–1-7, 3-6–3-7, 4-26–4-30, 5-5–5-8;
+ADI-DATABOOK-1987, printed pp. 2-36–2-39].
 
 A separate active-low HALT controller is now composed with the same bounded
 ordinary-fetch owner. It samples HALT at the enabled end of state 3, lets the
@@ -78,8 +93,8 @@ the data action once, drives one following external fetch, fills the cache,
 and stops after its state-7 completion. The Type 13 attachment passes five
 directed tests and 50,124 independent-model/RTL clocks with 210 such handoffs;
 the Type 5 attachment passes five and 50,126 with 197. Both cover stable
-driven halted outputs and DMACK-qualified resume. Shared-PM arbitration is not
-yet a complete external transaction owner. HALT during BG
+driven halted outputs and DMACK-qualified resume. Their connection to the
+shared selector and cross-event priority are not yet complete. HALT during BG
 or DM waits, TRAP/interrupt priority, reset interaction, and analog input timing
 remain uncomposed
 [ADI-UM-1989, printed pp. 5-13–5-14, 5-17–5-20].

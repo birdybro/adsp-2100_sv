@@ -297,6 +297,12 @@ from .program_bus import (
     ProgramBusState,
     apply_program_bus_cycle,
 )
+from .program_owner_bus import (
+    ProgramBusOwner,
+    ProgramOwnerBusCycleResult,
+    ProgramOwnerBusState,
+    apply_program_owner_bus_cycle,
+)
 from .data_bus import (
     DATA_ADDRESS_WIDTH,
     DATA_WORD_WIDTH,
@@ -648,8 +654,11 @@ __all__ = [
     "ShifterDMNativeCycleResult",
     "ShifterDMNativeState",
     "ProgramBusCycleResult",
+    "ProgramBusOwner",
     "ProgramBusRequest",
     "ProgramBusState",
+    "ProgramOwnerBusCycleResult",
+    "ProgramOwnerBusState",
     "MACResult",
     "MACRegisterWrite",
     "MR_SATURATION_OPCODE",
@@ -728,6 +737,7 @@ __all__ = [
     "apply_dm_write_immediate_native_cycle",
     "apply_shifter_dm_native_cycle",
     "apply_program_bus_cycle",
+    "apply_program_owner_bus_cycle",
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",
     "apply_direct_jump_cycle",

@@ -8,6 +8,22 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded fail-closed shared program-memory owner selector in an independent
+  Python model and portable SystemVerilog. Ordinary fetch, Type 5 PM data, and
+  Type 13 PM data descriptors now converge on exactly one native PM phase
+  controller; exactly-one requests are accepted at state 8-to-1, owners and
+  descriptors are retained through completion/relinquishment, and one-hot
+  acceptance/read/completion events return to the accepted requester.
+  Simultaneous and out-of-phase requests are rejected and observed rather than
+  assigned an undocumented priority. Eight directed tests and 50,007
+  deterministic model/RTL clocks cover 3,240 completions, 1,100 collisions,
+  1,328 out-of-phase attempts, 2,595 owner switches, and 606 active
+  relinquishment holds. A machine-readable contract, formal harness, Yosys
+  recipe, and fully constrained Cyclone V project bind the result. Quartus uses
+  160 ALMs and 77 registers, no RAM/DSP blocks, +12.059 ns worst setup,
+  +0.168 ns worst hold, 125.93 MHz worst slow-corner Fmax, and no unconstrained
+  paths at 20 ns. Architectural client wiring and event priority remain open.
+
 - A primary-backed bounded Type 5/native-PM/HALT composition in an independent
   Python model and portable SystemVerilog. HALT recognized during the PM-data
   cycle now converts an issue-time hit into a recovery, suppresses the cached
@@ -591,6 +607,13 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- The shared-PM owner passes eight directed checks, 50,007 deterministic
+  model/RTL clocks, the complete 655-check `make test` regression, strict
+  Verilator/text lint, and all 69 formal-harness syntax checks. Its fully
+  constrained Quartus Cyclone V fit closes at 20 ns with positive multicorner
+  setup/hold slack and zero unconstrained paths; proof execution and Yosys
+  synthesis remain unavailable in this environment.
 
 - Sixteen integrated-model foundation tests and the complete `make test`
   regression pass after composing linear NOP/Type 6/Type 7 execution with the

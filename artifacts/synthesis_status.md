@@ -15,7 +15,7 @@
   the bounded NOP/Type 6/Type 7/Type 17/Type 18
   linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
   compositions plus the Type 5/Type 13 native-PM/HALT attachments,
-  the standalone and Type 13-integrated
+  the shared-PM-owner selector, the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
   stack-control
@@ -27,8 +27,16 @@
   no warnings.
 - Yosys is not installed in this environment. Original RESET/phase, normal
   BR/BG, standalone HALT sequencing, bounded linear-owner, linear-owner/BR/BG,
-  linear-owner/HALT, and Type 5/Type 13 native-PM/HALT synthesis scripts are wired into
-  `make synth-yosys` for an equipped host.
+  linear-owner/HALT, shared-PM-owner, and Type 5/Type 13 native-PM/HALT
+  synthesis scripts are wired into `make synth-yosys` for an equipped host.
+- Quartus 17.0.2 full compilation of the bounded shared-PM-owner selector
+  passes for Cyclone V `5CSEBA6U23I7`. It uses 160 ALMs and 77 fitted
+  registers, no block memory, and no DSP blocks. Against its 20 ns virtual-pin
+  smoke constraint, worst multicorner setup slack is +12.059 ns, worst hold
+  slack is +0.168 ns, worst slow-corner Fmax is 125.93 MHz, and TimeQuest
+  reports zero unconstrained clocks, ports, or paths. This qualifies the
+  exactly-one selector plus one native PM controller, not architectural client
+  attachment, request priority, physical I/O, or whole-core timing closure.
 - Quartus 17.0.2 full compilation of the normal BR/BG controller passes for
   Cyclone V `5CSEBA6U23I7`. It uses 27 ALMs, 7 fitted registers, no block
   memory, and no DSP blocks. Against its 20 ns virtual-pin smoke constraint,

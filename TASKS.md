@@ -1114,6 +1114,9 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv`,
   `formal/shifter_pm_cache.sby`, `tests/test_program_bus.py`,
   `sim/unit/tb_adsp2100_program_bus.sv`, `formal/pm_bus.sby`,
+  `tests/test_program_owner_bus.py`,
+  `sim/unit/tb_adsp2100_program_owner_bus.sv`,
+  `formal/program_owner_bus.sby`,
   `tests/test_shifter_pm_native.py`,
   `sim/unit/tb_adsp2100_shifter_pm_native_slice.sv`,
   `formal/shifter_pm_native.sby`, `tests/test_compute_pm_cache.py`,
@@ -1167,7 +1170,20 @@ advance beyond research until a page-level primary citation is added.
   recovery fetch, cache refill, 387 stops/resumes, and DMACK-qualified release.
   Its formal recipe syntax-checks and a fully constrained 25 ns Cyclone V fit
   uses 1,946 ALMs, 1,768 registers, one DSP, and no RAM. Shared event
-  arbitration remains open. A bounded ordinary linear-fetch owner now shares the native PM
+  arbitration remains open. A fail-closed shared-PM selector now places
+  ordinary fetch, Type 5 PM data, and Type 13 PM data descriptors before one
+  native PM controller. It accepts exactly one requester at state 8-to-1,
+  retains and routes that owner through state-7 completion, preserves owner
+  through relinquishment, and reports rather than prioritizes collisions or
+  off-boundary requests. Eight directed tests and 50,007 model/RTL clocks
+  cover 3,240 completions, 1,100 rejected collisions, 1,328 rejected
+  off-boundary requests, 2,595 owner switches, and 606 relinquished active
+  holds. Its formal recipe syntax-checks and a fully constrained 20 ns Cyclone
+  V fit uses 160 ALMs and 77 registers, no RAM/DSP blocks, +12.059 ns worst
+  setup, +0.168 ns worst hold, 125.93 MHz worst slow-corner Fmax, and zero
+  unconstrained paths. The verified architectural client wrappers are not yet
+  connected to this selector and it makes no architectural priority claim.
+  A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
@@ -1182,8 +1198,9 @@ advance beyond research until a page-level primary citation is added.
   composition now attaches normal BR/BG issue inhibition and PM output masking
   through five tests and 50,003 clocks, including 93 full handshakes; every
   other owner remains outside that result.
-- **Unresolved questions:** whole-core PM ownership, BR/BG priority with other
-  owners and events, and electrical wrapper constraints.
+- **Unresolved questions:** architectural request generation/attachment,
+  branch/loop/interrupt/HALT/TRAP/BR priority, and electrical wrapper
+  constraints.
 - **Confidence:** CORROBORATED
 
 ## M19 — Data-memory interface

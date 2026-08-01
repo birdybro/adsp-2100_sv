@@ -53,6 +53,17 @@ compute/status/read/PX/I commit edge; and accepts a miss recovery on the next
 state 8-to-1 without repeating the architectural data action. This remains an
 independent bounded client, not a shared PM-owner decision.
 
+A bounded shared-PM selector now places ordinary instruction fetch, Type 5 PM
+data, and Type 13 PM data descriptors in front of exactly one native PM
+controller. It accepts a descriptor only when exactly one requester is
+asserted on the enabled state-8-to-state-1 boundary, retains that owner through
+the state-7 completion, and routes acceptance/read/completion events only to
+that owner. Simultaneous requests and out-of-phase requests are rejected and
+reported. Rejecting a collision is deliberately an implementation invariant,
+not a claim that the original device discarded such work: architectural
+request generation and branch/loop/interrupt/event priority remain outside
+this decision until sourced and composed.
+
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete

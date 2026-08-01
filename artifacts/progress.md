@@ -17,6 +17,8 @@ bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
 attached separately to that owner, standalone PM-data HALT forced-fetch
 scheduling attached independently to the bounded Type 5 and Type 13
 native-PM owners,
+fail-closed shared native-PM transaction ownership for ordinary fetch and the
+Type 5/Type 13 descriptor classes,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -25,6 +27,17 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- bounded shared-PM transaction owner for ordinary fetch, Type 5 PM data, and
+  Type 13 PM data descriptors, accepting exactly one request at state 8-to-1,
+  retaining the owner through state-7 completion/relinquishment, routing
+  events one-hot, and rejecting conflicts/off-boundary attempts without an
+  undocumented priority; eight directed tests and 50,007 independent-model/
+  RTL clocks cover 3,240 completions, 1,100 collisions, 1,328 out-of-phase
+  attempts, 2,595 owner switches, and 606 relinquished active holds, with a
+  machine-readable contract, formal/Yosys recipes, and a fully constrained
+  160-ALM/77-register Cyclone V fit; architectural clients and event priority
+  remain unconnected;
 
 - primary-backed bounded Type 5/cache/native-PM/HALT composition: a state-3
   recognition converts an issue-time cache hit into late recovery, commits
@@ -330,7 +343,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 647 distinct Python unit checks plus manifest/hash verification;
+- 655 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -613,7 +626,7 @@ outstanding.
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants
-  (68 total)
+  plus shared-PM-owner mutual-exclusion and routing invariants (69 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -626,10 +639,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Build fail-closed shared PM-owner arbitration for ordinary fetch and the
-   verified Type 5/Type 13 PM-data clients, then compose HALT with BR/BG,
-   DMACK waits, TRAP, interrupts, and reset without weakening the bounded
-   attachments.
+3. Attach the bounded ordinary-fetch and verified Type 5/Type 13 PM-data
+   clients to the fail-closed shared selector, then compose HALT with BR/BG,
+   DMACK waits, TRAP, interrupts, and reset without inventing priority or
+   weakening the bounded attachments.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed

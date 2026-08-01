@@ -55,6 +55,29 @@ model/RTL clocks cover reads, writes, instruction/data selection, state-7
 holds, back-to-back PMS continuity, unknown validity, reset, and bus-output
 masking.
 
+## Bounded shared-owner selector
+
+`adsp2100_program_owner_bus` composes exactly one native controller with three
+uniform descriptor inputs: ordinary fetch, Type 5 PM data, and Type 13 PM
+data. Request capture remains the enabled state-8-to-state-1 edge. An accepted
+owner remains stable through the active eight-state transaction and receives
+the sole completion/read-sample event at state 7-to-state-8. Bus
+relinquishment masks native outputs while preserving both owner and descriptor;
+the next enabled state-8 boundary may replace the owner for a back-to-back
+transaction without deasserting PMS.
+
+The selector accepts only an exactly-one request set. Two or three concurrent
+requests produce no transaction and raise `request_conflict_o`; a request at
+any other boundary raises `request_out_of_phase_o` and cannot replace an active
+owner. This fail-closed rule is not presented as original-device request
+priority. It provides deterministic mutual exclusion until architectural
+sequencing ensures legal one-hot requests. Eight directed tests and 50,007
+model/RTL clocks pass with all three requesters, 1,100 boundary conflicts,
+1,328 off-boundary rejections, 3,240 completions, 2,595 owner switches, and
+606 active relinquishment holds. Architectural client wiring and the priority
+among fetch, PM data recovery, branch, loop, interrupt, HALT, TRAP, and BR/BG
+remain open.
+
 ## Type 13/cache attachment
 
 The bounded `adsp2100_shifter_pm_native_slice` admits architectural issue and
