@@ -1,10 +1,15 @@
 PYTHON ?= python3
 VERILATOR ?= verilator
-LINEAR_COMPUTE_RTL = rtl/core/adsp2100_condition_logic.sv \
+LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_conditional_compute_decode.sv \
 	rtl/core/adsp2100_alu.sv rtl/core/adsp2100_mr_saturate.sv \
 	rtl/core/adsp2100_mac.sv \
-	rtl/core/adsp2100_conditional_compute_action.sv
+	rtl/core/adsp2100_conditional_compute_action.sv \
+	rtl/core/adsp2100_immediate_shift_decode.sv \
+	rtl/core/adsp2100_conditional_shift_decode.sv \
+	rtl/core/adsp2100_shifter.sv \
+	rtl/core/adsp2100_immediate_shift_action.sv \
+	rtl/core/adsp2100_conditional_shift_action.sv
 
 .DEFAULT_GOAL := test
 
@@ -78,7 +83,7 @@ lint:
 			rtl/core/adsp2100_status_stack.sv \
 			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_program_owner_bus.sv \
@@ -255,7 +260,7 @@ lint:
 			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
@@ -277,7 +282,7 @@ lint:
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_bus_control.sv \
 			rtl/wrappers/adsp2100_reset_bus_grant.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_bus_control_slice.sv; \
@@ -303,7 +308,7 @@ lint:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_halt_control.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_halt_control_slice.sv; \
@@ -756,7 +761,7 @@ linear-owner-control-tests:
 			rtl/core/adsp2100_status_stack.sv \
 			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_program_owner_bus.sv \
@@ -1059,7 +1064,7 @@ linear-core-tests:
 			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			sim/unit/tb_adsp2100_linear_core_slice.sv; \
@@ -1095,7 +1100,7 @@ linear-bus-control-tests:
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_bus_control.sv \
 			rtl/wrappers/adsp2100_reset_bus_grant.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_bus_control_slice.sv \
@@ -1142,7 +1147,7 @@ halt-tests:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_halt_control.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_halt_control_slice.sv \
@@ -2110,7 +2115,7 @@ formal:
 			rtl/core/adsp2100_status_stack.sv \
 			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_program_owner_bus.sv \
@@ -2197,7 +2202,7 @@ formal:
 			rtl/core/adsp2100_architectural_state.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			formal/harnesses/adsp2100_linear_core_formal.sv; \
@@ -2221,7 +2226,7 @@ formal:
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_bus_control.sv \
 			rtl/wrappers/adsp2100_reset_bus_grant.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_bus_control_slice.sv \
@@ -2245,7 +2250,7 @@ formal:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_halt_control.sv \
-			$(LINEAR_COMPUTE_RTL) \
+			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_halt_control_slice.sv \

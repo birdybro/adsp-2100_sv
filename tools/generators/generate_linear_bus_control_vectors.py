@@ -36,6 +36,7 @@ READABLE_CODES = tuple(
     + list(range(0x20, 0x2C))
     + list(range(0x30, 0x38))
 )
+LEGAL_SHIFTER_XOPS = (0, 2, 3, 4, 5, 6, 7)
 
 
 def _append(packed: int, value: int | bool, width: int) -> int:
@@ -66,8 +67,26 @@ def _type9_nop(rng: random.Random) -> int:
     )
 
 
+def _type15(rng: random.Random) -> int:
+    return (
+        0x0F0000
+        | (rng.randrange(8) << 11)
+        | (rng.choice(LEGAL_SHIFTER_XOPS) << 8)
+        | rng.randrange(256)
+    )
+
+
+def _type16(rng: random.Random) -> int:
+    return (
+        0x0E0000
+        | (rng.randrange(16) << 11)
+        | (rng.choice(LEGAL_SHIFTER_XOPS) << 8)
+        | rng.randrange(16)
+    )
+
+
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(12)
+    choice = rng.randrange(16)
     if choice < 2:
         return 0
     if choice < 7:
@@ -76,7 +95,11 @@ def _legal_opcode(rng: random.Random) -> int:
         return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
     if choice < 11:
         return 0x0C0000 | (rng.randrange(256) << 4)
-    return _type9_nop(rng)
+    if choice < 12:
+        return _type9_nop(rng)
+    if choice < 14:
+        return _type15(rng)
+    return _type16(rng)
 
 
 def _exact(value: object) -> tuple[bool, int]:
@@ -132,6 +155,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
     coverage = {key: 0 for key in (
         "recognized", "grant_assert", "grant_release", "resume",
         "retire", "issue", "masked", "type9_retire",
+        "type15_retire", "type16_retire",
     )}
 
     def emit(
@@ -164,6 +188,16 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             result.core.retire_event
             and isinstance(state.core.instruction, ExactWord)
             and state.core.instruction.value & 0xF800F0 == 0x200000
+        )
+        coverage["type15_retire"] += int(
+            result.core.retire_event
+            and isinstance(state.core.instruction, ExactWord)
+            and state.core.instruction.value & 0xFF8000 == 0x0F0000
+        )
+        coverage["type16_retire"] += int(
+            result.core.retire_event
+            and isinstance(state.core.instruction, ExactWord)
+            and state.core.instruction.value & 0xFF80F0 == 0x0E0000
         )
         coverage["recognized"] += int(result.control.request_recognized)
         coverage["grant_assert"] += int(result.control.grant_assert_event)

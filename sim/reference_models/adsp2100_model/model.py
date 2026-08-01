@@ -2,9 +2,9 @@
 
 The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
-original Type 18 mode control, and legal Type 17 internal moves from known
-sources. Unsupported behavior fails closed instead of becoming an accidental
-no-op.
+Type 15 immediate shifts, Type 16 conditional shifts, original Type 18 mode
+control, and legal Type 17 internal moves from known sources. Unsupported
+behavior fails closed instead of becoming an accidental no-op.
 """
 
 from __future__ import annotations
@@ -426,6 +426,84 @@ class ADSP2100Model:
                 mstat=computed.state.status.mstat,
                 icntl=computed.state.status.icntl,
                 imask=computed.state.status.imask,
+            )
+        elif instruction.value & 0xFF8000 == 0x0F0000:
+            from .immediate_shift import (
+                ImmediateShiftState,
+                apply_immediate_shift_cycle,
+                decode_immediate_shift,
+            )
+
+            action = decode_immediate_shift(instruction.value)
+            if action is None:
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} has an unsupported Type 15 "
+                    "shifter subencoding"
+                )
+            shifted = apply_immediate_shift_cycle(
+                ImmediateShiftState(
+                    primary=self.state.primary,
+                    alternate=self.state.alternate,
+                    mstat=self.state.mstat,
+                ),
+                execute=True,
+                opcode=instruction.value,
+            )
+            next_state = replace(
+                self.state,
+                primary=shifted.state.primary,
+                alternate=shifted.state.alternate,
+                mstat=shifted.state.mstat,
+            )
+        elif instruction.value & 0xFF80F0 == 0x0E0000:
+            from .conditional_shift import (
+                ConditionalShiftState,
+                apply_conditional_shift_cycle,
+                decode_conditional_shift,
+            )
+            from .status import ASTATState, StatusRegisters
+
+            action = decode_conditional_shift(instruction.value)
+            if action is None:
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} has an unsupported Type 16 "
+                    "shifter source subencoding"
+                )
+            shifted = apply_conditional_shift_cycle(
+                ConditionalShiftState(
+                    primary=self.state.primary,
+                    alternate=self.state.alternate,
+                    status=StatusRegisters(
+                        astat=(
+                            ASTATState()
+                            if self.state.astat is UNKNOWN
+                            else ASTATState.from_word(self.state.astat)
+                        ),
+                        mstat=self.state.mstat,
+                        icntl=self.state.icntl,
+                        imask=self.state.imask,
+                    ),
+                ),
+                execute=True,
+                opcode=instruction.value,
+                not_counter_expired=(
+                    isinstance(self.state.cntr, ExactWord)
+                    and self.state.cntr.value != 1
+                ),
+            )
+            next_astat = (
+                shifted.state.status.astat.to_word()
+                if shifted.state.status.astat.is_fully_known
+                else UNKNOWN
+            )
+            next_state = replace(
+                self.state,
+                primary=shifted.state.primary,
+                alternate=shifted.state.alternate,
+                astat=next_astat,
+                mstat=shifted.state.status.mstat,
+                icntl=shifted.state.status.icntl,
+                imask=shifted.state.status.imask,
             )
         else:
             database = load_database()

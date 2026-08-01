@@ -14,8 +14,10 @@ flow, the PC incrementer drives the following address onto PMA and that value
 is loaded into the PC at cycle end [ADI-UM-1989, printed pp. 4-3, 4-10]. The
 integrated Python model and bounded steady-state RTL owner now enforce this
 distinction for NOP, legal Type 6/7, every Type 9 conditional ALU/MAC word,
-all 2,256 legal Type 17 internal MOVE source/destination pairs from fully
-initialized state, and all Type 18 MODE CONTROL words:
+all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
+16 conditional-shift words, all 2,256 legal Type 17 internal MOVE source/
+destination pairs from fully initialized state, and all Type 18 MODE CONTROL
+words:
 address `N` executes while an ordinary fetch for `N+1` occupies the native PM
 phases, then the state-7-to-8 edge commits the current action, PC=`N+1`, and
 the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
@@ -24,12 +26,18 @@ instruction. Type 9 samples cycle-start operands, condition, bank, MSTAT
 arithmetic controls, feedback, and validity-aware CNTR predicate, then commits
 true ALU/MAC result and ASTAT effects atomically with the fetched word at the
 same completion edge. False and AMF-zero forms retain the same one-cycle
-fetch/retire boundary without an architectural computation write. The request
+fetch/retire boundary without an architectural computation write. Type 15
+samples the selected-bank X operand, immediate exponent, and old SR for OR
+forms at cycle start, then commits SR at that edge. Type 16 samples its
+predicate, X operand, SE/SR/SB, and ASTAT feedback at cycle start; a true form
+commits only the function-selected SR/SE/SB/SS destinations, while a false
+form preserves them without changing the fetch cycle. The request
 is admitted at the enabled state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Fourteen directed tests and 53,662
+interface exposes no PM acknowledge input. Fifteen directed tests and 177,167
 phase clocks compare the independent model with RTL, including every legal
-Type 17 pair, every Type 9 AMF/condition combination, every Type 18 encoding,
+Type 17 pair, every Type 9 AMF/condition combination, every supported Type 15
+and Type 16 word, every Type 18 encoding,
 phase holds, bus-output relinquishment, PC wrap, selected-bank state,
 CNTR-stack effects, invalid fetched data, and fail-closed unsupported words. A
 Type 17 move sourced from ASTAT, MSTAT,
@@ -40,11 +48,11 @@ not architectural interfaces. Reset release/first fetch, active-loop and branch
 selection, interrupt abort, PM-data/cache ownership, HALT, and whole-core
 BR/BG arbitration remain outside this bounded result. A separate bounded
 composition now proves the ordinary linear owner across 50,003 more clocks and
-86 complete BR/BG handshakes, including current-fetch retirement, next-issue
+92 complete BR/BG handshakes, including current-fetch retirement, next-issue
 inhibition, grant-time PM masking, and state-8-to-state-1 restart; it does not
 attach any other PM/DM owner [ADI-UM-1989, printed pp. 1-5,
-2-6, 2-15, 2-18, 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24,
-5-5–5-8, 6-1–6-2, 6-12, 6-14–6-15, A-3, and A-9].
+2-6, 2-15, 2-18, 2-20–2-30, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-25,
+5-5–5-8, 6-1–6-2, 6-11–6-12, 6-14–6-15, A-3, A-7, and A-9].
 
 Another bounded composition now verifies the ordinary-fetch HALT pipeline
 case. Active-low HALT recognition at state 3 does not squash the word already
@@ -52,7 +60,7 @@ executing or its overlapped fetch. That fetch retires at state 7-to-8, the
 pipeline then remains stopped with the fetched PC/opcode and external PM
 levels stable in state 8, and a DMACK-qualified HALT release issues the next
 fetch at state 8-to-1. The independent-model/RTL comparison covers 50,003
-clocks and 790 stop/restart sequences. The distinct PM-data case still requires
+clocks and 784 stop/restart sequences. The distinct PM-data case still requires
 the documented forced external instruction fetch even on a cache hit. A
 standalone controller now schedules that path: PM-data recognition completes
 the data cycle, admits one forced fetch at the following state-8 issue edge,

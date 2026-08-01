@@ -182,7 +182,8 @@ owner is now attached to BR/BG: its current ordinary fetch remains driven and
 retires before the new-issue inhibit takes effect; grant then masks every PM
 output enable, and the first post-release fetch starts at the state-8-to-state-1
 restart boundary. Five directed tests and 50,003 differential clocks exercise
-86 complete request/grant/release/resume sequences. PM-data/cache owners,
+92 complete request/grant/release/resume sequences, including fetched Type 15
+and Type 16 retirement under the same inhibit/grant/restart contract. PM-data/cache owners,
 control transfers, interrupts, HALT, and reset-first-fetch are not part of that
 composition.
 
@@ -197,8 +198,9 @@ halted driven bus, not the tristated BG condition. When HALT is inactive and
 DMACK is high, the next state-8-to-state-1 edge accepts the following fetch.
 
 Seven directed tests and 50,003 deterministic independent-model/RTL clocks
-cover 790 recognize/stop/resume sequences, 161 DMACK-low blocked-release
-observations, and 742 held clocks with stable PM signals.
+cover 784 recognize/stop/resume sequences, 178 DMACK-low blocked-release
+observations, and 883 held clocks with stable PM signals; fetched Type 15 and
+Type 16 words retire before the stop without replay after release.
 
 The PM-data case is not equivalent: the original requires a forced external
 instruction fetch before stopping, even if the cache held the next word. The

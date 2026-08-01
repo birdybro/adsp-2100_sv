@@ -38,6 +38,7 @@ READABLE_CODES = tuple(
     + list(range(0x20, 0x2C))
     + list(range(0x30, 0x38))
 )
+LEGAL_SHIFTER_XOPS = (0, 2, 3, 4, 5, 6, 7)
 
 
 def _append(packed: int, value: int | bool, width: int) -> int:
@@ -75,6 +76,24 @@ def _type9(
         | ((z & 1) << 18)
         | ((amf & 0x1F) << 13)
         | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | (condition & 0xF)
+    )
+
+
+def _type15(*, sf: int, xop: int, exponent: int) -> int:
+    return (
+        0x0F0000
+        | ((sf & 0xF) << 11)
+        | ((xop & 0x7) << 8)
+        | (exponent & 0xFF)
+    )
+
+
+def _type16(*, sf: int, xop: int, condition: int) -> int:
+    return (
+        0x0E0000
+        | ((sf & 0xF) << 11)
         | ((xop & 0x7) << 8)
         | (condition & 0xF)
     )
@@ -127,11 +146,29 @@ def _directed_opcodes() -> tuple[int, ...]:
         for amf in range(32)
         for condition in range(16)
     )
+    # Traverse every source-backed Type 15 and Type 16 word through the real
+    # fetched retirement path. Standalone state tests already execute both
+    # banks exhaustively; mode changes and random tail traffic vary the bank
+    # again here without duplicating the complete opcode traversal.
+    opcodes.append(_type7(writable["MSTAT"], 0))
+    opcodes.extend(
+        _type15(sf=sf, xop=xop, exponent=exponent)
+        for sf in range(8)
+        for xop in LEGAL_SHIFTER_XOPS
+        for exponent in range(256)
+    )
+    opcodes.append(_type7(writable["MSTAT"], 1))
+    opcodes.extend(
+        _type16(sf=sf, xop=xop, condition=condition)
+        for sf in range(16)
+        for xop in LEGAL_SHIFTER_XOPS
+        for condition in range(16)
+    )
     return tuple(opcodes)
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(14)
+    choice = rng.randrange(18)
     if choice == 0:
         return 0
     if choice < 5:
@@ -140,11 +177,23 @@ def _legal_opcode(rng: random.Random) -> int:
         return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
     if choice < 11:
         return MODE_CONTROL_VALUE | (rng.randrange(256) << 4)
-    return _type9(
-        z=rng.randrange(2),
-        amf=rng.randrange(32),
-        yop=rng.randrange(4),
-        xop=rng.randrange(8),
+    if choice < 14:
+        return _type9(
+            z=rng.randrange(2),
+            amf=rng.randrange(32),
+            yop=rng.randrange(4),
+            xop=rng.randrange(8),
+            condition=rng.randrange(16),
+        )
+    if choice < 16:
+        return _type15(
+            sf=rng.randrange(8),
+            xop=rng.choice(LEGAL_SHIFTER_XOPS),
+            exponent=rng.randrange(256),
+        )
+    return _type16(
+        sf=rng.randrange(16),
+        xop=rng.choice(LEGAL_SHIFTER_XOPS),
         condition=rng.randrange(16),
     )
 
@@ -408,7 +457,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--instructions", type=int, default=6_000)
+    parser.add_argument("--instructions", type=int, default=20_000)
     parser.add_argument("--seed", type=lambda value: int(value, 0), default=0x210067)
     args = parser.parse_args()
     lines = generate_lines(args.instructions, args.seed)

@@ -58,6 +58,14 @@ def _type9(
     )
 
 
+def _type15(*, sf: int, xop: int, exponent: int) -> int:
+    return 0x0F0000 | ((sf & 0xF) << 11) | ((xop & 0x7) << 8) | (exponent & 0xFF)
+
+
+def _type16(*, sf: int, xop: int, condition: int) -> int:
+    return 0x0E0000 | ((sf & 0xF) << 11) | ((xop & 0x7) << 8) | (condition & 0xF)
+
+
 def _setup(state: LinearCoreState, opcode: int, *, pc: int = 4) -> LinearCoreState:
     result = apply_linear_core_cycle(
         state,
@@ -117,6 +125,14 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "ALL_TYPE_9_CONDITIONAL_ALU_MAC_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_14336_SUPPORTED_TYPE_15_IMMEDIATE_SHIFT_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_1792_SUPPORTED_TYPE_16_CONDITIONAL_SHIFT_WORDS",
             contract["supported_current_instructions"],
         )
         self.assertIn("OQ_016", contract["provisional_behavior"])
@@ -228,6 +244,57 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertEqual(preserved.state.architecture.astat, ExactWord(8, 0))
 
+    def test_type15_and_type16_retire_shifter_actions_atomically(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type7(0x31, 0))
+        for opcode in (
+            _type6(DREG.SI, 0xB6A3),
+            _type6(DREG.SE, 0),
+            _type15(sf=0, xop=0, exponent=-5),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        shifted = _complete(_issue(state).state, _type7(0x30, 0))
+        self.assertEqual(
+            read_dreg(shifted.state.architecture.primary, DREG.SR0),
+            ExactWord(16, 0x1800),
+        )
+        self.assertEqual(
+            read_dreg(shifted.state.architecture.primary, DREG.SR1),
+            ExactWord(16, 0x05B5),
+        )
+
+        state = _complete(
+            _issue(shifted.state).state,
+            _type6(DREG.SI, 0x1234),
+        ).state
+        state = _complete(
+            _issue(state).state,
+            _type16(sf=0, xop=0, condition=0),
+        ).state
+        false_shift = _complete(
+            _issue(state).state,
+            _type16(sf=0, xop=0, condition=0xF),
+        )
+        self.assertEqual(
+            read_dreg(false_shift.state.architecture.primary, DREG.SR0),
+            ExactWord(16, 0x1800),
+        )
+        self.assertEqual(
+            read_dreg(false_shift.state.architecture.primary, DREG.SR1),
+            ExactWord(16, 0x05B5),
+        )
+
+        true_shift = _complete(_issue(false_shift.state).state, 0)
+        self.assertEqual(
+            read_dreg(true_shift.state.architecture.primary, DREG.SR0),
+            ExactWord(16, 0x0000),
+        )
+        self.assertEqual(
+            read_dreg(true_shift.state.architecture.primary, DREG.SR1),
+            ExactWord(16, 0x1234),
+        )
+        self.assertEqual(true_shift.state.architecture.astat, ExactWord(8, 0))
+
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))
         for value in range(1, 7):
@@ -242,6 +309,8 @@ class LinearCoreTests(unittest.TestCase):
             (0x000001, False),
             (_type7(0x32, 1), True),
             (_type17(0x32, 0x00), True),
+            (_type15(sf=8, xop=0, exponent=0), True),
+            (_type16(sf=0, xop=1, condition=0xF), True),
         ):
             state = _setup(LinearCoreState.reset(), opcode)
             result = _issue(state)

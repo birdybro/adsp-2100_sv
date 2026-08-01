@@ -118,6 +118,25 @@ module adsp2100_linear_fetch_client (
     logic type9_mac_write;
     logic [39:0] type9_mac_result;
     logic type9_mac_mv;
+    logic type15_class_valid;
+    logic type15_action_valid;
+    logic type15_unsupported_subencoding;
+    logic [3:0] type15_source_dreg;
+    logic type15_sr_write;
+    logic [31:0] type15_sr_result;
+    logic type16_class_valid;
+    logic type16_action_valid;
+    logic type16_unsupported_subencoding;
+    logic type16_condition_true;
+    logic [3:0] type16_source_dreg;
+    logic type16_sr_write;
+    logic [31:0] type16_sr_result;
+    logic type16_se_write;
+    logic [7:0] type16_se_result;
+    logic type16_sb_write;
+    logic [4:0] type16_sb_result;
+    logic type16_ss_write;
+    logic type16_ss_result;
     logic supported_instruction;
     logic state_write;
     logic [5:0] state_write_code;
@@ -135,9 +154,9 @@ module adsp2100_linear_fetch_client (
     logic [15:0] state_af;
     logic [15:0] state_mf;
     logic [39:0] state_mr;
-    logic [7:0] state_se_unused;
-    logic [4:0] state_sb_unused;
-    logic [31:0] state_sr_unused;
+    logic [7:0] state_se;
+    logic [4:0] state_sb;
+    logic [31:0] state_sr;
     logic unused_observation;
 
     assign issue_boundary_o = (
@@ -160,13 +179,16 @@ module adsp2100_linear_fetch_client (
     assign nop_valid = opcode_q == 24'h000000;
     assign supported_instruction = (
         nop_valid || type6_valid || type7_action_valid || type17_action_valid
-        || type18_valid || type9_action_valid
+        || type18_valid || type9_action_valid || type15_action_valid
+        || type16_action_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
         && (
             (type7_class_valid && type7_invalid_subencoding)
             || (type17_class_valid && type17_invalid_subencoding)
+            || (type15_class_valid && type15_unsupported_subencoding)
+            || (type16_class_valid && type16_unsupported_subencoding)
         )
     );
     assign unsupported_instruction_o = (
@@ -198,8 +220,18 @@ module adsp2100_linear_fetch_client (
                 ? {2'b00, type7_data}
                 : state_read_data
         );
-    assign state_read_code = type17_action_valid
-        ? type17_source_code : {2'b00, type9_x_source_dreg};
+    always_comb begin
+        state_read_code = {2'b00, type9_x_source_dreg};
+        if (type16_action_valid) begin
+            state_read_code = {2'b00, type16_source_dreg};
+        end
+        if (type15_action_valid) begin
+            state_read_code = {2'b00, type15_source_dreg};
+        end
+        if (type17_action_valid) begin
+            state_read_code = type17_source_code;
+        end
+    end
 
     assign instruction_valid_o = instruction_valid_q;
     assign transaction_pending_o = pending_q;
@@ -296,6 +328,41 @@ module adsp2100_linear_fetch_client (
         .mac_mv_o(type9_mac_mv)
     );
 
+    adsp2100_immediate_shift_action type15_action (
+        .opcode_i(opcode_q),
+        .source_data_i(state_read_data),
+        .sr_i(state_sr),
+        .class_valid_o(type15_class_valid),
+        .action_valid_o(type15_action_valid),
+        .unsupported_subencoding_o(type15_unsupported_subencoding),
+        .source_dreg_o(type15_source_dreg),
+        .sr_write_o(type15_sr_write),
+        .sr_result_o(type15_sr_result)
+    );
+
+    adsp2100_conditional_shift_action type16_action (
+        .opcode_i(opcode_q),
+        .not_counter_expired_i(state_not_counter_expired),
+        .source_data_i(state_read_data),
+        .sr_i(state_sr),
+        .se_i(state_se),
+        .sb_i(state_sb),
+        .astat_i(astat_o),
+        .class_valid_o(type16_class_valid),
+        .action_valid_o(type16_action_valid),
+        .unsupported_subencoding_o(type16_unsupported_subencoding),
+        .condition_true_o(type16_condition_true),
+        .source_dreg_o(type16_source_dreg),
+        .sr_write_o(type16_sr_write),
+        .sr_result_o(type16_sr_result),
+        .se_write_o(type16_se_write),
+        .se_result_o(type16_se_result),
+        .sb_write_o(type16_sb_write),
+        .sb_result_o(type16_sb_result),
+        .ss_write_o(type16_ss_write),
+        .ss_result_o(type16_ss_result)
+    );
+
     adsp2100_architectural_state state (
         .clk_i(clk_i),
         .reset_i(reset_i),
@@ -321,12 +388,16 @@ module adsp2100_linear_fetch_client (
         .mac_write_enable_i(retire_event_o && type9_mac_write),
         .mac_destination_feedback_i(type9_destination_feedback),
         .mac_result_i(type9_mac_result),
-        .shifter_sr_write_enable_i(1'b0),
-        .shifter_sr_result_i(32'h00000000),
-        .shifter_se_write_enable_i(1'b0),
-        .shifter_se_result_i(8'h00),
-        .shifter_sb_write_enable_i(1'b0),
-        .shifter_sb_result_i(5'h00),
+        .shifter_sr_write_enable_i(
+            retire_event_o && (type15_sr_write || type16_sr_write)
+        ),
+        .shifter_sr_result_i(
+            type15_sr_write ? type15_sr_result : type16_sr_result
+        ),
+        .shifter_se_write_enable_i(retire_event_o && type16_se_write),
+        .shifter_se_result_i(type16_se_result),
+        .shifter_sb_write_enable_i(retire_event_o && type16_sb_write),
+        .shifter_sb_result_i(type16_sb_result),
         .dag_i_write_enable_i(1'b0),
         .dag_i_write_address_i(3'b000),
         .dag_i_write_data_i(14'h0000),
@@ -354,8 +425,8 @@ module adsp2100_linear_fetch_client (
         .divide_aq_i(1'b0),
         .mac_status_write_enable_i(retire_event_o && type9_mac_write),
         .mac_mv_i(type9_mac_mv),
-        .shifter_status_write_enable_i(1'b0),
-        .shifter_ss_i(1'b0),
+        .shifter_status_write_enable_i(retire_event_o && type16_ss_write),
+        .shifter_ss_i(type16_ss_result),
         .invalid_move_write_o(state_invalid_setup),
         .internal_conflict_o(internal_conflict_o),
         .count_stack_push_o(state_count_push_unused),
@@ -378,9 +449,9 @@ module adsp2100_linear_fetch_client (
         .af_o(state_af),
         .mf_o(state_mf),
         .mr_o(state_mr),
-        .se_o(state_se_unused),
-        .sb_o(state_sb_unused),
-        .sr_o(state_sr_unused)
+        .se_o(state_se),
+        .sb_o(state_sb),
+        .sr_o(state_sr)
     );
 
     always_ff @(posedge clk_i) begin
@@ -418,10 +489,10 @@ module adsp2100_linear_fetch_client (
         type17_destination_writable_unused, type17_source_valid_unused,
         type9_class_valid, type9_nop_action, type9_condition_true,
         type9_is_mac, type9_is_alu, type9_x_source_data_unused,
-        type9_y_source_data_unused, state_invalid_setup,
+        type9_y_source_data_unused, type16_condition_true,
+        state_invalid_setup,
         state_count_push_unused, state_count_push_data_unused,
-        state_bit_reverse_unused, state_se_unused, state_sb_unused,
-        state_sr_unused
+        state_bit_reverse_unused
     };
 
 `ifndef SYNTHESIS

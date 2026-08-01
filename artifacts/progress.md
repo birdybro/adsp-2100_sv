@@ -11,9 +11,9 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
-bounded steady-state NOP/Type 6/Type 7/Type 9/Type 17/Type 18 ordinary-fetch
-ownership with Type 9 computation/status actions attached directly to the
-shared architectural state,
+bounded steady-state NOP/Type 6/Type 7/Type 9/Type 15/Type 16/Type 17/Type 18
+ordinary-fetch ownership with Type 9 ALU/MAC and Type 15/16 shifter/status
+actions attached directly to the shared architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
 attached separately to that owner, standalone PM-data HALT forced-fetch
@@ -31,6 +31,21 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- fetched Type 15 immediate-shift and Type 16 conditional-shift execution
+  attached to the shared architectural-state owner and native ordinary-fetch
+  phases: 15 directed tests and 177,167 model/RTL clocks traverse all 14,336
+  supported Type 15 words and all 1,792 supported Type 16 words while
+  preserving selected-bank, old-SR OR, condition-false, and function-selected
+  SR/SE/SB/SS semantics; separate 50,003-clock BR/BG, shared-PM/BR-BG, and
+  HALT comparisons respectively retire 1,305, 1,050, and 1,414 fetched
+  shifter words while preserving control sequencing; strict lint passes, and
+  a fully constrained 25 ns Cyclone V fit uses 2,029 ALMs, 1,180 registers,
+  one DSP, no RAM, +3.388 ns worst setup, +0.166 ns worst hold, 46.27 MHz worst
+  slow-corner Fmax, and zero unconstrained clocks, ports, or paths; unsupported
+  Type 15 SF/XOP and Type 16 XOP words still fail closed, and reset-first-fetch,
+  loops, interrupts, control transfers, and unified PM/cache ownership remain
+  open;
 
 - fetched Type 9 conditional ALU/MAC execution attached to the shared
   architectural-state owner and native ordinary-fetch phases: 14 directed
@@ -416,7 +431,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 680 distinct Python unit checks plus manifest/hash verification;
+- 681 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -556,11 +571,11 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/9/17/18 linear owner adds 53,662 phase clocks,
-  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
+  the bounded Type 6/7/9/15/16/17/18 linear owner adds 177,167 phase clocks,
+  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 92
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across
-  769 stop/restart handshakes,
+  784 stop/restart handshakes,
   the Type 2/native-DM attachment adds 50,027 clocks,
   the Type 12/native-DM attachment adds 50,064 clocks,
   and the Type 14 state slice adds
@@ -714,7 +729,7 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/9/17/18 linear fetch owner and original
+  the bounded steady-state Type 6/7/9/15/16/17/18 linear fetch owner and original
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants

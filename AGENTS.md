@@ -230,12 +230,13 @@ now isolated in one reusable `adsp2100_architectural_state` owner; Type 17 and
 its dependent Type 3/6/7/linear paths retain their verified behavior through
 a compatibility action wrapper. Direct parallel DREG, ALU/MAC/shifter,
 DAG-I, automatic-status, and mode-control action ports are exposed and
-directly tested at that owner. The first fetched compute class, Type 9
-conditional ALU/MAC, now drives those shared result/status actions; a single
-cache shared by real Type 5/Type 13/fetch clients and the remaining fetched
-classes remain open, so this is not yet a unified core. A bounded steady-state
-owner now executes NOP, legal Type 6/7, every Type 9 conditional compute word,
-every legal Type 17 internal MOVE, and every Type 18 MODE CONTROL word while
+directly tested at that owner. Fetched Type 9 conditional ALU/MAC, Type 15
+immediate shift, and Type 16 conditional shift now drive those shared result/
+status actions; a single cache shared by real Type 5/Type 13/fetch clients and
+the remaining fetched classes remain open, so this is not yet a unified core.
+A bounded steady-state owner now executes NOP, legal Type 6/7, every Type 9
+conditional compute word, every supported Type 15/16 shifter word, every legal
+Type 17 internal MOVE, and every Type 18 MODE CONTROL word while
 fetching PC+1 through the native PM phase controller. Type 17 narrow
 status/control-source
 extension remains an observable OQ-016 provisional behavior; reset

@@ -100,8 +100,12 @@ classification and preserve state. The supported words pass both-bank
 model/RTL comparison over 58,709 cycles, including the manual's logical and
 arithmetic negative-five examples, PASS/OR feedback, every exponent, reset
 unknowns and warm-reset bank retention, invalid words, and collision
-suppression. Multifunction shifter instructions, fetch phases, and interrupt
-timing remain unintegrated.
+suppression. A stateless action boundary is additionally attached to the
+ordinary linear owner: all 14,336 supported words retire within a 177,167-
+clock independent-model/RTL run while PC+1 is fetched through the native PM
+phases. Unsupported SF/XOP words still fail closed. Multifunction attachment,
+loop-terminal behavior, interrupt timing, and unified event priority remain
+unintegrated.
 
 The separate `adsp2100_conditional_shift_slice` connects every source-backed
 Type 16 field combination to condition logic, both computational banks, the
@@ -121,9 +125,11 @@ EXP LO conditionally updates only SE; EXPADJ conditionally updates only SB.
 The complete class partition is exhaustively checked, all 1,792 supported
 words round trip through the assembler/disassembler, and 54,403 deterministic
 model/RTL cycles execute every supported word in both banks under true/false
-status patterns plus randomized reset/conflict cases. Fetch overlap,
-loop-terminal behavior, interrupt abort, waits, and external bus phases remain
-outside the bounded slice
+status patterns plus randomized reset/conflict cases. A stateless action
+boundary is additionally attached to the ordinary linear owner: all 1,792
+supported words retire within a 177,167-clock independent-model/RTL run while
+PC+1 is fetched through the native PM phases. Loop-terminal behavior,
+interrupt abort, and unified event priority remain outside the attachment
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
 
 The bounded `adsp2100_shift_move_slice` implements the canonical Type 14

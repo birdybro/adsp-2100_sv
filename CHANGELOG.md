@@ -8,6 +8,23 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched Type 15 immediate-shift and Type 16 conditional-shift execution in
+  the bounded ordinary linear owner. Two stateless action producers now sample
+  selected-bank X, immediate/SE shift counts, old SR/SB, predicate/CNTR, and
+  ASTAT feedback from the single shared architectural-state owner, then drive
+  atomic SR/SE/SB/SS intents at state-7 retirement. Fifteen directed tests and
+  177,167 deterministic model/RTL clocks traverse all 14,336 supported Type 15
+  words and all 1,792 supported Type 16 words in fetched execution, while
+  unsupported SF/XOP subencodings fail closed. Separate 50,003-clock BR/BG,
+  shared-PM/BR-BG, and HALT compositions respectively retire 1,305, 1,050,
+  and 1,414 fetched Type 15/16 words without changing request retention,
+  output masking, stop, or restart behavior. Strict lint passes. A fully
+  constrained 25 ns Cyclone V fit uses 2,029 ALMs, 1,180 registers, one DSP,
+  no block RAM, +3.388 ns worst multicorner setup slack, +0.166 ns worst hold
+  slack, 46.27 MHz worst slow-corner Fmax, and zero unconstrained clocks,
+  ports, or paths. Reset-first-fetch, active loops, control transfers,
+  interrupts, PM-data/cache ownership, and unified event priority remain open.
+
 - Fetched Type 9 conditional ALU/MAC execution in the bounded ordinary linear
   owner. A stateless action producer now decodes cycle-start operands,
   condition/status, feedback, CNTR predicate, and MSTAT arithmetic modes, then
