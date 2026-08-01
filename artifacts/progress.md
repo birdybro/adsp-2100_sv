@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `a660902`
+**Latest verified engineering commit:** `98561ea`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -22,6 +22,11 @@ cycle-, or Hard Drivin'-complete
 - complete 30-class mask inventory, all 106 diagrammed fields across 393
   variable bit positions, explicit unshown-reserved fallback, and one
   hand-verified NOP semantic fixture;
+- class-complete original Type 2 immediate-DM-write action semantics,
+  independent model, three hand-derived fixtures, all 160 boundary/selector
+  assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
+  formal field/same-DAG invariants; waited DM execution and post-modification
+  remain the next bounded increment;
 - exact Type 6 immediate-to-DREG semantics, assembler/disassembler support,
   exhaustive Python/RTL field decode, both-bank independent state execution,
   and exact SE/MR2/MR1 storage side effects;
