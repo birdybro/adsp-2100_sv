@@ -6,6 +6,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_pkg.s
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_register_pkg.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_load_dreg_immediate_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_load_non_dreg_immediate_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mode_control_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_move_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_register_file.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag_register_file.sv

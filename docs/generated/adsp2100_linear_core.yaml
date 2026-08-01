@@ -5,7 +5,8 @@
   "supported_current_instructions": [
     "NOP_0x000000",
     "ALL_TYPE_6_IMMEDIATE_DREG_LOADS",
-    "LEGAL_TYPE_7_IMMEDIATE_NON_DREG_LOADS"
+    "LEGAL_TYPE_7_IMMEDIATE_NON_DREG_LOADS",
+    "ALL_TYPE_18_MODE_CONTROL_WORDS"
   ],
   "current_pc_semantics": "PC_NAMES_THE_INSTRUCTION_EXECUTING_DURING_THE_CYCLE",
   "ordinary_fetch_address": "PC_PLUS_ONE_MODULO_14_BITS",

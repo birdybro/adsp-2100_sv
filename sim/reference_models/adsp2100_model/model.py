@@ -1,8 +1,9 @@
 """Exact-width foundation for an independent original ADSP-2100 model.
 
-The integrated instruction boundary currently covers linear-flow NOP and the
-source-closed Type 6/7 immediate-load classes.  Unsupported behavior fails
-closed instead of becoming an accidental no-op.
+The integrated instruction boundary currently covers linear-flow NOP, the
+source-closed Type 6/7 immediate-load classes, and original Type 18 mode
+control. Unsupported behavior fails closed instead of becoming an accidental
+no-op.
 """
 
 from __future__ import annotations
@@ -347,6 +348,15 @@ class ADSP2100Model:
                 )
             assert action.register is not None
             next_state = _apply_type7_immediate(self.state, action.register, action.data)
+        elif instruction.value & 0xFFF00F == 0x0C0000:
+            from .mode_control import apply_mode_control, decode_mode_control
+
+            action = decode_mode_control(instruction.value)
+            assert action is not None
+            next_state = replace(
+                self.state,
+                mstat=apply_mode_control(self.state.mstat, action),
+            )
         else:
             database = load_database()
             classes = classify_opcode(database, instruction.value)

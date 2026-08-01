@@ -2,9 +2,10 @@
 
 // Bounded steady-state instruction owner for ordinary linear flow.
 //
-// This slice intentionally supports only NOP and legal Type 6/7 immediate
-// loads. A deterministic instruction preload establishes the current
-// executing word; it is not an architectural host interface. The special
+// This slice intentionally supports only NOP, legal Type 6/7 immediate loads,
+// and original Type 18 mode control. A deterministic instruction preload
+// establishes the current executing word; it is not an architectural host
+// interface. The special
 // reset-to-first-fetch waveform, loops, transfers, interrupts, PM data,
 // HALT, and BR/BG arbitration remain outside this boundary.
 module adsp2100_linear_core_slice (
@@ -89,6 +90,14 @@ module adsp2100_linear_core_slice (
     logic type7_dreg_unused;
     logic type7_reserved_unused;
     logic type7_read_only_unused;
+    logic type18_valid;
+    logic [1:0] type18_mode_sr;
+    logic [1:0] type18_mode_br;
+    logic [1:0] type18_mode_ol;
+    logic [1:0] type18_mode_as;
+    logic type18_has_effect_unused;
+    logic type18_has_alias_unused;
+    logic [3:0] type18_mstat_next;
     logic supported_instruction;
     logic fetch_request;
     logic [13:0] fetch_address;
@@ -142,7 +151,7 @@ module adsp2100_linear_core_slice (
 
     assign nop_valid = opcode_q == 24'h000000;
     assign supported_instruction = (
-        nop_valid || type6_valid || type7_action_valid
+        nop_valid || type6_valid || type7_action_valid || type18_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
@@ -161,13 +170,19 @@ module adsp2100_linear_core_slice (
     assign instruction_issue_o = pm_request_accepted_o;
     assign retire_event_o = pending_q && pm_completion_event_o;
 
-    assign state_write = retire_event_o && (type6_valid || type7_action_valid);
+    assign state_write = retire_event_o && (
+        type6_valid || type7_action_valid || type18_valid
+    );
     assign state_write_code = type6_valid
         ? {2'b00, type6_destination}
-        : type7_code;
+        : (type7_action_valid ? type7_code : 6'h31);
     assign state_write_data = type6_valid
         ? type6_data
-        : {2'b00, type7_data};
+        : (
+            type7_action_valid
+                ? {2'b00, type7_data}
+                : {12'h000, type18_mstat_next}
+        );
 
     assign instruction_valid_o = instruction_valid_q;
     assign transaction_pending_o = pending_q;
@@ -197,6 +212,33 @@ module adsp2100_linear_core_slice (
         .reserved_destination_o(type7_reserved_unused),
         .read_only_destination_o(type7_read_only_unused)
     );
+
+    adsp2100_mode_control_decode type18_decode (
+        .opcode_i(opcode_q),
+        .valid_o(type18_valid),
+        .mode_sr_o(type18_mode_sr),
+        .mode_br_o(type18_mode_br),
+        .mode_ol_o(type18_mode_ol),
+        .mode_as_o(type18_mode_as),
+        .has_effect_o(type18_has_effect_unused),
+        .has_no_change_one_alias_o(type18_has_alias_unused)
+    );
+
+    always_comb begin
+        type18_mstat_next = mstat_o;
+        if (type18_mode_sr[1]) begin
+            type18_mstat_next[0] = type18_mode_sr[0];
+        end
+        if (type18_mode_br[1]) begin
+            type18_mstat_next[1] = type18_mode_br[0];
+        end
+        if (type18_mode_ol[1]) begin
+            type18_mstat_next[2] = type18_mode_ol[0];
+        end
+        if (type18_mode_as[1]) begin
+            type18_mstat_next[3] = type18_mode_as[0];
+        end
+    end
 
     adsp2100_internal_move_slice state (
         .clk_i(clk_i),
@@ -310,7 +352,8 @@ module adsp2100_linear_core_slice (
     assign unused_observation = ^{
         type7_group_unused, type7_index_unused, type7_present_unused,
         type7_writable_unused, type7_dreg_unused, type7_reserved_unused,
-        type7_read_only_unused, state_class_valid_unused,
+        type7_read_only_unused, type18_has_effect_unused,
+        type18_has_alias_unused, state_class_valid_unused,
         state_boundary_valid_unused, state_invalid_opcode_unused,
         state_invalid_subencoding_unused, state_invalid_setup,
         state_integration_conflict_unused, state_source_code_unused,

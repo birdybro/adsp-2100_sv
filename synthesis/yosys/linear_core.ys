@@ -2,6 +2,7 @@ read_verilog -sv rtl/packages/adsp2100_pkg.sv
 read_verilog -sv rtl/packages/adsp2100_register_pkg.sv
 read_verilog -sv rtl/core/adsp2100_load_dreg_immediate_decode.sv
 read_verilog -sv rtl/core/adsp2100_load_non_dreg_immediate_decode.sv
+read_verilog -sv rtl/core/adsp2100_mode_control_decode.sv
 read_verilog -sv rtl/core/adsp2100_internal_move_decode.sv
 read_verilog -sv rtl/core/adsp2100_register_file.sv
 read_verilog -sv rtl/core/adsp2100_dag_register_file.sv

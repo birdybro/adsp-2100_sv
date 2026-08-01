@@ -130,6 +130,7 @@ lint:
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
 			rtl/core/adsp2100_internal_move_decode.sv \
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_dag_register_file.sv \
@@ -672,6 +673,7 @@ linear-core-tests:
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
 			rtl/core/adsp2100_internal_move_decode.sv \
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_dag_register_file.sv \
@@ -1555,6 +1557,7 @@ formal:
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
 			rtl/core/adsp2100_internal_move_decode.sv \
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_dag_register_file.sv \

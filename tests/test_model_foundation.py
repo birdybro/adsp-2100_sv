@@ -27,6 +27,10 @@ def _type7(code: int, data: int) -> int:
     return 0x300000 | ((code >> 4) << 18) | ((data & 0x3FFF) << 4) | (code & 0xF)
 
 
+def _type18(payload: int) -> int:
+    return 0x0C0000 | ((payload & 0xFF) << 4)
+
+
 class ExactWidthTests(unittest.TestCase):
     def test_exact_word_rejects_truncation(self) -> None:
         with self.assertRaises(ValueError):
@@ -150,6 +154,17 @@ class ArchitecturalFoundationTests(unittest.TestCase):
             tuple(ExactWord(14, value) for value in range(4)),
         )
         self.assertEqual(model.state.sstat.value & 0x0C, 0x08)
+
+    def test_type18_executes_atomically_in_linear_flow(self) -> None:
+        model = ADSP2100Model()
+        model.step(_type7(0x31, 0xA))
+        changed = model.step(_type18(0xBB))
+        self.assertEqual(changed.pc_before, ExactWord(14, 5))
+        self.assertEqual(changed.pc_after, ExactWord(14, 6))
+        self.assertEqual(changed.instruction_cycles, 1)
+        self.assertEqual(model.state.mstat, ExactWord(4, 0x5))
+        model.step(_type18(0x55))
+        self.assertEqual(model.state.mstat, ExactWord(4, 0x5))
 
     def test_reserved_type7_destination_fails_without_state_change(self) -> None:
         for code in (0x00, 0x32, 0x38):

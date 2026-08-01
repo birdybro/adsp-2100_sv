@@ -26,6 +26,10 @@ def _type7(code: int, data: int) -> int:
     return 0x300000 | ((code >> 4) << 18) | ((data & 0x3FFF) << 4) | (code & 0xF)
 
 
+def _type18(payload: int) -> int:
+    return 0x0C0000 | ((payload & 0xFF) << 4)
+
+
 def _setup(state: LinearCoreState, opcode: int, *, pc: int = 4) -> LinearCoreState:
     result = apply_linear_core_cycle(
         state,
@@ -75,6 +79,10 @@ class LinearCoreTests(unittest.TestCase):
             "RESET_RELEASE_AND_FIRST_FETCH_WAVEFORM",
             contract["excluded_claims"],
         )
+        self.assertIn(
+            "ALL_TYPE_18_MODE_CONTROL_WORDS",
+            contract["supported_current_instructions"],
+        )
 
     def test_nop_fetches_pc_plus_one_and_retires_at_state_seven(self) -> None:
         state = _setup(LinearCoreState.reset(), 0)
@@ -94,6 +102,20 @@ class LinearCoreTests(unittest.TestCase):
         state = _setup(LinearCoreState.reset(), _type7(0x31, 1))
         first = _complete(_issue(state).state, _type6(DREG.AX0, 0xA55A))
         self.assertEqual(first.state.architecture.mstat, ExactWord(4, 1))
+        second = _complete(_issue(first.state).state, 0)
+        self.assertEqual(
+            read_dreg(second.state.architecture.alternate, DREG.AX0),
+            ExactWord(16, 0xA55A),
+        )
+        self.assertIs(
+            read_dreg(second.state.architecture.primary, DREG.AX0),
+            UNKNOWN,
+        )
+
+    def test_type18_bank_switch_controls_following_type6(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type18(0xBB))
+        first = _complete(_issue(state).state, _type6(DREG.AX0, 0xA55A))
+        self.assertEqual(first.state.architecture.mstat, ExactWord(4, 0x5))
         second = _complete(_issue(first.state).state, 0)
         self.assertEqual(
             read_dreg(second.state.architecture.alternate, DREG.AX0),

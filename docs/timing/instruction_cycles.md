@@ -175,19 +175,21 @@ or PM-data transaction. It likewise does not yet connect normal fetch overlap,
 active-loop/interrupt arbitration, or external PM fetch phases
 [ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and A-9].
 
-The top-level independent model additionally composes NOP and legal Type 6/7
-state execution with ordinary linear PC progression and the overlapped next
-instruction fetch. Sixteen foundation tests verify PC/fetch separation,
-loaded next-word visibility, fixed one-cycle timing, selected-bank and narrow
-register effects, DAG/status writes, CNTR stack saturation/SSTAT, and
-fail-closed reserved Type 7 destinations. A separate phase-level composition
-and bounded RTL owner add eight directed tests and 53,588 differential clocks:
-the next fetch is admitted only at enabled state 8-to-1, PM pins follow the
-native controller, and the current action plus PC/next-word state retire only
-at state 7-to-8. Phase holds preserve the transaction and bus relinquishment
+The top-level independent model additionally composes NOP, legal Type 6/7,
+and all Type 18 MODE CONTROL words with ordinary linear PC progression and the
+overlapped next-instruction fetch. Seventeen foundation tests verify PC/fetch
+separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
+changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
+stack saturation/SSTAT, and fail-closed reserved Type 7 destinations. A
+separate phase-level composition and bounded RTL owner add ten directed tests
+and 53,427 differential clocks: every Type 18 encoding executes, the next
+fetch is admitted only at enabled state 8-to-1, PM pins follow the native
+controller, and the current action plus PC/next-word state retire only at
+state 7-to-8. Phase holds preserve the transaction and bus relinquishment
 masks outputs without mutating it. This still is not a multi-owner core; reset
 first-fetch, loop/transfer/event selection, PM-data/cache, HALT, and BR/BG
-arbitration remain open [ADI-UM-1989, printed pp. 1-5, 4-3, 4-10, 5-5–5-8].
+arbitration remain open [ADI-UM-1989, printed pp. 1-5, 4-3, 4-10, 4-22–4-23,
+5-5–5-8, and 6-14–6-15].
 
 The bounded Type 15 model/RTL slice verifies a cycle-start selected-bank
 operand read, optional old-SR read for OR forms, and one cycle-end SR write.

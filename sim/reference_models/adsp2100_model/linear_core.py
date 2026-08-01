@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, replace
 
 from .load_dreg_immediate import decode_load_dreg_immediate
 from .load_non_dreg_immediate import decode_load_non_dreg_immediate
+from .mode_control import decode_mode_control
 from .model import (
     ADSP2100Model,
     ArchitecturalState,
@@ -63,6 +64,8 @@ def _instruction_class(
     if instruction.value == 0:
         return (True, False)
     if decode_load_dreg_immediate(instruction.value) is not None:
+        return (True, False)
+    if decode_mode_control(instruction.value) is not None:
         return (True, False)
     type7 = decode_load_non_dreg_immediate(instruction.value)
     if type7 is not None:

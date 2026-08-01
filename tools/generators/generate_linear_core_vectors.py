@@ -18,6 +18,7 @@ from sim.reference_models.adsp2100_model import (  # noqa: E402
     ExactWord,
     LinearCoreState,
     LogicalPhase,
+    MODE_CONTROL_VALUE,
     UNKNOWN,
     apply_linear_core_cycle,
     read_dreg,
@@ -50,12 +51,14 @@ def _type7(code: int, data: int) -> int:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(9)
+    choice = rng.randrange(11)
     if choice == 0:
         return 0
     if choice < 5:
         return _type6(rng.randrange(16), rng.randrange(1 << 16))
-    return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
+    if choice < 9:
+        return _type7(rng.choice(LEGAL_TYPE7_CODES), rng.randrange(1 << 14))
+    return MODE_CONTROL_VALUE | (rng.randrange(256) << 4)
 
 
 def _exact(value: object) -> tuple[bool, int]:
@@ -108,6 +111,9 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
     rng = random.Random(seed)
     state = LinearCoreState.reset()
     lines: list[str] = []
+    directed_mode_opcodes = tuple(
+        MODE_CONTROL_VALUE | (payload << 4) for payload in range(256)
+    )
 
     def emit(
         phase: LogicalPhase,
@@ -233,7 +239,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
         state = post_state
 
     emit(LogicalPhase.STATE_8, reset=True, pmd_valid=False)
-    current_opcode = _legal_opcode(rng)
+    current_opcode = directed_mode_opcodes[0]
     emit(LogicalPhase.STATE_8, setup=(4, current_opcode))
 
     completed = 0
@@ -275,7 +281,10 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             emit(LogicalPhase.STATE_7, relinquished=True)
 
         choice = rng.randrange(100)
-        if choice < 93:
+        if completed + 1 < len(directed_mode_opcodes):
+            next_opcode = directed_mode_opcodes[completed + 1]
+            next_valid = True
+        elif choice < 93:
             next_opcode = _legal_opcode(rng)
             next_valid = True
         elif choice < 96:
