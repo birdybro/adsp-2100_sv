@@ -72,6 +72,16 @@ store or prioritize them; retry is an architectural-client responsibility.
 This preserves the original distinction between completing the current
 instruction and relinquishing pins without introducing an undocumented queue.
 
+The bounded Type 13/cache architectural client is now attached to that
+composition. Its already captured PM-data or recovery descriptor remains in
+the client after selector collision or BR/BG issue inhibition and is presented
+again only at a later enabled state-8 boundary. Only the routed Type 13
+completion advances the client; completed ordinary fetches instead fill the
+same instruction cache. PMDA is captured per descriptor, not derived from the
+owner ID, so a Type 13 recovery fetch remains an instruction access. Ordinary
+fetch and Type 5 are still raw descriptor inputs, and no whole-core priority
+decision is added by this attachment.
+
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete

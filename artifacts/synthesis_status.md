@@ -16,6 +16,7 @@
   linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
   compositions plus the Type 5/Type 13 native-PM/HALT attachments,
   the shared-PM-owner selector and its normal-BR/BG composition, the
+  attached Type 13/cache/shared-PM/BR-BG composition, the
   standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
@@ -29,8 +30,19 @@
 - Yosys is not installed in this environment. Original RESET/phase, normal
   BR/BG, standalone HALT sequencing, bounded linear-owner, linear-owner/BR/BG,
   linear-owner/HALT, shared-PM-owner, shared-PM-owner/BR-BG, and Type 5/Type 13
-  native-PM/HALT synthesis scripts are wired into `make synth-yosys` for an
-  equipped host.
+  native-PM/HALT plus Type 13/shared-PM/BR-BG synthesis scripts are wired into
+  `make synth-yosys` for an equipped host.
+- Quartus 17.0.2 full compilation of the bounded Type
+  13/cache/shared-PM/BR-BG attachment passes for Cyclone V `5CSEBA6U23I7`.
+  It uses 2,089 ALMs and 1,646 fitted registers, no block memory, and no DSP
+  blocks. Against its 25 ns virtual-pin smoke constraint, worst multicorner
+  setup slack is +8.194 ns, worst hold slack is +0.166 ns, worst slow-corner
+  Fmax is 59.5 MHz, and TimeQuest reports zero unconstrained clocks, ports, or
+  paths. Expected warnings are limited to virtual-pin optimization and the
+  Quartus Lite LogicLock license. This qualifies the bounded Type 13 retry,
+  routed completion, ordinary-fetch cache-fill, explicit PMDA qualifier, and
+  BR/BG output-mask composition; ordinary-fetch/Type 5 architectural clients,
+  complete event priority, physical I/O, and whole-core closure remain open.
 - Quartus 17.0.2 full compilation of the bounded shared-PM-owner/BR-BG
   composition passes for Cyclone V `5CSEBA6U23I7`. It uses 190 ALMs and 84
   fitted registers, no block memory, and no DSP blocks. Against its 20 ns
@@ -39,16 +51,18 @@
   TimeQuest reports zero unconstrained clocks, ports, or paths. Expected
   warnings are limited to virtual-pin optimization and the Quartus Lite
   LogicLock license. This qualifies shared descriptor issue inhibition and PM
-  output masking, not architectural clients, DM pins, physical I/O, or
-  whole-core timing closure.
+  output masking; a Type 13 client is qualified separately above, while raw
+  fetch/Type 5 clients, DM pins, physical I/O, and whole-core timing closure
+  remain open.
 - Quartus 17.0.2 full compilation of the bounded shared-PM-owner selector
   passes for Cyclone V `5CSEBA6U23I7`. It uses 160 ALMs and 77 fitted
   registers, no block memory, and no DSP blocks. Against its 20 ns virtual-pin
   smoke constraint, worst multicorner setup slack is +12.059 ns, worst hold
   slack is +0.168 ns, worst slow-corner Fmax is 125.93 MHz, and TimeQuest
   reports zero unconstrained clocks, ports, or paths. This qualifies the
-  exactly-one selector plus one native PM controller, not architectural client
-  attachment, request priority, physical I/O, or whole-core timing closure.
+  exactly-one selector plus one native PM controller and explicit descriptor
+  PMDA propagation, not complete client attachment, request priority, physical
+  I/O, or whole-core timing closure.
 - Quartus 17.0.2 full compilation of the normal BR/BG controller passes for
   Cyclone V `5CSEBA6U23I7`. It uses 27 ALMs, 7 fitted registers, no block
   memory, and no DSP blocks. Against its 20 ns virtual-pin smoke constraint,

@@ -239,8 +239,13 @@ distinguishes PM-data recognition, admits exactly one forced external fetch on
 the following state-8 boundary, and stops after that fetch. Bounded Type 5 and
 Type 13 attachments now consume this late request, discard any
 issue-time cache hit, complete the PM data action once, fill the cache from
-the forced external fetch, and stop after its state-7 completion. Cross-event
-priority and shared-PM ownership remain open. Other bounded
+the forced external fetch, and stop after its state-7 completion. A separate
+shared-PM composition now attaches the real Type 13/cache client alongside raw
+ordinary-fetch and Type 5 descriptors under normal BR/BG. Rejected Type 13
+descriptors are retained and retried, completed ordinary fetches fill the same
+cache, and PMDA follows the captured descriptor rather than owner identity.
+Ordinary-fetch/Type 5 architectural clients, HALT composition, and complete
+cross-event priority remain open. Other bounded
 source-backed RTL
 execution slices implement all
 original Type 2

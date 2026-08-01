@@ -1,0 +1,68 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_shifter_pm_owner_control_slice
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_shifter_pm_owner_control
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_register_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag_register_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_register_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_registers.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_instruction_cache.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_slice.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_cache_slice.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_owner_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_bus_control.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/wrappers/adsp2100_reset_bus_grant.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_owner_bus_control.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_owner_control_slice.sv
+set_global_assignment -name SDC_FILE shifter_pm_owner_control_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to phase_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to phase_advance_i
+set_instance_assignment -name VIRTUAL_PIN ON -to br_n_i
+set_instance_assignment -name VIRTUAL_PIN ON -to fetch_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to fetch_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to fetch_address_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_address_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_data_access_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_write_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_write_data_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to execute_i
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to next_fetch_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to next_fetch_address_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to mstat_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_setup_code_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dreg_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to sb_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to dag_setup_kind_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag_setup_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dag_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to px_setup_write_i
+set_instance_assignment -name VIRTUAL_PIN ON -to px_setup_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_dreg_code_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_dag_address_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to "*_o"
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_global_assignment -name SEED 7

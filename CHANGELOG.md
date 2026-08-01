@@ -8,20 +8,39 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded Type 13/cache architectural client attached to the single shared
+  PM owner and normal BR/BG composition. The client presents captured PM-data
+  or recovery-fetch descriptors only at enabled state-8 boundaries, retains
+  rejected descriptors for retry without replaying the architectural data
+  action, consumes only Type 13 completion events, and receives completed
+  ordinary fetches as cache fills. Six directed tests and 50,061 deterministic
+  model/RTL clocks cover 2,783 accepted Type 13 descriptors, 752 retained
+  retries/collisions, 1,391 data completions, 17,757 recovery observations,
+  286 ordinary-fetch fills, 286 independently completed raw Type 5
+  transactions, 88 BR recognitions/resumes, and 3,126 masked grant clocks. A
+  machine-readable boundary, formal harness, Yosys recipe, and fully
+  constrained Cyclone V project bind the result. Quartus uses 2,089 ALMs and
+  1,646 fitted registers, no RAM/DSP blocks, +8.194 ns worst setup,
+  +0.166 ns worst hold, 59.5 MHz worst slow-corner Fmax, and no unconstrained
+  paths at 25 ns. Ordinary fetch and Type 5 remain raw descriptor inputs;
+  HALT/TRAP/interrupt/loop/DM priority and whole-core execution remain open.
+
 - A source-backed composition of the fail-closed shared PM owner and the
   original normal BR/BG sequencer. A state-3 bus request lets the active
   fetch/Type 5/Type 13 transaction complete, blocks later descriptor capture,
   masks every PM driver during grant, and accepts exactly one held descriptor
   at the state-8 resume boundary. Six directed tests and 50,002 deterministic
-  model/RTL clocks cover all owners, 131 complete handshakes, 90 completions
-  after request recognition, 1,735 blocked requests, 4,525 masked grant
-  clocks, 86 resume-edge accepts, and 514 fail-closed collisions. A
+  model/RTL clocks cover all owners, 111 complete handshakes, 80 completions
+  after request recognition, 1,417 blocked requests, 3,536 masked grant
+  clocks, 79 resume-edge accepts, 530 fail-closed collisions, and 1,264
+  accepted Type 5/13 instruction-access descriptors. A
   machine-readable contract, formal harness, Yosys recipe, and fully
   constrained Cyclone V project bind the result. Quartus uses 190 ALMs and 84
   fitted registers, no RAM/DSP blocks, +11.053 ns worst setup, +0.167 ns worst
   hold, 111.77 MHz worst slow-corner Fmax, and no unconstrained paths at
-  20 ns. Architectural client attachment, requester retry storage, DM-bus
-  composition, and HALT/TRAP/interrupt/loop priority remain open.
+  20 ns. The Type 13 client is now attached in a separate bounded composition;
+  ordinary-fetch/Type 5 requester storage, DM-bus composition, and
+  HALT/TRAP/interrupt/loop priority remain open.
 
 - A bounded fail-closed shared program-memory owner selector in an independent
   Python model and portable SystemVerilog. Ordinary fetch, Type 5 PM data, and
@@ -29,15 +48,18 @@ semantic versioning after its first release.
   controller; exactly-one requests are accepted at state 8-to-1, owners and
   descriptors are retained through completion/relinquishment, and one-hot
   acceptance/read/completion events return to the accepted requester.
+  PMDA is captured per descriptor rather than inferred from requester identity.
   Simultaneous and out-of-phase requests are rejected and observed rather than
   assigned an undocumented priority. Eight directed tests and 50,007
-  deterministic model/RTL clocks cover 3,240 completions, 1,100 collisions,
-  1,328 out-of-phase attempts, 2,595 owner switches, and 606 active
-  relinquishment holds. A machine-readable contract, formal harness, Yosys
+  deterministic model/RTL clocks cover 3,248 completions, 1,097 collisions,
+  1,346 out-of-phase attempts, 2,576 owner switches, 611 active
+  relinquishment holds, and 1,113 accepted Type 5/13 instruction-access
+  descriptors. A machine-readable contract, formal harness, Yosys
   recipe, and fully constrained Cyclone V project bind the result. Quartus uses
   160 ALMs and 77 registers, no RAM/DSP blocks, +12.059 ns worst setup,
   +0.168 ns worst hold, 125.93 MHz worst slow-corner Fmax, and no unconstrained
-  paths at 20 ns. Architectural client wiring and event priority remain open.
+  paths at 20 ns. A Type 13 client is attached in a separate bounded
+  composition; complete client wiring and event priority remain open.
 
 - A primary-backed bounded Type 5/native-PM/HALT composition in an independent
   Python model and portable SystemVerilog. HALT recognized during the PM-data
@@ -81,7 +103,9 @@ semantic versioning after its first release.
   uses 26 ALMs and 6 registers, no RAM/DSP blocks, +12.584 ns worst setup,
   +0.172 ns worst hold, 134.84 MHz worst slow-corner Fmax, and no unconstrained
   paths at 20 ns. Type 5 and Type 13 now consume the forced-fetch pulse in
-  separate bounded compositions; shared-PM arbitration remains open.
+  separate bounded compositions; Type 13 is also attached separately to
+  shared PM plus normal BR/BG, while combined HALT/shared-PM priority remains
+  open.
 
 - A primary-backed bounded ordinary-fetch HALT controller and structural
   attachment in independent Python and portable SystemVerilog. It recognizes
@@ -563,6 +587,18 @@ semantic versioning after its first release.
 
 ### Fixed
 
+- Replaced two stale `TASKS.md` references to the nonexistent
+  `tests/test_architecture_claims.py` with the implemented documentation
+  presence check and explicitly left semantic device-scope/matrix validation
+  as unfinished work.
+
+- Preserved an explicit per-descriptor PM data-access qualifier through the
+  shared owner instead of deriving PMDA from the Type 5/Type 13 owner ID. The
+  prior derivation incorrectly marked a retained Type 13 recovery instruction
+  fetch as a PM data access. Updated selector and BR/BG differentials now cover
+  1,113 and 1,264 accepted Type 5/Type 13 descriptors with PMDA deasserted,
+  respectively, and the attached Type 13 recovery test requires PMDA low.
+
 - Removed the prior model expectation that treated the currently executing
   word as a same-cycle instruction fetch and allowed a caller to extend that
   fetch by arbitrary instruction cycles. The 1989 manual instead defines the
@@ -622,6 +658,11 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- The attached Type 13/shared-PM/BR-BG slice passes strict RTL and 71-harness
+  assertion syntax lint. SymbiYosys/Yosys remain unavailable, so no new proof
+  or open-source synthesis result is claimed; Quartus full compilation and
+  TimeQuest complete with zero errors and all primary timing paths constrained.
 
 - The shared-PM-owner/BR/BG composition passes six directed checks, 50,002
   deterministic model/RTL clocks, the complete 661-check `make test`
@@ -1138,6 +1179,10 @@ semantic versioning after its first release.
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
+
+- Added the machine-readable Type 13/shared-PM/BR-BG attachment contract and
+  recorded that PMDA is a captured transaction qualifier, not an owner-class
+  shortcut.
 
 - Recorded the exact Type 1 dual-read fields, fixed DAG ownership, DD/PD
   destination restrictions, implicit AR/MR result, AMF-zero dual-fetch form,

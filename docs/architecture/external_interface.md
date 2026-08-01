@@ -34,8 +34,8 @@ The bounded Type 13 path exposes distinct logical active-high PM data and
 recovery-fetch cycles. Its connected 16-word cache supplies the actual next
 instruction on a pre-cycle hit and captures each recovery word on a miss; an
 explicit ordinary-fetch-completion input populates the same monitor outside
-Type 13 ownership. A bounded wrapper now connects this owner to the sourced
-active-low PMS/PMDA/PMRD/PMWR phases, but it is not a unified
+Type 13 ownership. A bounded wrapper connects this owner to the sourced PMS,
+PMDA, and active-low PMRD/PMWR phases, but it is not a unified
 PC/branch/interrupt bus owner
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
 
@@ -57,21 +57,24 @@ now composed with the bounded ordinary NOP/Type 6/Type 7/Type 17/Type 18 fetch
 owner: a recognized request lets the current fetch retire, inhibits the next
 issue, masks all PM output enables during grant, and restarts issue at state
 8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 93
-complete handshakes. It is not yet composed with the Type 13 or Type 5
-PM-data clients, other PM instruction classes, or a whole-core PM arbiter.
+complete handshakes. A separate composition described below now attaches the
+Type 13 client to the shared owner; Type 5, other PM instruction classes, and
+a whole-core PM arbiter remain outside the linear owner.
 
 The bounded `adsp2100_program_owner_bus` now provides one physical PM
-controller for three descriptor classes: ordinary fetch, Type 5 PM data, and
-Type 13 PM data. Exactly one request on an enabled state-8-to-state-1 boundary
+controller for three descriptor classes: ordinary fetch, Type 5 PM
+transactions, and Type 13 PM transactions. The descriptor carries PMDA
+explicitly because a Type 5/13 recovery fetch is an instruction access despite
+retaining its architectural requester. Exactly one request on an enabled state-8-to-state-1 boundary
 is accepted; the two-bit owner is retained through completion; and accepted,
 read-sample, and completion pulses are routed one-hot. Multiple simultaneous
 requests are rejected without an invented priority, and off-boundary requests
 are rejected and reported. Eight directed tests and 50,007 independent-model/
-RTL clocks cover all owners, 1,100 collision rejections, 1,328 out-of-phase
-rejections, 3,240 completions, 2,595 owner switches, and 606 relinquished
-active holds. This proves a shared electrical transaction owner and mutual
-exclusion, but the existing architectural clients are not yet wired into the
-selector and branch/loop/interrupt/HALT/BR priority is not claimed
+RTL clocks cover all owners, 1,097 collision rejections, 1,346 out-of-phase
+rejections, 3,248 completions, 2,576 owner switches, 611 relinquished active
+holds, and 1,113 accepted Type 5/13 instruction-access descriptors. This
+proves a shared electrical transaction owner and mutual exclusion, but not
+branch/loop/interrupt/HALT/BR priority
 [ADI-UM-1989, printed pp. 1-5–1-7, 3-6–3-7, 4-26–4-30, 5-5–5-8;
 ADI-DATABOOK-1987, printed pp. 2-36–2-39].
 
@@ -80,11 +83,28 @@ source-backed normal BR/BG sequence to that one shared interface. An active
 owner remains driven and completes after state-3 recognition; future
 descriptor capture is inhibited; native grant masks all PM output enables;
 and capture resumes at state 8-to-1 after the complete release interval. Six
-directed tests and 50,002 independent-model/RTL clocks cover 131 handshakes,
-90 post-recognition completions, 1,735 blocked requests, and 4,525 masked
-grant clocks. The wrapper exposes blocked requests without inventing storage
-or priority, so the three architectural clients and their retry behavior are
-still not attached [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
+directed tests and 50,002 independent-model/RTL clocks cover 111 handshakes,
+80 post-recognition completions, 1,417 blocked requests, 3,536 masked grant
+clocks, 79 resume-edge acceptances, 530 fail-closed collisions, and 1,264
+accepted Type 5/13 instruction-access descriptors. The wrapper exposes
+blocked requests without inventing storage or priority
+[ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
+ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+
+`adsp2100_shifter_pm_owner_control_slice` attaches the bounded Type 13/cache
+client to that shared owner and BR/BG boundary. A collision or grant-time
+inhibition leaves the captured Type 13 PM-data or recovery descriptor pending;
+the client presents it again on a later enabled state-8 boundary. Only the
+routed Type 13 completion advances its data/recovery state, so a raw Type 5
+completion cannot commit Type 13, and a rejected recovery cannot replay the
+already completed shifter/PM/PX/DAG2 action. Completed ordinary fetches fill
+the same 16-word cache. Six directed tests and 50,061 independent-model/RTL
+clocks cover 2,783 accepted Type 13 descriptors, 752 retries, 1,391 data
+completions, 286 ordinary-fetch cache fills, 286 raw Type 5 completions, 88 BR
+handshakes, and 3,126 masked grant clocks. Ordinary fetch and Type 5 remain raw
+descriptor inputs; HALT/TRAP/interrupt/loop/DM priority and whole-core request
+generation remain outside this attachment [ADI-UM-1989, printed pp. 1-5–1-7,
+2-6–2-7, 4-26–4-30, 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
 A separate active-low HALT controller is now composed with the same bounded

@@ -197,13 +197,17 @@ cancel the active owner's transaction; descriptor capture is inhibited only
 after recognition, all PM drivers are masked during native grant, and exactly
 one requester held by its architectural client may be accepted on the
 state-8-to-state-1 resume edge. Six directed tests and 50,002 independent-
-model/RTL clocks cover all owners, 131 complete handshakes, 90 active
-transactions completed after recognition, 1,735 blocked requests, 4,525
-masked grant clocks, 86 resume-edge accepts, and 514 fail-closed collisions.
+model/RTL clocks cover all owners, 111 complete handshakes, 80 active
+transactions completed after recognition, 1,417 blocked requests, 3,536
+masked grant clocks, 79 resume-edge accepts, and 530 fail-closed collisions.
 The composition reports a blocked request but deliberately does not store it;
-architectural clients, retry policy, DM-driver masking, and priority against
-HALT, TRAP, loops, reset release, or interrupts remain outside this bounded
-result [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
+the attached Type 13/cache client now retains and retries its own rejected
+descriptor without replaying completed data actions. Six directed attachment
+tests and 50,061 model/RTL clocks verify Type 13 data/recovery completion and
+cache fill across 88 BR handshakes. Ordinary fetch and Type 5 architectural
+clients, DM-driver masking, and priority against HALT, TRAP, loops, reset
+release, or interrupts remain outside this bounded result
+[ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
 The machine-readable contract is

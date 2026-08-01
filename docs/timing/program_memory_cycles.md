@@ -58,8 +58,10 @@ masking.
 ## Bounded shared-owner selector
 
 `adsp2100_program_owner_bus` composes exactly one native controller with three
-uniform descriptor inputs: ordinary fetch, Type 5 PM data, and Type 13 PM
-data. Request capture remains the enabled state-8-to-state-1 edge. An accepted
+uniform descriptor inputs: ordinary fetch, Type 5 PM transactions, and Type 13
+PM transactions. PMDA is an explicit captured descriptor qualifier rather
+than an inference from owner identity, because a Type 5/13 recovery fetch is
+an instruction access. Request capture remains the enabled state-8-to-state-1 edge. An accepted
 owner remains stable through the active eight-state transaction and receives
 the sole completion/read-sample event at state 7-to-state-8. Bus
 relinquishment masks native outputs while preserving both owner and descriptor;
@@ -72,11 +74,11 @@ any other boundary raises `request_out_of_phase_o` and cannot replace an active
 owner. This fail-closed rule is not presented as original-device request
 priority. It provides deterministic mutual exclusion until architectural
 sequencing ensures legal one-hot requests. Eight directed tests and 50,007
-model/RTL clocks pass with all three requesters, 1,100 boundary conflicts,
-1,328 off-boundary rejections, 3,240 completions, 2,595 owner switches, and
-606 active relinquishment holds. Architectural client wiring and the priority
-among fetch, PM data recovery, branch, loop, interrupt, HALT, TRAP, and BR/BG
-remain open.
+model/RTL clocks pass with all three requesters, 1,097 boundary conflicts,
+1,346 off-boundary rejections, 3,248 completions, 2,576 owner switches, 611
+active relinquishment holds, and 1,113 accepted Type 5/13 descriptors with
+PMDA low. Priority among fetch, PM data recovery, branch, loop, interrupt,
+HALT, TRAP, and BR/BG remains open.
 
 The bounded BR/BG composition keeps those capture and completion boundaries
 distinct from bus relinquishment. BR recognition at state 3 does not disturb
@@ -86,8 +88,19 @@ only while native BG is asserted, and the state-8 resume event may accept one
 held descriptor. A held request remains the client's responsibility and is
 reported with `request_blocked_o`; the composition does not create an
 unsourced retry queue. Six directed tests and 50,002 model/RTL clocks cover all
-three owners and 131 complete handshakes. DM-bus masking and priority with
-HALT, TRAP, interrupts, loops, and reset release remain open.
+three owners, 111 complete handshakes, and 1,264 accepted Type 5/13
+instruction-access descriptors. DM-bus masking and priority with HALT, TRAP,
+interrupts, loops, and reset release remain open.
+
+The bounded Type 13/cache client is now connected to that composition. It
+retains any descriptor rejected by a collision or issue inhibition and
+re-presents it on a later enabled state-8 boundary. Routed Type 13 completion
+is the only interface event allowed to advance the client, while completed
+ordinary fetches fill its cache. Six directed tests and 50,061 model/RTL
+clocks cover data and recovery retries, exactly-once architectural commit,
+ordinary-fetch fill, raw Type 5 isolation, and 88 BR handshakes. Ordinary
+fetch and Type 5 architectural request generation plus complete event priority
+remain open.
 
 ## Type 13/cache attachment
 
@@ -178,7 +191,9 @@ forced issue pulses. The Type 13/native-PM owner now consumes that pulse in a
 bounded composition: five tests and 50,124 clocks verify that a late request
 overrides the issue-time hit, data commits once, one following external fetch
 owns the sourced pin phases, and stop occurs at its state-7 completion. Type 5
-and shared-PM arbitration remain open. HALT during BG or DMACK waits,
+has an equivalent bounded HALT attachment, and Type 13 is separately attached
+to shared PM plus normal BR/BG; the combined shared-PM/HALT priority remains
+open. HALT during BG or DMACK waits,
 TRAP/interrupt priority, BR while
 stopped, and reset interaction also remain outside this attachment
 [ADI-UM-1989, printed pp. 5-13–5-15].

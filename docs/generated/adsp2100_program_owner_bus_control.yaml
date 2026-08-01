@@ -8,7 +8,8 @@
   "release_effect": "DESCRIPTOR_CAPTURE_REMAINS_INHIBITED_UNTIL_STATE_8_TO_STATE_1_RESUME",
   "resume_effect": "EXACTLY_ONE_HELD_DESCRIPTOR_CAN_BE_ACCEPTED_ON_RESUME_STATE_8_EDGE",
   "reset_time_path": "NATIVE_BG_FOLLOWS_BR_THROUGH_SEPARATE_COMBINATIONAL_PIN_WRAPPER",
-  "requesters": ["INSTRUCTION_FETCH", "TYPE_5_PM_DATA", "TYPE_13_PM_DATA"],
+  "requesters": ["INSTRUCTION_FETCH", "TYPE_5_PM_TRANSACTION", "TYPE_13_PM_TRANSACTION"],
+  "descriptor_data_access_qualifier": "PRESERVED_THROUGH_BR_BG_COMPOSITION",
   "sources": [
     "ADI-UM-1989 printed pp. 1-5 and 5-3 through 5-8",
     "ADI-UM-1989 Figure 5.3 and Figure 5.5",

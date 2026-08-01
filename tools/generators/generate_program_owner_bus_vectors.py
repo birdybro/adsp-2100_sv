@@ -32,7 +32,7 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
     lines: list[str] = []
     coverage = {name: 0 for name in (
         "fetch", "type5", "type13", "conflict", "out_of_phase",
-        "completion", "owner_switch", "relinquished",
+        "completion", "owner_switch", "relinquished", "nondata_owner",
     )}
 
     def emit(
@@ -40,6 +40,7 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
         advance: bool = True, valids: tuple[bool, bool, bool] = (False,) * 3,
         addresses: tuple[int, int, int] = (0, 0, 0),
         address_known: tuple[bool, bool, bool] = (True,) * 3,
+        data_access: tuple[bool, bool, bool] = (False, True, True),
         writes: tuple[bool, bool, bool] = (False,) * 3,
         write_data: tuple[int, int, int] = (0, 0, 0),
         write_known: tuple[bool, bool, bool] = (True,) * 3,
@@ -56,7 +57,7 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
             requests.append(ProgramBusRequest(
                 address=(ExactWord(14, addresses[index])
                          if address_known[index] else UNKNOWN),
-                data_access=index != 0,
+                data_access=data_access[index],
                 write=writes[index] if index else False,
                 write_data=(ExactWord(24, write_data[index])
                             if write_known[index] else UNKNOWN),
@@ -78,7 +79,8 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
                 (address_known[index], 1),
             ]
             if index != 0:
-                fields.extend(((writes[index], 1),
+                fields.extend(((data_access[index], 1),
+                               (writes[index], 1),
                                (write_data[index], 24),
                                (write_known[index], 1)))
             for value, width in fields:
@@ -121,7 +123,7 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
             (isinstance(next_read, ExactWord), 1),
         ):
             post = _append(post, value, width)
-        lines.append(f"{stimulus:033x} {pre:023x} {post:08x}")
+        lines.append(f"{stimulus:034x} {pre:023x} {post:08x}")
 
         old_owner = state.owner
         state = result.state
@@ -133,6 +135,8 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
             ("completion", result.bus.completion_event),
             ("owner_switch", old_owner != state.owner and bool(state.owner)),
             ("relinquished", relinquished and state.bus.active),
+            ("nondata_owner", (result.type5_accepted or result.type13_accepted)
+             and not data_access[int(result.accepted_owner) - 1]),
         ):
             coverage[key] += int(hit)
         if phase_override is None and advance and not relinquished:
@@ -168,6 +172,7 @@ def generate_lines(random_count: int, seed: int) -> tuple[list[str], dict[str, i
             advance=advance, valids=valids,
             addresses=tuple(rng.randrange(1 << 14) for _ in range(3)),
             address_known=tuple(rng.randrange(19) != 0 for _ in range(3)),
+            data_access=(False, bool(rng.randrange(2)), bool(rng.randrange(2))),
             writes=(False, bool(rng.randrange(2)), bool(rng.randrange(2))),
             write_data=tuple(rng.randrange(1 << 24) for _ in range(3)),
             write_known=tuple(rng.randrange(17) != 0 for _ in range(3)),

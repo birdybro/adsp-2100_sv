@@ -37,7 +37,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
     coverage = {name: 0 for name in (
         "fetch", "type5", "type13", "recognized", "completion_delay",
         "blocked", "grant", "release", "resume", "resume_accept",
-        "masked", "conflict",
+        "masked", "conflict", "nondata_owner",
     )}
 
     def emit(
@@ -47,6 +47,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
         valids: tuple[bool, bool, bool] = (False,) * 3,
         addresses: tuple[int, int, int] = (0, 0, 0),
         address_known: tuple[bool, bool, bool] = (True,) * 3,
+        data_access: tuple[bool, bool, bool] = (False, True, True),
         writes: tuple[bool, bool, bool] = (False,) * 3,
         write_data: tuple[int, int, int] = (0, 0, 0),
         write_known: tuple[bool, bool, bool] = (True,) * 3,
@@ -62,7 +63,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             requests.append(ProgramBusRequest(
                 address=(ExactWord(14, addresses[index])
                          if address_known[index] else UNKNOWN),
-                data_access=index != 0,
+                data_access=data_access[index],
                 write=writes[index] if index else False,
                 write_data=(ExactWord(24, write_data[index])
                             if write_known[index] else UNKNOWN),
@@ -92,7 +93,8 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             ]
             if index != 0:
                 fields.extend((
-                    (writes[index], 1), (write_data[index], 24),
+                    (data_access[index], 1), (writes[index], 1),
+                    (write_data[index], 24),
                     (write_known[index], 1),
                 ))
             for value, width in fields:
@@ -166,7 +168,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
         ):
             post = _append(post, value, width)
         lines.append(
-            f"{stimulus:033x} {control_pre:05x} {owner_pre:023x} {post:09x}"
+            f"{stimulus:034x} {control_pre:05x} {owner_pre:023x} {post:09x}"
         )
 
         for key, hit in (
@@ -187,6 +189,8 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
              and not bus.control_output_enable
              and not bus.data_output_enable),
             ("conflict", owner.request_conflict),
+            ("nondata_owner", (owner.type5_accepted or owner.type13_accepted)
+             and not data_access[int(owner.accepted_owner) - 1]),
         ):
             coverage[key] += int(hit)
         state = result.state
@@ -238,6 +242,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             valids=valids,
             addresses=tuple(rng.randrange(1 << 14) for _ in range(3)),
             address_known=tuple(rng.randrange(23) != 0 for _ in range(3)),
+            data_access=(False, bool(rng.randrange(2)), bool(rng.randrange(2))),
             writes=(False, bool(rng.randrange(2)), bool(rng.randrange(2))),
             write_data=tuple(rng.randrange(1 << 24) for _ in range(3)),
             write_known=tuple(rng.randrange(19) != 0 for _ in range(3)),

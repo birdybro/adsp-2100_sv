@@ -6,11 +6,13 @@ module adsp2100_program_owner_bus (
     input logic fetch_valid_i, input logic [13:0] fetch_address_i,
     input logic fetch_address_valid_i,
     input logic type5_valid_i, input logic [13:0] type5_address_i,
-    input logic type5_address_valid_i, input logic type5_write_i,
+    input logic type5_address_valid_i, input logic type5_data_access_i,
+    input logic type5_write_i,
     input logic [23:0] type5_write_data_i,
     input logic type5_write_data_valid_i,
     input logic type13_valid_i, input logic [13:0] type13_address_i,
-    input logic type13_address_valid_i, input logic type13_write_i,
+    input logic type13_address_valid_i, input logic type13_data_access_i,
+    input logic type13_write_i,
     input logic [23:0] type13_write_data_i,
     input logic type13_write_data_valid_i,
     input logic [23:0] pmd_read_data_i,
@@ -45,6 +47,7 @@ module adsp2100_program_owner_bus (
     logic selected_valid;
     logic [13:0] selected_address;
     logic selected_address_valid;
+    logic selected_data_access;
     logic selected_write;
     logic [23:0] selected_write_data;
     logic selected_write_data_valid;
@@ -65,6 +68,7 @@ module adsp2100_program_owner_bus (
         selected_owner = OWNER_NONE;
         selected_address = 14'h0000;
         selected_address_valid = 1'b0;
+        selected_data_access = 1'b0;
         selected_write = 1'b0;
         selected_write_data = 24'h000000;
         selected_write_data_valid = 1'b0;
@@ -77,6 +81,7 @@ module adsp2100_program_owner_bus (
                 selected_owner = OWNER_TYPE5;
                 selected_address = type5_address_i;
                 selected_address_valid = type5_address_valid_i;
+                selected_data_access = type5_data_access_i;
                 selected_write = type5_write_i;
                 selected_write_data = type5_write_data_i;
                 selected_write_data_valid = type5_write_data_valid_i;
@@ -84,6 +89,7 @@ module adsp2100_program_owner_bus (
                 selected_owner = OWNER_TYPE13;
                 selected_address = type13_address_i;
                 selected_address_valid = type13_address_valid_i;
+                selected_data_access = type13_data_access_i;
                 selected_write = type13_write_i;
                 selected_write_data = type13_write_data_i;
                 selected_write_data_valid = type13_write_data_valid_i;
@@ -144,7 +150,7 @@ module adsp2100_program_owner_bus (
         .request_valid_i(selected_valid),
         .request_address_i(selected_address),
         .request_address_valid_i(selected_address_valid),
-        .request_data_access_i(selected_owner != OWNER_FETCH),
+        .request_data_access_i(selected_data_access),
         .request_write_i(selected_write),
         .request_write_data_i(selected_write_data),
         .request_write_data_valid_i(selected_write_data_valid),

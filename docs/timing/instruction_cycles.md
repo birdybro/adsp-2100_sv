@@ -51,7 +51,7 @@ Known cases:
 | interrupt vectoring | two cycles described, including vector jump |
 | DMACK low | extend state 7 by whole processor cycles until high |
 | HALT during ordinary instruction fetch | asserted active-low input is recognized at state 3; the current cycle completes at state 7-to-8, stopped outputs hold state 8, and a DMACK-high release resumes at state 8-to-1 |
-| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified, while shared ownership remains open |
+| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified, and Type 13 is separately attached to shared PM plus normal BR/BG, while the combined shared-PM/HALT priority remains open |
 
 Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 5-13–5-16, 6-14–6-15, 6-21, A-4, A-8–A-10]. The Type 26

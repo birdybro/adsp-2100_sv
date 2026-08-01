@@ -68,7 +68,9 @@ advance beyond research until a page-level primary citation is added.
   cited to original-device pages; Hard Drivin' fitted part evidence is cited.
 - **Source references:** ADI-DATABOOK-1987 printed pp. 2-15 onward,
   ADI-UM-1989, ATARI-ADSP-SCHEM
-- **Relevant tests:** `tests/test_architecture_claims.py::test_device_scope`
+- **Relevant tests:**
+  `tests/test_repository.py::RepositoryTests::test_required_documentation`;
+  semantic device-scope claim validation is not yet implemented
 - **Implementation notes:** do not treat assembler convention that “ADSP-2100”
   includes 2100A as proof of electrical identity.
 - **Unresolved questions:** exact mask/revision differences and authentic
@@ -87,7 +89,9 @@ advance beyond research until a page-level primary citation is added.
   citations or `UNKNOWN`; default configuration excludes all later features.
 - **Source references:** ADI-UM-FAMILY-1995, ADI-21XX-DS-REVC,
   ADI-DATABOOK-1987, ADI-2104-DS-REV0
-- **Relevant tests:** `tests/test_architecture_claims.py::test_feature_matrix`
+- **Relevant tests:**
+  `tests/test_repository.py::RepositoryTests::test_required_documentation`;
+  semantic feature-matrix claim validation is not yet implemented
 - **Implementation notes:** unknown cells are intentional research targets, not
   evidence of absence.
 - **Unresolved questions:** 2104 primary documentation and original core
@@ -1120,6 +1124,9 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_program_owner_bus_control.py`,
   `sim/unit/tb_adsp2100_program_owner_bus_control.sv`,
   `formal/program_owner_bus_control.sby`,
+  `tests/test_shifter_pm_owner_control.py`,
+  `sim/unit/tb_adsp2100_shifter_pm_owner_control_slice.sv`,
+  `formal/shifter_pm_owner_control.sby`,
   `tests/test_shifter_pm_native.py`,
   `sim/unit/tb_adsp2100_shifter_pm_native_slice.sv`,
   `formal/shifter_pm_native.sby`, `tests/test_compute_pm_cache.py`,
@@ -1179,24 +1186,36 @@ advance beyond research until a page-level primary citation is added.
   retains and routes that owner through state-7 completion, preserves owner
   through relinquishment, and reports rather than prioritizes collisions or
   off-boundary requests. Eight directed tests and 50,007 model/RTL clocks
-  cover 3,240 completions, 1,100 rejected collisions, 1,328 rejected
-  off-boundary requests, 2,595 owner switches, and 606 relinquished active
+  cover 3,248 completions, 1,097 rejected collisions, 1,346 rejected
+  off-boundary requests, 2,576 owner switches, and 611 relinquished active
   holds. Its formal recipe syntax-checks and a fully constrained 20 ns Cyclone
   V fit uses 160 ALMs and 77 registers, no RAM/DSP blocks, +12.059 ns worst
   setup, +0.168 ns worst hold, 125.93 MHz worst slow-corner Fmax, and zero
-  unconstrained paths. The verified architectural client wrappers are not yet
-  connected to this selector and it makes no architectural priority claim.
+  unconstrained paths. PMDA is now captured as an explicit descriptor field
+  instead of being inferred from the requester identity; updated selector and
+  BR/BG differentials cover 1,113 and 1,264 accepted Type 5/Type 13
+  non-data-access descriptors, respectively.
   The selector is now structurally composed with the original normal BR/BG
   controller and RESET-time native-pin wrapper. Six directed tests and 50,002
-  model/RTL clocks cover all three owners, 131 request/grant/release/resume
-  handshakes, 90 in-flight completions after BR recognition, 1,735 blocked
-  new requests, 4,525 masked grant clocks, 86 resume-edge acceptances, and 514
+  model/RTL clocks cover all three owners, 111 request/grant/release/resume
+  handshakes, 80 in-flight completions after BR recognition, 1,417 blocked
+  new requests, 3,536 masked grant clocks, 79 resume-edge acceptances, and 530
   fail-closed collisions. Its formal recipe syntax-checks and a fully
   constrained 20 ns Cyclone V fit uses 190 ALMs and 84 registers, no RAM/DSP
   blocks, +11.053 ns worst setup, +0.167 ns worst hold, 111.77 MHz worst
-  slow-corner Fmax, and zero unconstrained paths. Architectural clients,
-  requester retry storage, DM-bus composition, and cross-event priority remain
-  outside this composition.
+  slow-corner Fmax, and zero unconstrained paths. The bounded Type 13/cache
+  client is now connected to this composition. It retains a rejected PM-data
+  or recovery descriptor and retries without replaying a completed data
+  action; only its routed completion advances its state, while completed
+  ordinary fetches fill the same cache. Six directed tests and 50,061
+  model/RTL clocks cover 2,783 accepted Type 13 transactions, 752 retries,
+  1,391 data completions, 286 ordinary-fetch cache fills, 286 raw Type 5
+  completions, 88 BR handshakes, and 3,126 masked grant clocks. The attached
+  fully constrained 25 ns Cyclone V fit uses 2,089 ALMs and 1,646 registers,
+  no RAM/DSP blocks, +8.194 ns worst setup, +0.166 ns worst hold, 59.5 MHz
+  worst slow-corner Fmax, and zero unconstrained paths. Ordinary fetch and
+  Type 5 remain raw descriptor inputs; their architectural retry storage,
+  DM-bus composition, and cross-event priority remain outside this result.
   A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It
@@ -1438,13 +1457,16 @@ advance beyond research until a page-level primary citation is added.
   first-fetch ownership remain unimplemented.
   A second bounded BR/BG composition now covers the one physical PM selector
   shared by ordinary fetch and Type 5/Type 13 descriptor classes. Six directed
-  tests and 50,002 model/RTL clocks cover 131 full handshakes, 90 active-owner
-  completions after recognition, 1,735 blocked new requests, 4,525 masked
-  grant clocks, 86 resume accepts, and 514 fail-closed collisions. It preserves
+  tests and 50,002 model/RTL clocks cover 111 full handshakes, 80 active-owner
+  completions after recognition, 1,417 blocked new requests, 3,536 masked
+  grant clocks, 79 resume accepts, and 530 fail-closed collisions. It preserves
   the distinction between future-issue inhibition and native output masking,
   and its formal recipe plus fully constrained 190-ALM/84-register Cyclone V
-  fit pass. Architectural client attachment, held-request storage, DM-bus
-  masking, and event priority remain incomplete.
+  fit pass. A bounded Type 13/cache client is now attached and retains its own
+  rejected descriptors through retry; six directed tests and 50,061 clocks
+  plus a fully constrained 2,089-ALM/1,646-register fit pass. Ordinary-fetch/
+  Type 5 architectural client storage, DM-bus masking, and event priority
+  remain incomplete.
   A second structurally independent model/RTL composition now implements the
   primary-backed active-low ordinary-fetch HALT path: recognition at enabled
   state 3, current-fetch retirement at state 7, stopped state-8 PM outputs

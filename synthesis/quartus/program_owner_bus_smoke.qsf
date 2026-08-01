@@ -20,12 +20,14 @@ set_instance_assignment -name VIRTUAL_PIN ON -to fetch_address_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type5_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type5_address_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to type5_address_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type5_data_access_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type5_write_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type5_write_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to type5_write_data_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_address_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_address_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to type13_data_access_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_write_i
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_write_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_write_data_valid_i

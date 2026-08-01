@@ -1,0 +1,23 @@
+read_verilog -sv rtl/packages/adsp2100_pkg.sv
+read_verilog -sv rtl/packages/adsp2100_register_pkg.sv
+read_verilog -sv rtl/core/adsp2100_shifter_pm_decode.sv
+read_verilog -sv rtl/core/adsp2100_shifter.sv
+read_verilog -sv rtl/core/adsp2100_dag.sv
+read_verilog -sv rtl/core/adsp2100_dag_register_file.sv
+read_verilog -sv rtl/core/adsp2100_register_file.sv
+read_verilog -sv rtl/core/adsp2100_status_registers.sv
+read_verilog -sv rtl/core/adsp2100_instruction_cache.sv
+read_verilog -sv rtl/core/adsp2100_shifter_pm_slice.sv
+read_verilog -sv rtl/core/adsp2100_shifter_pm_cache_slice.sv
+read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_program_owner_bus.sv
+read_verilog -sv rtl/core/adsp2100_bus_control.sv
+read_verilog -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
+read_verilog -sv rtl/core/adsp2100_program_owner_bus_control.sv
+read_verilog -sv rtl/core/adsp2100_shifter_pm_owner_control_slice.sv
+
+hierarchy -check -top adsp2100_shifter_pm_owner_control_slice
+synth -top adsp2100_shifter_pm_owner_control_slice
+check
+stat
+write_json build/yosys_shifter_pm_owner_control.json

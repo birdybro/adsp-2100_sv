@@ -3,13 +3,14 @@
 
 module tb_adsp2100_program_owner_bus_control;
     logic clk;
-    logic [130:0] stimulus;
+    logic [132:0] stimulus;
     logic [17:0] expected_control_pre;
     logic [89:0] expected_owner_pre;
     logic [32:0] expected_post;
     logic reset, advance, br_n;
     logic [2:0] phase, valid, address_valid;
     logic [13:0] address [0:2];
+    logic type5_data_access, type13_data_access;
     logic type5_write, type13_write;
     logic [23:0] type5_write_data, type13_write_data;
     logic type5_write_data_valid, type13_write_data_valid;
@@ -36,9 +37,9 @@ module tb_adsp2100_program_owner_bus_control;
     assign {
         reset, phase, advance, br_n,
         valid[0], address[0], address_valid[0],
-        valid[1], address[1], address_valid[1], type5_write,
+        valid[1], address[1], address_valid[1], type5_data_access, type5_write,
         type5_write_data, type5_write_data_valid,
-        valid[2], address[2], address_valid[2], type13_write,
+        valid[2], address[2], address_valid[2], type13_data_access, type13_write,
         type13_write_data, type13_write_data_valid,
         read_data, read_data_valid
     } = stimulus;
@@ -50,11 +51,13 @@ module tb_adsp2100_program_owner_bus_control;
         .fetch_address_valid_i(address_valid[0]),
         .type5_valid_i(valid[1]), .type5_address_i(address[1]),
         .type5_address_valid_i(address_valid[1]),
+        .type5_data_access_i(type5_data_access),
         .type5_write_i(type5_write),
         .type5_write_data_i(type5_write_data),
         .type5_write_data_valid_i(type5_write_data_valid),
         .type13_valid_i(valid[2]), .type13_address_i(address[2]),
         .type13_address_valid_i(address_valid[2]),
+        .type13_data_access_i(type13_data_access),
         .type13_write_i(type13_write),
         .type13_write_data_i(type13_write_data),
         .type13_write_data_valid_i(type13_write_data_valid),
