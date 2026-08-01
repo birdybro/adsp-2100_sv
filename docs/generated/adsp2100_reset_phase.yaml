@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "input_boundary": "ONE_FPGA_CLOCK_ENABLE_PER_CLKIN_EDGE_WITH_EXPLICIT_EDGE_POLARITY",
+  "reset_recognition": "ANY_ENABLED_RISING_CLKIN_EDGE",
+  "minimum_reset_clkin_cycles": 4,
+  "reset_hold_phase": "STATE_4",
+  "reset_clkout": 0,
+  "release_sequence": [
+    "FIRST_RISING_CLKIN_EDGE_AFTER_RELEASE_REMAINS_STATE_4",
+    "SECOND_RISING_CLKIN_EDGE_AFTER_RELEASE_ADVANCES_STATE_4_TO_STATE_5"
+  ],
+  "short_reset_behavior": "FAIL_CLOSED_IN_STATE_4_WITH_DURATION_ERROR_BECAUSE_REAL_DEVICE_BEHAVIOR_IS_UNDEFINED",
+  "pre_reset_powerup_state": "UNKNOWN_UNTIL_RESET_IS_RECOGNIZED",
+  "clocking_policy": "SINGLE_FPGA_CLOCK_WITH_SYNCHRONOUS_EDGE_ENABLE_AND_NO_GENERATED_OR_GATED_CLOCK",
+  "first_fetch_boundary": "RESET_PHASE_OWNER_ONLY; PMA_AND_PROGRAM_STROBE_ATTACHMENT_IS_SEPARATE",
+  "sources": [
+    "ADI-UM-1989 printed p. 5-13 Section 5.5.1"
+  ],
+  "confidence": "VERIFIED_PRIMARY_BOUNDED"
+}

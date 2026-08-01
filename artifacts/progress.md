@@ -21,6 +21,13 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- source-backed original RESET/logical-phase owner with rising-edge-only
+  recognition, four-sample qualification, state-4/CLKOUT-low hold, exact
+  second-rising-edge release to state 5, ordinary eight-state traversal,
+  authentic invalid pre-RESET state, explicit fail-closed short-reset
+  handling, six directed tests, 50,034 model/RTL clocks, formal invariants,
+  a portable Yosys flow, and a fully constrained 26-ALM Cyclone V fit; PM
+  initial-fetch strobes remain OQ-024;
 - bounded steady-state native linear owner for NOP, legal Type 6/7, all 2,256
   legal Type 17 internal MOVE pairs, and every Type 18 MODE CONTROL word,
   executing at the current PC while the native PM controller fetches PC+1,
@@ -530,9 +537,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Replace the bounded NOP/Type 6/Type 7/Type 17/Type 18 owner's deterministic
-   preload with sourced reset first-fetch and PM ownership, then add further
-   source-closed non-memory classes.
+3. Attach reset-time PMA `0x0004` and first fetch only after resolving or
+   explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
+   Type 17/Type 18 owner's deterministic preload and add further source-closed
+   non-memory classes.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

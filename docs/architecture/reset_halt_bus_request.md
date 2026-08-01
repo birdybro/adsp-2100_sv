@@ -1,6 +1,6 @@
 # Reset, halt, trap, and bus request
 
-**Status: logical behavior source-backed; Type 22 handshake bounded in RTL**
+**Status: reset recognition/phase owner and Type 22 handshake bounded in RTL**
 
 RESET is recognized on a CLKIN rising edge, must remain asserted for at least
 four CLKIN cycles, holds state 4 and CLKOUT low, and releases into state 5 on
@@ -14,6 +14,48 @@ The standalone cache RTL clears only monitor/data-valid state on reset. It
 does not fabricate zeros in the 16-by-24 data array, matching the documented
 monitor invalidation without inventing a cache-data reset value [ADI-UM-1989,
 printed p. 5-13].
+
+## Reset and logical-phase implementation boundary
+
+`rtl/core/adsp2100_reset_phase.sv` and the structurally independent
+`sim/reference_models/adsp2100_model/reset_phase.py` implement the exact
+source-backed digital boundary that can be represented portably:
+
+- one synchronous FPGA clock enable represents one CLKIN edge, with an
+  explicit input indicating whether that edge is rising;
+- RESET recognition occurs only on an enabled rising edge;
+- four sampled asserted rising edges are required by the bounded digital
+  contract, the recognized state is state 4, and CLKOUT is low;
+- the first enabled rising edge after deassertion remains in state 4;
+- the second enabled rising edge after deassertion advances to state 5; and
+- subsequent enabled edges traverse states 5, 6, 7, 8, 1, 2, 3, and 4 without
+  a generated or gated clock.
+
+The authentic pre-RESET FPGA state is deliberately not initialized. The first
+recognized RESET edge establishes valid phase state. A RESET pulse that does
+not meet the documented minimum fails closed in state 4 and exposes a sticky
+duration-error output; this is implementation protection, not a claim about
+the real device after its specified minimum has been violated. A new asserted
+rising edge restarts qualification.
+
+Because a synthesis tool cannot preserve a portable architectural `X` as a
+runtime validity state, it may optimize `phase_valid_o` after observing that
+every defined transition sets it. Integrators must assert RESET before using
+any phase output; `phase_valid_o` is a simulation/formal observation, not a
+substitute for that system requirement. The Quartus smoke fit reports this
+constant-output optimization explicitly.
+
+Six directed model tests and 50,034 deterministic model/RTL clocks cover
+recognition, minimum duration, both release edges, ordinary phase traversal,
+disabled edges, mid-run RESET, too-short RESET, and restart. The accompanying
+formal harness states reset/phase invariants; proof execution remains pending
+because SymbiYosys/Yosys are unavailable in the current environment.
+
+This module does **not** yet own program memory. The manual explicitly fixes
+PMA at `0x0004` during RESET when the bus is not granted, but does not provide
+a reset-specific PMRD/PMS waveform between recognition and the state-5 release
+boundary [ADI-UM-1989, printed p. 5-13]. OQ-024 therefore withholds that pin
+attachment instead of borrowing the ordinary-fetch waveform.
 
 HALT is recognized at state 3 and stops at state 8. If the current cycle is PM
 data, a forced instruction fetch completes first; this makes the stopped PMA

@@ -8,6 +8,22 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original RESET/logical-phase owner in structurally
+  independent Python and portable SystemVerilog. It recognizes RESET only on
+  represented rising CLKIN edges, qualifies four asserted samples, holds
+  state 4 and CLKOUT low, releases into state 5 on exactly the second rising
+  edge after deassertion, and traverses all eight logical states using clock
+  enables rather than gated clocks. Six directed tests and 50,034
+  deterministic differential clocks cover disabled edges, mid-run assertion,
+  too-short fail-closed behavior, and restart; a formal harness and Yosys flow
+  are wired into automation. A fully constrained Cyclone V fit uses 26 ALMs
+  and 15 registers with +12.432 ns worst setup and +0.144 ns worst hold slack
+  at 20 ns. Reset-time PMA `0x0004` is source-backed, while
+  the undocumented reset-specific PM strobe onset is recorded as OQ-024 and
+  intentionally not attached. Integrators are required to assert RESET before
+  consuming phase outputs because synthesis cannot portably retain an
+  architectural unknown power-up validity flag.
+
 - A bounded steady-state linear instruction owner in structurally independent
   Python and portable SystemVerilog. It executes NOP, legal Type 6/7, all
   2,256 legal Type 17 internal MOVE words, and all Type 18 MODE CONTROL words

@@ -1,0 +1,19 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_reset_phase
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_reset_phase
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_reset_phase.sv
+set_global_assignment -name SDC_FILE reset_phase_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SEED 9
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to edge_enable_i
+set_instance_assignment -name VIRTUAL_PIN ON -to clkin_rising_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_pin_i
+set_instance_assignment -name VIRTUAL_PIN ON -to "*_o"
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

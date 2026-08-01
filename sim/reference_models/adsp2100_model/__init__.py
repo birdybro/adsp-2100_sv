@@ -256,6 +256,12 @@ from .conditional_trap import (
     is_conditional_trap_class,
 )
 from .phase import LogicalPhase
+from .reset_phase import (
+    MINIMUM_RESET_CLKIN_CYCLES,
+    ResetPhaseCycleResult,
+    ResetPhaseState,
+    apply_reset_phase_cycle,
+)
 from .program_bus import (
     PROGRAM_ADDRESS_WIDTH,
     PROGRAM_WORD_WIDTH,

@@ -1332,15 +1332,24 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ATARI-ADSP-SCHEM
 - **Relevant tests:** `make bus-tests`, `make interrupt-tests`,
-  `tests/test_conditional_trap.py`, `formal/conditional_trap.sby`,
-  `formal/system_control.sby`
+  `make reset-tests`, `tests/test_reset_phase.py`,
+  `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
+  `formal/conditional_trap.sby`, `formal/system_control.sby`
 - **Implementation notes:** use clock enables and phase state, never gated
-  clocks. The Type 22 boundary now implements the source-backed TRAP half of
+  clocks. A standalone phase owner now implements rising-edge RESET
+  recognition, four-sample qualification, state-4/CLKOUT-low hold, exact
+  two-rising-edge release into state 5, authentic invalid pre-RESET state, and
+  fail-closed short-pulse handling. Six directed tests and 50,034
+  differential clocks pass; its formal recipe passes syntax lint, while proof
+  execution awaits Yosys/SymbiYosys. PMA `0x0004` is source-backed but the
+  reset-specific PM strobe onset is withheld under OQ-024. The Type 22
+  boundary implements the source-backed TRAP half of
   system control, including state-8 hold and an input explicitly representing
   HALT after recognition. The raw asynchronous HALT synchronizer, general
   pin-driven halt, BR/BG, and bus tristate control remain unimplemented.
-- **Unresolved questions:** exact composition priority among general HALT,
-  TRAP, BR/BG, DMACK waits, reset, and interrupts.
+- **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
+  composition priority among general HALT, TRAP, BR/BG, DMACK waits, reset,
+  and interrupts.
 - **Confidence:** UNKNOWN
 
 ## M24 — Pipeline and instruction timing

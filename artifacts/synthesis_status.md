@@ -3,6 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
+  original RESET/logical-phase owner,
   Type 1 dual-read action decoder,
   Type 2 action decoder and waited execution slice, Type 4 action and waited
   logical-DM slices,
@@ -21,8 +22,19 @@
   stateful CNTR, stateful status/control, stateful status-stack, and stateful
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
-- Yosys is not installed in this environment. A bounded linear-owner Yosys
-  synthesis script is wired into `make synth-yosys` for an equipped host.
+- Yosys is not installed in this environment. Original RESET/phase and bounded
+  linear-owner synthesis scripts are wired into `make synth-yosys` for an
+  equipped host.
+- Quartus 17.0.2 full compilation of the original RESET/logical-phase owner
+  passes for Cyclone V `5CSEBA6U23I7`. It uses 26 ALMs, 15 registers, no block
+  memory, and no DSP blocks. Against its 20 ns virtual-pin smoke constraint,
+  worst multicorner setup slack is +12.432 ns, worst hold slack is +0.144 ns,
+  worst slow-corner Fmax is 132.14 MHz, and TimeQuest reports zero
+  unconstrained clocks, ports, or paths. This does not include reset-time PM
+  pins or a whole core. Quartus also reports the expected constant
+  `phase_valid_o`: portable synthesis cannot retain a runtime validity bit for
+  an intentionally unspecified power-up state, so wrappers must assert RESET
+  before consuming phase outputs.
 - Quartus 17.0.2 full compilation of the bounded steady-state linear owner
   passes for Cyclone V `5CSEBA6U23I7`. It uses 889 ALMs, 1,003 fitted registers,
   no block memory, and no DSP blocks. Against its documented 25 ns virtual-pin

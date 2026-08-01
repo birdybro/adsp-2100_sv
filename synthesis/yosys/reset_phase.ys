@@ -1,0 +1,8 @@
+read_verilog -sv rtl/packages/adsp2100_pkg.sv
+read_verilog -sv rtl/core/adsp2100_reset_phase.sv
+
+hierarchy -check -top adsp2100_reset_phase
+synth -top adsp2100_reset_phase
+check
+stat
+write_json build/yosys_reset_phase.json

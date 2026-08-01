@@ -7,6 +7,7 @@
 | 24-bit PM, 16-bit DM, 14-bit addresses | VERIFIED_PRIMARY | original 1989 manual |
 | Four input clocks/eight logical states per instruction | VERIFIED_PRIMARY | original 1989 manual |
 | Reset PC `0x0004`, MSTAT/IMASK zero, ICNTL undefined | VERIFIED_PRIMARY | original 1989 manual |
+| RESET recognition and logical phase release | VERIFIED_PRIMARY, BOUNDED | original 1989 manual p. 5-13 establishes rising-edge recognition, four-CLKIN-cycle minimum, state-4/CLKOUT-low hold, and second-rising-edge release to state 5; six directed tests and 50,034 model/RTL clocks pass, while reset-specific PM strobe onset remains OQ-024 |
 | Original four-bit MSTAT boundary | VERIFIED_PRIMARY | original manual; later modes explicitly excluded |
 | NOP `0x000000` | VERIFIED_PRIMARY | original Appendix A diagram |
 | All 30 top-level opcode masks | CORROBORATED | primary diagrams transcribed, algebraically checked, and compared to pinned MAME layout |
