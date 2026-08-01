@@ -8,6 +8,12 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded original Type 4 state/transaction model and portable RTL slice
+  connecting the exact action decoder to selected-bank ALU/MAC, ASTAT, both
+  DAGs, and a waited logical DM boundary; plus deterministic differential
+  vectors, directed unknown/reset/conflict tests, a stateful formal harness,
+  and a constrained Cyclone V project.
+
 - A primary-backed original Type 4 action database, independent model,
   synthesizable exact decoder, two manual-derived fixtures, exhaustive Python
   and RTL partitions, algebraic assembler/disassembler support, formal
@@ -316,6 +322,12 @@ semantic versioning after its first release.
 
 ### Changed
 
+- The Type 4 execution boundary now captures every cycle-start compute,
+  memory, bank, and DAG input once; DMACK-low clocks freeze the descriptor and
+  all destinations, while acknowledgment atomically commits compute/status,
+  optional read data, and selected-I postmodify. AMF-zero remains a
+  memory-only transaction.
+
 - Type 13 and its cache wrapper now support an explicit delayed PM-cycle
   completion input. The compatibility path remains a one-clock logical cycle,
   while the native attachment holds descriptors and defers every architectural
@@ -334,6 +346,10 @@ semantic versioning after its first release.
   ADI data book at printed pages 2-15 onward.
 
 ### Fixed
+
+- Re-ran the Type 4 logical-DM smoke project with Standard Fit after Auto Fit
+  exposed a -0.215 ns multicorner hold violation; the verified fit now has
+  +0.104 ns worst hold slack without weakening its constraints.
 
 - Scoped the Type 12 pending-descriptor stability assertion outside reset.
   Reset intentionally masks transaction outputs before the synchronous edge
@@ -360,6 +376,16 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- The bounded Type 4 state model and RTL agree for 50,072 clocks spanning
+  immediate and arbitrary waits, reads/writes, all selected-bank compute
+  paths, both DAGs, DAG1 bit reversal, old-value write overlap, memory-only
+  aliases, reset cancellation, integration conflicts, and unknown-dependent
+  invalidation. Twelve model/schema/directed tests and strict assertion lint pass.
+- Quartus Standard Fit closes the bounded Type 4 logical-DM slice at 25 ns on
+  Cyclone V: 1,677 ALMs, 1,258 registers, one DSP block, no RAM, +3.644 ns
+  worst setup, +0.104 ns worst multicorner hold, 46.83 MHz worst slow-corner
+  Fmax, and zero unconstrained clocks, inputs, outputs, or paths.
 
 - All 2,097,152 Type 4 words partition into 2,034,688 supported actions and
   62,464 prohibited compute/read destination collisions; AMF-zero memory-only
@@ -810,8 +836,9 @@ semantic versioning after its first release.
 
 - Closed original Type 4 field placement, memory-only AMF-zero behavior,
   cycle-start/cycle-end ordering, read-collision rule, and legal old-value
-  write overlap from the 1989 primary manual while keeping stateful/waited
-  execution explicitly open.
+  write overlap from the 1989 primary manual, and recorded the bounded waited
+  logical execution evidence while keeping native phases and whole-core event
+  arbitration explicitly open.
 
 - Distinguished the now-attached bounded Type 12 native read/write path from
   still-open whole-core DM/PM ownership, event arbitration, BR/BG, and analog
@@ -982,9 +1009,9 @@ semantic versioning after its first release.
 
 ### Known Issues
 
-- Type 4 currently stops at exact action decode and toolchain support; selected
-  register/DAG state, waited logical DM execution, native phases, fetch, and
-  control events are not attached.
+- Type 4 now has selected-register/DAG state and waited logical DM execution,
+  but native eight-state DM attachment, fetch, and control events are not
+  attached.
 
 - Type 2 and Type 12 are independently attached to the native DM controller,
   but no whole-core owner selects among them or coordinates simultaneous PM,

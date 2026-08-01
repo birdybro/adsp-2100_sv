@@ -63,7 +63,9 @@ two-bit I and M fields to I0–I3 and M0–M3, selects the L corresponding to I,
 uses normal-order I arithmetic even when MSTAT bit-reverse mode is active, and
 writes only the selected I at cycle end. Type 12 separately attaches DAG1 to
 the native shifter-plus-DM transfer phases and commits its selected-I update
-only at qualified completion. Type 4 action decode selects all DAG1 I/M pairs
-and the matching L-by-I rule, but has no stored-state or bus attachment yet.
+only at qualified completion. The bounded Type 4 logical slice selects all
+DAG1 I/M pairs and the matching L-by-I rule, applies bit reversal only to the
+old address, holds pending transactions, and commits selected-I postmodify
+only at acknowledged completion. Its native DM attachment remains open.
 Other direct DM transfers and multifunction instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].

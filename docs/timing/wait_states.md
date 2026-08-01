@@ -14,11 +14,11 @@ permits completion and read sampling on the following 7-to-8 edge. Nine
 directed tests and 50,039 model/RTL clocks cover zero, one, and repeated
 extensions, late ACK rejection, phase holds, stable output values, and reset.
 
-The bounded Type 2 and Type 12 execution slices separately automate the
+The bounded Type 2, Type 4, and Type 12 execution slices separately automate the
 architectural rule:
 each DMACK-low sample retains select, direction, valid address/write data, and
 architectural state, while the first high sample completes the transaction and
-permits selected-I post-modification. Their 50,035- and 50,069-clock
+permits selected-I post-modification. Their 50,035-, 50,072-, and 50,069-clock
 model/RTL differentials do not claim asynchronous setup/hold or native pin
 substate accuracy.
 
@@ -28,6 +28,8 @@ that a DMACK-low sample causes a complete physical-substate repeat while the
 instruction remains pending. The selected I register, Type 12 shifter result,
 and optional read destination cannot change until the later qualified 7-to-8
 completion.
+Type 4 retains only the verified logical transaction boundary until its
+separate native attachment is implemented and tested.
 
 The original AC table specifies DMACK setup to CLKIN high at 6-to-7 and hold
 after that edge; those nanosecond requirements are documented but not modeled

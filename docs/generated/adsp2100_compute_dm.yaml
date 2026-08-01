@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "SOURCE_CLOSED_TYPE_4_ALU_MAC_PLUS_DM_ACTION_DECODE",
+  "scope": "SOURCE_CLOSED_TYPE_4_ALU_MAC_PLUS_WAITED_LOGICAL_DM_EXECUTION",
   "decode": {
     "original_type": 4,
     "opcode_mask": "0xe00000",
@@ -39,6 +39,15 @@
     "base_instruction_cycles": 1,
     "conditional": false
   },
+  "logical_transaction": {
+    "issue": "CAPTURE_CYCLE_START_COMPUTE_DREG_DAG_AND_BANK_STATE",
+    "wait": "DMACK_LOW_HOLDS_DESCRIPTOR_BUS_OUTPUTS_AND_ALL_ARCHITECTURAL_DESTINATIONS",
+    "completion": "FIRST_DMACK_HIGH_BOUNDARY_ATOMICALLY_COMMITS_COMPUTE_STATUS_OPTIONAL_DM_READ_AND_SELECTED_I_POSTMODIFY",
+    "write_data": "CAPTURED_CYCLE_START_DREG_VALUE",
+    "read_data": "SAMPLED_ON_ACKNOWLEDGED_COMPLETION",
+    "reset": "ABORT_PENDING_TRANSACTION_WITHOUT_INVENTING_ARCHITECTURAL_RESET_VALUES",
+    "unknown_policy": "INVALIDATE_ONLY_DESTINATIONS_DEPENDENT_ON_UNKNOWN_OPERANDS_DATA_OR_DAG_CONFIGURATION"
+  },
   "source_citations": [
     "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
     "ADI-UM-1989 printed pp. 5-9–5-12",
@@ -52,10 +61,12 @@
     "hand_fixtures": "tests/vectors/compute_dm_fixtures.json",
     "tool_round_trip": "tests/test_assembler_disassembler.py",
     "rtl_decode": "sim/unit/tb_adsp2100_compute_dm_decode.sv",
-    "formal": "formal/compute_dm_decode.sby"
+    "rtl_state": "sim/unit/tb_adsp2100_compute_dm_slice.sv (50072 deterministic clocks)",
+    "formal_decode": "formal/compute_dm_decode.sby",
+    "formal_state": "formal/compute_dm.sby",
+    "quartus": "synthesis/quartus/compute_dm_smoke.qpf"
   },
   "unresolved": [
-    "LOGICAL_DMACK_TRANSACTION_EXECUTION",
     "NATIVE_DM_PHASE_ATTACHMENT",
     "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_AND_BUS_ARBITRATION",
     "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"

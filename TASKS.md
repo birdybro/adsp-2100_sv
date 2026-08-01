@@ -293,8 +293,11 @@ advance beyond research until a page-level primary citation is added.
   62,464 prohibited DM-read destination collisions. Two independent
   manual-derived fixtures, six model checks, exhaustive 24-bit RTL decode,
   canonical/raw assembler-disassembler preservation, a formal harness, and a
-  constrained decoder fit pass. Waited state execution and native DM
-  attachment remain explicitly incomplete.
+  constrained decoder fit pass. The bounded state model and RTL capture
+  selected-bank compute/DREG/DAG state, hold logical bus and state across
+  arbitrary DMACK waits, and atomically commit compute/status, optional read,
+  and I postmodify. Twelve model/schema/directed checks and 50,072 deterministic clocks
+  pass; native DM attachment remains explicitly incomplete.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -374,9 +377,11 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_shift_move_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_pm_slice.sv`,
-  `sim/unit/tb_adsp2100_compute_move_slice.sv`, `formal/shift_move.sby`,
+  `sim/unit/tb_adsp2100_compute_move_slice.sv`,
+  `sim/unit/tb_adsp2100_compute_dm_slice.sv`, `formal/shift_move.sby`,
   `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
-  `formal/compute_move.sby`, `formal/compute_dm_decode.sby`
+  `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
+  `formal/compute_dm.sby`
 - **Implementation notes:** the bounded Type 14 action graph implements the
   first complete source-backed parallel execution boundary. Shifter X and
   DREG-move source read cycle-start selected-bank state; noncolliding DREG,
@@ -400,9 +405,14 @@ advance beyond research until a page-level primary citation is added.
   directed tests, and 50,086 model/RTL clocks. Type 4 now has a source-closed
   action graph: all computation/memory operands are cycle-start selections,
   writes use the old DREG, AMF zero is memory-only, and colliding reads fail
-  closed. Its 2,097,152 words partition exhaustively in Python and RTL.
-  Stateful/waited Type 4 execution, Type 1/5 action graphs, PM/DM concurrency,
-  and whole-core event arbitration remain.
+  closed. Its 2,097,152 words partition exhaustively in Python and RTL. The
+  bounded state implementation captures all old values once, holds the
+  logical transaction and state over DMACK-low clocks, and commits ALU/MAC,
+  ASTAT, optional read DREG, and selected I atomically on acknowledgment.
+  Twelve model/schema/directed checks and 50,072 differential clocks cover both banks and
+  DAGs, memory-only aliases, old-value overlap, reset, conflicts, and unknowns.
+  Native Type 4 attachment, Type 1/5 action graphs, PM/DM concurrency, and
+  whole-core event arbitration remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, and result forwarding outside the bounded old-value rule
   remain high-risk.
@@ -496,6 +506,11 @@ advance beyond research until a page-level primary citation is added.
   arbitrary DMACK-low clocks, and atomically commits shifter/status, optional
   read DREG, and I post-modification on acknowledgment. Nine directed tests
   and 50,069 state/bus differential clocks pass across both banks and DAGs.
+  A separate Type 4 transaction model captures old selected-bank ALU/MAC,
+  DREG, and DAG state; holds one logical DM transaction over arbitrary waits;
+  and commits computation/status, optional read, and I postmodify atomically.
+  Twelve model/schema/directed checks and 50,072 model/RTL clocks pass for both banks and
+  DAGs, memory-only aliases, reset, conflicts, and unknown-state propagation.
   A structurally separate Type 13 transaction model captures old shifter,
   DREG, PX, and DAG2 state; performs the fixed logical PM data action; and
   distinguishes same-cycle next-fetch cache hits from exactly one external
@@ -1249,6 +1264,8 @@ advance beyond research until a page-level primary citation is added.
   transaction comparison, covering 50,069 seeded clocks with waits. Type 13
   adds 50,070 deterministic state/cache/bus clocks over fixed PM data cycles,
   hit completion, miss/forced-fetch recovery, PX packing, and DAG2 updates.
+  Type 4 adds 50,072 deterministic logical-DM clocks over selected-bank
+  ALU/MAC, old-value reads/writes, DAG postmodify, waits, and invalid state.
   These are
   bounded state/action traces, not legal-program execution; the MAME adapter,
   unified architectural trace schema, and reducer remain absent. MAME is an
@@ -1270,7 +1287,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Forty-three harnesses now pass strict assertion
+  result a complete proof. Fifty harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
@@ -1279,6 +1296,7 @@ advance beyond research until a page-level primary citation is added.
   cache-miss recovery plus connected cache selection/fill ownership,
   source-bounded instruction-cache count, reset, hold, restart, and oldest-
   replacement invariants,
+  bounded Type 4 ALU/MAC-plus-DM wait stability and atomic completion,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
@@ -1330,6 +1348,11 @@ advance beyond research until a page-level primary citation is added.
   The bounded Type 14 slice fits in 1,032 ALMs and 565 fitted registers with no
   RAM/DSPs, +3.041 ns worst setup, +0.171 ns worst hold, and zero unconstrained
   clocks, ports, or paths.
+  The bounded Type 4 logical-DM slice fits in 1,677 ALMs and 1,258 fitted
+  registers with one DSP and no RAM at 25 ns. Standard Fit closes the initial
+  Auto Fit hold failure with +3.644 ns worst setup, +0.104 ns worst
+  multicorner hold, 46.83 MHz worst slow-corner Fmax, and zero unconstrained
+  clocks, ports, or paths. Native DM phases and whole-core timing remain open.
   The bounded Type 2 DM-write slice fits in 581 ALMs and 430 fitted registers
   with no RAM/DSP blocks against a 20 ns standalone constraint. Worst setup is
   +3.590 ns, worst multicorner hold is +0.165 ns, worst slow-corner Fmax is
@@ -1503,11 +1526,12 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is attaching the now source-closed Type 4
-action graph to selected-bank ALU/MAC, DAG, waited logical DM, and native DM
-execution in `ISA-002`/`MODEL-001`; then constructing Type 1/5 action graphs.
+The highest-priority unblocked work is attaching the now verified logical
+Type 4 ALU/MAC-plus-DM transaction to the native eight-state DM controller in
+`ISA-002`/`MODEL-001`; then constructing Type 1/5 action graphs.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
-reference. Field placement and Type 4 action legality are closed, while its
-state/bus execution and the remaining multifunction classes are not.
+reference. Field placement, Type 4 action legality, and waited logical
+execution are closed, while native attachment, whole-core integration, and
+the remaining multifunction classes are not.
 `TIME-001` must be completed before architectural execution RTL is permitted
 to claim cycle accuracy.

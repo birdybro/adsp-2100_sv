@@ -150,6 +150,18 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_compute_dm_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_dm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_conditional_compute_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_condition_logic.sv \
@@ -676,7 +688,7 @@ compute-tests:
 		tests.test_mac_model tests.test_shifter_model tests.test_mr_saturation \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
-		tests.test_compute_move \
+		tests.test_compute_move tests.test_compute_dm \
 		tests.test_conditional_compute tests.test_divide_quotient \
 		tests.test_divide_sign
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
@@ -849,6 +861,24 @@ compute-tests:
 			rtl/core/adsp2100_compute_move_slice.sv \
 			sim/unit/tb_adsp2100_compute_move_slice.sv; \
 		build/obj_compute_move_slice/Vtb_adsp2100_compute_move_slice; \
+		$(PYTHON) tools/generators/generate_compute_dm_vectors.py \
+			--output build/compute_dm_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_dm_slice \
+			--top-module tb_adsp2100_compute_dm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			sim/unit/tb_adsp2100_compute_dm_slice.sv; \
+		build/obj_compute_dm_slice/Vtb_adsp2100_compute_dm_slice; \
 		$(PYTHON) tools/generators/generate_conditional_compute_vectors.py \
 			--output build/conditional_compute_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -1338,6 +1368,19 @@ formal:
 			rtl/core/adsp2100_compute_dm_decode.sv \
 			formal/harnesses/adsp2100_compute_dm_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_dm_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			formal/harnesses/adsp2100_compute_dm_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_conditional_compute_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_condition_logic.sv \
@@ -1567,6 +1610,7 @@ formal:
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_compute_dm_decode \
 			formal/compute_dm_decode.sby; \
+		sby -f -d build/formal_compute_dm formal/compute_dm.sby; \
 		sby -f -d build/formal_conditional_compute \
 			formal/conditional_compute.sby; \
 		sby -f -d build/formal_stack_control_decode \
@@ -1661,6 +1705,8 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_dm_decode_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/compute_dm_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/conditional_compute_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/direct_jump_smoke; \
@@ -1750,6 +1796,7 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_dm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_move_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name compute_dm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_compute_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name direct_jump_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name do_until_vectors.txt -delete
@@ -1864,6 +1911,9 @@ clean:
 	fi
 	@if [ -d build/obj_compute_dm_decode ]; then \
 		find build/obj_compute_dm_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_compute_dm_slice ]; then \
+		find build/obj_compute_dm_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_conditional_compute_decode ]; then \
 		find build/obj_conditional_compute_decode -depth -delete; \
@@ -2002,6 +2052,9 @@ clean:
 	@if [ -d build/quartus_compute_dm_decode ]; then \
 		find build/quartus_compute_dm_decode -depth -delete; \
 	fi
+	@if [ -d build/quartus_compute_dm ]; then \
+		find build/quartus_compute_dm -depth -delete; \
+	fi
 	@if [ -d build/quartus_conditional_compute ]; then \
 		find build/quartus_conditional_compute -depth -delete; \
 	fi
@@ -2070,6 +2123,7 @@ clean:
 		build/formal_shifter_pm_native \
 		build/formal_compute_move \
 		build/formal_compute_dm_decode \
+		build/formal_compute_dm \
 		build/formal_conditional_compute \
 		build/formal_direct_jump \
 		build/formal_do_until \

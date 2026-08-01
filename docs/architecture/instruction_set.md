@@ -71,9 +71,12 @@ parallel actions and 62,464 prohibited read-destination collisions. A write
 from the computation destination remains supported and supplies the old DREG
 value. The independent model, synthesizable exact decoder, two manual-derived
 fixtures, exhaustive Python and RTL partitions, assembler/disassembler, and
-formal assertions close action selection only. Waited DM execution, atomic
-register/status/DAG commit, native phases, fetch, and events are not yet
-implemented [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12,
+formal assertions close action selection. A bounded independent state model
+and portable RTL slice capture all cycle-start operands, preserve the logical
+transaction across DMACK-low clocks, and atomically commit computation/status,
+optional DM read, and selected-I postmodify on acknowledgment. Twelve
+model/schema/directed checks and 50,072 deterministic model/RTL clocks pass. Native phases, fetch,
+and events are not yet implemented [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12,
 6-1, 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
 
 Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded

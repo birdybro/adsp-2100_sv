@@ -1,7 +1,7 @@
 # Multiplier/accumulator
 
-**Status: standard fractional compute model and RTL implemented; Type 4 action
-decode closed; exact Type 25 saturation and bounded Type 8/Type 9 integrations
+**Status: standard fractional compute model and RTL implemented; Type 4 logical
+execution closed; exact Type 25 saturation and bounded Type 8/Type 9 integrations
 complete**
 
 The multiplier has two 16-bit inputs and a 32-bit product. A 40-bit
@@ -55,10 +55,12 @@ The separate register file accepts a full MAC result for atomic MR or
 MF-middle-word writeback in the selected bank.
 The separate status block accepts MV at the documented cycle-end boundary.
 The combinational compute block alone does not select architectural operands.
-Type 4 action decode now distinguishes all MAC AMFs, X/Y/Z fields, and the
-MR0/MR1/MR2 read-load collisions. It does not yet connect MR feedback,
-writeback, status, DAG state, or the DM transaction. Type 1/5 action selection
-and all remaining memory multifunction execution/timing remain unimplemented.
+The bounded Type 4 slice distinguishes every MAC AMF, X/Y/Z field, and
+MR0/MR1/MR2 read-load collision; captures cycle-start inputs, MR feedback, and
+old store data; and commits MR/MF plus ASTAT.MV atomically with the
+acknowledged DM action. Immediate and waited completion pass the 50,072-clock
+comparison. Type 1/5 action selection, native Type 4 DM phases, and all
+remaining memory multifunction execution/timing remain unimplemented.
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the
@@ -74,7 +76,7 @@ selected-bank MR/MF writeback, ASTAT.MV, and a simultaneous old-value DREG
 move. Z=0 packets whose move also targets MR0/MR1/MR2 fail closed. All
 476,672 supported Type 8 ALU/MAC words execute in both banks in the combined
 983,386-cycle comparison. AMF zero remains unassigned under OQ-022, and Types
-1/4/5 plus memory bus timing remain open
+1/5 plus unimplemented memory bus timing remain open
 [ADI-UM-1989, printed pp. 2-13–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
 
 The Type 9 model and RTL select the same original MAC X/Y/Z and MR-feedback

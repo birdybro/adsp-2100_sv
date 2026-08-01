@@ -1,6 +1,6 @@
 # Multifunction execution semantics
 
-**Status: key ordering rule verified; Type 4 action decode closed; bounded
+**Status: key ordering rule verified; bounded Type 4 ALU/MAC-plus-DM,
 Type 8 ALU/MAC-plus-DREG, Type 12 shifter-plus-DM, Type 13
 shifter-plus-PM/cache, and Type 14 shifter-plus-DREG forms integrated**
 
@@ -25,7 +25,7 @@ The original explicitly supports:
 
 [ADI-UM-1989, printed pp. 6-3–6-7 and Appendix A types 1, 4, 5, 8, 12–14.]
 
-## Source-closed Type 4 action decode
+## Bounded Type 4 execution and logical DM transaction
 
 Original Type 4 has fixed class `011`, DAG selector G, memory direction D,
 result selector Z, AMF/YOP/XOP computation fields, one memory DREG, and
@@ -43,8 +43,20 @@ destination collisions. They expose both computation operands, direction,
 memory DREG, and exact I/M selections. Two manual-derived opcode fixtures,
 canonical assembler/disassembler forms, lossless raw alias handling, a
 24-bit RTL traversal, and a bounded assertion harness verify this action
-boundary. No architectural register, DAG, DMACK transaction, native bus
-phase, or fetch state changes here yet; those execution layers remain open.
+boundary.
+
+The bounded state model and portable RTL slice capture the selected bank,
+compute operands and result, old DM-write DREG, and selected DAG I/M/L values
+when the transaction issues. Every DMACK-low clock preserves the descriptor,
+logical bus outputs, and all architectural destinations. The first
+acknowledged clock samples a read and atomically commits the optional ALU/MAC
+result and ASTAT effects, optional DREG load, and selected-I postmodify. AMF
+zero follows the same transaction path without a computational effect.
+Directed checks and 50,072 deterministic model/RTL clocks cover immediate and
+arbitrarily waited reads/writes, old-value overlap, both banks and DAGs, DAG1
+bit reversal, reset abort, integration conflicts, and unknown-dependent
+destination invalidation. Native eight-state DM attachment, instruction fetch,
+and event arbitration remain open.
 
 ## Bounded Type 8 execution
 

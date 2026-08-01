@@ -13,7 +13,7 @@ Known cases:
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
-| Type 4 ALU/MAC plus DM read/write | documented as one processor cycle when DMACK is asserted, with whole-cycle state-seven extensions while low; action decode and old-value ordering are verified, but the waited execution/native attachment is not yet implemented |
+| Type 4 ALU/MAC plus DM read/write | one logical processor cycle when DMACK is asserted; every DMACK-low clock preserves the captured bus and compute/DAG descriptor, and the first acknowledged boundary atomically commits compute/status, optional read, and selected-I postmodify; native eight-state attachment remains open |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
@@ -74,6 +74,14 @@ DM-read destination, and selected I. The first acknowledged clock atomically
 commits all three parallel actions. This verifies the sourced logical wait
 contract, not physical sub-cycle setup/hold timing or whole-core PM-fetch and
 event arbitration [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7].
+
+The bounded Type 4 model/RTL slice verifies 50,072 logical clocks. Immediate
+acknowledgment commits the captured ALU/MAC or memory-only action, optional
+read data, and selected-I postmodify together. Each DMACK-low clock retains
+the old-value compute/store/DAG descriptor and stable valid logical bus
+outputs without any architectural write. This is logical transaction evidence;
+native substates, ordinary fetch overlap, and event arbitration remain open
+[ADI-UM-1989, printed pp. 2-6–2-7, 5-9–5-12, 6-3–6-7].
 
 The bounded Type 2 model/RTL slice verifies 50,035 logical clocks. An
 immediately acknowledged write drives the old selected I (bit reversed for

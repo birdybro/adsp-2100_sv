@@ -32,8 +32,9 @@ fields to I4–I7 and M4–M7, selects the L corresponding to I, and writes only
 that I at cycle end. Type 2 now attaches all DAG2 I/M selections to immediate
 DM writes with stable waited transactions and completion-only
 post-modification; Type 12 separately attaches shifter-plus-DM. Type 4 action
-decode selects every DAG2 I/M pair and matching L-by-I relationship without
-yet committing state or issuing DM. Other PM/DM attachment and multifunction
+execution selects every DAG2 I/M pair and matching L-by-I relationship, holds
+the logical DM transaction across waits, and commits selected-I postmodify only
+at acknowledgment. Its native attachment and other PM/DM multifunction
 updates remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
