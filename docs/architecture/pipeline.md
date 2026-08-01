@@ -21,7 +21,7 @@ the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
 that completion edge and its bank-select effect is visible to the following
 instruction. The request is admitted at the enabled state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Twelve directed tests and 52,763
+interface exposes no PM acknowledge input. Thirteen directed tests and 53,985
 phase clocks compare the independent model with RTL, including every legal
 Type 17 pair, every Type 18 encoding, phase holds, bus-output relinquishment,
 PC wrap, selected-bank state, CNTR-stack effects, invalid fetched data, and
@@ -30,8 +30,12 @@ SSTAT, IMASK, or ICNTL raises a dedicated retirement pulse so the OQ-016
 zero-extension hypothesis cannot become invisible. The deterministic
 instruction preload and complete state initialization are verification hooks,
 not architectural interfaces. Reset release/first fetch, active-loop and branch
-selection, interrupt abort, PM-data/cache ownership, HALT, and BR/BG
-arbitration remain outside this bounded result [ADI-UM-1989, printed pp. 1-5,
+selection, interrupt abort, PM-data/cache ownership, HALT, and whole-core
+BR/BG arbitration remain outside this bounded result. A separate bounded
+composition now proves the ordinary linear owner across 50,003 more clocks and
+93 complete BR/BG handshakes, including current-fetch retirement, next-issue
+inhibition, grant-time PM masking, and state-8-to-state-1 restart; it does not
+attach any other PM/DM owner [ADI-UM-1989, printed pp. 1-5,
 2-6, 2-15, 2-18, 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24,
 5-5–5-8, 6-1–6-2, 6-12, 6-14–6-15, A-3, and A-9].
 

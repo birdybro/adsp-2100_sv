@@ -12,6 +12,7 @@
   "current_pc_semantics": "PC_NAMES_THE_INSTRUCTION_EXECUTING_DURING_THE_CYCLE",
   "ordinary_fetch_address": "PC_PLUS_ONE_MODULO_14_BITS",
   "issue_boundary": "ENABLED_STATE_8_TO_STATE_1_EDGE",
+  "issue_inhibit": "PREVENTS_ONLY_NEW_STATE_8_ISSUE_AND_DOES_NOT_MASK_AN_ACTIVE_TRANSACTION",
   "retire_boundary": "ENABLED_STATE_7_TO_STATE_8_EDGE",
   "retire_actions": [
     "COMMIT_CURRENT_INSTRUCTION_STATE_EFFECTS",

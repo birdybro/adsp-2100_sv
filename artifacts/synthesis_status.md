@@ -12,7 +12,7 @@
   Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the bounded NOP/Type 6/Type 7/Type 17/Type 18
-  linear owner,
+  linear owner and its bounded normal-BR/BG composition,
   the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
@@ -24,7 +24,8 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment. Original RESET/phase, normal
-  BR/BG, and bounded linear-owner synthesis scripts are wired into
+  BR/BG, bounded linear-owner, and linear-owner/BR/BG composition synthesis
+  scripts are wired into
   `make synth-yosys` for an equipped host.
 - Quartus 17.0.2 full compilation of the normal BR/BG controller passes for
   Cyclone V `5CSEBA6U23I7`. It uses 27 ALMs, 7 fitted registers, no block
@@ -44,11 +45,21 @@
   an intentionally unspecified power-up state, so wrappers must assert RESET
   before consuming phase outputs.
 - Quartus 17.0.2 full compilation of the bounded steady-state linear owner
-  passes for Cyclone V `5CSEBA6U23I7`. It uses 889 ALMs, 1,003 fitted registers,
+  passes for Cyclone V `5CSEBA6U23I7`. It uses 885 ALMs, 1,020 fitted registers,
   no block memory, and no DSP blocks. Against its documented 25 ns virtual-pin
-  smoke constraint, worst multicorner setup slack is +12.917 ns, worst hold
-  slack is +0.166 ns, and TimeQuest reports zero unconstrained clocks, ports,
-  or paths. This is not a whole-core utilization or Fmax result.
+  smoke constraint, worst multicorner setup slack is +13.145 ns, worst hold
+  slack is +0.166 ns, worst slow-corner Fmax is 84.35 MHz, and TimeQuest reports
+  zero unconstrained clocks, ports, or paths. This is not a whole-core result.
+- Quartus 17.0.2 full compilation of the bounded linear-owner/BR/BG
+  composition passes for Cyclone V `5CSEBA6U23I7`. It uses 898 ALMs, 1,041
+  fitted registers, no block memory, and no DSP blocks. Against its documented
+  25 ns virtual-pin smoke constraint, worst multicorner setup slack is
+  +12.845 ns, worst hold slack is +0.166 ns, worst slow-corner Fmax is
+  82.27 MHz, and TimeQuest reports zero unconstrained clocks, ports, or paths.
+  Expected warnings are limited to the Quartus Lite LogicLock license,
+  constant outputs in this read-only bounded fetch path, and virtual-pin
+  optimization. This is not multi-owner, physical-I/O, or whole-core timing
+  closure.
 - Quartus 17.0.2 full compilation of the combinational Type 3 direct-DM
   action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
   constraint. It uses 46 ALMs (32 combinational ALUTs) and no registers, RAM,
@@ -443,7 +454,7 @@
   top intentionally does not expose the other feedback/control registers.
   Across four timing models, worst setup is +5.529 ns and worst hold is
   +0.168 ns against 20 ns, with zero unconstrained paths.
-- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 63
+- SymbiYosys and Yosys are not installed. `make formal` strictly lints the 64
   available assertion harnesses before reporting that proof execution is
   skipped.
 
@@ -453,7 +464,8 @@ skip; `make synth-quartus` runs the bounded class-decode,
 internal-move-decode, stack-control-decode, stack-control-integration,
 Type-6 integration,
 normal BR/BG bus control,
-bounded NOP/Type-6/Type-7/Type-18 linear ownership,
+bounded NOP/Type-6/Type-7/Type-17/Type-18 linear ownership,
+bounded linear-ownership/normal-BR/BG composition,
 Type-8 integration,
 Type-9 integration,
 Type-2 integration,

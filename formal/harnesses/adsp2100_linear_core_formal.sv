@@ -5,6 +5,7 @@ module adsp2100_linear_core_formal (
     input logic        reset,
     input logic [2:0]  phase,
     input logic        phase_advance,
+    input logic        instruction_issue_inhibit,
     input logic        bus_relinquished,
     input logic        instruction_setup,
     input logic [13:0] instruction_setup_pc,
@@ -52,6 +53,7 @@ module adsp2100_linear_core_formal (
         .reset_i(reset),
         .phase_i(phase),
         .phase_advance_i(phase_advance),
+        .instruction_issue_inhibit_i(instruction_issue_inhibit),
         .bus_relinquished_i(bus_relinquished),
         .instruction_setup_i(instruction_setup),
         .instruction_setup_pc_i(instruction_setup_pc),
@@ -138,6 +140,9 @@ module adsp2100_linear_core_formal (
             assert (!pm_address_output_enable);
             assert (!pm_control_output_enable);
             assert (!pm_data_output_enable);
+        end
+        if (instruction_issue_inhibit) begin
+            assert (!instruction_issue);
         end
         cover (instruction_issue);
         cover (retire_event && pmd_read_data_valid);

@@ -1,23 +1,39 @@
 `default_nettype none
 `timescale 1ns/1ps
 
-module tb_adsp2100_linear_core_slice;
+module tb_adsp2100_linear_bus_control_slice;
     logic clk;
-    logic [76:0] stimulus;
-    logic [101:0] expected_pre;
-    logic [117:0] expected_post;
+    logic [75:0] stimulus;
+    logic [16:0] expected_bus_pre;
+    logic [101:0] expected_core_pre;
+    logic [120:0] expected_post;
 
     logic reset;
     logic [2:0] phase;
     logic phase_advance;
-    logic instruction_issue_inhibit;
-    logic bus_relinquished;
+    logic br_n;
     logic instruction_setup;
     logic [13:0] setup_pc;
     logic [23:0] setup_opcode;
     logic [23:0] pmd_read_data;
     logic pmd_read_data_valid;
     logic [5:0] probe_code;
+
+    logic [2:0] bus_mode;
+    logic state_three_boundary;
+    logic request_recognized;
+    logic grant_assert_event;
+    logic release_recognized;
+    logic grant_release_event;
+    logic resume_event;
+    logic request_withdrawn;
+    logic release_cancelled;
+    logic instruction_issue_inhibit;
+    logic normal_bus_relinquished;
+    logic normal_bg_n;
+    logic reset_br_request;
+    logic bg_n;
+    logic bus_relinquished;
 
     logic issue_boundary;
     logic setup_accepted;
@@ -93,6 +109,7 @@ module tb_adsp2100_linear_core_slice;
     logic exp_pmd_write_data_valid;
     logic [23:0] exp_pmd_write_data;
 
+    logic [2:0] exp_post_bus_mode;
     logic exp_post_instruction_valid;
     logic exp_post_pending;
     logic [13:0] exp_post_pc;
@@ -120,8 +137,7 @@ module tb_adsp2100_linear_core_slice;
     integer vector_count;
 
     assign {
-        reset, phase, phase_advance, instruction_issue_inhibit,
-        bus_relinquished,
+        reset, phase, phase_advance, br_n,
         instruction_setup, setup_pc, setup_opcode,
         pmd_read_data, pmd_read_data_valid, probe_code
     } = stimulus;
@@ -139,9 +155,10 @@ module tb_adsp2100_linear_core_slice;
         exp_pma_valid, exp_pma, exp_pmda, exp_pmda_valid,
         exp_pms_n, exp_pmrd_n, exp_pmwr_n,
         exp_pmd_write_data_valid, exp_pmd_write_data
-    } = expected_pre;
+    } = expected_core_pre;
 
     assign {
+        exp_post_bus_mode,
         exp_post_instruction_valid, exp_post_pending,
         exp_post_pc, exp_post_opcode,
         exp_probe_valid, exp_probe_data,
@@ -152,19 +169,33 @@ module tb_adsp2100_linear_core_slice;
         exp_count_stack_overflow, exp_post_pm_active
     } = expected_post;
 
-    adsp2100_linear_core_slice dut (
+    adsp2100_linear_bus_control_slice dut (
         .clk_i(clk),
         .reset_i(reset),
         .phase_i(phase),
         .phase_advance_i(phase_advance),
-        .instruction_issue_inhibit_i(instruction_issue_inhibit),
-        .bus_relinquished_i(bus_relinquished),
+        .br_n_i(br_n),
         .instruction_setup_i(instruction_setup),
         .instruction_setup_pc_i(setup_pc),
         .instruction_setup_opcode_i(setup_opcode),
         .pmd_read_data_i(pmd_read_data),
         .pmd_read_data_valid_i(pmd_read_data_valid),
         .probe_code_i(probe_code),
+        .bus_mode_o(bus_mode),
+        .state_three_boundary_o(state_three_boundary),
+        .request_recognized_o(request_recognized),
+        .grant_assert_event_o(grant_assert_event),
+        .release_recognized_o(release_recognized),
+        .grant_release_event_o(grant_release_event),
+        .resume_event_o(resume_event),
+        .request_withdrawn_o(request_withdrawn),
+        .release_cancelled_o(release_cancelled),
+        .instruction_issue_inhibit_o(instruction_issue_inhibit),
+        .normal_bus_relinquished_o(normal_bus_relinquished),
+        .normal_bg_n_o(normal_bg_n),
+        .reset_br_request_o(reset_br_request),
+        .bg_n_o(bg_n),
+        .bus_relinquished_o(bus_relinquished),
         .issue_boundary_o(issue_boundary),
         .instruction_setup_accepted_o(setup_accepted),
         .instruction_issue_o(instruction_issue),
@@ -212,23 +243,52 @@ module tb_adsp2100_linear_core_slice;
     initial begin
         clk = 1'b0;
         stimulus = '0;
-        expected_pre = '0;
+        expected_bus_pre = '0;
+        expected_core_pre = '0;
         expected_post = '0;
-        vector_file = $fopen("build/linear_core_vectors.txt", "r");
+        vector_file = $fopen(
+            "build/linear_bus_control_vectors.txt",
+            "r"
+        );
         if (vector_file == 0) begin
-            $fatal(1, "cannot open linear-core vectors");
+            $fatal(1, "cannot open linear-BR/BG vectors");
         end
         vector_count = 0;
         while (!$feof(vector_file)) begin
             scan_count = $fscanf(
                 vector_file,
-                "%h %h %h\n",
+                "%h %h %h %h\n",
                 stimulus,
-                expected_pre,
+                expected_bus_pre,
+                expected_core_pre,
                 expected_post
             );
-            if (scan_count == 3) begin
+            if (scan_count == 4) begin
                 #2;
+                if ({
+                    bus_mode, state_three_boundary, request_recognized,
+                    grant_assert_event, release_recognized,
+                    grant_release_event, resume_event, request_withdrawn,
+                    release_cancelled, instruction_issue_inhibit,
+                    normal_bus_relinquished, normal_bg_n,
+                    reset_br_request, bg_n, bus_relinquished
+                } !== expected_bus_pre) begin
+                    $fatal(
+                        1,
+                        "linear-BR/BG control mismatch vector=%0d got=%h expected=%h",
+                        vector_count,
+                        {
+                            bus_mode, state_three_boundary,
+                            request_recognized, grant_assert_event,
+                            release_recognized, grant_release_event,
+                            resume_event, request_withdrawn,
+                            release_cancelled, instruction_issue_inhibit,
+                            normal_bus_relinquished, normal_bg_n,
+                            reset_br_request, bg_n, bus_relinquished
+                        },
+                        expected_bus_pre
+                    );
+                end
                 if ({
                     issue_boundary, setup_accepted, instruction_issue,
                     retire_event, instruction_valid, transaction_pending,
@@ -246,7 +306,8 @@ module tb_adsp2100_linear_core_slice;
                     exp_pre_instruction_valid, exp_pre_pending,
                     exp_unsupported_instruction, exp_reserved_subencoding,
                     exp_phase_conflict, exp_integration_conflict,
-                    exp_internal_conflict, exp_provisional_source_extension,
+                    exp_internal_conflict,
+                    exp_provisional_source_extension,
                     exp_pm_request_accepted, exp_pm_completion_event,
                     exp_pm_read_sample_event, exp_pre_pm_active,
                     exp_pm_address_oe, exp_pm_control_oe, exp_pm_data_oe,
@@ -254,44 +315,7 @@ module tb_adsp2100_linear_core_slice;
                     exp_pms_n, exp_pmrd_n, exp_pmwr_n,
                     exp_pmd_write_data_valid
                 }) begin
-                    $fatal(
-                        1,
-                        "linear-core pre mismatch vector=%0d actual=%h expected=%h stimulus=%h",
-                        vector_count,
-                        {
-                            issue_boundary, setup_accepted,
-                            instruction_issue, retire_event,
-                            instruction_valid, transaction_pending,
-                            unsupported_instruction, reserved_subencoding,
-                            phase_conflict, integration_conflict,
-                            internal_conflict,
-                            provisional_source_extension,
-                            pm_request_accepted,
-                            pm_completion_event, pm_read_sample_event,
-                            pm_bus_active, pm_address_oe, pm_control_oe,
-                            pm_data_oe, pma_valid, pmda, pmda_valid,
-                            pms_n, pmrd_n, pmwr_n,
-                            pmd_write_data_valid
-                        },
-                        {
-                            exp_issue_boundary, exp_setup_accepted,
-                            exp_instruction_issue, exp_retire_event,
-                            exp_pre_instruction_valid, exp_pre_pending,
-                            exp_unsupported_instruction,
-                            exp_reserved_subencoding, exp_phase_conflict,
-                            exp_integration_conflict,
-                            exp_internal_conflict,
-                            exp_provisional_source_extension,
-                            exp_pm_request_accepted,
-                            exp_pm_completion_event,
-                            exp_pm_read_sample_event, exp_pre_pm_active,
-                            exp_pm_address_oe, exp_pm_control_oe,
-                            exp_pm_data_oe, exp_pma_valid, exp_pmda,
-                            exp_pmda_valid, exp_pms_n, exp_pmrd_n,
-                            exp_pmwr_n, exp_pmd_write_data_valid
-                        },
-                        stimulus
-                    );
+                    $fatal(1, "linear-BR/BG core mismatch vector=%0d", vector_count);
                 end
                 if (!reset && pc !== exp_pre_pc)
                     $fatal(1, "pre PC mismatch vector=%0d", vector_count);
@@ -307,16 +331,17 @@ module tb_adsp2100_linear_core_slice;
                 #2 clk = 1'b1;
                 #1;
                 if ({
-                    instruction_valid, transaction_pending, pc,
+                    bus_mode, instruction_valid, transaction_pending, pc,
                     mstat, imask, cntr_valid, sstat, alternate_bank,
                     count_stack_depth, count_stack_overflow, pm_bus_active
                 } !== {
-                    exp_post_instruction_valid, exp_post_pending,
-                    exp_post_pc, exp_mstat, exp_imask, exp_cntr_valid,
-                    exp_sstat, exp_alternate_bank, exp_count_stack_depth,
-                    exp_count_stack_overflow, exp_post_pm_active
+                    exp_post_bus_mode, exp_post_instruction_valid,
+                    exp_post_pending, exp_post_pc, exp_mstat, exp_imask,
+                    exp_cntr_valid, exp_sstat, exp_alternate_bank,
+                    exp_count_stack_depth, exp_count_stack_overflow,
+                    exp_post_pm_active
                 }) begin
-                    $fatal(1, "linear-core post mismatch vector=%0d", vector_count);
+                    $fatal(1, "linear-BR/BG post mismatch vector=%0d", vector_count);
                 end
                 if (exp_post_instruction_valid && opcode !== exp_post_opcode)
                     $fatal(1, "post opcode mismatch vector=%0d", vector_count);
@@ -336,10 +361,10 @@ module tb_adsp2100_linear_core_slice;
         end
         $fclose(vector_file);
         if (vector_count < 50_000) begin
-            $fatal(1, "insufficient linear-core vectors: %0d", vector_count);
+            $fatal(1, "insufficient linear-BR/BG vectors: %0d", vector_count);
         end
         $display(
-            "PASS bounded NOP/Type 6/Type 7/Type 17/Type 18 linear core: %0d clocks",
+            "PASS bounded linear-fetch/BR-BG composition: %0d clocks",
             vector_count
         );
         $finish;

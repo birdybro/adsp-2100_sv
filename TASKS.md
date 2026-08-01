@@ -545,7 +545,7 @@ advance beyond research until a page-level primary citation is added.
   interrupts, PM-data/cache, HALT, and BR/BG remain outside this model
   increment.
   A structurally separate phase model now composes that architectural state
-  with the native PM transaction model. Twelve directed tests and 52,763
+  with the native PM transaction model. Thirteen directed tests and 53,985
   deterministic model/RTL clocks cover enabled state-8 issue, state-7 retire,
   phase holds, bus-output relinquishment, PC wrap, invalid fetched data,
   selected-bank Type 6/7/17/18 ordering, every legal Type 17 pair, every Type
@@ -554,7 +554,13 @@ advance beyond research until a page-level primary citation is added.
   dedicated retirement pulse so the OQ-016 provisional boundary is
   observable. Its instruction preload and complete-state initialization are
   explicitly deterministic test hooks rather than architectural loading or
-  reset mechanisms.
+  reset mechanisms. A separate bounded composition attaches the source-backed
+  normal BR/BG controller without conflating new-issue inhibition and native
+  bus relinquishment: the current fetch retires, the following state-8 issue is
+  blocked, PM output enables are masked only while BG is asserted, and release
+  restarts fetch at state 8-to-1. Five directed tests and 50,003 differential
+  clocks cover 93 complete request/grant/release/resume handshakes. Other PM
+  owners, DM, HALT, interrupts, and reset-first-fetch remain unattached.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
   an independently structured compute model, commits SR at cycle end, and
@@ -1145,14 +1151,17 @@ advance beyond research until a page-level primary citation is added.
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
   and loaded next word at state 7-to-8, preserves pending state through phase
   holds/relinquishment, and fails closed for unsupported or reserved current
-  words. Twelve directed tests and 52,763 phase clocks pass, with each legal
+  words. Thirteen directed tests and 53,985 phase clocks pass, with each legal
   Type 17 pair and each Type 18 encoding exercised in the integrated flow.
   Narrow Type 17 status/control sources raise an OQ-016 provisional retirement
   pulse. Reset's special first-fetch
-  waveform, PM-data/cache ownership, transfers, loops, interrupts, HALT, and
-  BR/BG arbitration remain separate work.
-- **Unresolved questions:** whole-core PM ownership, BR/BG recognition timing,
-  and electrical wrapper constraints.
+  waveform, PM-data/cache ownership, transfers, loops, interrupts, and HALT
+  remain separate work. A bounded NOP/Type 6/Type 7/Type 17/Type 18
+  composition now attaches normal BR/BG issue inhibition and PM output masking
+  through five tests and 50,003 clocks, including 93 full handshakes; every
+  other owner remains outside that result.
+- **Unresolved questions:** whole-core PM ownership, BR/BG priority with other
+  owners and events, and electrical wrapper constraints.
 - **Confidence:** CORROBORATED
 
 ## M19 — Data-memory interface
@@ -1333,9 +1342,11 @@ advance beyond research until a page-level primary citation is added.
   ATARI-ADSP-SCHEM
 - **Relevant tests:** `make bus-tests`, `make interrupt-tests`,
   `make reset-tests`, `make bus-control-tests`, `tests/test_reset_phase.py`,
-  `tests/test_bus_control.py`,
+  `tests/test_bus_control.py`, `make linear-bus-control-tests`,
+  `tests/test_linear_bus_control.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
-  `formal/bus_control.sby`, `formal/conditional_trap.sby`,
+  `formal/bus_control.sby`, `formal/linear_bus_control.sby`,
+  `formal/conditional_trap.sby`,
   `formal/system_control.sby`
 - **Implementation notes:** use clock enables and phase state, never gated
   clocks. A standalone phase owner now implements rising-edge RESET
@@ -1355,8 +1366,15 @@ advance beyond research until a page-level primary citation is added.
   native wrapper confines the documented asynchronous RESET-time BR-to-BG
   path outside architectural state. Invalid early withdrawal/reassertion
   fails closed and is explicitly an implementation contract. The raw
-  asynchronous HALT synchronizer, general pin-driven halt, and whole-core
-  PM/DM attachment remain unimplemented.
+  asynchronous HALT synchronizer and general pin-driven halt remain
+  unimplemented. A bounded structural composition now attaches BR/BG to the
+  ordinary linear PM owner: current fetch completes through state 7, the next
+  issue is stopped, all PM output enables are masked during grant, and issue
+  resumes at state 8-to-1 after release. Five directed tests and 50,003
+  independent-model/RTL clocks cover 93 complete handshakes, 5,375 retires,
+  and 5,376 issues. The composition has a formal recipe and a fully constrained
+  Cyclone V fit; PM-data/cache, DM, transfer, loop, interrupt, HALT, and reset-
+  first-fetch ownership remain unimplemented.
 - **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
   composition priority among general HALT, TRAP, BR/BG, DMACK waits, reset,
   and interrupts; analog BR setup/metastability behavior and invalid
@@ -1393,11 +1411,14 @@ advance beyond research until a page-level primary citation is added.
   internal MOVE words from initialized state, and all Type 18 MODE CONTROL
   words: the current-PC instruction executes while PC+1 is
   fetched, then action/PC/next-word state retires at state 7-to-8. The phase
-  model and RTL agree for 52,763 clocks, including every legal Type 17 pair and
+  model and RTL agree for 53,985 clocks, including every legal Type 17 pair and
   every Type 18 encoding, and no longer permit an invented ordinary-PM wait
-  extension. OQ-016 narrow-source extension is exposed at retirement. Reset
-  first-fetch, all other instruction owners, control events, and arbitration
-  are pending.
+  extension. OQ-016 narrow-source extension is exposed at retirement. A
+  separate bounded composition adds 50,003 clocks and 93 complete normal
+  BR/BG handshakes while retaining the current fetch, inhibiting the next
+  issue, masking PM only during grant, and restarting at state 8-to-1. Reset
+  first-fetch, all other instruction owners, HALT/interrupt control events,
+  and multi-owner arbitration are pending.
 - **Unresolved questions:** fetch/decode/execute visibility and PM-data conflict
   penalties.
 - **Confidence:** UNKNOWN

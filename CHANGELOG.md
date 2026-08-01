@@ -8,6 +8,22 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded structural composition of the ordinary linear PM owner and the
+  source-backed BR/BG controller in independent Python and portable
+  SystemVerilog. It lets an in-flight fetch remain driven and retire after
+  state-3 request recognition, inhibits the following state-8 issue, masks
+  every PM output enable only while native BG is asserted, preserves state
+  throughout grant, and accepts the restart fetch at state 8-to-1 after the
+  full release interval. Five directed tests and 50,003 deterministic
+  differential clocks cover 93 complete request/grant/release/resume
+  handshakes, 5,375 retirements, and 5,376 issues. A machine-readable contract,
+  formal harness, Yosys flow, and fully constrained Cyclone V project bound
+  the attachment. The integrated fit uses 898 ALMs and 1,041 registers, no
+  RAM/DSP blocks, +12.845 ns worst setup, +0.166 ns worst hold, 82.27 MHz worst
+  slow-corner Fmax, and no unconstrained paths at 25 ns. PM-data/cache, DM,
+  control-transfer, interrupt, HALT, and reset-first-fetch ownership remain
+  outside this result.
+
 - A primary-backed original normal-operation BR/BG controller in structurally
   independent Python and portable SystemVerilog. It recognizes active-low BR
   at enabled state 3, inhibits new issue while allowing the current instruction
@@ -45,13 +61,15 @@ semantic versioning after its first release.
   at the current PC while the native PM controller
   fetches PC+1, admits the fetch at state 8-to-1, atomically retires state/PC/
   next word at state 7-to-8, and fails closed for unsupported or reserved
-  words. Twelve directed tests and 52,763 deterministic differential clocks,
+  words. Thirteen directed tests and 53,985 deterministic differential clocks,
   including every Type 17 source/destination pair and Type 18 encoding, a
   formal recipe, a machine-readable boundary contract, Yosys flow, and a fully
   constrained Cyclone V project bound the claim. Type 17 status/control-source
   extension is exposed on a dedicated retirement pulse under OQ-016; reset
   first-fetch and all multi-owner/event/cache arbitration remain explicitly
-  excluded.
+  excluded. The standalone fit now uses 885 ALMs and 1,020 registers, no
+  RAM/DSP blocks, +13.145 ns worst setup, +0.166 ns worst hold, and 84.35 MHz
+  worst slow-corner Fmax with no unconstrained paths at 25 ns.
 
 - A primary-backed original Type 7 immediate-to-non-data-register database,
   independent decoder and state model, exact assembler/disassembler support,

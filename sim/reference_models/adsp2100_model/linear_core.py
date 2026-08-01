@@ -84,6 +84,7 @@ def apply_linear_core_cycle(
     reset: bool = False,
     phase: LogicalPhase | int = LogicalPhase.STATE_1,
     phase_advance: bool = True,
+    instruction_issue_inhibit: bool = False,
     bus_relinquished: bool = False,
     instruction_setup: tuple[ExactWord, ExactWord] | None = None,
     pmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
@@ -107,6 +108,7 @@ def apply_linear_core_cycle(
 
     issue_boundary = bool(
         not reset
+        and not instruction_issue_inhibit
         and not bus_relinquished
         and phase_advance
         and phase == LogicalPhase.STATE_8

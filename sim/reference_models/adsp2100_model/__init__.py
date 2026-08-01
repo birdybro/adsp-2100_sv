@@ -7,6 +7,11 @@ from .bus_control import (
     BusControlState,
     apply_bus_control_cycle,
 )
+from .linear_bus_control import (
+    LinearBusControlCycleResult,
+    LinearBusControlState,
+    apply_linear_bus_control_cycle,
+)
 from .conditions import (
     ConditionInputs,
     DO_TERMINATION_MNEMONICS,

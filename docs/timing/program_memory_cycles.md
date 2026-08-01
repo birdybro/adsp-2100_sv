@@ -110,4 +110,11 @@ the native-pin wrapper supplies the special asynchronous RESET-time relation
 [ADI-UM-1989, printed pp. 5-3–5-6, Figure 5.3]. Nanosecond delays,
 electrical setup/hold requirements, ordinary fetch/PC ownership, other PM
 instruction classes, HALT/TRAP behavior, and composition of BR/BG with every
-PM owner remain outside this bounded attachment.
+PM owner remain outside this bounded attachment. The separate bounded linear
+owner is now attached to BR/BG: its current ordinary fetch remains driven and
+retires before the new-issue inhibit takes effect; grant then masks every PM
+output enable, and the first post-release fetch starts at the state-8-to-state-1
+restart boundary. Five directed tests and 50,003 differential clocks exercise
+93 complete request/grant/release/resume sequences. PM-data/cache owners,
+control transfers, interrupts, HALT, and reset-first-fetch are not part of that
+composition.

@@ -7,12 +7,16 @@
 // deterministic instruction preload establishes the current executing word;
 // it is not an architectural host interface. The special
 // reset-to-first-fetch waveform, loops, transfers, interrupts, PM data,
-// HALT, and BR/BG arbitration remain outside this boundary.
+// HALT, and multi-owner BR/BG arbitration remain outside this boundary.
+// Separate issue-inhibit and bus-relinquish inputs permit a sourced external
+// controller to stop the following fetch without masking the current
+// transaction early.
 module adsp2100_linear_core_slice (
     input  logic        clk_i,
     input  logic        reset_i,
     input  logic [2:0]  phase_i,
     input  logic        phase_advance_i,
+    input  logic        instruction_issue_inhibit_i,
     input  logic        bus_relinquished_i,
 
     input  logic        instruction_setup_i,
@@ -147,7 +151,8 @@ module adsp2100_linear_core_slice (
     logic unused_observation;
 
     assign issue_boundary_o = (
-        !reset_i && !bus_relinquished_i && phase_advance_i
+        !reset_i && !instruction_issue_inhibit_i
+        && !bus_relinquished_i && phase_advance_i
         && phase_i == PHASE_STATE_8
     );
     assign instruction_setup_accepted_o = (
@@ -418,6 +423,9 @@ module adsp2100_linear_core_slice (
         assert (!pmd_write_data_valid_o);
         if (instruction_issue_o) begin
             assert (issue_boundary_o);
+        end
+        if (instruction_issue_inhibit_i) begin
+            assert (!instruction_issue_o);
         end
         if (retire_event_o) begin
             assert (phase_i == PHASE_STATE_7 && phase_advance_i);

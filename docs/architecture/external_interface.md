@@ -52,9 +52,13 @@ descriptor at state 8-to-1, commits the architectural data action at state
 7-to-8, and accepts a miss recovery back-to-back. Five directed tests and
 50,081 model/RTL clocks cover the attachment. A separate phase-aware BR/BG
 controller now provides normal grant/release timing and a RESET-time native-pin
-wrapper provides the documented asynchronous relationship, but neither is yet
-composed with this PM client. Ordinary fetch, other PM instruction classes,
-and whole-core PM arbitration remain unattached.
+wrapper provides the documented asynchronous relationship. That controller is
+now composed with the bounded ordinary NOP/Type 6/Type 7/Type 17/Type 18 fetch
+owner: a recognized request lets the current fetch retire, inhibits the next
+issue, masks all PM output enables during grant, and restarts issue at state
+8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 93
+complete handshakes. It is not yet composed with this Type 13 PM-data client,
+Type 5, other PM instruction classes, or a whole-core PM arbiter.
 
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic
 core exposes phase and transaction trace signals without a generic modern bus

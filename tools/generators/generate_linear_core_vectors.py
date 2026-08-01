@@ -159,6 +159,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
         *,
         reset: bool = False,
         advance: bool = True,
+        issue_inhibit: bool = False,
         relinquished: bool = False,
         setup: tuple[int, int] | None = None,
         pmd: int = 0,
@@ -178,6 +179,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             reset=reset,
             phase=phase,
             phase_advance=advance,
+            instruction_issue_inhibit=issue_inhibit,
             bus_relinquished=relinquished,
             instruction_setup=setup_value,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
@@ -188,6 +190,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (reset, 1),
             (int(phase), 3),
             (advance, 1),
+            (issue_inhibit, 1),
             (relinquished, 1),
             (setup is not None, 1),
             (0 if setup is None else setup[0], 14),
@@ -275,7 +278,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (post_state.bus.active, 1),
         ):
             post = _append(post, value, width)
-        lines.append(f"{stimulus:019x} {pre:026x} {post:030x}")
+        lines.append(f"{stimulus:020x} {pre:026x} {post:030x}")
         state = post_state
 
     emit(LogicalPhase.STATE_8, reset=True, pmd_valid=False)
@@ -300,6 +303,8 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             )
         if rng.randrange(31) == 0:
             emit(LogicalPhase.STATE_8, relinquished=True)
+        if rng.randrange(19) == 0:
+            emit(LogicalPhase.STATE_8, issue_inhibit=True)
 
         issued = state.instruction_valid
         emit(LogicalPhase.STATE_8)
@@ -313,6 +318,8 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
                 emit(logical_phase, advance=False)
             if rng.randrange(47) == 0:
                 emit(logical_phase, relinquished=True)
+            if rng.randrange(43) == 0:
+                emit(logical_phase, issue_inhibit=True)
             emit(logical_phase)
 
         if rng.randrange(13) == 0:

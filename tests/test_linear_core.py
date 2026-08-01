@@ -211,6 +211,28 @@ class LinearCoreTests(unittest.TestCase):
         self.assertFalse(relinquished.bus.control_output_enable)
         self.assertEqual(relinquished.state, held.state)
 
+    def test_issue_inhibit_stops_only_new_fetch(self) -> None:
+        ready = _setup(LinearCoreState.reset(), 0)
+        inhibited = apply_linear_core_cycle(
+            ready,
+            phase=LogicalPhase.STATE_8,
+            instruction_issue_inhibit=True,
+        )
+        self.assertFalse(inhibited.issue_boundary)
+        self.assertFalse(inhibited.instruction_issue)
+        self.assertEqual(inhibited.state, ready)
+
+        issued = _issue(inhibited.state)
+        self.assertTrue(issued.instruction_issue)
+        active = apply_linear_core_cycle(
+            issued.state,
+            phase=LogicalPhase.STATE_4,
+            instruction_issue_inhibit=True,
+        )
+        self.assertTrue(active.state.pending)
+        self.assertTrue(active.bus.address_output_enable)
+        self.assertTrue(active.bus.control_output_enable)
+
     def test_invalid_fetched_word_does_not_erase_retiring_effects(self) -> None:
         state = _setup(LinearCoreState.reset(), _type6(DREG.SE, 0x0180))
         done = _complete(_issue(state).state, None)

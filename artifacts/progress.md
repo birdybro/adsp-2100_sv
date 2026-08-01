@@ -12,7 +12,8 @@ exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 17/Type 18 ordinary-fetch ownership,
-normal-operation BR/BG request/grant/release/restart control,
+normal-operation BR/BG request/grant/release/restart control attached to that
+bounded linear fetch owner,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -22,6 +23,14 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
+- bounded structural composition of the ordinary linear PM owner and normal
+  BR/BG controller, preserving the current fetch after state-3 recognition,
+  inhibiting only the next issue, masking every PM output enable during grant,
+  preserving state, and restarting at state 8-to-1 after release; five directed
+  tests and 50,003 model/RTL clocks cover 93 complete handshakes, 5,375 retires,
+  and 5,376 issues, with formal invariants, a Yosys flow, and a fully constrained
+  898-ALM/1,041-register Cyclone V fit; all other PM/DM owners, HALT,
+  interrupts, reset-first-fetch, and analog timing remain open;
 - primary-backed normal-operation BR/BG controller with active-low state-3
   recognition, complete-current/inhibit-next behavior, one-full-eight-state-
   cycle grant and release delays, all-bus-driver mask, state-8-to-state-1
@@ -40,7 +49,7 @@ cycle-, or Hard Drivin'-complete
   legal Type 17 internal MOVE pairs, and every Type 18 MODE CONTROL word,
   executing at the current PC while the native PM controller fetches PC+1,
   with state-8 issue, state-7 atomic action/PC/next-word retirement,
-  fail-closed unsupported words, twelve directed checks, 52,763 differential
+  fail-closed unsupported words, thirteen directed checks, 53,985 differential
   clocks including every legal Type 17 pair and all 256 Type 18 encodings,
   an observable OQ-016 provisional-source retirement pulse, formal assertions,
   a machine-readable contract, and a fully constrained Cyclone V fit;
@@ -276,7 +285,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 621 distinct Python unit checks plus manifest/hash verification;
+- 627 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -409,7 +418,9 @@ outstanding.
   cache boundary adds 50,086 clocks, the native PM pin-phase boundary adds
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
-  the bounded Type 6/7/17/18 linear owner adds 52,763 phase clocks,
+  the bounded Type 6/7/17/18 linear owner adds 53,985 phase clocks,
+  the linear-owner/normal-BR/BG composition adds 50,003 clocks across 93
+  complete handshakes,
   the Type 2/native-DM attachment adds 50,027 clocks,
   the Type 12/native-DM attachment adds 50,064 clocks,
   and the Type 14 state slice adds
@@ -460,6 +471,13 @@ outstanding.
   with no RAM or DSP blocks, +12.825 ns setup, +0.167 ns worst multicorner
   hold, 139.37 MHz worst slow-corner Fmax, and no unconstrained paths against
   its 20 ns constraint;
+  the bounded linear owner fits in 885 ALMs and 1,020 fitted registers with no
+  RAM or DSP blocks, +13.145 ns setup, +0.166 ns worst multicorner hold,
+  84.35 MHz worst slow-corner Fmax, and no unconstrained paths against its
+  25 ns constraint; its normal-BR/BG composition fits in 898 ALMs and 1,041
+  fitted registers with no RAM or DSP blocks, +12.845 ns setup, +0.166 ns
+  worst multicorner hold, 82.27 MHz worst slow-corner Fmax, and no
+  unconstrained paths against 25 ns;
   the native DM pin-phase controller fits in 100 ALMs and 57 fitted registers
   with no RAM or DSP blocks, +11.895 ns worst setup, +0.169 ns worst
   multicorner hold, 123.38 MHz worst slow-corner Fmax, and zero unconstrained
@@ -533,7 +551,8 @@ outstanding.
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
   the bounded steady-state Type 6/7/17/18 linear fetch owner and original
-  RESET/logical-phase and normal BR/BG invariants (63 total)
+  RESET/logical-phase, normal BR/BG, and bounded linear BR/BG attachment
+  invariants (64 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -546,9 +565,9 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Compose normal BR/BG new-issue inhibition and bus-driver masking with the
-   bounded linear/native PM owner, retaining the current transaction through
-   grant recognition and restarting issue exactly at state 8-to-1.
+3. Research and implement the source-backed general HALT recognition/restart
+   boundary, including PM-data forced-fetch and DMACK-high restart constraints,
+   before composing it with the bounded linear owner.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed

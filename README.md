@@ -51,8 +51,10 @@ effects, and bounded independent-model/native-RTL integration in which NOP,
 legal Type 6/7, all 2,256 legal Type 17 internal MOVE source/destination pairs,
 and all Type 18 MODE CONTROL words execute at the current PC while the
 following word is fetched at PC+1 across the sourced state-8 issue/state-7
-retire phases, with 52,763 model/RTL phase clocks and an explicit OQ-016
-provisional-source retirement pulse, 25,648 canonical
+retire phases, with 53,985 model/RTL phase clocks and an explicit OQ-016
+provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
+50,003 clocks and 93 complete current-fetch/inhibit/grant/restart handshakes,
+25,648 canonical
 Type 14 shifter-plus-DREG
 multifunction words with old-value parallel semantics, all 2,097,152 Type 4
 words partitioned at the action boundary into 2,034,688 source-closed

@@ -229,8 +229,11 @@ bounded steady-state owner now executes NOP, legal Type 6/7, every legal Type
 17 internal MOVE, and every Type 18 MODE CONTROL word while fetching PC+1
 through the native PM phase controller. Type 17 narrow status/control-source
 extension remains an observable OQ-016 provisional behavior; reset
-first-fetch, transfers, loops, interrupts, PM-data/cache, HALT, and BR/BG
-arbitration remain outside that owner. Other bounded source-backed RTL
+first-fetch, transfers, loops, interrupts, PM-data/cache, and HALT remain
+outside that owner. Normal BR/BG is attached only to this bounded linear
+owner: the current fetch completes, new issue is inhibited, PM output enables
+are masked during grant, and restart occurs at state 8-to-1. Other bounded
+source-backed RTL
 execution slices implement all
 original Type 2
 immediate-DM-write words, all original Type 18 mode
@@ -368,13 +371,14 @@ active-low PMRD/PMWR for states 4–7, samples reads at the 7-to-8 edge, and
 drives write data for states 5–8. It preserves PMS across back-to-back requests
 and masks all FPGA output enables during externally directed bus
 relinquishment. Ten directed tests and 50,032 model/RTL clocks pass. This block
-now has one bounded Type 13/cache client, but it does not yet arbitrate ordinary
-whole-core fetches or other PM instruction classes, attach the separate
-phase-aware BR/BG controller, or model analog delays; the request boundary is
-not a claim about a hidden device latch. The normal BR/BG controller separately
-passes 50,084 model/RTL clocks for state-3 recognition, one-cycle grant/release
-latency, bus-driver masking, and state-1 resume; its RESET-time direct pin path
-is confined to a wrapper.
+has bounded Type 13/cache and ordinary linear-fetch clients, but it does not
+yet provide whole-core PM arbitration or attach other PM instruction classes.
+The normal BR/BG controller passes 50,084 standalone model/RTL clocks, and its
+bounded linear-owner composition passes 50,003 more clocks for current-fetch
+completion, next-issue inhibition, grant-time PM masking, and state-1 resume.
+No PM-data/cache or DM client is attached to BR/BG, analog delays are not
+modeled, and the request boundary is not a claim about a hidden device latch.
+The RESET-time direct pin path is confined to a wrapper.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
 tuple. Its logical DM request holds captured address/data over arbitrary
@@ -436,9 +440,9 @@ phases.
 Type 22 is the first decoder-connected phase-aware instruction boundary: it
 retains a condition decision through logical phases, asserts TRAP at the
 state-7/state-8 transition, holds state 8, and implements the recognized-HALT
-clear/release handshake. General HALT synchronization, BR/BG, interrupt/loop
-arbitration, and attachment to the separate PM strobe and BR/BG controllers
-remain unconnected. SC-013 records that pinned
+clear/release handshake. General HALT synchronization, BR/BG interaction,
+interrupt/loop arbitration, and attachment to the separate PM strobe and
+BR/BG controllers remain unconnected. SC-013 records that pinned
 MAME incorrectly classifies these original-device words reserved.
 The bounded Type 23/24 division boundaries implement all eight ALU-X divisor
 sources, DIVS AY1/AF upper-dividend selection and sign seeding, DIVQ old-AQ

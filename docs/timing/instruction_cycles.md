@@ -183,17 +183,21 @@ separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
 changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
 stack saturation/SSTAT, fail-closed reserved Type 7 destinations, legal Type
 17 execution, and unknown-source/reserved-selector rejection. A separate
-phase-level composition and bounded RTL owner add twelve directed tests and
-52,763 differential clocks: all 2,256 legal Type 17 source/destination pairs
+phase-level composition and bounded RTL owner add thirteen directed tests and
+53,985 differential clocks: all 2,256 legal Type 17 source/destination pairs
 execute from fully initialized state, every Type 18 encoding executes, the next
 fetch is admitted only at enabled state 8-to-1, PM pins follow the native
 controller, and the current action plus PC/next-word state retire only at
 state 7-to-8. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source use raises a
 dedicated OQ-016 provisional-behavior pulse at retirement. Phase holds preserve
-the transaction and bus relinquishment masks outputs without mutating it. This
-still is not a multi-owner core; reset
-first-fetch, loop/transfer/event selection, PM-data/cache, HALT, and BR/BG
-arbitration remain open [ADI-UM-1989, printed pp. 1-5, 2-6, 2-15, 2-18,
+the transaction, and a distinct new-issue inhibit does not mask the active
+fetch. The bounded BR/BG composition adds five directed tests and 50,003
+clocks with 93 complete handshakes: the recognized request permits current
+retirement, blocks the next issue, masks PM output enables only during grant,
+and restarts at state 8-to-1 after release. This still is not a multi-owner
+core; reset first-fetch, loop/transfer/event selection, PM-data/cache, HALT,
+DM ownership, and interrupt arbitration remain open [ADI-UM-1989, printed
+pp. 1-5, 2-6, 2-15, 2-18,
 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24, 5-5–5-8, 6-1–6-2,
 6-12, 6-14–6-15, A-3, and A-9].
 

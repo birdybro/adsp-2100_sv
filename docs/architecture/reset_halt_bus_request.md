@@ -101,6 +101,21 @@ so a transaction belonging to the current instruction can finish, exposes
 the grant interval separately for PM/DM output-enable masking, and re-enables
 issue on the state-8 restart edge.
 
+The bounded composition in
+`rtl/core/adsp2100_linear_bus_control_slice.sv` attaches those two distinct
+effects to the ordinary linear PM owner. A request recognized in state 3 does
+not cancel or mask the current fetch: its PM read remains driven through state
+7 and retires at state 7-to-8. The next state-8 issue is inhibited. Once BG is
+asserted, all PM output enables are masked while the architectural and PM
+transaction state remains preserved. After release recognition and the full
+release interval, BG deasserts and the next fetch is accepted on the documented
+state-8-to-state-1 restart edge. Five directed composition tests and 50,003
+independent-model/RTL clocks cover 93 complete request/grant/release/resume
+handshakes, 5,375 retirements, and 5,376 issues. This evidence applies only to
+the bounded NOP/Type 6/Type 7/Type 17/Type 18 linear fetch owner; PM-data,
+DM, transfer, loop, interrupt, HALT, and reset-first-fetch ownership remain
+unconnected.
+
 The machine-readable contract is
 `docs/generated/adsp2100_bus_control.yaml`. Seven directed tests and 50,084
 deterministic model/RTL clocks cover request/grant and release/restart latency,
