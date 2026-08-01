@@ -86,11 +86,14 @@ conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
 division-flag conflict is recorded as SC-014. Division exists as bounded
 instruction slices, not yet in the top-level fetch/decode/execute model.
-Type 2 and Type 12 supply logical DM transaction boundaries, and Type 13
-supplies a cache-integrated logical PM data/recovery boundary attached to the
-original active-low logical pin phases. This is still a bounded Type 13 client,
-not an integrated fetch/decode/execute bus owner; ordinary fetch arbitration,
-other PM instruction classes, BR/BG, and native DM phases remain unimplemented.
+Type 2 and Type 12 supply logical DM transaction boundaries, and a separate
+native controller now reproduces the original active-low DM phases and
+full-cycle DMACK extension. Those clients are not yet attached to that
+controller. Type 13 supplies a cache-integrated logical PM data/recovery
+boundary attached to the original active-low logical pin phases. These remain
+bounded clients, not an integrated fetch/decode/execute bus owner; ordinary
+fetch arbitration, other PM instruction classes, and BR/BG remain
+unimplemented.
 Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 

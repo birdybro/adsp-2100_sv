@@ -8,6 +8,13 @@ semantic versioning after its first release.
 
 ### Added
 
+- A source-backed native DM phase controller and structurally independent
+  model implementing DMA/DMS states 1–8, DMRD/DMWR states 4–7, DMACK
+  qualification at 6–7, DMD read sampling at 7–8, write drive states 5–8,
+  and complete eight-substate state-seven extensions; plus a machine-readable
+  contract, directed/random differential tests, formal harness, and
+  constrained Cyclone V project.
+
 - Repository governance, contribution policy, required directory layout, and
   explicit evidence-based completion rules.
 - Initial reference provenance schema and safe local-cache workflow.
@@ -333,6 +340,14 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- Native DM timing passes nine directed model tests and 50,039 deterministic
+  model/RTL phase clocks, including repeated full-cycle DMACK extensions,
+  late-ACK rejection, stable strobes/data, back-to-back DMS, phase holds,
+  reset, explicit unknowns, and relinquishment masking. Its formal harness
+  passes strict assertion syntax lint; a 20 ns Cyclone V fit uses 100 ALMs and
+  57 registers, meets setup/hold across all timing models, and has no
+  unconstrained clocks, ports, or paths.
 
 - The Type 13/cache/native-PM attachment passes five directed tests and 50,081
   deterministic model/RTL clocks covering read and write phases, issue-time
@@ -750,6 +765,10 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Transcribed the original DM state-edge table and Figure 5.7 state-seven
+  extension notation into a machine-readable native-interface contract and
+  updated timing/interface status without claiming electrical-delay closure.
+
 - Recorded the bounded Type 13 state-8 issue/state-7 commit contract in the
   memory, multifunction, pipeline, external-interface, instruction-cycle, and
   PM-cycle specifications and in the cycle-model ADR. Ordinary fetch, other PM
@@ -905,6 +924,10 @@ semantic versioning after its first release.
   arbitration and empty-stack effects remain explicitly outside this boundary.
 
 ### Known Issues
+
+- The native DM controller is not yet attached to the Type 2/12 architectural
+  clients; PM concurrency, wait-time event latching, and BR/BG recognition
+  remain outside the bounded controller.
 
 - The exact original ADSP-2100 Cross-Software manual, evaluation-board manual,
   independent data-sheet revisions, and errata remain unavailable. Appendix A

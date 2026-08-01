@@ -84,6 +84,15 @@ not physical state-6/state-7 pin timing, fetch concurrency, or event
 arbitration [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1,
 and A-6].
 
+The standalone native DM controller closes the physical-substate mapping for
+those future clients. Its 50,039-clock model/RTL comparison checks DMACK only
+at the enabled 6-to-7 edge, holds address/select/strobe/write data across each
+complete eight-substate state-seven extension, and samples reads only on the
+qualified 7-to-8 completion edge. This is native-bus evidence, but Type 2/12
+issue and architectural commit are not yet connected to it
+[ADI-UM-1989, printed pp. 5-9–5-12, Figures 5.6–5.7;
+ADI-DATABOOK-1987, printed pp. 2-40–2-43, Figures 16–17].
+
 The bounded Type 13 model/RTL slice verifies 50,070 logical clocks, and the
 connected cache boundary verifies another 50,086. A pre-cycle monitor hit
 supplies the actual cached word and completes the PM-data instruction in one

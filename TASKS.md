@@ -977,16 +977,26 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_dm_write_immediate_slice.sv`,
   `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
-  `make compute-tests`
+  `tests/test_data_bus.py`, `sim/unit/tb_adsp2100_data_bus.sv`,
+  `formal/dm_bus.sby`, `make dm-bus-tests`, `make compute-tests`
 - **Implementation notes:** the Type 2 immediate-write and Type 12
   multifunction boundaries expose a distinct logical
   14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
   completion, and validity signals. It holds the transaction stable over waits
   and sample read data only at completion. Type 2 adds captured raw immediate
-  data and passes 50,035 state/bus clocks. This is not yet the native
-  active-low pin/state wrapper or whole-core arbitration layer.
-- **Unresolved questions:** shared data-bus turnaround and select ordering.
-- **Confidence:** UNKNOWN
+  data and passes 50,035 state/bus clocks. A separate native controller now
+  captures descriptors at state 8-to-1, drives DMA/DMS states 1–8,
+  DMRD/DMWR states 4–7, samples DMACK at state 6-to-7, samples read data at
+  state 7-to-8, and drives write data states 5–8. A low DMACK retains
+  processor state seven while all eight physical substates repeat; nine
+  directed tests and 50,039 model/RTL clocks cover repeated low samples,
+  late ACK rejection, back-to-back DMS continuity, holds, reset, unknowns,
+  and relinquishment masking. Its forty-sixth formal recipe syntax-checks;
+  a fully constrained 50 MHz Cyclone V fit uses 100 ALMs and 57 registers.
+  Type 2/12 client attachment and whole-core arbitration do not yet exist.
+- **Unresolved questions:** shared data-bus turnaround, Type 1 dual-memory
+  concurrency, event latching during waits, and BR/BG recognition.
+- **Confidence:** CORROBORATED
 
 ## M20 — Program-memory data transfers
 
@@ -1434,8 +1444,8 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is constructing the native DM phase
-boundary and attaching the existing Type 2/12 logical clients; constructing
+The highest-priority unblocked work is attaching the existing Type 2/12
+logical clients to the new native DM phase controller; constructing
 the next source-closed Type 1/4/5 action graph in
 `ISA-002`/`ISA-001`; and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field

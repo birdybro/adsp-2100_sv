@@ -1,7 +1,7 @@
 # ADR-0003: Eight-state logical cycle model on one FPGA clock
 
-- **Status:** Accepted; bounded PM phase implementation exists, unified core
-  sequencing pending
+- **Status:** Accepted; bounded PM and DM phase implementations exist, unified
+  core sequencing pending
 - **Date:** 2026-07-30
 - **Tasks:** TIME-001, RTL-PMBUS-001, RTL-DMBUS-001
 
@@ -45,6 +45,14 @@ old-value PM descriptor, commits that data action only on state 7-to-8, and
 uses the following state 8-to-1 for a required back-to-back recovery fetch.
 This validates the selected request/commit contract while leaving ordinary
 fetch and whole-core control arbitration outside the decision boundary.
+
+The native DM controller applies the same physical-substate contract with one
+additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
+architectural state seven while the physical phase input traverses one complete
+8/1/2/3/4/5/6/7 sequence. A qualified high sample releases completion only at
+the next 7-to-8 edge. This encodes Figure 5.7 directly without gated clocks or
+collapsing a full processor-cycle wait into one FPGA clock. The existing Type
+2/12 architectural clients remain unattached.
 
 ## Consequences
 

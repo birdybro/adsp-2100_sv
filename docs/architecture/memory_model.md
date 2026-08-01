@@ -30,8 +30,21 @@ select, and old write-source data. A missing DMACK holds all valid bus outputs
 and all architectural destinations. The first acknowledged boundary samples
 read data and atomically commits the optional DREG load, shifter action, and
 selected-I post-modification [ADI-UM-1989, printed pp. 5-9–5-12,
-6-3–6-7]. It does not yet include PM fetch concurrency, BR/BG ownership,
-interrupt/HALT latching, or a physical state-1-through-state-8 pin wrapper.
+6-3–6-7]. It does not yet include PM fetch concurrency, BR/BG ownership, or
+interrupt/HALT latching.
+
+The separate native DM controller captures one selected descriptor at its
+implementation state-8-to-state-1 boundary and produces DMA, active-low
+DMS/DMRD/DMWR, and DMD output-enable timing over the documented substates.
+DMACK is qualified only at 6-to-7. Each low sample retains architectural state
+seven while all eight physical substates repeat; a high sample permits the
+read sample/completion at the following 7-to-8 edge. Nine directed tests and
+50,039 model/RTL clocks cover normal reads/writes, repeated extensions,
+late-ACK rejection, back-to-back select, reset, unknowns, and external
+relinquishment. Type 2/12 attachment and whole-core PM/DM arbitration remain
+outside this standalone boundary [ADI-UM-1989, printed pp. 5-9–5-12,
+Figures 5.6–5.7; ADI-DATABOOK-1987, printed pp. 2-40–2-43,
+Figures 16–17].
 
 The bounded Type 13 boundary implements the corresponding PM-data path with
 fixed original-device timing. It exposes the old DAG2 I address, PM data

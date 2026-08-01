@@ -1,6 +1,7 @@
 # Data-memory cycles
 
-**Status: logical ordering and wait sample verified**
+**Status: source-backed eight-substate logical pin phases implemented;
+architectural clients not yet attached**
 
 DM read/write drives DMA and DMS, selects DMRD or DMWR, and transfers DMD.
 DMS can remain asserted without a glitch across consecutive DM cycles
@@ -10,8 +11,32 @@ DMACK is checked at the end of state 6. If absent, state 7 extends by one full
 processor cycle repeatedly. HALT, BR, and interrupts may latch but are not
 serviced during this extension [ADI-UM-1989, printed p. 5-9].
 
-Automated bus traces must check address/control/write-data stability throughout
-every extension and completion at the first accepted DMACK sample.
+The portable `adsp2100_data_bus` controller now captures a request on the
+enabled state-8-to-state-1 edge aligned with the sourced DMA/DMS transition.
+It implements this logical pin map:
+
+| Signal/action | Logical substates or edge |
+|---|---|
+| DMA and active-low DMS valid | states 1–8 and every wait substate |
+| DMRD/DMWR low | states 4–7 and every wait substate |
+| DMACK recognition | enabled state-6-to-state-7 edge |
+| DMD read sample | completing state-7-to-state-8 edge |
+| DMD write output enable | states 5–8 and every wait substate |
+
+A low DMACK sample retains architectural state seven while the physical
+substate counter traverses 8, 1, 2, 3, 4, 5, 6, and 7 again. Each low sample
+therefore adds one complete eight-substate processor cycle; a high sample
+qualifies completion only at the following 7-to-8 edge. This follows the
+original timing figure's `7(8)` through `7(6)` notation rather than treating a
+wait as one FPGA clock [ADI-UM-1989, printed pp. 5-9–5-11, Figures 5.6–5.7;
+ADI-DATABOOK-1987, printed pp. 2-40–2-43, parameters 61–98, Figures 16–17].
+
+Nine directed tests and 50,039 deterministic model/RTL clocks check address,
+select, strobe, and write-data stability throughout every extension; rejection
+of a late unsampled ACK; completion on the first qualified edge; consecutive
+DMS continuity; phase holds; reset; unknown validity; and externally directed
+bus relinquishment. The electrical DMACK setup/hold values remain wrapper
+constraints rather than delay constructs in synthesizable RTL.
 
 The Type 2 immediate-write and Type 12 multifunction execution boundaries now
 automate that logical check. A request can
@@ -22,6 +47,7 @@ write data is either Type 2's captured raw immediate or Type 12's old
 selected-bank DREG value. Reset cancels a pending transaction and invalidates
 reset-unknown computational and DAG state. The Type 2 and Type 12 differentials
 cover 50,035 and 50,069 clocks respectively, including arbitrary multi-clock
-extension, stable address/data, and completion-only I post-modification. PM
-concurrency, event latching during waits, and active-low pin-level state timing
+extension, stable address/data, and completion-only I post-modification.
+These existing architectural clients are not yet attached to the new phase
+controller. PM concurrency, event latching during waits, and BR/BG recognition
 are still unimplemented.

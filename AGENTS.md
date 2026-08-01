@@ -273,9 +273,12 @@ collisions. It exposes a logical DM request/address/read-write/data/ack
 boundary, holds all bus outputs and architectural state over arbitrary ACK-low
 extensions, samples read data and commits the selected shifter, DREG, and DAG-I
 postmodify writes atomically on the first ACK-high boundary, and uses the old
-DREG value for a simultaneous store. It does not yet reproduce physical
-active-low DM pin phases, integrate instruction fetch, or settle whole-core
-interrupt/bus arbitration.
+DREG value for a simultaneous store. A separate native DM controller now
+implements DMA/DMS states 1–8, DMRD/DMWR states 4–7, DMACK qualification at
+6–7, DMD read sampling at 7–8, write drive states 5–8, and the original
+full-eight-substate state-seven extension. Type 2/12 request attachment,
+instruction-fetch concurrency, and whole-core interrupt/bus arbitration remain
+open.
 The bounded Type 13 slice partitions all 65,536 words into 54,320 supported
 actions, 8,192 unavailable-XOP words, and 3,024 illegal PM-read destination
 collisions. It performs the fixed logical PM data cycle, reads a 24-bit PM

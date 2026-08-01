@@ -7,7 +7,7 @@
   Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone and Type 13-integrated
-  instruction cache, native PM phase controller and Type 13 attachment,
+  instruction cache, native PM and DM phase controllers and Type 13 attachment,
   stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
@@ -16,6 +16,14 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the native DM phase controller passes
+  for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It uses
+  100 ALMs and 57 fitted registers with no RAM or DSP blocks. Across four
+  timing models, worst setup slack is +11.895 ns, worst hold slack is
+  +0.169 ns, and worst slow-corner Fmax is 123.38 MHz, with zero unconstrained
+  clocks, ports, or paths. The sole warning is the expected Quartus Lite
+  LogicLock license warning. This is bounded logical DM pin-phase evidence,
+  not Type 2/12 attachment, physical-I/O timing sign-off, or MiSTer closure.
 - Quartus 17.0.2 full compilation of the native PM phase controller passes
   for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone constraint. It uses
   112 ALMs and 71 fitted registers with no RAM or DSP blocks. Across four

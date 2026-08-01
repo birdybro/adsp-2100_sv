@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests pm-bus-tests pm-native-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests pm-native-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
@@ -25,6 +25,10 @@ lint:
 			--top-module adsp2100_program_bus \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_program_bus.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_data_bus \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_data_bus.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_pm_native_slice \
 			rtl/packages/adsp2100_pkg.sv \
@@ -345,6 +349,24 @@ pm-bus-tests:
 		build/obj_program_bus/Vtb_adsp2100_program_bus; \
 	else \
 		echo "SKIP PM-bus RTL test: Verilator is not installed"; \
+	fi
+
+dm-bus-tests:
+	$(PYTHON) -m unittest -v tests.test_data_bus
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_data_bus_vectors.py \
+			--output build/data_bus_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_data_bus \
+			--top-module tb_adsp2100_data_bus \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			sim/unit/tb_adsp2100_data_bus.sv; \
+		build/obj_data_bus/Vtb_adsp2100_data_bus; \
+	else \
+		echo "SKIP DM-bus RTL test: Verilator is not installed"; \
 	fi
 
 pm-native-tests:
@@ -1050,7 +1072,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests pm-native-tests compute-tests
+bus-tests: cache-tests pm-bus-tests dm-bus-tests pm-native-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -1092,6 +1114,11 @@ formal:
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			formal/harnesses/adsp2100_program_bus_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_data_bus_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			formal/harnesses/adsp2100_data_bus_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_pm_native_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -1421,6 +1448,7 @@ formal:
 			formal/shifter_pm_cache.sby; \
 		sby -f -d build/formal_instruction_cache formal/instruction_cache.sby; \
 		sby -f -d build/formal_pm_bus formal/pm_bus.sby; \
+		sby -f -d build/formal_dm_bus formal/dm_bus.sby; \
 		sby -f -d build/formal_shifter_pm_native \
 			formal/shifter_pm_native.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
@@ -1506,6 +1534,7 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/instruction_cache_smoke; \
 		quartus_sh --flow compile synthesis/quartus/program_bus_smoke; \
+		quartus_sh --flow compile synthesis/quartus/data_bus_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_native_smoke; \
 		quartus_sh --flow compile \
@@ -1567,6 +1596,7 @@ clean:
 	@find build -maxdepth 1 -type f -name instruction_cache_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_cache_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name program_bus_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name data_bus_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
@@ -1687,6 +1717,9 @@ clean:
 	fi
 	@if [ -d build/obj_program_bus ]; then \
 		find build/obj_program_bus -depth -delete; \
+	fi
+	@if [ -d build/obj_data_bus ]; then \
+		find build/obj_data_bus -depth -delete; \
 	fi
 	@if [ -d build/obj_shifter_pm_native_slice ]; then \
 		find build/obj_shifter_pm_native_slice -depth -delete; \
@@ -1819,6 +1852,9 @@ clean:
 	@if [ -d build/quartus_program_bus ]; then \
 		find build/quartus_program_bus -depth -delete; \
 	fi
+	@if [ -d build/quartus_data_bus ]; then \
+		find build/quartus_data_bus -depth -delete; \
+	fi
 	@if [ -d build/quartus_shifter_pm_native ]; then \
 		find build/quartus_shifter_pm_native -depth -delete; \
 	fi
@@ -1887,6 +1923,7 @@ clean:
 		build/formal_shifter_pm_cache \
 		build/formal_instruction_cache \
 		build/formal_pm_bus \
+		build/formal_dm_bus \
 		build/formal_shifter_pm_native \
 		build/formal_compute_move \
 		build/formal_conditional_compute \

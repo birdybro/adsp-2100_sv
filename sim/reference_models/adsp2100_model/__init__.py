@@ -199,6 +199,14 @@ from .program_bus import (
     ProgramBusState,
     apply_program_bus_cycle,
 )
+from .data_bus import (
+    DATA_ADDRESS_WIDTH,
+    DATA_WORD_WIDTH,
+    DataBusCycleResult,
+    DataBusRequest,
+    DataBusState,
+    apply_data_bus_cycle,
+)
 from .load_dreg_immediate import (
     LOAD_DREG_IMMEDIATE_MASK,
     LOAD_DREG_IMMEDIATE_VALUE,
@@ -467,6 +475,11 @@ __all__ = [
     "PC_STACK_WIDTH",
     "PROGRAM_ADDRESS_WIDTH",
     "PROGRAM_WORD_WIDTH",
+    "DATA_ADDRESS_WIDTH",
+    "DATA_WORD_WIDTH",
+    "DataBusCycleResult",
+    "DataBusRequest",
+    "DataBusState",
     "ProgramBusCycleResult",
     "ProgramBusRequest",
     "ProgramBusState",
@@ -541,6 +554,7 @@ __all__ = [
     "apply_computational_cycle",
     "apply_dreg_cycle",
     "apply_instruction_cache_cycle",
+    "apply_data_bus_cycle",
     "apply_program_bus_cycle",
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",

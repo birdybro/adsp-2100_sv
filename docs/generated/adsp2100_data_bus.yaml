@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "scope": "native logical data-memory pin phases and DMACK extension",
+  "request_capture": "ENABLED_STATE_8_TO_STATE_1_EDGE",
+  "phase_encoding": {
+    "STATE_1": 0,
+    "STATE_2": 1,
+    "STATE_3": 2,
+    "STATE_4": 3,
+    "STATE_5": 4,
+    "STATE_6": 5,
+    "STATE_7": 6,
+    "STATE_8": 7
+  },
+  "logical_pin_map": {
+    "DMA_DMS_N": "VALID_STATES_1_THROUGH_8_AND_ALL_WAIT_SUBSTATES",
+    "DMRD_N": "LOW_STATES_4_THROUGH_7_FOR_READ_AND_ALL_WAIT_SUBSTATES",
+    "DMWR_N": "LOW_STATES_4_THROUGH_7_FOR_WRITE_AND_ALL_WAIT_SUBSTATES",
+    "DMD_READ_SAMPLE": "ENABLED_STATE_7_TO_STATE_8_EDGE_AFTER_ACKNOWLEDGEMENT",
+    "DMD_WRITE_OUTPUT_ENABLE": "STATES_5_THROUGH_8_AND_ALL_WAIT_SUBSTATES",
+    "DMACK_SAMPLE": "ENABLED_STATE_6_TO_STATE_7_EDGE"
+  },
+  "wait_extension": {
+    "trigger": "DMACK_LOW_AT_STATE_6_TO_STATE_7",
+    "duration": "ONE_COMPLETE_EIGHT_SUBSTATE_CYCLE_PER_LOW_SAMPLE",
+    "architectural_state": "STATE_7_RETAINED",
+    "descriptor": "STABLE_UNTIL_COMPLETION_OR_RESET",
+    "completion": "FIRST_STATE_7_TO_STATE_8_AFTER_HIGH_STATE_6_SAMPLE"
+  },
+  "bus_relinquishment": "MASK_OUTPUT_ENABLES_AND_HOLD_DESCRIPTOR",
+  "asynchronous_input_boundary": "DMACK_I_IS_THE_LOGICAL_RECOGNITION_SAMPLE; ELECTRICAL_SYNCHRONIZATION_IS_WRAPPER_SCOPE",
+  "sources": [
+    {
+      "id": "ADI-UM-1989",
+      "pages": "printed pp. 5-3, 5-9 through 5-12",
+      "figures": ["5.6", "5.7"]
+    },
+    {
+      "id": "ADI-DATABOOK-1987",
+      "pages": "printed pp. 2-40 through 2-43",
+      "parameters": "61 through 98",
+      "figures": ["16", "17"]
+    }
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "exclusions": [
+    "nanosecond electrical delays",
+    "metastability model",
+    "BR/BG recognition",
+    "HALT and interrupt event latching",
+    "architectural request arbitration"
+  ]
+}
