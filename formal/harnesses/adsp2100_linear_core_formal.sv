@@ -177,6 +177,9 @@ module adsp2100_linear_core_formal (
         cover (
             retire_event && ((opcode & 24'hffffe0) == 24'h090000)
         );
+        cover (
+            retire_event && ((opcode & 24'hffffe0) == 24'h040000)
+        );
     end
 
     always_ff @(posedge clk) begin

@@ -64,6 +64,10 @@ module tb_adsp2100_architectural_state;
     logic mac_mv;
     logic shifter_status_write_enable;
     logic shifter_ss;
+    logic [1:0] stack_status_operation;
+    logic stack_count_pop;
+    logic stack_loop_pop;
+    logic stack_pc_pop;
     logic invalid_move_write;
     logic internal_conflict;
     logic count_stack_push;
@@ -139,6 +143,10 @@ module tb_adsp2100_architectural_state;
             mac_mv = 1'b0;
             shifter_status_write_enable = 1'b0;
             shifter_ss = 1'b0;
+            stack_status_operation = 2'b00;
+            stack_count_pop = 1'b0;
+            stack_loop_pop = 1'b0;
+            stack_pc_pop = 1'b0;
         end
     endtask
 
@@ -246,6 +254,10 @@ module tb_adsp2100_architectural_state;
         .mac_mv_i(mac_mv),
         .shifter_status_write_enable_i(shifter_status_write_enable),
         .shifter_ss_i(shifter_ss),
+        .stack_status_operation_i(stack_status_operation),
+        .stack_count_pop_i(stack_count_pop),
+        .stack_loop_pop_i(stack_loop_pop),
+        .stack_pc_pop_i(stack_pc_pop),
         .invalid_move_write_o(invalid_move_write),
         .internal_conflict_o(internal_conflict),
         .count_stack_push_o(count_stack_push),
@@ -480,6 +492,52 @@ module tb_adsp2100_architectural_state;
         end
         tick();
         expect16(read_data, 16'h9999, "conflicting AR write preservation");
+
+        // Manual stack actions share this owner and commit from cycle-start
+        // stack/status state at one active edge.
+        move_register(6'h30, 16'h00a5);
+        move_register(6'h31, 16'h0006);
+        move_register(6'h33, 16'h0009);
+        clear_actions();
+        stack_status_operation = 2'b10;
+        tick();
+        if (sstat[4] !== 1'b0) begin
+            $fatal(1, "status-stack push did not clear empty state");
+        end
+        move_register(6'h30, 16'h0012);
+        move_register(6'h31, 16'h0003);
+        move_register(6'h33, 16'h0004);
+        clear_actions();
+        stack_status_operation = 2'b11;
+        tick();
+        if (
+            astat !== 8'ha5 || mstat !== 4'h6 || imask !== 4'h9
+            || sstat[4] !== 1'b1
+        ) begin
+            $fatal(1, "status-stack pop/restore mismatch");
+        end
+
+        move_register(6'h35, 16'h0123);
+        move_register(6'h35, 16'h0234);
+        if (count_stack_depth !== 3'd1 || sstat[2] !== 1'b0) begin
+            $fatal(1, "count-stack setup mismatch");
+        end
+        clear_actions();
+        stack_count_pop = 1'b1;
+        tick();
+        if (
+            cntr !== 14'h0123 || !cntr_valid
+            || count_stack_depth !== 3'd0 || sstat[2] !== 1'b1
+        ) begin
+            $fatal(1, "count-stack pop/restore mismatch");
+        end
+        clear_actions();
+        stack_pc_pop = 1'b1;
+        stack_loop_pop = 1'b1;
+        tick();
+        if (internal_conflict || sstat[0] !== 1'b1 || sstat[6] !== 1'b1) begin
+            $fatal(1, "empty PC/loop pops changed shared stack state");
+        end
 
         // Reset suppresses direct computational writes while retaining the
         // intentionally unspecified computational-register contents.

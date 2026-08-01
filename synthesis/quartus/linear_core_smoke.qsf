@@ -27,6 +27,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_si
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_modify_address_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_modify_address_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_stack_control_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_alu.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturation_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturate.sv

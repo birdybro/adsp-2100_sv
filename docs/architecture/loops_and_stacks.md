@@ -48,6 +48,17 @@ invalid opcodes, SSTAT composition, and fail-closed integration conflicts
 [ADI-UM-1989, printed pp. 4-3–4-7, 4-9–4-10, 6-14–6-15,
 A-4, A-8–A-10].
 
+The same action decoder is now attached to the shared architectural state in
+the bounded ordinary-fetch owner. Status PUSH captures live cycle-start
+ASTAT/MSTAT/IMASK, status POP restores that tuple, and a count POP restores a
+valid prior CNTR only on the fetched instruction's state-7 retirement. The
+25-test, 442,383-clock owner comparison traverses all 32 payloads. Its PC and
+loop stacks are necessarily empty because active control-transfer/DO execution
+is not yet attached; those fetched pops therefore verify only the explicit
+OQ-013 fail-closed preservation rule. Valid PC/loop pops and arbitrary combined
+valid actions remain established by the standalone 50,015-cycle slice rather
+than being overclaimed as fetched coverage.
+
 The sequencer storage exposes each current top with an explicit valid bit,
 accepted pushes, valid pops, overflow events, and empty-pop indications. Its
 SSTAT output is a fragment: bits 4/5 are zero and must be composed with the
@@ -84,7 +95,7 @@ implementing the original restriction rather than allowing an unrepresentable
 comparator state.
 
 Interrupt/RTI connectivity and arbitration between Type 26 and automatic
-sequencer/interrupt actions remain outside this integration boundary. Every
+sequencer/interrupt actions remain outside both integration boundaries. Every
 empty-pop architectural side effect remains OQ-013. Conditional-CALL CE
 remains OQ-012. Competing automatic/manual actions and DO setup on an active
 outer loop's final instruction are rejected under OQ-018 instead of receiving

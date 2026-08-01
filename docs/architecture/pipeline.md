@@ -20,8 +20,8 @@ all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
 16 conditional-shift words, all 2,256 legal Type 17 internal MOVE source/
 destination pairs from fully initialized state, all Type 18 MODE CONTROL
 words, all eight Type 23 DIVQ forms, all sixteen source-closed Type 24 DIVS
-forms, the exact Type 25 conditional MR-saturation word, and all 32 Type 21
-MODIFY words:
+forms, the exact Type 25 conditional MR-saturation word, all 32 Type 21
+MODIFY words, and all 32 Type 26 stack-control words:
 address `N` executes while an ordinary fetch for `N+1` occupies the native PM
 phases, then the state-7-to-8 edge commits the current action, PC=`N+1`, and
 the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
@@ -51,18 +51,22 @@ selected-bank MR, and bank selection; MV true commits the sign-selected MR
 limit at state 7-to-8 without altering ASTAT, while MV false retires on the
 same boundary without an MR write. Type 21 samples the selected I/M pair and
 I-corresponding L at cycle start and commits only the selected I at state
-7-to-8, without a PM-data, DM, or status action. The request is admitted at
+7-to-8, without a PM-data, DM, or status action. Type 26 reads status and stack
+tops at cycle start and commits its independent manual actions only at
+retirement. Valid fetched status and count pops are covered; PC/loop pops see
+empty stacks in this owner and retain state under OQ-013. The request is admitted at
 the enabled state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Twenty-four directed tests and
-442,405 phase clocks compare the independent model with RTL. They traverse
+interface exposes no PM acknowledge input. Twenty-five directed tests and
+442,383 phase clocks compare the independent model with RTL. They traverse
 every Type 8 compute-field tuple and every move source/destination pair in both
 banks, every legal Type 17 pair, every Type 9 AMF/condition combination, every canonical Type 14
 packet, every supported Type 15 and Type 16 word, every Type 18 encoding,
 all Type 23 divisors in both banks and both old-AQ paths, every legal Type 24
 divisor/upper-source form in both banks, dependent DIVS-to-DIVQ, the Type 25
 true/false paths in both banks, every Type 21 DAG/I/M selection with positive
-and negative linear/circular modification, phase holds, bus-output
+and negative linear/circular modification, every Type 26 payload with valid
+status/count and empty PC/loop context, phase holds, bus-output
 relinquishment, PC wrap, selected-bank state,
 CNTR-stack effects, invalid fetched data, and fail-closed unsupported words. A
 Type 17 move sourced from ASTAT, MSTAT,

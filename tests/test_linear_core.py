@@ -40,6 +40,10 @@ def _type21(*, dag: int, i_local: int, m_local: int) -> int:
     )
 
 
+def _type26(payload: int) -> int:
+    return 0x040000 | (payload & 0x1F)
+
+
 def _type17(destination: int, source: int) -> int:
     return (
         0x0D0000
@@ -200,6 +204,10 @@ class LinearCoreTests(unittest.TestCase):
             contract["supported_current_instructions"],
         )
         self.assertIn(
+            "ALL_32_TYPE_26_STACK_CONTROL_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
             "ALL_14336_SUPPORTED_TYPE_15_IMMEDIATE_SHIFT_WORDS",
             contract["supported_current_instructions"],
         )
@@ -311,6 +319,38 @@ class LinearCoreTests(unittest.TestCase):
             ExactWord(14, 0x0005),
         )
         self.assertEqual(retired.state.architecture.astat, UNKNOWN)
+
+    def test_type26_stack_actions_commit_at_retirement(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            LinearCoreState.reset(),
+            _type7(writable["ASTAT"], 0xA5),
+        )
+        for opcode in (
+            _type7(writable["MSTAT"], 0x6),
+            _type7(writable["IMASK"], 0x9),
+            _type26(0x02),
+            _type7(writable["ASTAT"], 0x12),
+            _type7(writable["MSTAT"], 0x3),
+            _type7(writable["IMASK"], 0x4),
+            _type26(0x03),
+            _type7(writable["CNTR"], 0x123),
+            _type7(writable["CNTR"], 0x234),
+            _type26(0x04),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        issued = _issue(state)
+        self.assertEqual(issued.state.architecture.cntr, ExactWord(14, 0x234))
+        retired = _complete(issued.state, 0)
+        architecture = retired.state.architecture
+        self.assertEqual(architecture.astat, ExactWord(8, 0xA5))
+        self.assertEqual(architecture.mstat, ExactWord(4, 0x6))
+        self.assertEqual(architecture.imask, ExactWord(4, 0x9))
+        self.assertEqual(architecture.cntr, ExactWord(14, 0x123))
+        self.assertEqual(architecture.status_stack, ())
+        self.assertEqual(architecture.count_stack, ())
+        self.assertEqual(architecture.sstat.value & 0x54, 0x54)
 
     def test_type9_alu_retires_with_next_fetch_and_false_form_preserves(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x30, 0))

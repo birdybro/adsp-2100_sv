@@ -53,13 +53,14 @@ Type 9 conditional ALU/MAC words, all 2,256 legal Type 17
 internal MOVE source/destination pairs, all 25,648 canonical Type 14 shifter-
 plus-DREG packets, all eight Type 23 DIVQ words, all sixteen source-closed
 Type 24 DIVS words, the exact Type 25 conditional
-MR-saturation word, all
+MR-saturation word, all 32 Type 21 address-modify words, all 32 Type 26
+manual stack-control words, all
 14,336 supported Type 15 immediate
 shift words, all 1,792 supported Type 16 conditional shift words, and all Type
 18 MODE CONTROL words
 execute at the current PC while the
 following word is fetched at PC+1 across the sourced state-8 issue/state-7
-retire phases, with 442,392 model/RTL phase clocks and an explicit OQ-016
+retire phases, with 442,383 model/RTL phase clocks and an explicit OQ-016
 provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
 50,003 clocks and 86 complete current-fetch/inhibit/grant/restart handshakes,
 and a separate bounded active-low HALT attachment adds 50,003 clocks and 788

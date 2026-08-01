@@ -8,6 +8,27 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of all 32 original Type 26 manual stack-control words in
+  the bounded ordinary linear owner. The shared architectural-state owner now
+  accepts retirement-gated status-stack push/pop, count-stack-to-CNTR pop,
+  and discard pops for the PC and loop stacks. Directed fetched sequences
+  prove cycle-start ASTAT/MSTAT/IMASK capture and restore, live CNTR restore,
+  empty PC/loop pop preservation, and state-7-only commit; the independent
+  standalone Type 26 slice remains the evidence for valid PC/loop pops and
+  combined actions. The 25-test owner suite and 442,383 deterministic
+  model/RTL phase clocks traverse every Type 26 payload, while the BR/BG,
+  shared-PM/BR-BG, and HALT compatibility suites each remain passing across
+  50,003 clocks. Strict lint and all 73 formal assertion recipes parse cleanly;
+  SymbiYosys and Yosys are unavailable. Four fully constrained Cyclone V fits
+  report zero unconstrained paths: the 25 ns private owner uses 3,464 ALMs,
+  1,328 registers, two DSPs, no RAM, and misses setup by 0.504 ns at a
+  39.43 MHz worst slow-corner Fmax; the 25 ns BR/BG and HALT compositions use
+  3,483/3,485 ALMs and close with +0.062/+0.456 ns worst setup; the stricter
+  20 ns retained-fetch/shared-PM/BR-BG composition uses 3,579 ALMs and misses
+  setup by 5.739 ns at 39.55 MHz. Empty-pop hardware effects remain OQ-013,
+  automatic/interrupt arbitration remains OQ-018, and fetched valid PC/loop
+  stack context awaits control-flow attachment.
+
 - Fetched execution of all 32 original Type 21 `MODIFY (Ix, My);` words in
   the bounded ordinary linear owner. A stateless action producer selects the
   addressed I and M plus the L corresponding to I from the shared

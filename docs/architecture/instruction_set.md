@@ -448,7 +448,7 @@ retirement edge writes the selected I together with PC and the fetched next
 word. All 32 words execute in the 442,405-clock comparison, and directed
 checks prove preservation of M/L, ASTAT, and the PM-data/DM interfaces.
 
-A bounded stateful execution slice now connects Type 26 to all four stack
+A bounded stateful execution slice connects Type 26 to all four stack
 classes, live CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT. It samples all
 sources at cycle start and atomically commits selected actions at cycle end;
 nine model checks and 50,015 model-versus-RTL cycles cover all combinations
@@ -456,7 +456,13 @@ under valid, empty, full, reset, invalid-opcode, and conflicting-request
 conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
-assembler/disassembler syntax, and logical bus phases remain open. NOP,
+assembler/disassembler syntax, and whole-core logical bus ownership remain
+open. The bounded ordinary-fetch owner now also accepts all 32 words. Fetched
+status push/pop and count pop use valid live stack context; PC and loop pops
+exercise only fail-closed empty preservation because this owner does not yet
+fetch Type 10/11/19/20 control flow that would populate those stacks. All
+payloads retire atomically with PC and the fetched next word at native state 7
+across the 442,383-clock comparison. NOP,
 Type 2 bounded logical execution, Type 6, Type 7, Type 9, Type 18, Type 21,
 and Type 25 are the class-complete
 source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic

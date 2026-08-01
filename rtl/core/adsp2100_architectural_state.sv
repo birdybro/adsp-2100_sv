@@ -4,8 +4,9 @@
 //
 // This boundary exposes the complete general-register selector used by Type
 // 17 and deterministic setup together with execution-facing DREG,
-// computational-unit, DAG-I, status, and mode actions. Memory transactions
-// and sequencer/interrupt actions remain separate clients of this owner.
+// computational-unit, DAG-I, status, mode, and manual stack-control actions.
+// Memory transactions and automatic sequencer/interrupt actions remain
+// separate clients of this owner.
 module adsp2100_architectural_state (
     input  logic        clk_i,
     input  logic        reset_i,
@@ -80,6 +81,11 @@ module adsp2100_architectural_state (
     input  logic        mac_mv_i,
     input  logic        shifter_status_write_enable_i,
     input  logic        shifter_ss_i,
+
+    input  logic [1:0]  stack_status_operation_i,
+    input  logic        stack_count_pop_i,
+    input  logic        stack_loop_pop_i,
+    input  logic        stack_pc_pop_i,
 
     output logic        invalid_move_write_o,
     output logic        internal_conflict_o,
@@ -441,10 +447,10 @@ module adsp2100_architectural_state (
         .shifter_ss_i(shifter_ss_i),
         .interrupt_entry_i(1'b0),
         .interrupt_level_i(2'b00),
-        .status_restore_i(1'b0),
-        .restore_astat_i(8'h00),
-        .restore_mstat_i(4'h0),
-        .restore_imask_i(4'h0),
+        .status_restore_i(unused_status_pop_valid),
+        .restore_astat_i(unused_status_pop_data[15:8]),
+        .restore_mstat_i(unused_status_pop_data[7:4]),
+        .restore_imask_i(unused_status_pop_data[3:0]),
         .astat_o(astat_o),
         .mstat_o(mstat_o),
         .icntl_o(icntl_o),
@@ -469,7 +475,7 @@ module adsp2100_architectural_state (
         ),
         .load_data_i(move_data_i[13:0]),
         .ce_test_i(1'b0),
-        .manual_pop_i(1'b0),
+        .manual_pop_i(!reset_i && stack_count_pop_i),
         .count_stack_top_data_i(count_stack_top),
         .count_stack_top_valid_i(count_stack_top_valid),
         .cntr_data_o(cntr_o),
@@ -492,7 +498,7 @@ module adsp2100_architectural_state (
         .clk_i(clk_i),
         .reset_i(reset_i),
         .pc_push_i(1'b0),
-        .pc_pop_i(1'b0),
+        .pc_pop_i(!reset_i && stack_pc_pop_i),
         .pc_push_data_i(14'h0000),
         .pc_top_data_o(unused_pc_top),
         .pc_top_valid_o(unused_pc_top_valid),
@@ -516,7 +522,7 @@ module adsp2100_architectural_state (
         .count_overflow_event_o(unused_count_overflow_event),
         .count_empty_pop_o(unused_count_empty_pop),
         .loop_push_i(1'b0),
-        .loop_pop_i(1'b0),
+        .loop_pop_i(!reset_i && stack_loop_pop_i),
         .loop_push_data_i(18'h00000),
         .loop_top_data_o(unused_loop_top),
         .loop_top_valid_o(unused_loop_top_valid),
@@ -534,8 +540,8 @@ module adsp2100_architectural_state (
     adsp2100_status_stack status_stack (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .operation_i(2'b00),
-        .push_data_i(16'h0000),
+        .operation_i(reset_i ? 2'b00 : stack_status_operation_i),
+        .push_data_i({astat_o, mstat_o, imask_o}),
         .pop_data_o(unused_status_pop_data),
         .pop_valid_o(unused_status_pop_valid),
         .empty_o(status_stack_empty),

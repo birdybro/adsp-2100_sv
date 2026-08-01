@@ -94,6 +94,12 @@ module adsp2100_linear_fetch_client (
     logic type21_i_write;
     logic [13:0] type21_i_write_data;
     logic type21_i_write_result_valid;
+    logic type26_action_valid;
+    logic [1:0] type26_status_operation;
+    logic type26_count_pop;
+    logic type26_loop_pop;
+    logic type26_pc_pop;
+    logic type26_has_effect_unused;
     logic type17_class_valid;
     logic type17_action_valid;
     logic type17_invalid_subencoding;
@@ -277,6 +283,7 @@ module adsp2100_linear_fetch_client (
         || type18_valid || type9_action_valid || type15_action_valid
         || type16_action_valid || type14_action_valid || type23_action_valid
         || type21_action_valid || type24_action_valid || type25_action_valid
+        || type26_action_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
@@ -421,6 +428,16 @@ module adsp2100_linear_fetch_client (
         .i_write_o(type21_i_write),
         .i_write_data_o(type21_i_write_data),
         .i_write_result_valid_o(type21_i_write_result_valid)
+    );
+
+    adsp2100_stack_control_decode type26_action (
+        .opcode_i(opcode_q),
+        .valid_o(type26_action_valid),
+        .status_operation_o(type26_status_operation),
+        .count_pop_o(type26_count_pop),
+        .loop_pop_o(type26_loop_pop),
+        .pc_pop_o(type26_pc_pop),
+        .has_effect_o(type26_has_effect_unused)
     );
 
     adsp2100_compute_move_action type8_action (
@@ -771,6 +788,19 @@ module adsp2100_linear_fetch_client (
             retire_event_o && (type14_ss_write || type16_ss_write)
         ),
         .shifter_ss_i(type14_ss_write ? type14_ss_result : type16_ss_result),
+        .stack_status_operation_i(
+            retire_event_o && type26_action_valid
+                ? type26_status_operation : 2'b00
+        ),
+        .stack_count_pop_i(
+            retire_event_o && type26_action_valid && type26_count_pop
+        ),
+        .stack_loop_pop_i(
+            retire_event_o && type26_action_valid && type26_loop_pop
+        ),
+        .stack_pc_pop_i(
+            retire_event_o && type26_action_valid && type26_pc_pop
+        ),
         .invalid_move_write_o(state_invalid_setup),
         .internal_conflict_o(internal_conflict_o),
         .count_stack_push_o(state_count_push_unused),
@@ -835,6 +865,7 @@ module adsp2100_linear_fetch_client (
         type8_is_mac_unused,
         type21_dag2_unused, type21_operands_valid_unused,
         type21_configuration_valid_unused,
+        type26_has_effect_unused,
         type9_class_valid, type9_nop_action, type9_condition_true,
         type9_is_mac, type9_is_alu, type9_x_source_data_unused,
         type9_y_source_data_unused, type16_condition_true,

@@ -20,6 +20,7 @@ from .divide_sign import decode_divide_sign, is_divide_sign_class
 from .mr_saturation import decode_mr_saturation
 from .mode_control import decode_mode_control
 from .modify_address import decode_modify_address
+from .stack_control import decode_stack_control
 from .model import (
     ADSP2100Model,
     ArchitecturalState,
@@ -101,6 +102,8 @@ def _instruction_class(
     if decode_mode_control(instruction.value) is not None:
         return (True, False)
     if decode_modify_address(instruction.value) is not None:
+        return (True, False)
+    if decode_stack_control(instruction.value) is not None:
         return (True, False)
     if decode_conditional_compute(instruction.value) is not None:
         return (True, False)

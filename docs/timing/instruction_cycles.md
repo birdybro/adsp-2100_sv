@@ -378,15 +378,19 @@ to corroborate the explicit corresponding-L and writeback wording
 ADI-2101-CROSS-1990, printed p. 9-65]. This is instruction-boundary evidence,
 and the fetched attachment now adds explicit native phase evidence: operands
 are captured with the PC+1 request at enabled state 8-to-1 and selected-I,
-PC, and next-word state commit together at state 7-to-8. Twenty-four directed
-owner tests and 442,405 phase clocks cover all 32 selections with no PM-data
+PC, and next-word state commit together at state 7-to-8. The superseded
+twenty-four-test, 442,405-clock run covers all 32 selections with no PM-data
 or DM transaction. Reset-first-fetch and cross-event priority remain open.
 
 The bounded Type 26 model/RTL execution slice verifies that every selected
 status/count/loop/PC action reads cycle-start state and commits on the same
-cycle-end edge across 50,015 stateful cycles. This is instruction-boundary
-evidence only; fetch overlap, the eight logical internal states, wait
-extension, and external bus phases are not yet connected to that slice.
+cycle-end edge across 50,015 stateful cycles. The bounded fetched owner adds
+native state-8 issue and state-7 retirement evidence for all 32 payloads across
+25 directed tests and 442,383 phase clocks. Its valid status/count actions
+commit atomically with PC and the fetched next word; its PC/loop stacks are
+empty, so valid PC/loop pops remain standalone-only evidence. No Type 26 form
+starts a PM-data or DM transaction. Automatic flow/interrupt arbitration and
+the OQ-013 physical empty-pop result remain open.
 
 Every opcode/taken/false/cache/loop/interrupt combination still needs a
 machine-readable row and automated assertion.

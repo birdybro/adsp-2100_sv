@@ -4,7 +4,8 @@ The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
 Type 8 ALU/MAC-plus-move packets, Type 14 shifter-plus-move packets, Type 15
 immediate shifts, Type 16 conditional shifts, original Type 18 mode control,
-all 32 Type 21 MODIFY selections, Type 23 DIVQ, the
+all 32 Type 21 MODIFY selections, all 32 Type 26 manual stack controls, Type
+23 DIVQ, the
 source-closed Type 24 DIVS forms, exact Type 25 MR saturation, and legal Type
 17 internal moves from known sources.
 Unsupported behavior fails closed instead of becoming an accidental no-op.
@@ -173,7 +174,9 @@ class ArchitecturalState:
     pc_stack: tuple[ExactWord, ...] = ()
     loop_stack: tuple[tuple[ExactWord, ExactWord], ...] = ()
     count_stack: tuple[ExactWord, ...] = ()
-    status_stack: tuple[tuple[ExactWord, ExactWord, ExactWord], ...] = ()
+    status_stack: tuple[
+        tuple[KnownOrUnknown, ExactWord, ExactWord], ...
+    ] = ()
     total_instruction_cycles: int = 0
 
     @classmethod
@@ -323,6 +326,11 @@ class ADSP2100Model:
         next_state = self.state
         if instruction.value == 0:
             pass
+        elif instruction.value & 0xFFFFE0 == 0x040000:
+            next_state = _apply_type26_stack_control(
+                self.state,
+                instruction.value,
+            )
         elif instruction.value & 0xF00000 == 0x400000:
             from .load_dreg_immediate import decode_load_dreg_immediate
             from .registers import DREGWrite, apply_dreg_cycle
@@ -822,6 +830,71 @@ def _apply_type21_modify(
             m=architectural(result.state.m),
             l=architectural(result.state.l),
         ),
+    )
+
+
+def _apply_type26_stack_control(
+    state: ArchitecturalState,
+    opcode: int,
+) -> ArchitecturalState:
+    """Apply one source-closed manual stack-control action bundle."""
+
+    from .stack_control import (
+        StackControlStatusOperation,
+        decode_stack_control,
+    )
+
+    action = decode_stack_control(opcode)
+    assert action is not None
+
+    pc_stack = state.pc_stack
+    loop_stack = state.loop_stack
+    count_stack = state.count_stack
+    status_stack = state.status_stack
+    astat = state.astat
+    mstat = state.mstat
+    imask = state.imask
+    cntr = state.cntr
+    sstat = state.sstat.value & 0xAA
+
+    if action.status_operation is StackControlStatusOperation.PUSH:
+        if len(status_stack) < 4:
+            status_stack += ((state.astat, state.mstat, state.imask),)
+        else:
+            sstat |= 1 << 5
+    elif action.status_operation is StackControlStatusOperation.POP:
+        if status_stack:
+            astat, mstat, imask = status_stack[-1]
+            status_stack = status_stack[:-1]
+
+    if action.count_pop and count_stack:
+        cntr = count_stack[-1]
+        count_stack = count_stack[:-1]
+    if action.pc_pop and pc_stack:
+        pc_stack = pc_stack[:-1]
+    if action.loop_pop and loop_stack:
+        loop_stack = loop_stack[:-1]
+
+    if not pc_stack:
+        sstat |= 1 << 0
+    if not count_stack:
+        sstat |= 1 << 2
+    if not status_stack:
+        sstat |= 1 << 4
+    if not loop_stack:
+        sstat |= 1 << 6
+
+    return replace(
+        state,
+        astat=astat,
+        mstat=mstat,
+        imask=imask,
+        cntr=cntr,
+        pc_stack=pc_stack,
+        loop_stack=loop_stack,
+        count_stack=count_stack,
+        status_stack=status_stack,
+        sstat=ExactWord(8, sstat),
     )
 
 

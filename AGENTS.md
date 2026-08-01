@@ -234,7 +234,8 @@ directly tested at that owner. Fetched Type 8 ALU/MAC-plus-DREG, Type 9
 conditional ALU/MAC, canonical Type 14 shifter-plus-DREG, Type 15 immediate
 shift, Type 16 conditional shift,
 all eight Type 23 DIVQ forms, all sixteen source-closed Type 24 DIVS forms,
-exact Type 25 MR saturation, and all 32 Type 21 address-modify words now drive
+exact Type 25 MR saturation, all 32 Type 21 address-modify words, and all 32
+Type 26 stack-control words now drive
 those
 shared parallel result/move/status/DAG actions; a single
 cache shared by real Type 5/Type 13/fetch clients and
@@ -245,12 +246,15 @@ supported Type 15/16 shifter word, every legal
 canonical Type 14 shifter-plus-DREG packet, every legal Type 17 internal MOVE,
 every Type 18 MODE CONTROL word, all eight Type 23 DIVQ forms, all sixteen
 source-closed Type 24 DIVS forms, and exact Type
-25 MR saturation plus all 32 Type 21 address-modify words while
+25 MR saturation plus all 32 Type 21 address-modify and Type 26 stack-control
+words while
 fetching PC+1 through the native PM phase controller. Type 17 narrow
 status/control-source
 extension remains an observable OQ-016 provisional behavior; reset
-first-fetch, transfers, loops, interrupts, and PM-data/cache remain outside
-that owner. Normal BR/BG and ordinary-fetch HALT are attached separately only
+first-fetch, control transfers, automatic loops, interrupts, and PM-data/cache
+remain outside that owner. Valid status/count Type 26 pops are fetched; valid
+PC/loop pops remain standalone because this owner cannot populate those stacks.
+Normal BR/BG and ordinary-fetch HALT are attached separately only
 to this bounded linear
 owner: the current fetch completes, new issue is inhibited, PM output enables
 are masked during grant, HALT instead holds driven PM outputs in state 8, and
@@ -472,9 +476,10 @@ generation. A bounded sequencer integration slice connects IF/DO condition
 evaluation, explicit flow, DO setup, CNTR, and PC/count/loop stack storage for
 source-backed cases. It rejects conditional-CALL CE (OQ-012), empty-pop
 effects remain OQ-013, and competing automatic/manual actions are held and
-flagged under OQ-018. Type 26 now connects manual status-stack push/restore to
-live ASTAT/MSTAT/IMASK in its bounded slice; interrupt/RTI arbitration remains
-absent. A bounded Type 10 slice is the first semantic decoder connected to a
+flagged under OQ-018. Type 26 now connects manual stack actions to live
+status/CNTR/stack state in both its bounded slice and the ordinary fetched
+owner; interrupt/RTI and automatic-flow arbitration remain absent. A bounded
+Type 10 slice is the first semantic decoder connected to a
 14-bit PC register, CALL PC-stack pushes, and JUMP NOT CE counter-stack
 transitions. It fails closed for all 16,384 CALL NOT CE encodings under
 OQ-012 and excludes active-loop, fetch/cache, interrupt, bus, and phase
@@ -508,13 +513,12 @@ Multifunction legality, ordering, and whole-core cycle integration remain
 incomplete. The executable
 instruction model establishes
 exact-width state, reset unknowns, deterministic traces, PM fetch
-transactions, and only the hand-verified all-zero NOP in its top-level step
-method. Independent bounded models cover Type 17 action/state selection and
+transactions, and the fetched classes named above in its top-level step
+method. Independent bounded models additionally cover Type 17 action/state selection and
 Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15, Type 16, Type 18,
 Type 19, Type 20, Type 21, Type 22, Type 23, Type 24,
-Type 25, and
-Type 26 state/action behavior outside that
-top-level step path; all other opcodes still fail closed. Architectural
+Type 25, and Type 26 state/action behavior; all other opcodes still fail
+closed. Architectural
 documents marked partial or provisional remain research inputs until their
 named evidence gates pass.
 

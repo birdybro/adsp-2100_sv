@@ -23,6 +23,7 @@ read_verilog -sv rtl/core/adsp2100_divide_sign_action.sv
 read_verilog -sv rtl/core/adsp2100_modify_address_decode.sv
 read_verilog -sv rtl/core/adsp2100_dag.sv
 read_verilog -sv rtl/core/adsp2100_modify_address_action.sv
+read_verilog -sv rtl/core/adsp2100_stack_control_decode.sv
 read_verilog -sv rtl/core/adsp2100_alu.sv
 read_verilog -sv rtl/core/adsp2100_mr_saturation_decode.sv
 read_verilog -sv rtl/core/adsp2100_mr_saturate.sv

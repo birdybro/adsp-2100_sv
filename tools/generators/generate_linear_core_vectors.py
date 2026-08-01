@@ -82,6 +82,10 @@ def _type21(*, dag: int, i_local: int, m_local: int) -> int:
     )
 
 
+def _type26(payload: int) -> int:
+    return 0x040000 | (payload & 0x1F)
+
+
 def _type9(
     *,
     z: int,
@@ -207,6 +211,26 @@ def _directed_opcodes() -> tuple[int, ...]:
                         ),
                     )
                 )
+    # Establish valid status and count-stack contents, then traverse every
+    # Type 26 field combination through fetched retirement. PC/loop pops are
+    # empty-pop preservation cases here; valid PC/loop state remains covered
+    # by the independent standalone Type 26 slice.
+    opcodes.extend(
+        (
+            _type7(0x30, 0x00A5),
+            _type7(0x31, 0x0006),
+            _type7(0x33, 0x0009),
+            _type26(0x02),
+            _type7(0x30, 0x0012),
+            _type7(0x31, 0x0003),
+            _type7(0x33, 0x0004),
+            _type26(0x03),
+            _type7(0x35, 0x0123),
+            _type7(0x35, 0x0234),
+            _type26(0x04),
+        )
+    )
+    opcodes.extend(_type26(payload) for payload in range(32))
     # Establish known feedback registers in both banks, then traverse every
     # Type 9 AMF/condition combination through the fetched retirement path.
     opcodes.extend(
@@ -368,7 +392,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(26)
+    choice = rng.randrange(27)
     if choice == 0:
         return 0
     if choice < 5:
@@ -422,6 +446,8 @@ def _legal_opcode(rng: random.Random) -> int:
         return _type23(rng.randrange(8))
     if choice == 24:
         return _type24(rng.choice((1, 2)), rng.randrange(8))
+    if choice == 25:
+        return _type26(rng.randrange(32))
     z = rng.randrange(2)
     amf = rng.randrange(1, 32)
     destination = rng.randrange(16)

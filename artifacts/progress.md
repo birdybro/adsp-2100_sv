@@ -12,9 +12,10 @@ exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 8/Type 9/Type 14/Type 15/Type 16/
-Type 17/Type 18/Type 21/Type 23/Type 24/Type 25 ordinary-fetch ownership with Type 8
+Type 17/Type 18/Type 21/Type 23/Type 24/Type 25/Type 26 ordinary-fetch ownership with Type 8
 ALU/MAC-plus-DREG and Type 9 ALU/MAC,
-Type 14 parallel move/shifter, Type 15/16 shifter/status, Type 23 divide-
+Type 14 parallel move/shifter, Type 15/16 shifter/status, Type 26 manual stack,
+Type 23 divide-
 quotient, Type 24 divide-sign, Type 25 conditional MR, and Type 21 DAG actions
 attached directly to the shared architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
@@ -34,6 +35,23 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- all 32 original Type 26 manual stack-control words attached to native
+  ordinary-fetch retirement and the shared architectural-state owner. Valid
+  fetched status push/pop restores cycle-start ASTAT/MSTAT/IMASK, count pop
+  restores the prior CNTR, and empty PC/loop pops preserve state under OQ-013.
+  The 25-test owner suite traverses every payload across 442,383 deterministic
+  model/RTL phase clocks; valid PC/loop pops remain established only by the
+  standalone 50,015-cycle slice until fetched control flow can populate those
+  stacks. BR/BG, retained-fetch/shared-PM/BR-BG, and HALT compatibility flows
+  each pass 50,003 clocks. Strict lint and 73 formal recipes pass syntax
+  checking; SymbiYosys/Yosys are unavailable. Fully constrained Cyclone V
+  fits have zero unconstrained paths. At 25 ns the 3,483-ALM BR/BG and
+  3,485-ALM HALT compositions close with +0.062/+0.456 ns worst setup; the
+  3,464-ALM private owner narrowly misses by 0.504 ns at 39.43 MHz, and the
+  stricter 20 ns 3,579-ALM retained/shared-PM owner misses by 5.739 ns at
+  39.55 MHz. All use two DSPs and no RAM; automatic/interrupt arbitration,
+  valid fetched PC/loop context, and timing optimization remain open;
 
 - all 32 original Type 21 MODIFY words attached to the shared architectural-
   state owner and native ordinary-fetch phases. A dedicated execution read
@@ -669,7 +687,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/8/9/14/15/16/17/18/21/23/24/25 linear owner adds 442,405 phase clocks,
+  the bounded Type 6/7/8/9/14/15/16/17/18/21/23/24/25/26 linear owner adds 442,383 phase clocks,
   the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across

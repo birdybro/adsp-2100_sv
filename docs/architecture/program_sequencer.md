@@ -77,7 +77,7 @@ or opcode input. Interrupt and status-stack connectivity, cache/fetch overlap,
 phase enables, complete reset integration, and bus-cycle timing remain
 unimplemented. The discovered MAME ordering difference is recorded as SC-012.
 
-A separate bounded Type 26 execution slice now connects all original manual
+A separate bounded Type 26 execution slice connects all original manual
 stack-control fields to the status/count/loop/PC stacks, live CNTR, and
 ASTAT/MSTAT/IMASK. It reads every source from cycle-start state, commits the
 selected actions together at cycle end, composes all eight SSTAT stack bits,
@@ -86,6 +86,16 @@ words and simultaneous setup/automatic requests are action-free, the latter
 flagged as OQ-018 integration conflicts. This slice is not yet arbitrated with
 the automatic flow slice, interrupts, or RTI, and preserves the explicit
 OQ-013 empty-pop boundary.
+
+All 32 Type 26 words are also recognized by the bounded ordinary-fetch owner.
+Their requests are gated by native state-7 retirement into its shared status,
+CNTR, and stack state. Directed fetched sequences cover valid status push/pop,
+valid count pop, and empty PC/loop pop preservation; the 442,383-clock flow
+traverses every payload. Because no fetched direct/indirect transfer, DO, or
+return instruction yet populates the PC/loop stacks, valid fetched PC/loop pops
+are explicitly unclaimed. Next-PC changes, loop actions, and interrupt actions
+remain outside this owner, so OQ-018 arbitration is not resolved by this
+attachment.
 
 The bounded Type 10 direct-transfer slice is the first decoder-connected PC
 register boundary. Its authentic reset path sets PC to `0x0004`, then every
