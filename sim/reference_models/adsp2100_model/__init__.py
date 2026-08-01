@@ -96,6 +96,12 @@ from .dm_write_immediate import (
     DMWriteImmediateAction,
     decode_dm_write_immediate,
 )
+from .dm_write_immediate_slice import (
+    DMWriteImmediateCycleResult,
+    DMWriteImmediatePending,
+    DMWriteImmediateState,
+    apply_dm_write_immediate_cycle,
+)
 from .instruction_cache import (
     CACHE_WORDS,
     InstructionCacheCycleResult,
@@ -550,6 +556,7 @@ __all__ = [
     "compute_move_unsupported_reason",
     "compute_dag",
     "decode_dm_write_immediate",
+    "apply_dm_write_immediate_cycle",
     "compute_mac",
     "compute_shifter",
     "cache_region_contains",
@@ -594,4 +601,7 @@ __all__ = [
     "DM_WRITE_IMMEDIATE_MASK",
     "DM_WRITE_IMMEDIATE_VALUE",
     "DMWriteImmediateAction",
+    "DMWriteImmediateCycleResult",
+    "DMWriteImmediatePending",
+    "DMWriteImmediateState",
 ]

@@ -16,7 +16,15 @@ The architectural model exposes separate PM instruction fetch, PM data read,
 PM data write, DM read, and DM write transactions. It does not embed RAM into
 the CPU. Uninitialized memory is a model input, not silently zero.
 
-The bounded Type 12 boundary is the first executable DM transaction path. It
+The bounded Type 2 immediate-write path drives the old selected I (or DAG1
+bit reversal), raw 16-bit immediate, and write direction. It holds those
+signals over every DMACK-low extension and commits only the selected-I
+post-modification at the first acknowledged boundary. The 50,035-clock
+model/RTL differential covers every I/M selection, both DAGs, immediate and
+multi-clock completion, reset cancellation, and invalid/unknown DAG state
+[ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
+
+The bounded Type 12 boundary adds the multifunction DM transaction path. It
 drives the old selected I (or the DAG1 bit-reversal of that value), direction,
 select, and old write-source data. A missing DMACK holds all valid bus outputs
 and all architectural destinations. The first acknowledged boundary samples

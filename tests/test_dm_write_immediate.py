@@ -34,7 +34,7 @@ class DMWriteImmediateTests(unittest.TestCase):
         self.assertEqual(instruction["field_defined_encoding_count"], 1 << 21)
         self.assertEqual(
             self.contract["implementation_boundary"]["execution"],
-            "NOT_YET_IMPLEMENTED",
+            "BOUNDED_LOGICAL_DMACK_TRANSACTION",
         )
 
     def test_hand_derived_fixtures(self):

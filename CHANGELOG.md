@@ -105,7 +105,10 @@ semantic versioning after its first release.
 - A primary-backed, class-complete original Type 2 immediate-DM-write action
   database, independent decoder, three hand-derived fixtures, portable RTL
   decoder, algebraic assembler/disassembler support, exhaustive 24-bit
-  fail-closed simulation, and formal recipe.
+  fail-closed simulation, and formal recipe; plus an independent waited-DMACK
+  execution model, portable logical transaction/DAG state slice, deterministic
+  differential generator, formal stability harness, and constrained Cyclone V
+  project.
 - A bounded Type 8 ALU/MAC-plus-internal-DREG semantic entry covering 476,672
   source-closed noncolliding words; an independent unknown-preserving parallel
   state model, exact fail-closed decoder, portable execution RTL, canonical
@@ -311,7 +314,17 @@ semantic versioning after its first release.
   identifies exactly 2,097,152 field-defined actions, and proves all other
   words action-free. Six model/metadata tests cover both DAGs, all I/M
   selections, raw 16-bit immediate boundaries, hand fixtures, and failures.
-- The expanded `make test` passes 444 distinct Python checks, 14 local
+- Type 2 bounded execution passes eleven directed tests and 50,035
+  deterministic model/RTL clocks covering all I/M selections, both DAGs,
+  DAG1 bit reversal, raw immediate writes, immediate and multi-clock DMACK
+  completion, stable stalls, completion-only I updates, reset aborts,
+  conflicts, and unknown/invalid DAG state.
+- Quartus full compilation passes for the bounded Type 2 logical DM-write
+  slice at its 20 ns standalone constraint: 581 ALMs, 430 fitted registers,
+  no RAM/DSP blocks, +3.590 ns worst setup and +0.165 ns worst multicorner
+  hold slack, 60.94 MHz worst slow-corner Fmax, and zero unconstrained clocks,
+  ports, or paths.
+- The expanded `make test` passes 455 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   twenty-two exhaustive 24-bit decode traversals, and every existing
   model/RTL vector regression.

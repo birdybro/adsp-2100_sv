@@ -49,9 +49,16 @@ same DAG. The corresponding L register follows I. The source-backed action
 decoder does not assign signedness to DATA and fails closed for every other
 instruction class. Six model/metadata tests, three hand-derived fixtures, 160
 boundary/selector assembler-disassembler round trips, a formal field harness,
-and exhaustive 24-bit RTL traversal close action decode.
-The acknowledged logical DM transaction, completion-only post-modification,
-native phases, and whole-core arbitration remain implementation work
+and exhaustive 24-bit RTL traversal close action decode. The bounded execution
+model and RTL capture old-I address generation, the raw immediate, and the
+post-modified I result once; hold address/data and all architectural state over
+arbitrary DMACK-low extensions; and commit only the selected I validity/value
+on the first acknowledged boundary. Eleven directed model checks and 50,035
+deterministic model/RTL clocks cover both DAGs, DAG1 bit reversal, linear and
+invalid circular configurations, every I/M selection, reset cancellation,
+request conflicts, immediate completion, and multi-clock waits.
+Native active-low phases, fetch/event concurrency, and whole-core arbitration
+remain implementation work
 [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
 
 Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded
@@ -322,7 +329,7 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 2 action decode, Type 6, Type 9, Type 18, Type 21, and Type 25 are the class-complete
+Type 2 bounded logical execution, Type 6, Type 9, Type 18, Type 21, and Type 25 are the class-complete
 source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic
 entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
 closed. Type 14 has a bounded semantic entry for 25,648 canonical words while

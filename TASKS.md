@@ -158,6 +158,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
   `tests/test_dm_write_immediate.py`,
+  `tests/test_dm_write_immediate_slice.py`,
   `tests/test_assembler_disassembler.py`,
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
@@ -170,6 +171,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_mode_control_decode.sv`,
   `sim/unit/tb_adsp2100_modify_address_decode.sv`,
   `sim/unit/tb_adsp2100_dm_write_immediate_decode.sv`,
+  `sim/unit/tb_adsp2100_dm_write_immediate_slice.sv`,
   `sim/unit/tb_adsp2100_internal_move_decode.sv`,
   `sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv`,
   `sim/unit/tb_adsp2100_immediate_shift_decode.sv`,
@@ -182,6 +184,7 @@ advance beyond research until a page-level primary citation is added.
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `formal/dm_write_immediate_decode.sby`,
+  `formal/dm_write_immediate_slice.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
@@ -211,8 +214,12 @@ advance beyond research until a page-level primary citation is added.
   entries. Type 2 now has a primary-backed class-complete action record,
   independent decoder, three hand fixtures, exhaustive 24-bit RTL traversal,
   and six model/metadata tests for all 2,097,152 field-defined words. Its
-  160 boundary/selector algebraic forms round trip; its DMACK transaction and
-  completion-only DAG update remain unimplemented.
+  160 boundary/selector algebraic forms round trip. A separate execution
+  model/RTL slice captures old-I address, raw immediate, and next I once;
+  retains them through arbitrary DMACK-low extensions; and commits selected-I
+  post-modification only at acknowledgment. Eleven directed tests and 50,035
+  deterministic model/RTL clocks cover every I/M selection, both DAGs, DAG1
+  bit reversal, reset, conflicts, unknown/invalid DAG state, and waits.
   Type 16 has a bounded semantic entry for 1,792 documented words;
   its 256 unassigned-XOP subencodings fail closed. Type 14 has a bounded
   semantic entry for 25,648 canonical words; 39,888 unresolved or unsupported
@@ -677,8 +684,10 @@ advance beyond research until a page-level primary citation is added.
   A bounded Type 21 slice adds exact I/M/L storage, all DAG1 selections,
   selected-I cycle-end writeback, and 50,124 stateful model/RTL cycles. Type
   12 now attaches every DAG1 I/M selection to a DM transaction, including bit
-  reversal and completion-only post-modification through arbitrary waits.
-- **Unresolved questions:** ordinary data-transfer writeback and stall enables,
+  reversal and completion-only post-modification through arbitrary waits. Type
+  2 adds the same sourced waited/post-modified path for immediate DM writes
+  across 50,035 differential clocks.
+- **Unresolved questions:** remaining direct-transfer writeback and stall enables,
   same-cycle external register writes, alternate banking, multifunction
   ordering, loops, interrupts, and externally visible timing.
 - **Confidence:** CORROBORATED
@@ -700,13 +709,14 @@ advance beyond research until a page-level primary citation is added.
   has a DAG2 configuration in which bit-reverse is structurally ineffective;
   all vectors compare DAG1/DAG2 arithmetic. The bounded Type 21 slice adds all
   DAG2 register selections, exact I/M/L storage, selected-I writeback, and
-  stateful comparison. Type 12 attaches every DAG2 I/M selection to a DM
-  transaction with completion-only post-modification. The bounded Type 19
+  stateful comparison. Type 2 and Type 12 attach every DAG2 I/M selection to
+  immediate and shifter-plus-DM transactions respectively, with
+  completion-only post-modification. The bounded Type 19
   slice now reads exact I4-I7 storage
   without modification, drives a testable PMA-target observation when taken,
   and passes 50,259 model/RTL cycles. The bounded Type 13 path attaches every
   DAG2 I/M selection to a PM data transaction and post-modifies only when its
-  fixed data cycle commits. Other PM and non-Type-12 DM data-bus attachment
+  fixed data cycle commits. Other PM and non-Type-2/12 DM data-bus attachment
   does not exist.
 - **Unresolved questions:** differing register group restrictions and
   simultaneous PM/DM semantics.
@@ -936,13 +946,17 @@ advance beyond research until a page-level primary citation is added.
   formal properties.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ADI-UM-1989 system-interface chapter
-- **Relevant tests:** `tests/test_shifter_dm.py`,
+- **Relevant tests:** `tests/test_dm_write_immediate_slice.py`,
+  `sim/unit/tb_adsp2100_dm_write_immediate_slice.sv`,
+  `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
   `make compute-tests`
-- **Implementation notes:** the Type 12 boundary exposes a distinct logical
+- **Implementation notes:** the Type 2 immediate-write and Type 12
+  multifunction boundaries expose a distinct logical
   14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
   completion, and validity signals. It holds the transaction stable over waits
-  and samples read data only at completion. This is not yet the native
+  and sample read data only at completion. Type 2 adds captured raw immediate
+  data and passes 50,035 state/bus clocks. This is not yet the native
   active-low pin/state wrapper or whole-core arbitration layer.
 - **Unresolved questions:** shared data-bus turnaround and select ordering.
 - **Confidence:** UNKNOWN
@@ -1104,12 +1118,15 @@ advance beyond research until a page-level primary citation is added.
   interrupts, and BR during waits pass trace and liveness tests.
 - **Source references:** ADI-DATABOOK-1987 ADSP-2100 data sheet,
   ADI-UM-1989 system-interface chapter
-- **Relevant tests:** `tests/test_shifter_dm.py`,
+- **Relevant tests:** `tests/test_dm_write_immediate_slice.py`,
+  `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`
-- **Implementation notes:** Type 12 implements the sourced logical DMACK rule:
+- **Implementation notes:** Type 2 and Type 12 implement the sourced logical DMACK rule:
   each low sample extends the transaction by a processor clock, bus outputs
   remain stable, state does not commit, and the first high sample commits all
-  parallel actions. PM waits, interrupt/BR/HALT latching, and physical state-6/
+  parallel actions. The Type 2 differential adds 50,035 clocks of raw
+  immediate writes, both DAGs, and completion-only I updates. PM waits,
+  interrupt/BR/HALT latching, and physical state-6/
   state-7 pin timing remain.
 - **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
   behavior.
@@ -1155,8 +1172,9 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Forty harnesses now pass strict assertion
-  syntax lint, including exact Type 6 immediate-load, bounded Type 15 immediate-shift,
+  result a complete proof. Forty-two harnesses now pass strict assertion
+  syntax lint, including Type 2 action decode and waited logical execution,
+  exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
   bounded Type 12 shifter-plus-DM decode, wait stability, and atomic completion,
   bounded Type 13 shifter-plus-PM decode, fixed-cycle commit, and one-cycle
@@ -1193,7 +1211,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make synth-yosys`, `make synth-quartus`
 - **Implementation notes:** constrained Quartus Cyclone V smoke projects cover
   the condition, ALU, MAC, shifter, DAG, sequencer-flow, and bounded Type
-  10/11/19/20, Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
+  2/10/11/19/20, Type 18, Type 21, Type 25, and Type 26 execution blocks. The Type 18 slice fits in
   46 ALMs and four registers with positive multicorner setup/hold slack and
   zero unconstrained paths. The Type 21 slice fits in 526 ALMs with exactly
   360 architectural DAG data/valid registers, no RAM/DSPs, positive
@@ -1214,6 +1232,12 @@ advance beyond research until a page-level primary citation is added.
   The bounded Type 14 slice fits in 1,032 ALMs and 565 fitted registers with no
   RAM/DSPs, +3.041 ns worst setup, +0.171 ns worst hold, and zero unconstrained
   clocks, ports, or paths.
+  The bounded Type 2 DM-write slice fits in 581 ALMs and 430 fitted registers
+  with no RAM/DSP blocks against a 20 ns standalone constraint. Worst setup is
+  +3.590 ns, worst multicorner hold is +0.165 ns, worst slow-corner Fmax is
+  60.94 MHz, and no clocks, ports, or paths are unconstrained. Constant
+  read/PM outputs and asynchronous-read DAG arrays are expected for this
+  write-only bounded smoke project.
   The bounded Type 12 DM transaction slice fits in 1,704 ALMs and 1,091 fitted
   registers with no RAM/DSPs, +1.377 ns worst setup, +0.166 ns worst
   multicorner hold slack at 21 ns, 50.96 MHz worst slow-corner Fmax, and zero
@@ -1374,8 +1398,7 @@ advance beyond research until a page-level primary citation is added.
 
 The highest-priority unblocked work is connecting the standalone original
 instruction-cache monitor to Type 13 and a native PM phase boundary, replacing
-Type 13's bounded caller-provided cache result; completing Type 2's logical
-DMACK transaction and completion-only DAG update; and constructing the next
+Type 13's bounded caller-provided cache result; constructing the next
 source-closed Type 1/4/5 action graph in `ISA-002`/`ISA-001` and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field
 placement is closed for the printed Appendix A diagrams, but legality,

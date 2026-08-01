@@ -3,7 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 2 action decoder,
+  Type 2 action decoder and waited execution slice,
   Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone instruction cache, stack-control
@@ -14,6 +14,14 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 2 immediate-DM-write
+  slice passes for Cyclone V `5CSEBA6U23I7` at its 20 ns standalone
+  constraint. It uses 581 ALMs and 430 fitted registers with no RAM or DSP
+  blocks. Across four timing models, worst setup slack is +3.590 ns, worst
+  hold slack is +0.165 ns, and worst slow-corner Fmax is 60.94 MHz, with zero
+  unconstrained clocks, ports, or paths. Constant DM-read/PM outputs and
+  asynchronous-read DAG arrays are expected; this is bounded logical-write
+  evidence, not native-pin or MiSTer timing closure.
 - Quartus 17.0.2 full compilation of the standalone instruction cache passes
   for Cyclone V `5CSEBA6U23I7` at its 20 ns constraint. It uses 310 ALMs and
   429 fitted registers with no RAM or DSP blocks. Across four timing models,

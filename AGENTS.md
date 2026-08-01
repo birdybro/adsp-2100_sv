@@ -225,7 +225,8 @@ A commit message must state the engineering change and its verification.
 ## Current architectural status and risk
 
 No integrated fetch/decode/execute instruction core exists. Bounded
-source-backed RTL execution slices now implement all original Type 18 mode
+source-backed RTL execution slices now implement all original Type 2
+immediate-DM-write words, all original Type 18 mode
 controls, all 32 original Type 21 MODIFY selections, exact Type 25 conditional
 MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
@@ -292,10 +293,12 @@ replacement. It preserves authentic invalid data state and passes 50,028
 model/RTL clocks. It is not yet wired to Type 13 or a unified fetch controller;
 the manual's hidden ahead/behind register encoding, self-modifying PM effects,
 and event arbitration remain OQ-008.
-Original Type 2 immediate DM-write action decode is class-complete: all
-2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L tuple.
-Its logical DMACK transaction, completion-only I update, and whole-core
-arbitration are not yet implemented.
+Original Type 2 immediate DM-write execution is bounded and class-complete:
+all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
+tuple. Its logical DM request holds captured address/data over arbitrary
+DMACK-low clocks and commits the selected I only on acknowledgment across
+50,035 model/RTL clocks. Native pin substates, fetch/event concurrency, and
+whole-core arbitration remain unimplemented.
 The bounded Type 8 slice executes documented ALU and fractional-MAC
 computations in parallel with one internal DREG move. Both clauses sample the
 cycle-start selected bank; noncolliding DREG/AR/AF/MR/MF and ASTAT writes

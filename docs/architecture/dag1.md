@@ -47,12 +47,19 @@ regression adds all 16 MSTAT values and 50,112 mixed stateful cycles.
 
 Register selection, I writeback gating, simultaneous data transfers,
 multifunction ordering, alternate-bank interactions, stalls, loops, interrupts,
-and external transaction timing remain outside this function block.
+and external transaction timing remain outside this function block itself.
+The bounded Type 2 slice now uses it for immediate DM writes: all DAG1 I/M
+selections, normal-order post-modification, bit-reversed old-I address output,
+arbitrary DMACK waits, and completion-only selected-I writeback pass directed
+tests and the 50,035-clock model/RTL differential. Physical pin phases and
+whole-core event arbitration remain outside that slice
+[ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
 
 The bounded Type 21 integration slice now supplies the missing stored-register
 selection and writeback path for standalone MODIFY. With `G=0`, it maps the
 two-bit I and M fields to I0–I3 and M0–M3, selects the L corresponding to I,
 uses normal-order I arithmetic even when MSTAT bit-reverse mode is active, and
-writes only the selected I at cycle end. This does not yet attach DAG1 to
-ordinary DM transfers or multifunction instructions
+writes only the selected I at cycle end. Type 12 separately attaches DAG1 to
+shifter-plus-DM transfers. Other direct DM transfers and multifunction
+instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].

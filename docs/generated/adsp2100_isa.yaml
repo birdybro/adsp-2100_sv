@@ -97,7 +97,7 @@
       "encoding_pattern": "101xxxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xe00000",
       "opcode_value": "0xa00000",
-      "status": "COMPLETE_ACTION_DECODE_EXECUTION_PENDING",
+      "status": "COMPLETE_BOUNDED_LOGICAL_EXECUTION_NATIVE_TIMING_PENDING",
       "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
     },

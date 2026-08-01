@@ -9,7 +9,8 @@ VERILATOR ?= verilator
 	reference-check repository-check
 
 test: lint reference-check repository-check decode-tests assembler-tests model-tests \
-	cache-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
+	cache-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests \
+	bus-tests
 	@echo "PASS implemented foundation regression"
 
 lint:
@@ -204,6 +205,12 @@ lint:
 			rtl/core/adsp2100_modify_address_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_dm_write_immediate_decode.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_dm_write_immediate_slice \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_dm_write_immediate_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_modify_address_slice \
 			rtl/core/adsp2100_modify_address_decode.sv \
@@ -943,16 +950,34 @@ mode-tests:
 		echo "SKIP MSTAT-consumer RTL test: Verilator is not installed"; \
 	fi
 
-instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests
+instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
 bus-tests: cache-tests compute-tests
-	@echo "PASS bounded cache, Type 12 DM, and Type 13 PM transaction regressions"
+	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_dm_write_immediate_vectors.py \
+			--output build/dm_write_immediate_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_dm_write_immediate_slice \
+			--top-module tb_adsp2100_dm_write_immediate_slice \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_dm_write_immediate_slice.sv \
+			sim/unit/tb_adsp2100_dm_write_immediate_slice.sv; \
+		build/obj_dm_write_immediate_slice/Vtb_adsp2100_dm_write_immediate_slice; \
+	else \
+		echo "SKIP Type 2 transaction RTL test: Verilator is not installed"; \
+	fi
+	@echo "PASS bounded cache, Type 2/12 DM, and Type 13 PM transaction regressions"
 
 interrupt-tests:
 	@echo "SKIP interrupt tests: interrupt RTL does not exist"
 
-differential: cache-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
+differential: bus-tests dag-tests sequencer-tests register-tests status-tests mode-tests
 	@echo "PASS available bounded model/RTL differential regressions"
 
 fuzz:
@@ -1089,6 +1114,13 @@ formal:
 			--top-module adsp2100_dm_write_immediate_decode_formal \
 			rtl/core/adsp2100_dm_write_immediate_decode.sv \
 			formal/harnesses/adsp2100_dm_write_immediate_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_dm_write_immediate_slice_formal \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_dm_write_immediate_slice.sv \
+			formal/harnesses/adsp2100_dm_write_immediate_slice_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice_formal \
 			rtl/core/adsp2100_stack_control_decode.sv \
@@ -1272,6 +1304,8 @@ formal:
 			formal/modify_address_decode.sby; \
 		sby -f -d build/formal_dm_write_immediate_decode \
 			formal/dm_write_immediate_decode.sby; \
+		sby -f -d build/formal_dm_write_immediate_slice \
+			formal/dm_write_immediate_slice.sby; \
 		sby -f -d build/formal_stack_control_slice \
 			formal/stack_control_slice.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
@@ -1327,6 +1361,8 @@ synth-quartus:
 			synthesis/quartus/shift_move_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_dm_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/dm_write_immediate_slice_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_smoke; \
 		quartus_sh --flow compile \
@@ -1388,6 +1424,7 @@ docs:
 
 clean:
 	@find build -maxdepth 1 -type f -name instruction_cache_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 	@find build -maxdepth 1 -type f -name condition_expected.mem -delete
@@ -1561,6 +1598,9 @@ clean:
 	@if [ -d build/obj_dm_write_immediate_decode ]; then \
 		find build/obj_dm_write_immediate_decode -depth -delete; \
 	fi
+	@if [ -d build/obj_dm_write_immediate_slice ]; then \
+		find build/obj_dm_write_immediate_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_slice ]; then \
 		find build/obj_modify_address_slice -depth -delete; \
 	fi
@@ -1607,6 +1647,9 @@ clean:
 	fi
 	@if [ -d build/quartus_shifter_dm ]; then \
 		find build/quartus_shifter_dm -depth -delete; \
+	fi
+	@if [ -d build/quartus_dm_write_immediate_slice ]; then \
+		find build/quartus_dm_write_immediate_slice -depth -delete; \
 	fi
 	@if [ -d build/quartus_shifter_pm ]; then \
 		find build/quartus_shifter_pm -depth -delete; \
@@ -1688,6 +1731,7 @@ clean:
 		build/formal_divide_sign \
 		build/formal_modify_address_decode \
 		build/formal_dm_write_immediate_decode \
+		build/formal_dm_write_immediate_slice \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \

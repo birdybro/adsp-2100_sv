@@ -12,6 +12,7 @@ Known cases:
 | Case | Current sourced timing |
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
+| Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
@@ -72,6 +73,16 @@ DM-read destination, and selected I. The first acknowledged clock atomically
 commits all three parallel actions. This verifies the sourced logical wait
 contract, not physical sub-cycle setup/hold timing or whole-core PM-fetch and
 event arbitration [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7].
+
+The bounded Type 2 model/RTL slice verifies 50,035 logical clocks. An
+immediately acknowledged write drives the old selected I (bit reversed for
+DAG1 when enabled), drives the raw immediate, and commits the post-modified I
+on that boundary. Every unacknowledged clock retains the captured address,
+immediate, selected-I destination, and next-I validity/value without a write.
+This establishes logical DMACK extension and completion-only post-modification,
+not physical state-6/state-7 pin timing, fetch concurrency, or event
+arbitration [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1,
+and A-6].
 
 The bounded Type 13 model/RTL slice verifies 50,070 logical clocks. A cache
 hit completes the PM-data instruction in one clock. A miss or HALT-forced

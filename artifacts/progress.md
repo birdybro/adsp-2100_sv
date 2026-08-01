@@ -25,8 +25,10 @@ cycle-, or Hard Drivin'-complete
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
-  formal field/same-DAG invariants; waited DM execution and post-modification
-  remain the next bounded increment;
+  formal field/same-DAG invariants; plus a waited logical DM execution model
+  and RTL slice with captured address/immediate, completion-only I
+  post-modification, deterministic differential vectors, stall-stability
+  invariants, and a constrained Cyclone V project;
 - exact Type 6 immediate-to-DREG semantics, assembler/disassembler support,
   exhaustive Python/RTL field decode, both-bank independent state execution,
   and exact SE/MR2/MR1 storage side effects;
@@ -171,11 +173,14 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 444 implemented Python unit checks plus manifest/hash verification;
+- 455 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 2,097,152 Type 2 words decode to exact immediate/G/I/M fields in Python
   and exhaustive RTL traversal; every other 24-bit word is action-free;
+- 50,035 Type 2 model/RTL clocks cover both DAGs, every I/M selection, DAG1
+  bit reversal, immediate and multi-clock DMACK completion, stable captured
+  address/data, completion-only I updates, reset, conflicts, and invalid state;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
   other 24-bit word produces no stack-control action in exhaustive RTL
   simulation;
@@ -271,7 +276,8 @@ outstanding.
   283,996, the Type 10 state slice adds 554,412, the Type 11 state slice adds
   554,309, the Type 19 state slice adds 50,259, the Type 20 slice adds 50,254,
   the phase-aware Type 22 slice adds 50,168 clocks, the Type 23 slice adds
-  50,081 cycles, the Type 24 slice adds 50,109 cycles, the Type 12 slice adds
+  50,081 cycles, the Type 24 slice adds 50,109 cycles, the Type 2 slice adds
+  50,035 state/bus clocks, the Type 12 slice adds
   50,069 state/bus clocks, the Type 13 slice adds 50,070 state/cache/bus
   clocks, and the standalone cache adds 50,028 clocks,
   and the Type 14 state slice adds
@@ -350,6 +356,10 @@ outstanding.
   +0.168 ns worst multicorner hold, 86.81 MHz worst slow-corner Fmax, and no
   unconstrained clocks, ports, or paths against its 20 ns standalone
   constraint;
+- the Type 2 DM-write slice fits in 581 ALMs and 430 fitted registers with no
+  RAM/DSP blocks, +3.590 ns setup, +0.165 ns worst multicorner hold, 60.94 MHz
+  worst slow-corner Fmax, and no unconstrained clocks, ports, or paths against
+  its 20 ns standalone constraint;
 - class-decode, stack-control decode/integration, condition, ALU, MAC, shifter, DAG,
   register-file, CNTR, sequencer-stack, sequencer-integration, status-register,
   status-stack,
@@ -357,7 +367,8 @@ outstanding.
   Type 25 decode/execution plus Type 17 action/state execution
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
-  Type 2, Type 23, Type 24, and instruction-cache invariants (41 total) pass
+  Type 2 action/execution, Type 23, Type 24, and instruction-cache invariants
+  (42 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -372,10 +383,8 @@ outstanding.
 3. Connect the source-bounded 16-entry instruction-cache monitor to Type 13
    and a unified fetch owner, replacing the bounded caller oracle while
    retaining OQ-008 event-interaction limits.
-4. Connect the class-complete Type 2 action decoder to a waited logical DM
-   transaction and completion-only DAG writeback.
-5. Extend the bounded logical DM and PM paths into sourced native pin phases and
+4. Extend the bounded logical DM and PM paths into sourced native pin phases and
    whole-core transaction arbitration.
-6. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
-7. Research and connect interrupt-entry sequencing to the now-composed SSTAT
+5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
+6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

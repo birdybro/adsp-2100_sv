@@ -26,11 +26,13 @@ indirect PMA observation nor requires the selected I to be initialized. The
 50,259-cycle model/RTL comparison checks all four selections and rotating I
 probes. It does not attach PMS/PMRD, cache, fetch, or wait-state phases
 [ADI-UM-1989, printed pp. 4-3, 4-20, 6-13–6-14, A-3].
-The bounded Type 21 integration slice now implements standalone MODIFY
+The bounded Type 21 integration slice implements standalone MODIFY
 selection and stored-I writeback. With `G=1`, it maps the two-bit I and M
 fields to I4–I7 and M4–M7, selects the L corresponding to I, and writes only
-that I at cycle end. PM/DM bus attachment, multifunction updates, and
-wait-state timing remain unimplemented
+that I at cycle end. Type 2 now attaches all DAG2 I/M selections to immediate
+DM writes with stable waited transactions and completion-only
+post-modification; Type 12 separately attaches shifter-plus-DM. Other PM/DM
+attachment and multifunction updates remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
 The bounded Type 13 path now attaches all I4–I7/M4–M7 selections to PM data.
