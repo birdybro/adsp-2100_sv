@@ -18,7 +18,7 @@ Known cases:
 
 | Case | Current sourced timing |
 |---|---|
-| ordinary instruction | one eight-state processor cycle |
+| ordinary instruction | one eight-state processor cycle; the retained bounded fetch client retries PC+1 after shared-owner collision or BR/BG issue inhibition and retires only on the routed state-7 completion |
 | Type 1 ALU/MAC plus DM and PM reads | one processor cycle with full-speed DMACK; computation consumes old operands and both reads complete at cycle end; DMACK-low extends state 7 by whole processor cycles, but the native PM strobe/data behavior during that extension remains OQ-023 |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
 | Type 4 ALU/MAC plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low state-6 sample repeats a complete eight-substate state-seven extension while preserving the captured bus/compute/DAG descriptor, and the qualified state-7-to-state-8 edge atomically commits compute/status, optional read, and selected-I postmodify |
@@ -51,7 +51,7 @@ Known cases:
 | interrupt vectoring | two cycles described, including vector jump |
 | DMACK low | extend state 7 by whole processor cycles until high |
 | HALT during ordinary instruction fetch | asserted active-low input is recognized at state 3; the current cycle completes at state 7-to-8, stopped outputs hold state 8, and a DMACK-high release resumes at state 8-to-1 |
-| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified, and both clients are separately attached to shared PM plus normal BR/BG, while unified client/fetch and combined shared-PM/HALT priority remain open |
+| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified, and the retained ordinary-fetch plus both PM-data clients are each separately attached to shared PM plus normal BR/BG, while unified three-client and combined shared-PM/HALT priority remain open |
 
 Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 5-13–5-16, 6-14–6-15, 6-21, A-4, A-8–A-10]. The Type 26

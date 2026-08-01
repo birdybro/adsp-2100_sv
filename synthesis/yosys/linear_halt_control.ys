@@ -12,6 +12,7 @@ read_verilog -sv rtl/core/adsp2100_sequencer_stacks.sv
 read_verilog -sv rtl/core/adsp2100_status_stack.sv
 read_verilog -sv rtl/core/adsp2100_internal_move_slice.sv
 read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_linear_fetch_client.sv
 read_verilog -sv rtl/core/adsp2100_linear_core_slice.sv
 read_verilog -sv rtl/core/adsp2100_halt_control.sv
 read_verilog -sv rtl/core/adsp2100_linear_halt_control_slice.sv

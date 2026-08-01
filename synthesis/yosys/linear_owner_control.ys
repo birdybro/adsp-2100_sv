@@ -11,15 +11,16 @@ read_verilog -sv rtl/core/adsp2100_counter.sv
 read_verilog -sv rtl/core/adsp2100_sequencer_stacks.sv
 read_verilog -sv rtl/core/adsp2100_status_stack.sv
 read_verilog -sv rtl/core/adsp2100_internal_move_slice.sv
+read_verilog -sv rtl/core/adsp2100_linear_fetch_client.sv
 read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_program_owner_bus.sv
 read_verilog -sv rtl/core/adsp2100_bus_control.sv
 read_verilog -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
-read_verilog -sv rtl/core/adsp2100_linear_fetch_client.sv
-read_verilog -sv rtl/core/adsp2100_linear_core_slice.sv
-read_verilog -sv rtl/core/adsp2100_linear_bus_control_slice.sv
+read_verilog -sv rtl/core/adsp2100_program_owner_bus_control.sv
+read_verilog -sv rtl/core/adsp2100_linear_owner_control_slice.sv
 
-hierarchy -check -top adsp2100_linear_bus_control_slice
-synth -top adsp2100_linear_bus_control_slice
+hierarchy -check -top adsp2100_linear_owner_control_slice
+synth -top adsp2100_linear_owner_control_slice
 check
 stat
-write_json build/yosys_linear_bus_control.json
+write_json build/yosys_linear_owner_control.json

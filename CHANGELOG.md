@@ -8,6 +8,24 @@ semantic versioning after its first release.
 
 ### Added
 
+- An extracted, retained ordinary-fetch architectural client attached to the
+  single shared PM owner and normal BR/BG composition. The compatibility
+  `adsp2100_linear_core_slice` now composes that same client with a private PM
+  controller without changing its prior bounded behavior. A fetch rejected by
+  a raw Type 5/Type 13 collision remains represented by the current
+  instruction and retries PC+1 at a later enabled state-8 boundary; only the
+  routed fetch completion retires it. Six directed tests and 50,003
+  deterministic model/RTL clocks cover 4,247 fetch accepts, 781 retained
+  retries/collisions, 4,246 fetch completions, 62 raw Type 5 and 32 raw Type
+  13 accepts, 94 BR recognitions/resumes, and 3,161 masked grant clocks. The
+  new machine-readable boundary and formal recipe syntax-check, existing
+  linear/BR-BG/HALT regressions remain unchanged, and a fully constrained
+  50 MHz Cyclone V fit uses 1,031 ALMs, 1,072 registers, no RAM/DSP blocks,
+  +8.005 ns worst setup, +0.165 ns worst multicorner hold, 83.37 MHz worst
+  slow-corner Fmax, and zero unconstrained paths. Type 5 and Type 13 remain
+  raw descriptors here; the unified three-client/cache/HALT composition and
+  sourced cross-event priority remain open.
+
 - A bounded Type 5/cache architectural client attached to the single shared
   PM owner and normal BR/BG composition. Captured PM-data and recovery-fetch
   descriptors survive fail-closed collision or issue inhibition and retry at

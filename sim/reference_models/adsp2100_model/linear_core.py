@@ -55,6 +55,25 @@ class LinearCoreCycleResult:
     integration_conflict: bool = False
 
 
+@dataclass(frozen=True)
+class LinearFetchClientCycleResult:
+    """One external-owner boundary for the retained linear-fetch client."""
+
+    state: LinearCoreState
+    issue_boundary: bool = False
+    instruction_setup_accepted: bool = False
+    fetch_request_presented: bool = False
+    fetch_address: ExactWord = ExactWord(14, 0)
+    instruction_issue: bool = False
+    retire_event: bool = False
+    supported_instruction: bool = False
+    unsupported_instruction: bool = False
+    reserved_subencoding: bool = False
+    provisional_source_extension: bool = False
+    phase_conflict: bool = False
+    integration_conflict: bool = False
+
+
 def _instruction_class(
     instruction: ExactWord | _UnknownValue,
     valid: bool,
@@ -78,7 +97,7 @@ def _instruction_class(
     return (False, False)
 
 
-def apply_linear_core_cycle(
+def apply_linear_fetch_client_cycle(
     state: LinearCoreState,
     *,
     reset: bool = False,
@@ -87,14 +106,11 @@ def apply_linear_core_cycle(
     instruction_issue_inhibit: bool = False,
     bus_relinquished: bool = False,
     instruction_setup: tuple[ExactWord, ExactWord] | None = None,
+    pm_request_accepted: bool = False,
+    pm_completion_event: bool = False,
     pmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
-) -> LinearCoreCycleResult:
-    """Apply one logical-phase clock to the bounded linear owner.
-
-    ``instruction_setup`` is a deterministic verification preload containing
-    ``(PC14, opcode24)``. It is admitted only at an idle state-8 boundary and
-    is not an architectural host-loading claim.
-    """
+) -> LinearFetchClientCycleResult:
+    """Apply one clock to the architectural client without a PM controller."""
 
     phase = LogicalPhase(phase)
     if instruction_setup is not None:
@@ -148,28 +164,15 @@ def apply_linear_core_cycle(
         and instruction_setup is None
     )
     fetch_address = state.architecture.pc.incremented()
-    request = (
-        ProgramBusRequest.fetch(fetch_address.value)
-        if fetch_request
-        else None
-    )
-    bus_result = apply_program_bus_cycle(
-        state.bus,
-        reset=reset,
-        phase=phase,
-        phase_advance=phase_advance,
-        request=request,
-        pmd_read_data=pmd_read_data,
-        bus_relinquished=bus_relinquished,
-    )
-    retire_event = bool(state.pending and bus_result.completion_event)
+    retire_event = bool(state.pending and pm_completion_event)
     provisional_source_extension = False
 
     if reset:
-        next_state = LinearCoreState.reset()
+        reset_state = LinearCoreState.reset()
+        next_state = replace(reset_state, bus=state.bus)
     else:
-        next_state = replace(state, bus=bus_result.state)
-        if bus_result.request_accepted:
+        next_state = state
+        if pm_request_accepted:
             next_state = replace(next_state, pending=True)
         if retire_event:
             assert isinstance(state.instruction, ExactWord)
@@ -200,12 +203,13 @@ def apply_linear_core_cycle(
                 pending=False,
             )
 
-    return LinearCoreCycleResult(
+    return LinearFetchClientCycleResult(
         state=next_state,
-        bus=bus_result,
         issue_boundary=issue_boundary,
         instruction_setup_accepted=setup_accepted,
-        instruction_issue=bus_result.request_accepted,
+        fetch_request_presented=fetch_request,
+        fetch_address=fetch_address,
+        instruction_issue=pm_request_accepted,
         retire_event=retire_event,
         supported_instruction=supported,
         unsupported_instruction=unsupported_event,
@@ -213,4 +217,77 @@ def apply_linear_core_cycle(
         provisional_source_extension=provisional_source_extension,
         phase_conflict=phase_conflict,
         integration_conflict=integration_conflict,
+    )
+
+
+def apply_linear_core_cycle(
+    state: LinearCoreState,
+    *,
+    reset: bool = False,
+    phase: LogicalPhase | int = LogicalPhase.STATE_1,
+    phase_advance: bool = True,
+    instruction_issue_inhibit: bool = False,
+    bus_relinquished: bool = False,
+    instruction_setup: tuple[ExactWord, ExactWord] | None = None,
+    pmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
+) -> LinearCoreCycleResult:
+    """Apply one logical-phase clock to the bounded linear owner.
+
+    ``instruction_setup`` is a deterministic verification preload containing
+    ``(PC14, opcode24)``. It is admitted only at an idle state-8 boundary and
+    is not an architectural host-loading claim.
+    """
+
+    phase = LogicalPhase(phase)
+    preview = apply_linear_fetch_client_cycle(
+        state,
+        reset=reset,
+        phase=phase,
+        phase_advance=phase_advance,
+        instruction_issue_inhibit=instruction_issue_inhibit,
+        bus_relinquished=bus_relinquished,
+        instruction_setup=instruction_setup,
+        pmd_read_data=pmd_read_data,
+    )
+    request = (
+        ProgramBusRequest.fetch(preview.fetch_address.value)
+        if preview.fetch_request_presented
+        else None
+    )
+    bus_result = apply_program_bus_cycle(
+        state.bus,
+        reset=reset,
+        phase=phase,
+        phase_advance=phase_advance,
+        request=request,
+        pmd_read_data=pmd_read_data,
+        bus_relinquished=bus_relinquished,
+    )
+    client = apply_linear_fetch_client_cycle(
+        state,
+        reset=reset,
+        phase=phase,
+        phase_advance=phase_advance,
+        instruction_issue_inhibit=instruction_issue_inhibit,
+        bus_relinquished=bus_relinquished,
+        instruction_setup=instruction_setup,
+        pm_request_accepted=bus_result.request_accepted,
+        pm_completion_event=bus_result.completion_event,
+        pmd_read_data=pmd_read_data,
+    )
+    next_state = replace(client.state, bus=bus_result.state)
+
+    return LinearCoreCycleResult(
+        state=next_state,
+        bus=bus_result,
+        issue_boundary=client.issue_boundary,
+        instruction_setup_accepted=client.instruction_setup_accepted,
+        instruction_issue=client.instruction_issue,
+        retire_event=client.retire_event,
+        supported_instruction=client.supported_instruction,
+        unsupported_instruction=client.unsupported_instruction,
+        reserved_subencoding=client.reserved_subencoding,
+        provisional_source_extension=client.provisional_source_extension,
+        phase_conflict=client.phase_conflict,
+        integration_conflict=client.integration_conflict,
     )

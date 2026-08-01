@@ -507,9 +507,16 @@ from .model import (
     sign_extend,
 )
 from .linear_core import (
+    LinearFetchClientCycleResult,
     LinearCoreCycleResult,
     LinearCoreState,
+    apply_linear_fetch_client_cycle,
     apply_linear_core_cycle,
+)
+from .linear_owner_control import (
+    LinearOwnerControlCycleResult,
+    LinearOwnerControlState,
+    apply_linear_owner_control_cycle,
 )
 
 __all__ = [
@@ -617,8 +624,11 @@ __all__ = [
     "InternalMoveSetup",
     "InternalMoveSliceState",
     "LogicalPhase",
+    "LinearFetchClientCycleResult",
     "LinearCoreCycleResult",
     "LinearCoreState",
+    "LinearOwnerControlCycleResult",
+    "LinearOwnerControlState",
     "ImmediateShiftAction",
     "ImmediateShiftCycleResult",
     "ImmediateShiftState",
@@ -831,7 +841,9 @@ __all__ = [
     "compute_shifter",
     "cache_region_contains",
     "mask_to_width",
+    "apply_linear_fetch_client_cycle",
     "apply_linear_core_cycle",
+    "apply_linear_owner_control_cycle",
     "original_base_mask",
     "reverse_address",
     "is_immediate_shift_class",

@@ -1140,7 +1140,10 @@ advance beyond research until a page-level primary citation is added.
   `formal/compute_pm_cache.sby`, `formal/compute_pm_native.sby`,
   `formal/compute_pm_halt.sby`,
   `tests/test_linear_core.py`,
-  `sim/unit/tb_adsp2100_linear_core_slice.sv`, `formal/linear_core.sby`
+  `sim/unit/tb_adsp2100_linear_core_slice.sv`, `formal/linear_core.sby`,
+  `tests/test_linear_owner_control.py`,
+  `sim/unit/tb_adsp2100_linear_owner_control_slice.sv`,
+  `formal/linear_owner_control.sby`
 - **Implementation notes:** keep PM physically/logically distinct from DM.
   The Type 13 slice now exposes a bounded logical PM data/fetch boundary with
   separate 14-bit address, 24-bit read/write data, direction, data-cycle, and
@@ -1232,6 +1235,20 @@ advance beyond research until a page-level primary citation is added.
   slow-corner Fmax, and zero unconstrained paths. A single composition with
   ordinary-fetch, Type 5, and Type 13 architectural clients plus complete
   cross-event priority remains open.
+  The ordinary linear-fetch owner is now extracted into a retained
+  architectural client and attached to the shared selector/BR-BG composition
+  without changing the legacy private-PM wrapper's behavior. A rejected PC+1
+  fetch remains represented by the current instruction and retries at a later
+  enabled state-8 boundary; only routed fetch completion retires the
+  instruction. Six directed tests and 50,003 model/RTL clocks cover 4,247
+  fetch accepts, 781 retries/collisions, 4,246 completions, 62 raw Type 5 and
+  32 raw Type 13 accepts, 94 BR recognitions/resumes, and 3,161 grant clocks.
+  Its formal recipe syntax-checks and a fully constrained 20 ns Cyclone V fit
+  uses 1,031 ALMs and 1,072 registers, no RAM/DSP blocks, +8.005 ns worst
+  setup, +0.165 ns worst multicorner hold, 83.37 MHz worst slow-corner Fmax,
+  and zero unconstrained paths. Type 5 and Type 13 remain raw descriptors in
+  this attachment; a single three-client/cache/HALT composition and sourced
+  cross-event priority remain open.
   A bounded ordinary linear-fetch owner now shares the native PM
   controller with NOP, legal Type 6/7, all 2,256 legal Type 17 internal MOVE
   source/destination pairs, and every Type 18 MODE CONTROL word. It
@@ -1247,7 +1264,7 @@ advance beyond research until a page-level primary citation is added.
   composition now attaches normal BR/BG issue inhibition and PM output masking
   through five tests and 50,003 clocks, including 93 full handshakes; every
   other owner remains outside that result.
-- **Unresolved questions:** architectural request generation/attachment,
+- **Unresolved questions:** unified Type 5/Type 13/fetch request generation,
   branch/loop/interrupt/HALT/TRAP/BR priority, and electrical wrapper
   constraints.
 - **Confidence:** CORROBORATED

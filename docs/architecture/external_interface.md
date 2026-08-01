@@ -91,6 +91,18 @@ blocked requests without inventing storage or priority
 [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
+`adsp2100_linear_owner_control_slice` attaches a retained ordinary-fetch
+architectural client to that same boundary. The client owns its current
+instruction until PC+1 is accepted and the routed fetch completion arrives;
+a fail-closed Type 5/Type 13 collision or BR/BG issue inhibition therefore
+causes a later state-8 retry rather than a dropped instruction. Six directed
+tests and 50,003 independent-model/RTL clocks cover 4,247 accepted fetches,
+781 retries, 4,246 completions, isolated raw Type 5/Type 13 ownership, and 94
+BR recognize/release/resume handshakes. Type 5 and Type 13 are raw descriptors
+in this composition, so the result proves retained ordinary-fetch attachment,
+not whole-core priority [ADI-UM-1989, printed pp. 1-5–1-7, 5-3–5-8,
+Figures 5.3 and 5.5; ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+
 `adsp2100_compute_pm_owner_control_slice` applies the same shared-owner/BR-BG
 boundary to the bounded Type 5 ALU/MAC-plus-PM/cache client. Captured PM-data
 and recovery descriptors retry after fail-closed rejection, only routed Type 5

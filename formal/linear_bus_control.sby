@@ -22,6 +22,7 @@ read -formal -sv rtl/core/adsp2100_internal_move_slice.sv
 read -formal -sv rtl/core/adsp2100_program_bus.sv
 read -formal -sv rtl/core/adsp2100_bus_control.sv
 read -formal -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
+read -formal -sv rtl/core/adsp2100_linear_fetch_client.sv
 read -formal -sv rtl/core/adsp2100_linear_core_slice.sv
 read -formal -sv rtl/core/adsp2100_linear_bus_control_slice.sv
 read -formal -sv formal/harnesses/adsp2100_linear_bus_control_formal.sv
@@ -44,6 +45,7 @@ rtl/core/adsp2100_internal_move_slice.sv
 rtl/core/adsp2100_program_bus.sv
 rtl/core/adsp2100_bus_control.sv
 rtl/wrappers/adsp2100_reset_bus_grant.sv
+rtl/core/adsp2100_linear_fetch_client.sv
 rtl/core/adsp2100_linear_core_slice.sv
 rtl/core/adsp2100_linear_bus_control_slice.sv
 formal/harnesses/adsp2100_linear_bus_control_formal.sv

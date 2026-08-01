@@ -90,6 +90,16 @@ two client attachments deliberately remain separate until ordinary-fetch,
 Type 5, Type 13, and system-event priority can be sourced and verified as one
 processor-level decision.
 
+The ordinary-fetch owner is now also separated into a retained architectural
+client and attached in a third composition. Its current instruction owns the
+unaccepted PC+1 request, so selector collision or BR/BG inhibition cannot lose
+or duplicate architectural work; only the routed fetch completion retires the
+instruction and installs the returned word. The prior bounded linear-core API
+is retained as a compatibility composition of this client with one private PM
+controller. Type 5 and Type 13 remain raw descriptors in the new attachment,
+so this extraction does not yet decide legal priority among all three real
+clients or system events.
+
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete

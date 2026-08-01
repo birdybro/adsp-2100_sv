@@ -16,7 +16,8 @@
   linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
   compositions plus the Type 5/Type 13 native-PM/HALT attachments,
   the shared-PM-owner selector and its normal-BR/BG composition, the
-  attached Type 5/cache and Type 13/cache shared-PM/BR-BG compositions, the
+  attached retained-fetch, Type 5/cache, and Type 13/cache shared-PM/BR-BG
+  compositions, the
   standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
@@ -30,8 +31,19 @@
 - Yosys is not installed in this environment. Original RESET/phase, normal
   BR/BG, standalone HALT sequencing, bounded linear-owner, linear-owner/BR/BG,
   linear-owner/HALT, shared-PM-owner, shared-PM-owner/BR-BG, and Type 5/Type 13
-  native-PM/HALT plus Type 5/Type 13 shared-PM/BR-BG synthesis scripts are wired into
-  `make synth-yosys` for an equipped host.
+  native-PM/HALT plus retained-fetch/Type 5/Type 13 shared-PM/BR-BG synthesis
+  scripts are wired into `make synth-yosys` for an equipped host.
+- Quartus 17.0.2 full compilation of the retained ordinary-fetch/shared-PM/
+  BR-BG attachment passes for Cyclone V `5CSEBA6U23I7`. It uses 1,031 ALMs
+  and 1,072 fitted registers, no block memory, and no DSP blocks. Against its
+  20 ns virtual-pin smoke constraint, worst multicorner setup slack is
+  +8.005 ns, worst hold slack is +0.165 ns, worst slow-corner Fmax is
+  83.37 MHz, and TimeQuest reports zero unconstrained clocks, ports, or paths.
+  Expected warnings are limited to virtual-pin optimization and the Quartus
+  Lite LogicLock license. This qualifies retained fetch retry/routed
+  completion and BR/BG output masking with raw Type 5/Type 13 descriptors;
+  the unified three-client/cache/HALT composition, physical I/O, and
+  whole-core timing closure remain open.
 - Quartus 17.0.2 full compilation of the bounded Type
   5/cache/shared-PM/BR-BG attachment passes for Cyclone V `5CSEBA6U23I7`.
   It uses 1,923 ALMs and 1,756 fitted registers, one DSP and no block memory.

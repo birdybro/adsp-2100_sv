@@ -201,12 +201,14 @@ model/RTL clocks cover all owners, 111 complete handshakes, 80 active
 transactions completed after recognition, 1,417 blocked requests, 3,536
 masked grant clocks, 79 resume-edge accepts, and 530 fail-closed collisions.
 The composition reports a blocked request but deliberately does not store it;
-the attached Type 13/cache client now retains and retries its own rejected
-descriptor without replaying completed data actions. Six directed attachment
-tests and 50,061 model/RTL clocks verify Type 13 data/recovery completion and
-cache fill across 88 BR handshakes. Ordinary fetch and Type 5 architectural
-clients, DM-driver masking, and priority against HALT, TRAP, loops, reset
-release, or interrupts remain outside this bounded result
+the separately attached Type 13/cache, Type 5/cache, and ordinary-fetch
+clients each retain and retry their own rejected descriptor without replaying
+completed architectural work. The ordinary-fetch attachment adds six directed
+tests and 50,003 model/RTL clocks covering 94 BR handshakes, 781 retained
+fetch retries, and 4,246 routed fetch completions. No one composition yet
+contains all three architectural clients. DM-driver masking and priority
+against HALT, TRAP, loops, reset release, or interrupts remain outside these
+bounded results
 [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
@@ -214,8 +216,8 @@ The Type 5/cache client is now attached in a separate composition and likewise
 retains rejected data/recovery work without replaying ALU/MAC/PM/PX/DAG2
 effects. Six directed tests and 50,063 model/RTL clocks cover 78 additional
 BR recognize/release/resume handshakes and 2,727 grant clocks with every PM
-driver masked. A unified composition with both PM-data clients, ordinary
-fetch, and HALT/TRAP/loop/interrupt priority remains open.
+driver masked. A unified composition with both PM-data clients, the retained
+ordinary-fetch client, and HALT/TRAP/loop/interrupt priority remains open.
 
 The machine-readable contract is
 `docs/generated/adsp2100_bus_control.yaml`. Seven directed tests and 50,084

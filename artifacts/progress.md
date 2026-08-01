@@ -19,8 +19,8 @@ scheduling attached independently to the bounded Type 5 and Type 13
 native-PM owners,
 fail-closed shared native-PM transaction ownership for ordinary fetch and the
 Type 5/Type 13 descriptor classes plus normal BR/BG sequencing on that shared
-interface with bounded Type 5/cache and Type 13/cache clients attached in
-separate compositions,
+interface with bounded ordinary-fetch, Type 5/cache, and Type 13/cache clients
+attached in separate compositions,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -29,6 +29,16 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- extracted retained ordinary-fetch architectural client attached to the
+  shared PM owner and normal BR/BG composition, while the prior linear-core
+  API now wraps the same client with a private PM controller; six directed
+  tests and 50,003 model/RTL clocks cover 4,247 fetch accepts, 781 retained
+  retries/collisions, 4,246 routed completions, 62 raw Type 5 and 32 raw Type
+  13 accepts, 94 BR handshakes, and 3,161 masked grant clocks, with a
+  machine-readable contract, formal/Yosys recipes, and a fully constrained
+  1,031-ALM/1,072-register/no-RAM-or-DSP Cyclone V fit; the unified three-
+  client/cache/HALT composition and sourced cross-event priority remain open;
 
 - bounded Type 5/cache architectural client attached to the shared PM owner
   and normal BR/BG composition, retaining rejected PM-data/recovery
@@ -378,7 +388,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 673 distinct Python unit checks plus manifest/hash verification;
+- 679 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -680,7 +690,8 @@ outstanding.
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants
   plus shared-PM-owner mutual-exclusion/routing, normal-BR/BG composition, and
-  attached Type 13 retry/completion/cache/PMDA invariants (71 total)
+  attached Type 5/Type 13/ordinary-fetch retry, completion, cache, and PMDA
+  invariants (73 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -693,10 +704,10 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Attach the bounded ordinary-fetch and verified Type 5 PM-data clients to
-   the fail-closed shared selector beside the now-connected Type 13 client,
-   then compose HALT, DMACK waits, TRAP, interrupts, and reset without
-   inventing priority or weakening the bounded attachments.
+3. Compose the now-separately attached ordinary-fetch, Type 5, and Type 13
+   architectural clients on one shared selector, then compose HALT, DMACK
+   waits, TRAP, interrupts, and reset without inventing priority or weakening
+   the bounded attachments.
 4. Attach reset-time PMA `0x0004` and first fetch only after resolving or
    explicitly bounding OQ-024, then replace the bounded NOP/Type 6/Type 7/
    Type 17/Type 18 owner's deterministic preload and add further source-closed

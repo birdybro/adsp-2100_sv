@@ -1,9 +1,9 @@
 [options]
 mode prove
-depth 24
+depth 48
 
 [engines]
-smtbmc
+smtbmc boolector
 
 [script]
 read -formal -sv rtl/packages/adsp2100_pkg.sv
@@ -19,11 +19,15 @@ read -formal -sv rtl/core/adsp2100_counter.sv
 read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
 read -formal -sv rtl/core/adsp2100_status_stack.sv
 read -formal -sv rtl/core/adsp2100_internal_move_slice.sv
-read -formal -sv rtl/core/adsp2100_program_bus.sv
 read -formal -sv rtl/core/adsp2100_linear_fetch_client.sv
-read -formal -sv rtl/core/adsp2100_linear_core_slice.sv
-read -formal -sv formal/harnesses/adsp2100_linear_core_formal.sv
-prep -top adsp2100_linear_core_formal
+read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv rtl/core/adsp2100_program_owner_bus.sv
+read -formal -sv rtl/core/adsp2100_bus_control.sv
+read -formal -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
+read -formal -sv rtl/core/adsp2100_program_owner_bus_control.sv
+read -formal -sv rtl/core/adsp2100_linear_owner_control_slice.sv
+read -formal -sv formal/harnesses/adsp2100_linear_owner_control_formal.sv
+prep -top adsp2100_linear_owner_control_formal
 
 [files]
 rtl/packages/adsp2100_pkg.sv
@@ -39,7 +43,11 @@ rtl/core/adsp2100_counter.sv
 rtl/core/adsp2100_sequencer_stacks.sv
 rtl/core/adsp2100_status_stack.sv
 rtl/core/adsp2100_internal_move_slice.sv
-rtl/core/adsp2100_program_bus.sv
 rtl/core/adsp2100_linear_fetch_client.sv
-rtl/core/adsp2100_linear_core_slice.sv
-formal/harnesses/adsp2100_linear_core_formal.sv
+rtl/core/adsp2100_program_bus.sv
+rtl/core/adsp2100_program_owner_bus.sv
+rtl/core/adsp2100_bus_control.sv
+rtl/wrappers/adsp2100_reset_bus_grant.sv
+rtl/core/adsp2100_program_owner_bus_control.sv
+rtl/core/adsp2100_linear_owner_control_slice.sv
+formal/harnesses/adsp2100_linear_owner_control_formal.sv

@@ -16,6 +16,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_stack.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_move_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_fetch_client.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_core_slice.sv
 set_global_assignment -name SDC_FILE linear_core_smoke.sdc
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 4

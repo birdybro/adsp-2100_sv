@@ -112,6 +112,16 @@ Type 13 completions, and 78 BR handshakes. A single composition containing
 ordinary-fetch, Type 5, and Type 13 architectural clients plus sourced event
 priority remains open.
 
+The ordinary-fetch architectural owner is also attached in a third separate
+composition. Its current instruction retains the PC+1 request after a
+fail-closed collision or BR/BG issue inhibition, and only the routed fetch
+completion advances PC and installs the returned opcode. Six directed tests
+and 50,003 model/RTL clocks cover 4,247 accepted fetches, 781 retries, 4,246
+completions, 62 raw Type 5 and 32 raw Type 13 accepts, 94 BR handshakes, and
+3,161 masked grant clocks. This closes retained fetch request/completion
+routing on the shared electrical owner; the legal three-client priority and
+unified cache/system-event composition remain open.
+
 ## Type 13/cache attachment
 
 The bounded `adsp2100_shifter_pm_native_slice` admits architectural issue and

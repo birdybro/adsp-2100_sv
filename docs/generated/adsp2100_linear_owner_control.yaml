@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "status": "BOUNDED_RETAINED_ORDINARY_FETCH_SHARED_PM_AND_BR_BG_ATTACHMENT",
+  "architectural_client": "LINEAR_NOP_TYPE6_TYPE7_TYPE17_TYPE18_FETCH_OWNER",
+  "other_requesters": ["RAW_TYPE_5_DESCRIPTOR", "RAW_TYPE_13_DESCRIPTOR"],
+  "collision_effect": "FETCH_CLIENT_RETAINS_CURRENT_INSTRUCTION_AND_RETRIES_PC_PLUS_1_AT_A_LATER_STATE_8_BOUNDARY",
+  "completion_routing": "ONLY_FETCH_OWNER_COMPLETION_RETIRES_THE_LINEAR_CLIENT",
+  "bus_request_effect": "ACTIVE_FETCH_COMPLETES_THEN_FUTURE_REQUESTS_ARE_INHIBITED",
+  "grant_effect": "ALL_NATIVE_PM_OUTPUT_ENABLES_ARE_MASKED",
+  "sources": [
+    "ADI-UM-1989 printed pp. 1-5 through 1-7",
+    "ADI-UM-1989 printed pp. 2-6 through 2-7 and 4-20 through 4-30",
+    "ADI-UM-1989 printed pp. 5-3 through 5-8, Figures 5.3 and 5.5",
+    "ADI-DATABOOK-1987 printed pp. 2-33 through 2-39"
+  ],
+  "excluded_claims": [
+    "TYPE5_ARCHITECTURAL_CLIENT",
+    "TYPE13_ARCHITECTURAL_CLIENT",
+    "LEGAL_COLLISION_PRIORITY",
+    "HALT_TRAP_INTERRUPT_OR_LOOP_PRIORITY",
+    "DM_BUS_COMPOSITION",
+    "WHOLE_CORE_EXECUTION"
+  ],
+  "confidence": "VERIFIED_PRIMARY_BOUNDED"
+}
