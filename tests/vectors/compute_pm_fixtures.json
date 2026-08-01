@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "fixtures": [
+    {
+      "id": "TYPE5-ALU-READ-FIELD-FIXTURE",
+      "statement": "AR = AX0 + AY0, AX0 = PM(I4, M7);",
+      "opcode": "0x526003",
+      "fields": {"D": 0, "Z": 0, "AMF": 19, "YOP": 0, "XOP": 0, "DREG": 0, "I": 0, "M": 3},
+      "citation": "ADI-UM-1989 printed pp. 6-3–6-7 and printed pp. A-1, A-5–A-11"
+    },
+    {
+      "id": "TYPE5-ALU-WRITE-FIELD-FIXTURE",
+      "statement": "PM(I7, M4) = AR, AR = AX0 + AY0;",
+      "opcode": "0x5a60ac",
+      "fields": {"D": 1, "Z": 0, "AMF": 19, "YOP": 0, "XOP": 0, "DREG": 10, "I": 3, "M": 0},
+      "citation": "ADI-UM-1989 printed pp. 6-5–6-7 and printed pp. A-1, A-5–A-11"
+    }
+  ],
+  "derivation": "Independent manual field concatenation; not assembler-generated"
+}

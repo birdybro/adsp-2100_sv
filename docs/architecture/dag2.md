@@ -34,9 +34,15 @@ DM writes with stable waited transactions and completion-only
 post-modification; Type 12 separately attaches shifter-plus-DM. Type 4 action
 execution selects every DAG2 I/M pair and matching L-by-I relationship, holds
 the logical DM transaction across waits, and commits selected-I postmodify only
-at acknowledgment. Its native attachment and other PM/DM multifunction
-updates remain unimplemented
+at acknowledgment. Its native attachment preserves that completion rule.
+Other PM/DM multifunction updates remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
+
+Original Type 5 action decode fixes every I/M selection to DAG2: the two-bit
+fields map to I4-I7 and M4-M7, with L selected by I. All sixteen I/M pairs are
+covered exhaustively. The execution-time old-I address, post-modification,
+cache recovery, and native PM attachment remain unimplemented for Type 5
+[ADI-UM-1989, printed pp. 3-1–3-7, 6-3–6-7, A-1, A-7–A-8].
 
 The bounded Type 13 path now attaches all I4–I7/M4–M7 selections to PM data.
 The access observes old I, chooses L by I, never applies DAG1 bit reversal,

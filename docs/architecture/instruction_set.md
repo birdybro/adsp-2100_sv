@@ -23,6 +23,7 @@ independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
 loads, the source-closed Type 15
 immediate-shift subset, 2,034,688 source-closed Type 4 action words,
+1,017,344 source-closed Type 5 action words,
 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
@@ -81,6 +82,21 @@ state-8 issue, full-cycle DMACK extension, read/write phases, and state-7
 atomic completion. Fetch, shared-bus arbitration, and events are not yet
 implemented [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 5-9–5-12,
 6-1, 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
+
+Type 5 encodes `0101 D Z AMF[4:0] YOP[1:0] XOP[2:0] DREG[3:0]
+I[1:0] M[1:0]`. Its memory action always uses DAG2, mapping the local I/M
+fields to I4-I7 and M4-M7. D selects a 24-bit PM read or write; a read loads
+the upper sixteen bits into DREG and the lower eight into PX, while a write
+uses cycle-start `{DREG,PX}`. AMF zero is the documented no-operation and
+therefore yields a PM-only transfer. The complete 1,048,576-word class
+partitions into 1,017,344 supported actions and 31,232 prohibited PM-read
+destination collisions. The independent decoder, two manual-derived field
+fixtures, assembler/disassembler paths, exhaustive 24-bit RTL traversal,
+formal assertions, and constrained Cyclone V fit close action selection.
+Architectural state execution, cache recovery, native PM phases, and
+whole-core ownership remain open
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-6–3-7, 6-3–6-7,
+6-12–6-13, A-1, A-5–A-11].
 
 Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded
 computational registers. Its exact format is `0100 DATA[19:4] DREG[3:0]`, so

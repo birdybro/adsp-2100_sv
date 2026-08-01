@@ -334,6 +334,64 @@ def _assemble_compute_dm(statement: str) -> int | None:
     )
 
 
+def _assemble_compute_pm(statement: str) -> int | None:
+    """Assemble the source-closed original Type 5 action forms."""
+
+    read = re.fullmatch(
+        r"(?:(.+)\s*,\s*)?([A-Z][A-Z0-9]*)\s*=\s*"
+        r"PM\s*\(\s*I([4-7])\s*,\s*M([4-7])\s*\)",
+        statement,
+    )
+    write = re.fullmatch(
+        r"PM\s*\(\s*I([4-7])\s*,\s*M([4-7])\s*\)\s*=\s*"
+        r"([A-Z][A-Z0-9]*)(?:\s*,\s*(.+))?",
+        statement,
+    )
+    if read is None and write is None:
+        return None
+
+    registers = _dreg_name_to_code()
+    if read is not None:
+        computation, register_name, i_text, m_text = read.groups()
+        write_direction = 0
+    else:
+        assert write is not None
+        i_text, m_text, register_name, computation = write.groups()
+        write_direction = 1
+    if register_name not in registers:
+        return None
+
+    if computation is None:
+        z, amf, yop, xop = 0, 0, 0, 0
+    else:
+        computation_fields = _compute_operation_codes().get(computation)
+        if computation_fields is None:
+            return None
+        z, amf, yop, xop = computation_fields
+
+    register = registers[register_name]
+    if not write_direction and amf != 0 and _compute_move_destination_collision(
+        z,
+        amf,
+        register,
+    ):
+        raise AssemblyError(
+            "Type 5 read destination collides with computation destination"
+        )
+
+    return (
+        0x500000
+        | (write_direction << 19)
+        | (z << 18)
+        | (amf << 13)
+        | (yop << 11)
+        | (xop << 8)
+        | (register << 4)
+        | ((int(i_text) & 3) << 2)
+        | (int(m_text) & 3)
+    )
+
+
 @lru_cache(maxsize=1)
 def _if_condition_codes() -> dict[str, int]:
     database = load_condition_database()
@@ -872,6 +930,9 @@ def assemble_statement(source: str) -> AssembledWord:
     compute_dm = _assemble_compute_dm(statement)
     if compute_dm is not None:
         return AssembledWord(compute_dm)
+    compute_pm = _assemble_compute_pm(statement)
+    if compute_pm is not None:
+        return AssembledWord(compute_pm)
     shifter_dm = _assemble_shifter_dm(statement)
     if shifter_dm is not None:
         return AssembledWord(shifter_dm)

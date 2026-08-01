@@ -6,7 +6,8 @@
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
-bounded semantic instruction decode including Type 4 native-DM execution,
+bounded semantic instruction decode including Type 4 native-DM execution and
+the exhaustive Type 5 ALU/MAC-plus-PM action boundary,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -35,6 +36,12 @@ cycle-, or Hard Drivin'-complete
   clocks, and a timing-clean 1,677-ALM/one-DSP Standard Fit; plus a separate
   six-test/50,082-clock native phase attachment and timing-clean
   1,693-ALM/1,226-register/one-DSP Standard Fit;
+- complete original Type 5 action partition: 1,017,344 supported
+  ALU/MAC-plus-PM or PM-only words and 31,232 prohibited read collisions, with
+  two manual-derived fixtures, independent model, exact RTL decoder,
+  algebraic/raw toolchain paths, bounded formal assertions, exhaustive 24-bit
+  RTL traversal, and a fully constrained 51-ALM Cyclone V decoder fit; state,
+  cache recovery, native PM phases, and whole-core ownership remain open;
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
@@ -449,7 +456,8 @@ outstanding.
   Type 2 action/execution, Type 23, Type 24, standalone instruction-cache, and
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
   Type 13, Type 2, Type 4, and Type 12 native-attachment invariants, plus
-  Type 4 action-decode and waited logical-execution invariants (51 total)
+  Type 4 action-decode and waited logical-execution plus Type 5 action-decode
+  invariants (52 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -462,8 +470,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Construct primary-backed Type 5 and Type 1 multifunction action graphs,
-   beginning with Type 5 ALU/MAC-plus-PM.
+3. Attach the source-closed Type 5 action graph to selected-bank compute,
+   DAG2/PX state, cache recovery, and native PM phases; then construct Type 1.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

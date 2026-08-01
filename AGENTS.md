@@ -233,6 +233,7 @@ Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, 108,640 source-closed Type 12 shifter-plus-DM words,
 54,320 source-closed Type 13 shifter-plus-PM words,
 2,034,688 source-closed Type 4 action words with waited logical DM execution,
+1,017,344 source-closed Type 5 ALU/MAC-plus-PM action words,
 all 1,792 source-backed Type 16 conditional shifter words, 476,672
 source-closed Type 8 ALU/MAC-plus-DREG words, all 32,768 Type 9
 conditional ALU/MAC words, 507,904 source-closed Type 10 direct JUMP/CALL
@@ -258,6 +259,13 @@ controller: issue occurs only at state 8-to-1, waits repeat a complete native
 substate sequence, and compute/status/read/I effects commit only at qualified
 state 7-to-8 completion. Whole-core fetch, multi-owner arbitration, and event
 handling remain open.
+Type 5 field/action decode is independently closed for its complete
+1,048,576-word class: 1,017,344 memory-only or ALU/MAC-plus-PM actions are
+supported and 31,232 same-destination PM-read collisions fail closed. DAG2
+I/M selection, AMF-zero behavior, old-value PM writes through `{DREG,PX}`,
+and PM-read `{DREG,PX}` destinations are source-backed at the action boundary.
+State execution, cache recovery, native PM phases, and whole-core ownership
+remain open.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at

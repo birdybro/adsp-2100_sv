@@ -8,7 +8,7 @@
 | 2 | DM write immediate | `101xxxxxxxxxxxxxxxxxxxxx` | `0xe00000` | `0xa00000` | VERIFIED_PRIMARY |
 | 3 | direct DM read/write | `100xxxxxxxxxxxxxxxxxxxxx` | `0xe00000` | `0x800000` | CORROBORATED |
 | 4 | ALU/MAC plus DM read/write | `011xxxxxxxxxxxxxxxxxxxxx` | `0xe00000` | `0x600000` | VERIFIED_PRIMARY |
-| 5 | ALU/MAC plus PM read/write | `0101xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x500000` | CORROBORATED |
+| 5 | ALU/MAC plus PM read/write | `0101xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x500000` | VERIFIED_PRIMARY |
 | 6 | data-register immediate | `0100xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x400000` | CORROBORATED |
 | 7 | non-data-register immediate | `0011xxxxxxxxxxxxxxxxxxxx` | `0xf00000` | `0x300000` | CORROBORATED |
 | 8 | ALU/MAC plus internal data-register move | `00101xxxxxxxxxxxxxxxxxxx` | `0xf80000` | `0x280000` | CORROBORATED |

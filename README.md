@@ -64,6 +64,9 @@ external instruction fills, plus a source-backed eight-state native PM
 pin-phase attachment that captures the Type 13 descriptor at state 8-to-1,
 commits its architectural effects at state 7-to-8, performs back-to-back miss
 recovery, preserves select continuity, and masks relinquished bus outputs,
+an exhaustive original Type 5 action boundary with 1,017,344 ALU/MAC-plus-PM
+or PM-only words and 31,232 explicit read collisions (state/cache/native-PM
+execution pending),
 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented

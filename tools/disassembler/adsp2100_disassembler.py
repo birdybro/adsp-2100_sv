@@ -369,6 +369,64 @@ def _try_disassemble_compute_dm(opcode: int) -> Disassembly | None:
     return Disassembly(opcode, text, "TYPE_04_BOUNDED_ACTION", True)
 
 
+def _try_disassemble_compute_pm(opcode: int) -> Disassembly | None:
+    """Disassemble the source-closed original Type 5 action forms."""
+
+    if opcode & 0xF00000 != 0x500000:
+        return None
+    write = bool((opcode >> 19) & 1)
+    z = (opcode >> 18) & 1
+    amf = (opcode >> 13) & 0x1F
+    yop = (opcode >> 11) & 3
+    xop = (opcode >> 8) & 7
+    register = (opcode >> 4) & 0xF
+    i_address = 4 | ((opcode >> 2) & 3)
+    m_address = 4 | (opcode & 3)
+
+    if not write and amf != 0 and _compute_move_destination_collision(
+        z,
+        amf,
+        register,
+    ):
+        return Disassembly(
+            opcode,
+            f".WORD 0x{opcode:06x};",
+            "UNSUPPORTED_TYPE_05_DESTINATION_COLLISION",
+            False,
+        )
+
+    names = _dreg_code_to_name()
+    memory = f"PM(I{i_address}, M{m_address})"
+    if amf == 0:
+        if z != 0 or yop != 0 or xop != 0:
+            return Disassembly(
+                opcode,
+                f".WORD 0x{opcode:06x};",
+                "TYPE_05_BOUNDED_ALIAS",
+                True,
+            )
+        text = (
+            f"{memory} = {names[register]};"
+            if write
+            else f"{names[register]} = {memory};"
+        )
+    else:
+        computation = _format_compute_operation(z, amf, yop, xop)
+        if computation is None:
+            return Disassembly(
+                opcode,
+                f".WORD 0x{opcode:06x};",
+                "TYPE_05_BOUNDED_ALIAS",
+                True,
+            )
+        text = (
+            f"{memory} = {names[register]}, {computation};"
+            if write
+            else f"{computation}, {names[register]} = {memory};"
+        )
+    return Disassembly(opcode, text, "TYPE_05_BOUNDED_ACTION", True)
+
+
 def _try_disassemble_conditional_compute(opcode: int) -> Disassembly | None:
     if opcode & 0xF800F0 != 0x200000:
         return None
@@ -653,6 +711,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     compute_dm = _try_disassemble_compute_dm(opcode)
     if compute_dm is not None:
         return compute_dm
+    compute_pm = _try_disassemble_compute_pm(opcode)
+    if compute_pm is not None:
+        return compute_pm
     shifter_dm = _try_disassemble_shifter_dm(opcode)
     if shifter_dm is not None:
         return shifter_dm

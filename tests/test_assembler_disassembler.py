@@ -345,6 +345,123 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement("AX0 = DM(I0, M4);")
 
+    def test_type_5_hand_fixtures_and_memory_only_forms_round_trip(self) -> None:
+        fixture_data = json.loads(
+            (ROOT / "tests/vectors/compute_pm_fixtures.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for fixture in fixture_data["fixtures"]:
+            opcode = int(fixture["opcode"], 16)
+            self.assertEqual(
+                assemble_statement(fixture["statement"]).value,
+                opcode,
+            )
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, "TYPE_05_BOUNDED_ACTION")
+            self.assertEqual(decoded.text, fixture["statement"])
+
+        dregs = [
+            name
+            for name, _ in sorted(
+                _dreg_name_to_code().items(),
+                key=lambda item: item[1],
+            )
+        ]
+        count = 0
+        for i_local in range(4):
+            for m_local in range(4):
+                memory = f"PM(I{4 + i_local}, M{4 + m_local})"
+                for register, name in enumerate(dregs):
+                    for write in range(2):
+                        statement = (
+                            f"{memory} = {name};"
+                            if write
+                            else f"{name} = {memory};"
+                        )
+                        opcode = (
+                            0x500000
+                            | (write << 19)
+                            | (register << 4)
+                            | (i_local << 2)
+                            | m_local
+                        )
+                        self.assertEqual(
+                            assemble_statement(statement).value,
+                            opcode,
+                        )
+                        decoded = disassemble_word(opcode)
+                        self.assertEqual(decoded.text, statement)
+                        self.assertEqual(
+                            decoded.classification,
+                            "TYPE_05_BOUNDED_ACTION",
+                        )
+                        count += 1
+        self.assertEqual(count, 512)
+
+    def test_type_5_canonical_compute_forms_and_aliases(self) -> None:
+        dregs = [
+            name
+            for name, _ in sorted(
+                _dreg_name_to_code().items(),
+                key=lambda item: item[1],
+            )
+        ]
+        count = 0
+        for z in range(2):
+            for amf in range(1, 32):
+                for yop in range(4):
+                    for xop in range(8):
+                        computation = _format_compute_operation(z, amf, yop, xop)
+                        if computation is None:
+                            continue
+                        for write in range(2):
+                            register = (z + amf + yop + xop + write) & 0xF
+                            collision = not write and not z and (
+                                (amf >= 0x10 and register == 0xA)
+                                or (amf < 0x10 and register in (0xB, 0xC, 0xD))
+                            )
+                            if collision:
+                                continue
+                            memory = "PM(I4, M7)"
+                            statement = (
+                                f"{memory} = {dregs[register]}, {computation};"
+                                if write
+                                else f"{computation}, {dregs[register]} = {memory};"
+                            )
+                            opcode = (
+                                0x500003
+                                | (write << 19)
+                                | (z << 18)
+                                | (amf << 13)
+                                | (yop << 11)
+                                | (xop << 8)
+                                | (register << 4)
+                            )
+                            self.assertEqual(
+                                assemble_statement(statement).value,
+                                opcode,
+                            )
+                            decoded = disassemble_word(opcode)
+                            self.assertEqual(decoded.text, statement)
+                            count += 1
+        self.assertEqual(count, 2_649)
+
+        for opcode in (0x540100, 0x520100):
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, "TYPE_05_BOUNDED_ALIAS")
+            self.assertEqual(assemble_statement(decoded.text).value, opcode)
+
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AR = AX0 + AY0, AR = PM(I4, M4);")
+        self.assertFalse(disassemble_word(0x5260A0).implemented)
+        self.assertEqual(
+            disassemble_word(0x5260A0).classification,
+            "UNSUPPORTED_TYPE_05_DESTINATION_COLLISION",
+        )
+
     def test_all_canonical_conditional_compute_forms_round_trip(self) -> None:
         from tools.assembler.adsp2100_assembler import _format_compute_operation
 
@@ -824,8 +941,8 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             "RESERVED_UNSHOWN",
         )
         self.assertEqual(
-            disassemble_word(0x500001).classification,
-            "UNIMPLEMENTED_TYPE_05",
+            disassemble_word(0x800000).classification,
+            "UNIMPLEMENTED_TYPE_03",
         )
 
 

@@ -1,7 +1,8 @@
 # Multifunction execution semantics
 
 **Status: key ordering rule verified; bounded Type 4 ALU/MAC-plus-DM,
-Type 8 ALU/MAC-plus-DREG, Type 12 shifter-plus-DM, Type 13
+Type 5 ALU/MAC-plus-PM action decode, Type 8 ALU/MAC-plus-DREG,
+Type 12 shifter-plus-DM, Type 13
 shifter-plus-PM/cache, and Type 14 shifter-plus-DREG forms integrated**
 
 All computational register reads take their values at the beginning of a cycle
@@ -62,6 +63,27 @@ completion to the logical client. Six directed tests and 50,082 additional
 model/RTL clocks cover reads, old-value writes, memory-only actions, waits,
 reset cancellation, off-boundary controls, late ACK, and relinquishment.
 Instruction fetch, multiple DM owners, and event arbitration remain open.
+
+## Bounded Type 5 action decode
+
+Original Type 5 mirrors the single-memory ALU/MAC action restrictions of
+Type 4 but fixes the memory space and address generator to PM and DAG2. Its
+fields are fixed `0101`, direction D, result selector Z, AMF/YOP/XOP, one
+memory DREG, and local I/M selectors mapping to I4-I7/M4-M7. AMF zero is a
+PM-only transfer. A PM read writes DREG from PMD23-8 and PX from PMD7-0; a PM
+write reads old `{DREG,PX}`. A read targeting AR while a result-register ALU
+operation writes AR, or MR0/MR1/MR2 while a result-register MAC operation
+writes MR, is unsupported. The corresponding store overlap is legal because
+the PM word uses cycle-start values
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-6–3-7, 6-3–6-7,
+Tables 6.1–6.2, A-1, A-5–A-11].
+
+Independent Python and synthesizable RTL decoders exhaustively partition all
+1,048,576 class words into 1,017,344 source-closed actions and 31,232 read
+collisions. Two hand-concatenated fixtures, canonical and raw toolchain
+round trips, a depth-one assertion harness, and a constrained Cyclone V fit
+verify this action boundary. No Type 5 state, cache-recovery, native-PM, or
+whole-core execution claim is made yet.
 
 ## Bounded Type 8 execution
 
@@ -208,7 +230,7 @@ arbitration remain open under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap execution for Types 1, 4, and 5;
+- source/destination overlap execution for Types 1 and 5;
 - old store value versus new computation result execution outside Types 12 and 13;
 - dual PM/DM loads and independent DAG post-modifies;
 - status from the computation visible only to the next cycle;

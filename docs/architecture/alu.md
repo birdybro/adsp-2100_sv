@@ -47,6 +47,11 @@ bounded Type 4, Type 8, and Type 9 slices, ALU multifunction execution remains
 excluded. Type 23 DIVQ and Type 24
 DIVS are implemented in separate bounded execution slices.
 
+The Type 5 action decoder covers every ALU AMF/X/Y/Z selection paired with
+one PM transfer and rejects AR/PM-read double destinations. This is decode
+evidence only; no Type 5 ALU state or PM/cache execution is claimed
+[ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-7].
+
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover
 `0`, `1`, `-1`, `0x7fff`, `0x8000`, carry/borrow, both overflow directions,

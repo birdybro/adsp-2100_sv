@@ -56,6 +56,14 @@ AMF zero retains memory-only transfers. Exhaustive model and RTL checks close
 this field/action partition, not stateful or bus execution
 [ADI-UM-1989, printed pp. 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
 
+Type 5 has mask/value `0xf00000`/`0x500000`. D, Z, AMF, YOP, XOP, DREG, I,
+and M occupy bits 19 through 0 without gaps; I/M always map to DAG2. Its
+source-backed destination rule partitions all 1,048,576 class words into
+1,017,344 bounded actions and 31,232 prohibited PM-read/computation
+destination collisions. AMF zero retains PM-only transfers. Exhaustive model
+and RTL checks close action decode; state/cache/native-PM execution remains
+open [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-11].
+
 The 19 finite abbreviation tables for AMF, data registers, DAG selectors,
 stack controls, jump/return types, shifter functions, and X/Y/Z operands are
 now fully transcribed in `docs/generated/adsp2100_isa_fields.yaml`

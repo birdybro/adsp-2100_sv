@@ -28,6 +28,7 @@
     "docs/generated/adsp2100_conditional_return_slice.yaml",
     "docs/generated/adsp2100_conditional_trap_slice.yaml",
     "docs/generated/adsp2100_compute_dm.yaml",
+    "docs/generated/adsp2100_compute_pm.yaml",
     "docs/generated/adsp2100_shifter_dm_slice.yaml",
     "docs/generated/adsp2100_shifter_pm_slice.yaml",
     "docs/generated/adsp2100_divide_quotient_slice.yaml",
@@ -98,7 +99,7 @@
       "encoding_pattern": "101xxxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xe00000",
       "opcode_value": "0xa00000",
-      "status": "COMPLETE_BOUNDED_LOGICAL_EXECUTION_NATIVE_TIMING_PENDING",
+      "status": "COMPLETE_BOUNDED_NATIVE_DM_EXECUTION",
       "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
     },
@@ -118,7 +119,7 @@
       "encoding_pattern": "011xxxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xe00000",
       "opcode_value": "0x600000",
-      "status": "COMPLETE_BOUNDED_LOGICAL_EXECUTION_NATIVE_PENDING",
+      "status": "COMPLETE_BOUNDED_NATIVE_DM_EXECUTION",
       "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed pp. 6-3–6-7, 6-12–6-13, A-1, and A-5–A-11"
     },
@@ -128,9 +129,9 @@
       "encoding_pattern": "0101xxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xf00000",
       "opcode_value": "0x500000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
-      "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
+      "status": "COMPLETE_BOUNDED_ACTION_DECODE_EXECUTION_PENDING",
+      "confidence": "VERIFIED_PRIMARY",
+      "source_citation": "ADI-UM-1989 printed pp. 2-6–2-7, 2-18, 3-6–3-7, 6-3–6-7, 6-12–6-13, A-1, and A-5–A-11"
     },
     {
       "original_type": 6,

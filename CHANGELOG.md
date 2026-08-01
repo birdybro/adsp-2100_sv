@@ -8,6 +8,12 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original Type 5 ALU/MAC-plus-PM action database,
+  independent exhaustive decoder, two hand-derived field fixtures,
+  algebraic/raw assembler-disassembler paths, portable exact RTL decoder,
+  formal assertions, exhaustive 24-bit traversal, and a constrained Cyclone V
+  decoder project.
+
 - A bounded original Type 4/native-DM composition in structurally independent
   Python and portable SystemVerilog. It accepts only at state 8-to-1, reuses
   the sourced state-6 DMACK/full-cycle wait controller, and commits
@@ -354,6 +360,11 @@ semantic versioning after its first release.
 
 ### Fixed
 
+- Moved the assembler/disassembler legal-but-unimplemented sentinel from
+  newly supported Type 5 to still-unimplemented Type 3. The distinction from
+  reserved-unshown encodings remains tested; no expected opcode behavior was
+  weakened.
+
 - Scoped the Type 4/native-DM wait-state commit assertion outside the
   synchronous reset pre-edge. The native pins remain masked immediately, while
   the retained bus state clears on the reset clock edge as the independent
@@ -388,6 +399,16 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- All 1,048,576 Type 5 words partition into 1,017,344 source-closed
+  ALU/MAC-plus-PM or PM-only actions and 31,232 prohibited read-destination
+  collisions. Seven model/schema tests, two independent fixtures, 512
+  canonical memory-only forms, 2,649 representative compute forms, raw
+  aliases, exhaustive RTL decode, and strict formal syntax lint pass.
+- Quartus full compilation closes the Type 5 combinational decoder at 20 ns
+  on Cyclone V: 51 ALMs, no registers/RAM/DSPs, +12.323 ns worst setup,
+  +4.281 ns worst hold, 130.26 MHz worst slow-corner Fmax, and no
+  unconstrained paths.
 
 - Type 4/native-DM attachment passes six directed tests and 50,082 connected
   model/RTL clocks spanning memory-only and ALU/MAC reads/writes, old-value
@@ -856,6 +877,11 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Recorded the exact Type 5 PM/DAG2 fields, AMF-zero PM-only behavior,
+  `{DREG,PX}` transfer packing, old-value store ordering, read collision rule,
+  objective action counts, and the boundary between closed decode and open
+  state/cache/native-PM execution.
+
 - Updated the Type 4 execution, memory, wait-state, cycle, confidence,
   verification, synthesis, and backlog records to distinguish the closed
   bounded native client from still-open whole-core ownership and event timing.
@@ -1034,6 +1060,10 @@ semantic versioning after its first release.
   arbitration and empty-stack effects remain explicitly outside this boundary.
 
 ### Known Issues
+
+- Type 5 action legality and toolchain support are source-closed, but selected-
+  bank compute state, DAG2 postmodify, PX effects, cache recovery, native PM
+  phases, and whole-core ownership are not yet attached.
 
 - Type 4 now has selected-register/DAG state, waited logical DM execution, and
   a separately verified native eight-state attachment, but fetch, shared-DM

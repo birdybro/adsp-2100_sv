@@ -46,6 +46,14 @@ from .compute_dm_native import (
     ComputeDMNativeState,
     apply_compute_dm_native_cycle,
 )
+from .compute_pm import (
+    COMPUTE_PM_CLASS_MASK,
+    COMPUTE_PM_CLASS_VALUE,
+    ComputePMAction,
+    compute_pm_unsupported_reason,
+    decode_compute_pm,
+    is_compute_pm_class,
+)
 from .conditional_compute import (
     CONDITIONAL_COMPUTE_CLASS_MASK,
     CONDITIONAL_COMPUTE_CLASS_VALUE,
@@ -425,6 +433,9 @@ __all__ = [
     "ComputeDMNativeState",
     "ComputeDMPending",
     "ComputeDMState",
+    "COMPUTE_PM_CLASS_MASK",
+    "COMPUTE_PM_CLASS_VALUE",
+    "ComputePMAction",
     "COMPUTE_MOVE_CLASS_MASK",
     "COMPUTE_MOVE_CLASS_VALUE",
     "ComputeMoveAction",
@@ -609,6 +620,7 @@ __all__ = [
     "decode_divide_quotient",
     "decode_divide_sign",
     "decode_compute_dm",
+    "decode_compute_pm",
     "decode_compute_move",
     "decode_mr_saturation",
     "decode_mode_control",
@@ -630,6 +642,7 @@ __all__ = [
     "is_conditional_shift_class",
     "is_conditional_compute_class",
     "is_compute_dm_class",
+    "is_compute_pm_class",
     "is_compute_move_class",
     "is_direct_jump_class",
     "is_divide_quotient_class",
@@ -645,6 +658,7 @@ __all__ = [
     "apply_sequencer_slice_cycle",
     "compute_alu",
     "compute_dm_unsupported_reason",
+    "compute_pm_unsupported_reason",
     "compute_move_unsupported_reason",
     "compute_dag",
     "decode_dm_write_immediate",

@@ -165,6 +165,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
   `tests/test_shifter_pm.py`,
   `tests/test_compute_move.py`, `tests/test_compute_dm.py`,
+  `tests/test_compute_pm.py`,
   `tests/test_direct_jump.py`,
   `sim/unit/tb_adsp2100_decode.sv`,
   `sim/unit/tb_adsp2100_stack_control_decode.sv`,
@@ -182,6 +183,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_shifter_pm_decode.sv`,
   `sim/unit/tb_adsp2100_compute_move_decode.sv`,
   `sim/unit/tb_adsp2100_compute_dm_decode.sv`,
+  `sim/unit/tb_adsp2100_compute_pm_decode.sv`,
   `sim/unit/tb_adsp2100_direct_jump_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
@@ -192,6 +194,7 @@ advance beyond research until a page-level primary citation is added.
   `formal/conditional_shift.sby`,
   `formal/shift_move.sby`, `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
   `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
+  `formal/compute_pm_decode.sby`,
   `formal/direct_jump.sby`,
   `make decode-tests`
 - **Implementation notes:** the database enumerates all 30 original top-level
@@ -300,6 +303,13 @@ advance beyond research until a page-level primary citation is added.
   pass. A separate six-test, 50,082-clock native attachment comparison now
   closes state-8 issue, full-cycle waits, state-7 atomic completion, reset,
   late ACK, off-boundary controls, and relinquishment for this bounded client.
+  Type 5 action selection now exhaustively partitions all 1,048,576 class
+  words into 1,017,344 source-closed ALU/MAC-plus-PM or PM-only actions and
+  31,232 prohibited read-destination collisions. Two independent
+  manual-derived fixtures, seven model/schema checks, canonical/raw
+  assembler-disassembler paths, exhaustive 24-bit RTL traversal, a formal
+  harness, and a fully constrained 51-ALM Cyclone V decoder fit pass. State,
+  cache-recovery, native-PM, and whole-core execution remain open.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -376,6 +386,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make compute-tests`, `tests/test_shift_move.py`,
   `tests/test_shifter_dm.py`, `tests/test_compute_move.py`,
   `tests/test_compute_dm.py`, `tests/test_shifter_pm.py`,
+  `tests/test_compute_pm.py`,
   `sim/unit/tb_adsp2100_shift_move_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_pm_slice.sv`,
@@ -383,6 +394,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_compute_dm_slice.sv`, `formal/shift_move.sby`,
   `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
   `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
+  `formal/compute_pm_decode.sby`,
   `formal/compute_dm.sby`
 - **Implementation notes:** the bounded Type 14 action graph implements the
   first complete source-backed parallel execution boundary. Shifter X and
@@ -415,8 +427,12 @@ advance beyond research until a page-level primary citation is added.
   DAGs, memory-only aliases, old-value overlap, reset, conflicts, and unknowns.
   The separate Type 4/native-DM composition adds six directed checks and
   50,082 clocks for state-8 issue, documented pin phases, complete-cycle waits,
-  and state-7-only compute/read/I commit. Type 1/5 action graphs, PM/DM
-  concurrency, shared-owner arbitration, and whole-core events remain.
+  and state-7-only compute/read/I commit. Type 5 now has a source-closed
+  action graph for all computation/PM/DAG2 fields, AMF-zero PM-only moves,
+  old `{DREG,PX}` stores, PM-read packing, and same-destination rejection;
+  all 1,048,576 words partition in Python and RTL. Type 5 state/cache/native
+  execution, the Type 1 dual-memory action graph, PM/DM concurrency,
+  shared-owner arbitration, and whole-core events remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, and result forwarding outside the bounded old-value rule
   remain high-risk.
@@ -519,6 +535,9 @@ advance beyond research until a page-level primary citation is added.
   with the eight-state bus controller; six directed tests and 50,082 clocks
   cover issue/commit phase alignment, native strobes, waits, reset, late ACK,
   off-boundary rejection, and relinquishment without transliterating RTL.
+  A separate Type 5 action model closes all ALU/MAC/PM/DAG2 fields and the
+  read-destination collision partition across seven directed/exhaustive
+  checks. It deliberately has no state/cache/native-PM execution yet.
   A structurally separate Type 13 transaction model captures old shifter,
   DREG, PX, and DAG2 state; performs the fixed logical PM data action; and
   distinguishes same-cycle next-fetch cache hits from exactly one external
@@ -580,6 +599,11 @@ advance beyond research until a page-level primary citation is added.
   preserves field-valid aliases as raw `.WORD`, rejects cross-DAG syntax,
   and rejects compute/read destination collisions while allowing the
   documented same-register write overlap.
+  Type 5 accepts PM-only and computation-plus-PM forms using DAG2 syntax,
+  round trips 512 canonical memory-only forms plus 2,649 representative
+  canonical compute forms and two hand-derived fixtures, preserves
+  field-valid aliases as raw `.WORD`, rejects DAG1 syntax, and rejects
+  compute/read destination collisions while allowing old-value write overlap.
   Type 9 round trips all 21,920 uniquely spellable conditional/unconditional
   computations, preserves every field-valid alias with raw `.WORD` syntax,
   and includes two hand-derived primary examples. Type 10 accepts all 507,904
@@ -1309,7 +1333,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Fifty-one harnesses now pass strict assertion
+  result a complete proof. Fifty-two harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 immediate-load, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
@@ -1320,6 +1344,7 @@ advance beyond research until a page-level primary citation is added.
   replacement invariants,
   bounded Type 4 ALU/MAC-plus-DM wait stability and atomic completion plus
   native issue/completion attachment and stalled-descriptor stability,
+  exhaustive Type 5 ALU/MAC-plus-PM action selection and collision exclusion,
   bounded Type 8 ALU/MAC-plus-DREG execution,
   class-complete bounded Type 9 conditional ALU/MAC execution,
   bounded Type 10 direct JUMP/CALL decode and state execution,
@@ -1379,6 +1404,10 @@ advance beyond research until a page-level primary citation is added.
   1,693 ALMs and 1,226 registers with one DSP and no RAM at 25 ns; worst setup
   is +1.121 ns, worst hold is +0.167 ns, worst slow-corner Fmax is 41.88 MHz,
   and no clock, port, or path is unconstrained. Whole-core timing remains open.
+  The combinational Type 5 action decoder fits in 51 ALMs with no registers,
+  RAM, or DSP blocks at 20 ns. Worst multicorner setup is +12.323 ns, worst
+  hold is +4.281 ns, worst slow-corner Fmax is 130.26 MHz, and no path is
+  unconstrained. This is decode-only evidence.
   The bounded Type 2 DM-write slice fits in 581 ALMs and 430 fitted registers
   with no RAM/DSP blocks against a 20 ns standalone constraint. Worst setup is
   +3.590 ns, worst multicorner hold is +0.165 ns, worst slow-corner Fmax is
@@ -1552,13 +1581,14 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is constructing the
-primary-backed Type 1 and Type 5 multifunction action graphs, beginning with
-Type 5 ALU/MAC-plus-PM because its source/destination legality can reuse the
-now-qualified compute and PM boundaries without inventing dual-bus ordering.
+The highest-priority unblocked implementation work is connecting the now
+source-closed Type 5 ALU/MAC-plus-PM action graph to selected-bank compute,
+DAG2, PX packing, the instruction cache, and the fixed PM data/recovery
+boundary. The Type 1 dual-memory action graph follows once Type 5 establishes
+the single-PM compute ordering without inventing dual-bus arbitration.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
-reference. Field placement, Type 4 action legality, waited logical execution,
-and its separate native attachment are closed at a bounded client boundary,
-while whole-core integration and the remaining multifunction classes are not.
+reference. Field placement, Type 4 execution/native attachment, and Type 5
+action legality are closed at bounded boundaries, while Type 5 execution,
+whole-core integration, and the remaining multifunction classes are not.
 `TIME-001` must be completed before architectural execution RTL is permitted
 to claim cycle accuracy.

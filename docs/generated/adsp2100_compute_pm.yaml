@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "SOURCE_CLOSED_TYPE_5_ALU_MAC_PLUS_PM_ACTION_DECODE",
+  "decode": {
+    "original_type": 5,
+    "opcode_mask": "0xf00000",
+    "opcode_value": "0x500000",
+    "fields": {
+      "D_DIRECTION_WRITE": [19, 19],
+      "Z_RESULT_DESTINATION": [18, 18],
+      "AMF_ALU_MAC_FUNCTION": [17, 13],
+      "YOP_COMPUTE_SOURCE": [12, 11],
+      "XOP_COMPUTE_SOURCE": [10, 8],
+      "DREG_PM_SOURCE_OR_DESTINATION": [7, 4],
+      "I4_TO_I7_LOCAL": [3, 2],
+      "M4_TO_M7_LOCAL": [1, 0]
+    },
+    "class_words": 1048576,
+    "source_closed_words": 1017344,
+    "read_destination_collision_words": 31232,
+    "amf_zero": "PM_ONLY_MOVE_WITH_COMPUTATION_FIELDS_IGNORED"
+  },
+  "parallel_actions": {
+    "cycle_start_reads": [
+      "SELECTED_BANK_COMPUTE_OPERANDS_IF_AMF_NONZERO",
+      "SELECTED_BANK_PM_WRITE_DREG_IF_WRITE",
+      "PX_IF_WRITE",
+      "SELECTED_DAG2_I_M_L"
+    ],
+    "completion_writes": [
+      "ALU_OR_MAC_DESTINATION_AND_STATUS_IF_AMF_NONZERO",
+      "PM_READ_DREG_UPPER_16_AND_PX_LOWER_8_IF_READ",
+      "POSTMODIFIED_SELECTED_I4_TO_I7"
+    ],
+    "pm_read_collision_rule": "COMPUTE_AND_PM_READ_MUST_NOT_WRITE_THE_SAME_DREG",
+    "pm_write_overlap_rule": "LEGAL_BECAUSE_WRITE_DATA_USES_CYCLE_START_DREG_AND_PX",
+    "base_instruction_cycles": 1,
+    "conditional": false
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
+    "ADI-UM-1989 printed pp. 3-6–3-7",
+    "ADI-UM-1989 printed pp. 6-1 and 6-3–6-7, Tables 6.1–6.2",
+    "ADI-UM-1989 printed pp. 6-12–6-13, Table 6.7",
+    "ADI-UM-1989 printed pp. A-1 and A-5–A-11"
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "tests": {
+    "python": "tests/test_compute_pm.py",
+    "hand_fixtures": "tests/vectors/compute_pm_fixtures.json",
+    "tool_round_trip": "tests/test_assembler_disassembler.py",
+    "rtl_decode": "sim/unit/tb_adsp2100_compute_pm_decode.sv",
+    "formal_decode": "formal/compute_pm_decode.sby",
+    "quartus_decode": "synthesis/quartus/compute_pm_decode_smoke.qpf"
+  },
+  "unresolved": [
+    "PM_CACHE_AND_RECOVERY_EXECUTION",
+    "NATIVE_PM_PHASE_ATTACHMENT",
+    "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_AND_BUS_ARBITRATION",
+    "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
+  ]
+}
