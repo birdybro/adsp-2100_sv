@@ -469,6 +469,12 @@ semantic versioning after its first release.
 
 ### Verified
 
+- Sixteen integrated-model foundation tests and the complete `make test`
+  regression pass after composing linear NOP/Type 6/Type 7 execution with the
+  corrected PC+1 fetch trace. Strict Verilator/text lint passes; the 60 formal
+  recipes remain syntax-only and Yosys synthesis remains skipped because
+  SymbiYosys/Yosys are unavailable.
+
 - All 4,194,304 Type 1 words decode as source-closed parallel actions with
   fixed DAG1 DM and DAG2 PM reads, DD/PD input-register destinations, implicit
   AR/MR computation destinations, and AMF-zero dual fetch. Six model/schema
