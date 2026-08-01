@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `e2722dc`
+**Latest verified engineering commit:** `dcc1b8a`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -11,7 +11,7 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
-bounded steady-state NOP/Type 6/Type 7/Type 18 ordinary-fetch ownership,
+bounded steady-state NOP/Type 6/Type 7/Type 17/Type 18 ordinary-fetch ownership,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 3, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -21,13 +21,14 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
-- bounded steady-state native linear owner for NOP, legal Type 6/7, and every
-  Type 18 MODE CONTROL word,
+- bounded steady-state native linear owner for NOP, legal Type 6/7, all 2,256
+  legal Type 17 internal MOVE pairs, and every Type 18 MODE CONTROL word,
   executing at the current PC while the native PM controller fetches PC+1,
   with state-8 issue, state-7 atomic action/PC/next-word retirement,
-  fail-closed unsupported words, ten directed checks, 53,427 differential
-  clocks including all 256 Type 18 encodings, formal assertions, a machine-
-  readable contract, and a fully constrained Cyclone V fit;
+  fail-closed unsupported words, twelve directed checks, 52,763 differential
+  clocks including every legal Type 17 pair and all 256 Type 18 encodings,
+  an observable OQ-016 provisional-source retirement pulse, formal assertions,
+  a machine-readable contract, and a fully constrained Cyclone V fit;
 - required repository layout and autonomous-agent governance;
 - lawful cache-only reference workflow with content and SHA-256 validation;
 - initial source-precedence, exact-device, and cycle-model ADRs;
@@ -88,8 +89,8 @@ cycle-, or Hard Drivin'-complete
   exhaustive Python/RTL partitioning, shared exact-width state, selected-bank
   SB and CNTR/count-stack effects, 50,299 differential clocks, a formal
   harness, and a fully constrained Cyclone V fit;
-- bounded top-level model integration for NOP, legal Type 6/7, and all Type 18
-  MODE CONTROL instructions:
+- bounded top-level model integration for NOP, legal Type 6/7, known-source
+  legal Type 17 internal MOVE, and all Type 18 MODE CONTROL instructions:
   the executing-PC state action, wrapped PC increment, and overlapped PC+1
   program fetch now share one fixed instruction boundary; synthetic ordinary
   PM-fetch waits and active-loop contexts fail closed;
@@ -260,7 +261,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 604 distinct Python unit checks plus manifest/hash verification;
+- 608 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -285,7 +286,9 @@ outstanding.
 - all 4,096 Type 17 class words partition into exactly 2,256 legal moves and
   1,840 reserved/read-only-destination subencodings; all other program words
   are action-free in exhaustive RTL simulation; all 4,512 legal pair/bank
-  executions and 59,430 stateful model/RTL cycles pass;
+  executions and 59,430 stateful model/RTL cycles pass; the bounded linear
+  owner additionally executes all 2,256 legal pairs after complete state
+  initialization and exposes OQ-016 narrow-source use at retirement;
 - all 1,048,576 Type 6 words decode to exact immediate/DREG fields in both
   Python and exhaustive RTL traversal; 50,204 selected-bank model/RTL cycles
   pass with no PM-data or DM activity;
@@ -391,6 +394,7 @@ outstanding.
   cache boundary adds 50,086 clocks, the native PM pin-phase boundary adds
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
+  the bounded Type 6/7/17/18 linear owner adds 52,763 phase clocks,
   the Type 2/native-DM attachment adds 50,027 clocks,
   the Type 12/native-DM attachment adds 50,064 clocks,
   and the Type 14 state slice adds
@@ -513,7 +517,7 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/18 linear fetch owner (61 total)
+  the bounded steady-state Type 6/7/17/18 linear fetch owner (61 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -526,8 +530,9 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Extend the bounded NOP/Type 6/Type 7/Type 18 linear owner with source-closed
-   non-memory classes, then implement reset first-fetch and PM ownership.
+3. Replace the bounded NOP/Type 6/Type 7/Type 17/Type 18 owner's deterministic
+   preload with sourced reset first-fetch and PM ownership, then add further
+   source-closed non-memory classes.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.
