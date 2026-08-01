@@ -1872,6 +1872,20 @@ register-tests:
 			rtl/core/adsp2100_register_file.sv \
 			sim/unit/tb_adsp2100_register_writeback.sv; \
 		build/obj_register_writeback/Vtb_adsp2100_register_writeback; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_architectural_state \
+			--top-module tb_adsp2100_architectural_state \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
+			sim/unit/tb_adsp2100_architectural_state.sv; \
+		build/obj_architectural_state/Vtb_adsp2100_architectural_state; \
 		$(PYTHON) tools/reference/generate_internal_move_slice_vectors.py \
 			--output build/internal_move_slice_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -3146,6 +3160,9 @@ clean:
 	fi
 	@if [ -d build/obj_internal_move_slice ]; then \
 		find build/obj_internal_move_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_architectural_state ]; then \
+		find build/obj_architectural_state -depth -delete; \
 	fi
 	@if [ -d build/obj_direct_dm_slice ]; then \
 		find build/obj_direct_dm_slice -depth -delete; \

@@ -39,7 +39,10 @@ cycle-, or Hard Drivin'-complete
   fetch/shared-PM regressions pass, strict lint is clean, and the re-fit uses
   808 ALMs/892 registers/no RAM or DSP at 50 MHz with +5.503 ns setup,
   +0.168 ns worst multicorner hold, 68.98 MHz worst slow-corner Fmax, and zero
-  unconstrained paths; direct compute/DAG action ports and unified cache/PM
+  unconstrained paths; the owner now exposes and directly tests parallel
+  DREG, ALU/MAC/shifter, DAG-I, automatic-status, and mode-control actions
+  with cycle-start/cycle-end visibility, bank isolation, conflict
+  preservation, and reset suppression; fetched compute and unified cache/PM
   client state remain open;
 
 - extracted retained ordinary-fetch architectural client attached to the

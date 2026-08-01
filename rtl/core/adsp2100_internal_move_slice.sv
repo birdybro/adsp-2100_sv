@@ -62,6 +62,16 @@ module adsp2100_internal_move_slice (
     logic       state_write_data_valid;
     logic       state_invalid_move_write;
     logic       alternate_bank_unused;
+    logic       bit_reverse_unused;
+    logic       overflow_latch_unused;
+    logic       saturate_ar_unused;
+    logic [15:0] dreg_read_unused;
+    logic [15:0] af_unused;
+    logic [15:0] mf_unused;
+    logic [39:0] mr_unused;
+    logic [7:0] se_unused;
+    logic [4:0] sb_unused;
+    logic [31:0] sr_unused;
     logic       unused_observation;
 
     function automatic logic selector_present (
@@ -134,6 +144,47 @@ module adsp2100_internal_move_slice (
         .read_data_o(source_data_o),
         .probe_code_i(probe_code_i),
         .probe_data_o(probe_data_o),
+        .dreg_read_address_i(4'h0),
+        .dreg_read_data_o(dreg_read_unused),
+        .dreg_write_enable_1_i(1'b0),
+        .dreg_write_address_1_i(4'h0),
+        .dreg_write_data_1_i(16'h0000),
+        .dreg_write_enable_2_i(1'b0),
+        .dreg_write_address_2_i(4'h0),
+        .dreg_write_data_2_i(16'h0000),
+        .alu_write_enable_i(1'b0),
+        .alu_destination_feedback_i(1'b0),
+        .alu_result_i(16'h0000),
+        .mac_write_enable_i(1'b0),
+        .mac_destination_feedback_i(1'b0),
+        .mac_result_i(40'h0000000000),
+        .shifter_sr_write_enable_i(1'b0),
+        .shifter_sr_result_i(32'h00000000),
+        .shifter_se_write_enable_i(1'b0),
+        .shifter_se_result_i(8'h00),
+        .shifter_sb_write_enable_i(1'b0),
+        .shifter_sb_result_i(5'h00),
+        .dag_i_write_enable_i(1'b0),
+        .dag_i_write_address_i(3'b000),
+        .dag_i_write_data_i(14'h0000),
+        .dag_i_write_result_valid_i(1'b0),
+        .mode_sr_i(2'b00),
+        .mode_br_i(2'b00),
+        .mode_ol_i(2'b00),
+        .mode_as_i(2'b00),
+        .alu_status_write_enable_i(1'b0),
+        .alu_az_i(1'b0),
+        .alu_an_i(1'b0),
+        .alu_av_i(1'b0),
+        .alu_ac_i(1'b0),
+        .alu_as_write_enable_i(1'b0),
+        .alu_as_i(1'b0),
+        .divide_status_write_enable_i(1'b0),
+        .divide_aq_i(1'b0),
+        .mac_status_write_enable_i(1'b0),
+        .mac_mv_i(1'b0),
+        .shifter_status_write_enable_i(1'b0),
+        .shifter_ss_i(1'b0),
         .invalid_move_write_o(state_invalid_move_write),
         .internal_conflict_o(internal_conflict_o),
         .count_stack_push_o(count_stack_push_o),
@@ -148,14 +199,25 @@ module adsp2100_internal_move_slice (
         .cntr_valid_o(cntr_valid_o),
         .px_o(px_o),
         .sstat_o(sstat_o),
-        .alternate_bank_o(alternate_bank_unused)
+        .alternate_bank_o(alternate_bank_unused),
+        .bit_reverse_o(bit_reverse_unused),
+        .overflow_latch_o(overflow_latch_unused),
+        .saturate_ar_o(saturate_ar_unused),
+        .af_o(af_unused),
+        .mf_o(mf_unused),
+        .mr_o(mr_unused),
+        .se_o(se_unused),
+        .sb_o(sb_unused),
+        .sr_o(sr_unused)
     );
 
     assign unused_observation = ^{
         unused_destination_group, unused_destination_index,
         unused_destination_present, unused_destination_writable,
         unused_source_selector_valid, state_invalid_move_write,
-        alternate_bank_unused
+        alternate_bank_unused, bit_reverse_unused, overflow_latch_unused,
+        saturate_ar_unused, dreg_read_unused, af_unused, mf_unused,
+        mr_unused, se_unused, sb_unused, sr_unused
     };
 
 `ifndef SYNTHESIS

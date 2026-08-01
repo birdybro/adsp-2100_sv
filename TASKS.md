@@ -1006,7 +1006,9 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_compute_move.py`,
   `formal/mode_slice.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`,
-  `formal/load_non_dreg_immediate.sby`, `formal/immediate_shift.sby`,
+  `formal/load_non_dreg_immediate.sby`,
+  `sim/unit/tb_adsp2100_architectural_state.sv`,
+  `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`, `formal/shift_move.sby`,
   `formal/compute_move.sby`
 - **Implementation notes:** the exact banked set is primary-verified. The
@@ -1047,9 +1049,14 @@ advance beyond research until a page-level primary citation is added.
   `adsp2100_architectural_state` boundary; Type 17 is a compatibility action
   wrapper around it. The preservation regression passes 44 focused model
   tests, 59,430 Type 17 clocks, 150,654 dependent Type 3/6/7 clocks, and the
-  existing linear-owner compositions. Direct computational-unit, DAG-update,
-  and interrupt/sequencer action ports remain to be exposed before the Type 5
-  and Type 13 clients can share this owner.
+  existing linear-owner compositions. The owner now exposes one additional
+  cycle-start DREG read, two parallel DREG writes, ALU/MAC/shifter result
+  actions, DAG-I update, ALU/divide/MAC/shifter status actions, four direct
+  mode controls, and all computational/MSTAT-consumer observations. A focused
+  RTL boundary test proves old-read/new-write timing, three-way DREG
+  writeback, bank isolation, computational and status effects, DAG update,
+  local collision preservation, and reset suppression. The first fetched
+  compute client and interrupt/sequencer actions remain to be attached.
 - **Unresolved questions:** full instruction/multifunction legality, operand
   and result decode connectivity, interrupt/context interactions, OQ-014
   real-device behavior for illegal collisions, and OQ-015

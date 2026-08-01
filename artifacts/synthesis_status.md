@@ -3,6 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
+  shared architectural-state execution boundary,
   original RESET/logical-phase owner,
   normal BR/BG phase controller and RESET-time native-pin wrapper,
   Type 1 dual-read action decoder,

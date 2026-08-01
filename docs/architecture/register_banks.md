@@ -154,6 +154,19 @@ Complete instruction and multifunction legality, operand/result decode
 connectivity, and interrupt/context interaction remain unimplemented. M16
 therefore remains `IMPLEMENTING`.
 
+The shared `adsp2100_architectural_state` owner exposes the execution-facing
+ports already implemented by the independently tested register, DAG, and
+status primitives. In addition to the complete general-register move
+selector, clients can make a third cycle-start DREG read; request two more
+parallel DREG writes; commit ALU, MAC, or one shifter result; commit a DAG I
+update; update ALU/divide/MAC/shifter flags; and apply all four mode-control
+actions. The owner gates every direct state-changing action during RESET and
+exports AF, MF, MR, SE, SB, SR, and the MSTAT bank/BR/OL/AS consumers. This is
+an integration boundary, not a new claim about legal instruction
+combinations: the decoders remain responsible for presenting only sourced
+action bundles [ADI-UM-1989, printed pp. 2-6–2-20, 4-20–4-25, 5-13,
+6-4–6-10, A-2, A-5–A-11].
+
 ## Objective evidence
 
 - `tests/test_register_banks.py` has 14 directed tests covering unknown
@@ -166,6 +179,12 @@ therefore remains `IMPLEMENTING`.
   all 4,096 three-read address combinations in each bank, adds boundary and
   seeded-random legal writes, clocks collision cases, and verifies that the
   next cycle sees unchanged state.
+- `sim/unit/tb_adsp2100_architectural_state.sv` directly checks the shared
+  owner's three cycle-start reads, three noncolliding DREG writes, primary and
+  alternate AF isolation, MR/SR/SE/SB destinations, automatic ASTAT updates,
+  mode outputs, DAG-I completion, local conflict preservation, and RESET
+  suppression. The exhaustive primitive comparisons remain the independent
+  evidence for each storage block beneath this composition.
 - `formal/registers.sby` states exact collision detection, conflict-state
   preservation, narrow-extension, MR consistency, and every unit-specific
   writeback property. The harness passes assertion lint; proof execution

@@ -21,8 +21,15 @@ semantic versioning after its first release.
   source, and a fully constrained 50 MHz Cyclone V re-fit uses 808 ALMs, 892
   registers, no RAM/DSP blocks, +5.503 ns worst setup, +0.168 ns worst
   multicorner hold, 68.98 MHz worst slow-corner Fmax, and no unconstrained
-  paths. This is a shared-state foundation only: direct ALU/MAC/shifter/DAG
-  action ports and a single cache serving all real PM clients remain open.
+  paths. The owner now also exposes a third cycle-start DREG read, two
+  parallel DREG write actions, ALU/MAC/shifter result actions, DAG-I update,
+  automatic ALU/divide/MAC/shifter status actions, all four mode controls,
+  computational feedback/result observations, and MSTAT consumer outputs.
+  A direct RTL boundary test proves cycle-start/cycle-end visibility,
+  three-way DREG writes, selected-bank isolation, every computational-unit
+  destination family, ASTAT/MSTAT side effects, DAG update, local collision
+  preservation, and reset suppression. No fetched compute client or single
+  cache serving every real PM client is claimed yet.
 
 - An extracted, retained ordinary-fetch architectural client attached to the
   single shared PM owner and normal BR/BG composition. The compatibility

@@ -2,10 +2,10 @@
 
 // Shared original-ADSP-2100 architectural state boundary.
 //
-// This first extracted boundary deliberately exposes the complete general
-// register selector used by Type 17 and by deterministic integration setup.
-// Computational-unit and memory-action ports will be added at this owner,
-// rather than by instantiating another private register/DAG/status bank.
+// This boundary exposes the complete general-register selector used by Type
+// 17 and deterministic setup together with execution-facing DREG,
+// computational-unit, DAG-I, status, and mode actions. Memory transactions
+// and sequencer/interrupt actions remain separate clients of this owner.
 module adsp2100_architectural_state (
     input  logic        clk_i,
     input  logic        reset_i,
@@ -19,6 +19,55 @@ module adsp2100_architectural_state (
     output logic [15:0] read_data_o,
     input  logic [5:0]  probe_code_i,
     output logic [15:0] probe_data_o,
+
+    // Parallel execution actions. These ports expose the already-verified
+    // register, DAG, and status primitives through this single state owner.
+    // All reads observe cycle-start state; accepted writes become visible
+    // after the active edge.
+    input  logic [3:0]  dreg_read_address_i,
+    output logic [15:0] dreg_read_data_o,
+    input  logic        dreg_write_enable_1_i,
+    input  logic [3:0]  dreg_write_address_1_i,
+    input  logic [15:0] dreg_write_data_1_i,
+    input  logic        dreg_write_enable_2_i,
+    input  logic [3:0]  dreg_write_address_2_i,
+    input  logic [15:0] dreg_write_data_2_i,
+
+    input  logic        alu_write_enable_i,
+    input  logic        alu_destination_feedback_i,
+    input  logic [15:0] alu_result_i,
+    input  logic        mac_write_enable_i,
+    input  logic        mac_destination_feedback_i,
+    input  logic [39:0] mac_result_i,
+    input  logic        shifter_sr_write_enable_i,
+    input  logic [31:0] shifter_sr_result_i,
+    input  logic        shifter_se_write_enable_i,
+    input  logic [7:0]  shifter_se_result_i,
+    input  logic        shifter_sb_write_enable_i,
+    input  logic [4:0]  shifter_sb_result_i,
+
+    input  logic        dag_i_write_enable_i,
+    input  logic [2:0]  dag_i_write_address_i,
+    input  logic [13:0] dag_i_write_data_i,
+    input  logic        dag_i_write_result_valid_i,
+
+    input  logic [1:0]  mode_sr_i,
+    input  logic [1:0]  mode_br_i,
+    input  logic [1:0]  mode_ol_i,
+    input  logic [1:0]  mode_as_i,
+    input  logic        alu_status_write_enable_i,
+    input  logic        alu_az_i,
+    input  logic        alu_an_i,
+    input  logic        alu_av_i,
+    input  logic        alu_ac_i,
+    input  logic        alu_as_write_enable_i,
+    input  logic        alu_as_i,
+    input  logic        divide_status_write_enable_i,
+    input  logic        divide_aq_i,
+    input  logic        mac_status_write_enable_i,
+    input  logic        mac_mv_i,
+    input  logic        shifter_status_write_enable_i,
+    input  logic        shifter_ss_i,
 
     output logic        invalid_move_write_o,
     output logic        internal_conflict_o,
@@ -34,7 +83,16 @@ module adsp2100_architectural_state (
     output logic        cntr_valid_o,
     output logic [7:0]  px_o,
     output logic [7:0]  sstat_o,
-    output logic        alternate_bank_o
+    output logic        alternate_bank_o,
+    output logic        bit_reverse_o,
+    output logic        overflow_latch_o,
+    output logic        saturate_ar_o,
+    output logic [15:0] af_o,
+    output logic [15:0] mf_o,
+    output logic [39:0] mr_o,
+    output logic [7:0]  se_o,
+    output logic [4:0]  sb_o,
+    output logic [31:0] sr_o
 );
     logic       move_present;
     logic       move_writable;
@@ -44,13 +102,6 @@ module adsp2100_architectural_state (
 
     logic [15:0] read_dreg_data;
     logic [15:0] probe_dreg_data;
-    logic [15:0] unused_dreg_data;
-    logic [15:0] unused_af;
-    logic [15:0] unused_mf;
-    logic [39:0] unused_mr;
-    logic [7:0]  unused_se;
-    logic [4:0]  selected_sb;
-    logic [31:0] unused_sr;
     logic        register_conflict;
 
     logic [2:0]  read_dag_address;
@@ -73,9 +124,6 @@ module adsp2100_architectural_state (
     logic        dag_conflict;
 
     logic        status_conflict;
-    logic        unused_bit_reverse;
-    logic        unused_overflow_latch;
-    logic        unused_saturate_ar;
     logic        unused_status_push;
     logic [7:0]  unused_status_push_astat;
     logic [3:0]  unused_status_push_mstat;
@@ -202,7 +250,7 @@ module adsp2100_architectural_state (
                     4'd3: read_data_o = {12'h000, imask_o};
                     4'd4: read_data_o = {11'h000, icntl_o};
                     4'd5: read_data_o = {2'b00, cntr_o};
-                    4'd6: read_data_o = {{11{selected_sb[4]}}, selected_sb};
+                    4'd6: read_data_o = {{11{sb_o[4]}}, sb_o};
                     4'd7: read_data_o = {8'h00, px_q};
                     default: read_data_o = 16'h0000;
                 endcase
@@ -233,7 +281,7 @@ module adsp2100_architectural_state (
                     4'd3: probe_data_o = {12'h000, imask_o};
                     4'd4: probe_data_o = {11'h000, icntl_o};
                     4'd5: probe_data_o = {2'b00, cntr_o};
-                    4'd6: probe_data_o = {{11{selected_sb[4]}}, selected_sb};
+                    4'd6: probe_data_o = {{11{sb_o[4]}}, sb_o};
                     4'd7: probe_data_o = {8'h00, px_q};
                     default: probe_data_o = 16'h0000;
                 endcase
@@ -255,39 +303,45 @@ module adsp2100_architectural_state (
         .alternate_bank_i(alternate_bank_o),
         .read_address_0_i(read_code_i[3:0]),
         .read_address_1_i(probe_code_i[3:0]),
-        .read_address_2_i(4'h0),
+        .read_address_2_i(dreg_read_address_i),
         .read_data_0_o(read_dreg_data),
         .read_data_1_o(probe_dreg_data),
-        .read_data_2_o(unused_dreg_data),
+        .read_data_2_o(dreg_read_data_o),
         .write_enable_0_i(state_write && (write_group == 2'b00)),
         .write_address_0_i(write_index),
         .write_data_0_i(move_data_i),
-        .write_enable_1_i(1'b0),
-        .write_address_1_i(4'h0),
-        .write_data_1_i(16'h0000),
-        .write_enable_2_i(1'b0),
-        .write_address_2_i(4'h0),
-        .write_data_2_i(16'h0000),
+        .write_enable_1_i(!reset_i && dreg_write_enable_1_i),
+        .write_address_1_i(dreg_write_address_1_i),
+        .write_data_1_i(dreg_write_data_1_i),
+        .write_enable_2_i(!reset_i && dreg_write_enable_2_i),
+        .write_address_2_i(dreg_write_address_2_i),
+        .write_data_2_i(dreg_write_data_2_i),
         .sb_move_write_enable_i(state_write && (move_code_i == 6'h36)),
         .sb_move_write_data_i(move_data_i[4:0]),
-        .alu_write_enable_i(1'b0),
-        .alu_destination_feedback_i(1'b0),
-        .alu_result_i(16'h0000),
-        .mac_write_enable_i(1'b0),
-        .mac_destination_feedback_i(1'b0),
-        .mac_result_i(40'h0000000000),
-        .shifter_sr_write_enable_i(1'b0),
-        .shifter_sr_result_i(32'h00000000),
-        .shifter_se_write_enable_i(1'b0),
-        .shifter_se_result_i(8'h00),
-        .shifter_sb_write_enable_i(1'b0),
-        .shifter_sb_result_i(5'h00),
-        .af_o(unused_af),
-        .mf_o(unused_mf),
-        .mr_o(unused_mr),
-        .se_o(unused_se),
-        .sb_o(selected_sb),
-        .sr_o(unused_sr),
+        .alu_write_enable_i(!reset_i && alu_write_enable_i),
+        .alu_destination_feedback_i(alu_destination_feedback_i),
+        .alu_result_i(alu_result_i),
+        .mac_write_enable_i(!reset_i && mac_write_enable_i),
+        .mac_destination_feedback_i(mac_destination_feedback_i),
+        .mac_result_i(mac_result_i),
+        .shifter_sr_write_enable_i(
+            !reset_i && shifter_sr_write_enable_i
+        ),
+        .shifter_sr_result_i(shifter_sr_result_i),
+        .shifter_se_write_enable_i(
+            !reset_i && shifter_se_write_enable_i
+        ),
+        .shifter_se_result_i(shifter_se_result_i),
+        .shifter_sb_write_enable_i(
+            !reset_i && shifter_sb_write_enable_i
+        ),
+        .shifter_sb_result_i(shifter_sb_result_i),
+        .af_o(af_o),
+        .mf_o(mf_o),
+        .mr_o(mr_o),
+        .se_o(se_o),
+        .sb_o(sb_o),
+        .sr_o(sr_o),
         .write_conflict_o(register_conflict)
     );
 
@@ -315,10 +369,10 @@ module adsp2100_architectural_state (
         .setup_kind_i(dag_write_kind),
         .setup_address_i(dag_write_address),
         .setup_data_i(move_data_i[13:0]),
-        .i_write_enable_i(1'b0),
-        .i_write_address_i(3'b000),
-        .i_write_data_i(14'h0000),
-        .i_write_result_valid_i(1'b0),
+        .i_write_enable_i(!reset_i && dag_i_write_enable_i),
+        .i_write_address_i(dag_i_write_address_i),
+        .i_write_data_i(dag_i_write_data_i),
+        .i_write_result_valid_i(dag_i_write_result_valid_i),
         .invalid_setup_kind_o(unused_dag_invalid_setup),
         .write_conflict_o(dag_conflict)
     );
@@ -334,23 +388,31 @@ module adsp2100_architectural_state (
         .icntl_move_write_data_i(move_data_i[4:0]),
         .imask_move_write_enable_i(state_write && (move_code_i == 6'h33)),
         .imask_move_write_data_i(move_data_i[3:0]),
-        .mode_sr_i(2'b00),
-        .mode_br_i(2'b00),
-        .mode_ol_i(2'b00),
-        .mode_as_i(2'b00),
-        .alu_status_write_enable_i(1'b0),
-        .alu_az_i(1'b0),
-        .alu_an_i(1'b0),
-        .alu_av_i(1'b0),
-        .alu_ac_i(1'b0),
-        .alu_as_write_enable_i(1'b0),
-        .alu_as_i(1'b0),
-        .divide_status_write_enable_i(1'b0),
-        .divide_aq_i(1'b0),
-        .mac_status_write_enable_i(1'b0),
-        .mac_mv_i(1'b0),
-        .shifter_status_write_enable_i(1'b0),
-        .shifter_ss_i(1'b0),
+        .mode_sr_i(reset_i ? 2'b00 : mode_sr_i),
+        .mode_br_i(reset_i ? 2'b00 : mode_br_i),
+        .mode_ol_i(reset_i ? 2'b00 : mode_ol_i),
+        .mode_as_i(reset_i ? 2'b00 : mode_as_i),
+        .alu_status_write_enable_i(
+            !reset_i && alu_status_write_enable_i
+        ),
+        .alu_az_i(alu_az_i),
+        .alu_an_i(alu_an_i),
+        .alu_av_i(alu_av_i),
+        .alu_ac_i(alu_ac_i),
+        .alu_as_write_enable_i(alu_as_write_enable_i),
+        .alu_as_i(alu_as_i),
+        .divide_status_write_enable_i(
+            !reset_i && divide_status_write_enable_i
+        ),
+        .divide_aq_i(divide_aq_i),
+        .mac_status_write_enable_i(
+            !reset_i && mac_status_write_enable_i
+        ),
+        .mac_mv_i(mac_mv_i),
+        .shifter_status_write_enable_i(
+            !reset_i && shifter_status_write_enable_i
+        ),
+        .shifter_ss_i(shifter_ss_i),
         .interrupt_entry_i(1'b0),
         .interrupt_level_i(2'b00),
         .status_restore_i(1'b0),
@@ -362,9 +424,9 @@ module adsp2100_architectural_state (
         .icntl_o(icntl_o),
         .imask_o(imask_o),
         .alternate_bank_o(alternate_bank_o),
-        .bit_reverse_o(unused_bit_reverse),
-        .overflow_latch_o(unused_overflow_latch),
-        .saturate_ar_o(unused_saturate_ar),
+        .bit_reverse_o(bit_reverse_o),
+        .overflow_latch_o(overflow_latch_o),
+        .saturate_ar_o(saturate_ar_o),
         .write_conflict_o(status_conflict),
         .status_push_o(unused_status_push),
         .status_push_astat_o(unused_status_push_astat),
