@@ -10,11 +10,11 @@ BR/BG, interrupts, and program-memory strobes remain outside this slice.
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from enum import IntEnum
 
 from .counter import CounterState
 from .flow_condition import evaluate_flow_condition
 from .model import ExactWord, UNKNOWN
+from .phase import LogicalPhase
 from .sequencer import PROGRAM_ADDRESS_MASK
 from .status import ASTATState
 
@@ -22,17 +22,6 @@ from .status import ASTATState
 CONDITIONAL_TRAP_CLASS_MASK = 0xFFFFF0
 CONDITIONAL_TRAP_CLASS_VALUE = 0x080000
 RESET_PC = 0x0004
-
-
-class LogicalPhase(IntEnum):
-    STATE_1 = 0
-    STATE_2 = 1
-    STATE_3 = 2
-    STATE_4 = 3
-    STATE_5 = 4
-    STATE_6 = 5
-    STATE_7 = 6
-    STATE_8 = 7
 
 
 @dataclass(frozen=True)

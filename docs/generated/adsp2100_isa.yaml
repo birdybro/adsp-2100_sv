@@ -915,7 +915,7 @@
       ],
       "confidence": "VERIFIED_PRIMARY",
       "unresolved_issues": [
-        "General HALT synchronizer timing, BR/BG during TRAP, interrupt-boundary arbitration, and complete PM strobes are not connected.",
+        "General HALT synchronizer timing, BR/BG during TRAP, interrupt-boundary arbitration, and attachment to the separate native PM controller are not connected.",
         "SC-013 records that pinned MAME incorrectly treats the original Type 22 class as reserved."
       ]
     },

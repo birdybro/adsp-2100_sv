@@ -108,6 +108,13 @@ semantic versioning after its first release.
   and reports deterministic PM-fill ownership conflicts; plus an independent
   composition model, directed/random differential tests, formal invariants,
   and a constrained Cyclone V project.
+- A source-backed native PM phase controller with a shared eight-state model
+  enum, independent request/response model, active-low PMS/PMRD/PMWR mapping,
+  PMA/PMDA timing, state-7 read sampling, states-5-through-8 write-data drive,
+  back-to-back PMS continuity, separate FPGA output enables, and externally
+  directed bus-relinquishment masking; plus directed/random differential
+  tests, a machine-readable contract, formal invariants, and a constrained
+  Cyclone V project.
 - A primary-backed, class-complete original Type 2 immediate-DM-write action
   database, independent decoder, three hand-derived fixtures, portable RTL
   decoder, algebraic assembler/disassembler support, exhaustive 24-bit
@@ -338,7 +345,15 @@ semantic versioning after its first release.
   20 ns: 1,937 ALMs, 1,446 fitted registers, no RAM/DSP blocks, +2.615 ns
   worst setup and +0.166 ns worst multicorner hold slack, 57.52 MHz worst
   slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 465 distinct Python checks, 14 local
+- Native PM phase generation passes ten directed tests and 50,032
+  deterministic model/RTL clocks covering fetch/data-read/data-write pin
+  maps, state holds, read sampling, write drive, back-to-back select
+  continuity, unknown validity, reset, and bus-output masking.
+- Quartus full compilation passes for the native PM phase controller at
+  20 ns: 112 ALMs, 71 fitted registers, no RAM/DSP blocks, +12.825 ns worst
+  setup and +0.167 ns worst multicorner hold slack, 139.37 MHz worst
+  slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+- The expanded `make test` passes 476 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   twenty-two exhaustive 24-bit decode traversals, and every existing
   model/RTL vector regression.
@@ -703,9 +718,10 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 43 harnesses,
+- `make formal` passes strict assertion syntax lint for all 44 harnesses,
   including exact Type 6/Type 17/Type 21 decode, bounded Type 6/Type 8/
-  Type 14/Type 17/Type 21 state execution, and Type 13/cache ownership;
+  Type 14/Type 17/Type 21 state execution, Type 13/cache ownership, and native
+  PM phase/strobe stability;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
@@ -720,8 +736,8 @@ semantic versioning after its first release.
   action, same-cycle cached-next-fetch completion, and exactly one recovery
   fetch after a miss or forced fetch with exact-device citations. Connected
   the standalone monitor for real hit/data selection, ordinary/recovery fills,
-  and explicit ownership; physical pin phases and whole-core event arbitration
-  remain open under OQ-008.
+  and explicit ownership; attachment to the separate native PM phase
+  controller and whole-core event arbitration remain open under OQ-008.
 - Closed the original Type 12 field partition, old-value parallel semantics,
   read-collision restriction, logical DM bus ordering, completion-only DAG
   post-modification, and DMACK wait extension with exact-device citations;
@@ -788,8 +804,9 @@ semantic versioning after its first release.
   handshake semantics: false TRAP advances to PC+1; true TRAP asserts at the
   state-7/state-8 boundary and halts in state 8; recognized HALT clears TRAP;
   HALT release resumes at PC+1; and TRAP NOT CE does not mutate CNTR. General
-  HALT synchronization, BR/BG, interrupt/loop arbitration, and complete PM bus
-  control remain explicit gaps.
+  HALT synchronization and BR/BG/interrupt/loop arbitration remain explicit
+  gaps. A separate controller now closes bounded PM bus pin phases without
+  claiming Type 22/fetch ownership attachment.
 - Recorded original-reserved versus later-family reuse and the Type 19 bit-5
   disagreement with MAME as explicit source conflicts.
 - Recorded MAME's rounded accumulate/subtract midpoint-test divergence and
@@ -876,10 +893,10 @@ semantic versioning after its first release.
   but not a native active-low state-phase interface, PM fetch concurrency,
   interrupt/BR/HALT latching during waits, or whole-core instruction issue.
 - Type 13 now supplies cache-integrated logical PM data/recovery transactions,
-  but not the native active-low PM phase interface or whole-core instruction
-  issue. The exact hidden ahead/behind counter encoding, self-modifying PM
-  behavior, and branch/loop/interrupt/HALT/BR arbitration remain unresolved
-  under OQ-008.
+  and a separate controller supplies the native active-low PM phase interface,
+  but the two are not yet attached to a whole-core instruction/fetch owner.
+  The exact hidden ahead/behind counter encoding, self-modifying PM behavior,
+  and branch/loop/interrupt/HALT/BR arbitration remain unresolved under OQ-008.
 - Open-source synthesis and formal tools are not installed in this environment.
 - Type 8 AMF-zero legality and same-destination results are unresolved and are
   rejected rather than assigned invented behavior. Its standalone combined

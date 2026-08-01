@@ -96,8 +96,9 @@ fetch completion fills that same monitor when Type 13 does not own PM. The
 exhaustive decoder partitions all 65,536 words into 54,320
 source-closed actions, 8,192 unavailable-XOP words, and 3,024 read collisions
 [ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
-5-13–5-16, 6-3–6-7, A-3]. Hidden monitor/event behavior and physical pin
-phases remain outside this bounded evidence under OQ-008.
+5-13–5-16, 6-3–6-7, A-3]. Hidden monitor/event behavior and attachment to the
+separately verified native PM phase controller remain outside this bounded
+evidence under OQ-008.
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no

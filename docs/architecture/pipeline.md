@@ -39,4 +39,5 @@ the cache even on a prior hit. The base Type 13 and integrated boundaries pass
 50,070 and 50,086 model/RTL clocks respectively [ADI-UM-1989, printed
 pp. 4-26–4-30, 5-13–5-16]. Ordinary external fetch completion is an explicit
 fill input when Type 13 does not own PM. Unified PC/branch/loop/interrupt/HALT/
-BR ownership, self-modifying PM effects, and native pin phases remain OQ-008.
+BR ownership, self-modifying PM effects, and attachment to the separate native
+PM phase controller remain OQ-008.

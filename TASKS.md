@@ -279,8 +279,8 @@ advance beyond research until a page-level primary citation is added.
   and one pure recovery fetch after a miss. A composed cache boundary now
   derives hits from the standalone monitor, supplies the actual cached word,
   fills recovery and ordinary external fetches, and passes ten integration
-  tests plus 50,086 model/RTL clocks; physical PM pin phases and whole-core
-  event integration remain open.
+  tests plus 50,086 model/RTL clocks; attachment to the separately verified
+  native PM pin phases and whole-core event integration remain open.
   Type 8 exhaustively partitions all 524,288 class words into 476,672
   source-closed actions, 16,384 AMF-zero words held under OQ-022, and 31,232
   same-destination collision words held under OQ-014. Two hand-derived
@@ -926,7 +926,8 @@ advance beyond research until a page-level primary citation is added.
   ADI-UM-1989 system-interface chapter
 - **Relevant tests:** `make bus-tests`, `tests/test_shifter_pm_cache.py`,
   `sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv`,
-  `formal/shifter_pm_cache.sby`, `formal/pm_bus.sby`
+  `formal/shifter_pm_cache.sby`, `tests/test_program_bus.py`,
+  `sim/unit/tb_adsp2100_program_bus.sv`, `formal/pm_bus.sby`
 - **Implementation notes:** keep PM physically/logically distinct from DM.
   The Type 13 slice now exposes a bounded logical PM data/fetch boundary with
   separate 14-bit address, 24-bit read/write data, direction, data-cycle, and
@@ -938,10 +939,17 @@ advance beyond research until a page-level primary citation is added.
   ownership rules. Ten directed tests and 50,086 integration clocks pass.
   Simultaneous external-fill/Type-13 requests are integration errors; their
   fail-closed priority is not claimed as original-device arbitration.
-  This is not the native active-low pin/state wrapper or whole-core arbitration
-  layer.
-- **Unresolved questions:** exact original pin timing and wait input behavior.
-- **Confidence:** UNKNOWN
+  A separate native PM phase controller uses an implementation request
+  boundary aligned to the state-8-to-1 edge, implements active-low
+  PMS/PMRD/PMWR, PMA/PMDA, state-7 read sampling,
+  states-5-through-8 write-data drive, back-to-back PMS continuity, and
+  externally directed bus-output masking. Ten directed tests and 50,032
+  model/RTL clocks pass; its formal recipe is assertion-linted and its
+  constrained Cyclone V fit passes. Type 13/cache request attachment and
+  whole-core arbitration remain open.
+- **Unresolved questions:** whole-core PM ownership, BR/BG recognition timing,
+  and electrical wrapper constraints.
+- **Confidence:** CORROBORATED
 
 ## M19 — Data-memory interface
 
@@ -995,8 +1003,8 @@ advance beyond research until a page-level primary citation is added.
   word, accepts ordinary external instruction fills, and passes 50,086
   model/RTL clocks.
 - **Unresolved questions:** exact hidden cache-monitor/event interactions,
-  physical PM pin phases, other original PM-transfer forms, and whole-core
-  fetch/event arbitration.
+  attachment to the native PM phase owner, other original PM-transfer forms,
+  and whole-core fetch/event arbitration.
 - **Confidence:** CORROBORATED
 
 ## M21 — Loop and stack behavior
@@ -1416,9 +1424,10 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is constructing the native PM phase
-boundary around the now cache-integrated Type 13 logical transaction;
-constructing the next source-closed Type 1/4/5 action graph in
+The highest-priority unblocked work is attaching the verified native PM phase
+boundary to the cache-integrated Type 13/fetch owner and constructing the
+native DM phase boundary; constructing the next source-closed Type 1/4/5
+action graph in
 `ISA-002`/`ISA-001`; and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field
 placement is closed for the printed Appendix A diagrams, but legality,

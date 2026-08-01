@@ -286,8 +286,8 @@ standalone monitor, supplies its 24-bit instruction in the same data cycle,
 and feeds every miss/forced-fetch recovery word back into that monitor without
 repeating architectural actions. It also accepts ordinary external fetch
 completions when Type 13 does not own PM; 50,086 integration clocks cover
-lookup/fill ownership. Physical active-low PM pin phases and whole-core event
-arbitration remain open under OQ-008.
+lookup/fill ownership. Attachment to the separate native PM phase controller
+and whole-core event arbitration remain open under OQ-008.
 The source-bounded cache monitor implements the documented
 16-by-24 array, PMA[3:0] indexing, single contiguous valid region,
 out-of-region invalidation, sequential extension, and circular oldest-word
@@ -296,6 +296,16 @@ standalone model/RTL clocks. Its Type 13 wrapper now passes a further 50,086
 model/RTL clocks. The manual's hidden ahead/behind register encoding,
 self-modifying PM effects, and unified branch/loop/interrupt/HALT/BR
 arbitration remain OQ-008.
+A separate source-backed native PM controller uses an implementation request
+boundary aligned to the state-8-to-state-1 edge, holds PMA/PMDA/PMS for states
+1–8, asserts
+active-low PMRD/PMWR for states 4–7, samples reads at the 7-to-8 edge, and
+drives write data for states 5–8. It preserves PMS across back-to-back requests
+and masks all FPGA output enables during externally directed bus
+relinquishment. Ten directed tests and 50,032 model/RTL clocks pass. This block
+does not yet arbitrate or attach Type 13/cache/fetch requests, recognize BR/BG,
+or model analog delays; the request boundary is not a claim about a hidden
+device latch.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
 tuple. Its logical DM request holds captured address/data over arbitrary
@@ -357,7 +367,8 @@ Type 22 is the first decoder-connected phase-aware instruction boundary: it
 retains a condition decision through logical phases, asserts TRAP at the
 state-7/state-8 transition, holds state 8, and implements the recognized-HALT
 clear/release handshake. General HALT synchronization, BR/BG, interrupt/loop
-arbitration, and PM strobes remain unconnected. SC-013 records that pinned
+arbitration, and attachment to the separate PM strobe controller remain
+unconnected. SC-013 records that pinned
 MAME incorrectly classifies these original-device words reserved.
 The bounded Type 23/24 division boundaries implement all eight ALU-X divisor
 sources, DIVS AY1/AF upper-dividend selection and sign seeding, DIVQ old-AQ

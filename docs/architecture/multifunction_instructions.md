@@ -155,8 +155,8 @@ cached word on a hit, fills recovery words on a miss/forced fetch, and accepts
 ordinary external instruction fills while Type 13 does not own PM. Ten
 directed integration tests and 50,086 additional clocks cover selection,
 replacement, unknown entries, reset, and fill ownership. Unified branches,
-loops, interrupts, self-modifying PM, physical eight-state pin phases, and
-whole-core arbitration remain open under OQ-008.
+loops, interrupts, self-modifying PM, attachment to the separate eight-state
+native PM controller, and whole-core arbitration remain open under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 

@@ -35,6 +35,7 @@
         "Printed pp. 2-6, 4-22, 6-1–6-2, 6-12, A-3, and A-9: original Type 17 internal MOVE timing, fields, register selectors, and SSTAT direction",
         "Printed pp. 1-2, 2-6–2-7, 2-15, 2-18, 6-1–6-2, 6-12–6-13, A-2, and A-9: original Type 6 immediate DREG load, field placement, banked cycle-boundary write, narrow DREG storage, and MR1 sign-fill side effect",
         "Printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7: original Type 15 immediate LSHIFT/ASHIFT functions, signed exponent, shifter X operands, field placement, SR feedback/writeback, and SE preservation",
+        "Printed pp. 5-5–5-8 and Figure 5.5: original PM interface roles, active-low controls, read/write ordering, bus relinquishment, and eight-state waveforms",
         "Additional architecture sections are cited at point of use and remain to be consolidated here"
       ],
       "may_commit": false,
@@ -162,6 +163,7 @@
       ],
       "cited_pages_or_sections": [
         "ADSP-2100 data sheet, printed pp. 2-15 onward (scan PDF pp. 25 onward).",
+        "ADSP-2100 data sheet, printed pp. 2-36–2-39, timing parameters 23–60 and Figures 14–15: PM read/write state-edge and electrical timing.",
         "ADSP-2100 development-system literature, printed pp. 2-3–2-14."
       ],
       "may_commit": false,

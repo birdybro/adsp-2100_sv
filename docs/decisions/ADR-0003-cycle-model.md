@@ -1,6 +1,7 @@
 # ADR-0003: Eight-state logical cycle model on one FPGA clock
 
-- **Status:** Accepted for foundation; RTL implementation pending
+- **Status:** Accepted; bounded PM phase implementation exists, unified core
+  sequencing pending
 - **Date:** 2026-07-30
 - **Tasks:** TIME-001, RTL-PMBUS-001, RTL-DMBUS-001
 
@@ -30,6 +31,13 @@ The independent model records the same logical states and external
 transactions, but remains structurally independent from RTL state-machine code.
 Electrical nanosecond limits stay in wrapper/board timing documentation rather
 than delay constructs.
+
+The first concrete native-interface application is the bounded program-bus
+controller. It accepts a transaction descriptor on the state-8-to-state-1
+edge, generates the sourced PM pin levels for all eight states, samples reads
+on the state-7-to-state-8 edge, and masks output enables during externally
+commanded bus relinquishment. It does not own or advance the phase counter and
+does not decide fetch/data/cache/BR/HALT/interrupt arbitration.
 
 ## Consequences
 

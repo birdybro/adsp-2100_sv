@@ -6,7 +6,8 @@
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
-bounded semantic instruction decode and logical DM/PM transaction slices
+bounded semantic instruction decode, logical DM/PM transactions, and native
+PM pin phases
 
 **Release status:** research/implementation in progress; not instruction-,
 cycle-, or Hard Drivin'-complete
@@ -96,6 +97,10 @@ cycle-, or Hard Drivin'-complete
   hit selection, miss/forced-fetch recovery fill, ordinary external fetch
   fill, explicit conflict priority, independent model, portable RTL, formal
   invariants, and constrained Cyclone V synthesis;
+- source-backed native PM pin-phase model/RTL with state-8-to-1 descriptor
+  capture, PMA/PMDA/PMS states 1–8, active-low PMRD/PMWR states 4–7,
+  state-7 read sampling, PMD write drive states 5–8, back-to-back PMS
+  continuity, and externally directed bus-output masking;
 - bounded Type 15 immediate LSHIFT/ASHIFT semantics, two manual fixtures,
   original-syntax assembler/disassembler support, exhaustive class
   partitioning, selected-bank SR execution, and explicit fail-closed handling
@@ -177,7 +182,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 455 implemented Python unit checks plus manifest/hash verification;
+- 476 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 2,097,152 Type 2 words decode to exact immediate/G/I/M fields in Python
@@ -286,7 +291,8 @@ outstanding.
   50,035 state/bus clocks, the Type 12 slice adds
   50,069 state/bus clocks, the Type 13 slice adds 50,070 state/cache/bus
   clocks, the standalone cache adds 50,028 clocks, and the connected Type 13/
-  cache boundary adds 50,086 clocks,
+  cache boundary adds 50,086 clocks, the native PM pin-phase boundary adds
+  50,032 clocks,
   and the Type 14 state slice adds
   82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
@@ -328,6 +334,10 @@ outstanding.
   registers with no RAM or DSP blocks, +2.615 ns setup, +0.166 ns worst
   multicorner hold, 57.52 MHz worst slow-corner Fmax, and no unconstrained
   paths against its 20 ns constraint;
+  the native PM pin-phase controller fits in 112 ALMs and 71 fitted registers
+  with no RAM or DSP blocks, +12.825 ns setup, +0.167 ns worst multicorner
+  hold, 139.37 MHz worst slow-corner Fmax, and no unconstrained paths against
+  its 20 ns constraint;
   the Type 8 slice fits in 983 ALMs and 693 fitted registers with one DSP and
   no RAM, +1.131 ns setup, +0.177 ns hold, 47.92 MHz worst slow-corner Fmax,
   and no unconstrained paths against its 22 ns standalone constraint; it
@@ -379,7 +389,8 @@ outstanding.
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
   Type 2 action/execution, Type 23, Type 24, standalone instruction-cache, and
-  Type 13/cache-integration invariants (43 total) pass
+  Type 13/cache-integration plus native PM phase/strobe invariants (44 total)
+  pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -391,9 +402,9 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Extend the now cache-integrated Type 13 PM path and the bounded DM paths
-   into sourced native pin phases and
-   whole-core transaction arbitration.
+3. Attach the now cache-integrated Type 13/fetch request owner to the verified
+   native PM phase controller, and extend the bounded DM paths into sourced
+   native pin phases and whole-core transaction arbitration.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

@@ -34,6 +34,17 @@ Type 13 ownership. This is not yet the sourced active-low PMS/PMDA/PMRD/PMWR
 phase wrapper or unified PC/branch/interrupt bus owner
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
 
+A separate native PM controller now converts a captured fetch/read/write
+descriptor into the source-defined logical pin phases: PMA/PMDA/PMS through
+states 1–8, active-low PMRD or PMWR through states 4–7, read sampling on the
+7-to-8 edge, and write-data drive through states 5–8. It preserves active-low
+PMS across back-to-back requests and exposes independent address, control, and
+PMD output enables for bus relinquishment. Ten directed tests and 50,032
+model/RTL clocks pass [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
+pp. 2-36–2-39, parameters 23–60, Figures 14–15; ADI-UM-1989, printed
+pp. 5-5–5-8, Figure 5.5]. This controller is not yet attached to Type 13, the
+cache/fetch issue path, or BR/BG recognition.
+
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic
 core exposes phase and transaction trace signals without a generic modern bus
 that would erase original PM/DM concurrency.

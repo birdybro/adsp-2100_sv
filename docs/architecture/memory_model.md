@@ -52,3 +52,12 @@ cover this ownership boundary. That conflict priority is a fail-closed harness
 policy for an integration error, not claimed original-device arbitration;
 whole-core issue must prevent the collision. Unified whole-core PM ownership,
 hidden monitor encoding, and self-modifying PM remain OQ-008.
+
+The separate native PM phase controller accepts one selected logical request
+at its implementation state-8-to-state-1 boundary and produces active-low
+PMS/PMRD/PMWR plus PMA, PMDA, and PMD output-enable timing over the documented
+eight states. This
+closes the bounded pin-phase mapping but does not yet connect the Type 13/cache
+request owner to it [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
+pp. 2-36–2-39, Figures 14–15; ADI-UM-1989, printed pp. 5-5–5-8,
+Figure 5.5].

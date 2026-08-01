@@ -1,0 +1,17 @@
+[options]
+mode prove
+depth 20
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/packages/adsp2100_pkg.sv
+read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv formal/harnesses/adsp2100_program_bus_formal.sv
+prep -top adsp2100_program_bus_formal
+
+[files]
+rtl/packages/adsp2100_pkg.sv
+rtl/core/adsp2100_program_bus.sv
+formal/harnesses/adsp2100_program_bus_formal.sv

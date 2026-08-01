@@ -184,7 +184,8 @@ hand-derived fixtures, every assembler/disassembler form, exhaustive 24-bit
 RTL decode, twelve directed model tests, and 50,168 model/RTL clocks pass
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, Figure 5.10, 6-14,
 A-4, A-6]. General HALT synchronization, BR/BG, interrupt arbitration, and
-complete PM bus controls remain open. SC-013 records MAME's lower-authority
+attachment to the separate PM bus controller remains open. SC-013 records
+MAME's lower-authority
 reserved classification.
 
 Type 23 encodes fixed `DIVQ` with XOP `[10:8]`. All eight ALU-X source codes
