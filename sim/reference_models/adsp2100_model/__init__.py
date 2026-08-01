@@ -207,6 +207,11 @@ from .data_bus import (
     DataBusState,
     apply_data_bus_cycle,
 )
+from .dm_write_immediate_native import (
+    DMWriteImmediateNativeCycleResult,
+    DMWriteImmediateNativeState,
+    apply_dm_write_immediate_native_cycle,
+)
 from .load_dreg_immediate import (
     LOAD_DREG_IMMEDIATE_MASK,
     LOAD_DREG_IMMEDIATE_VALUE,
@@ -480,6 +485,8 @@ __all__ = [
     "DataBusCycleResult",
     "DataBusRequest",
     "DataBusState",
+    "DMWriteImmediateNativeCycleResult",
+    "DMWriteImmediateNativeState",
     "ProgramBusCycleResult",
     "ProgramBusRequest",
     "ProgramBusState",
@@ -555,6 +562,7 @@ __all__ = [
     "apply_dreg_cycle",
     "apply_instruction_cache_cycle",
     "apply_data_bus_cycle",
+    "apply_dm_write_immediate_native_cycle",
     "apply_program_bus_cycle",
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",

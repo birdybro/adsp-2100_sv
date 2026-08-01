@@ -1,0 +1,27 @@
+[options]
+mode prove
+depth 40
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/packages/adsp2100_pkg.sv
+read -formal -sv rtl/core/adsp2100_dm_write_immediate_decode.sv
+read -formal -sv rtl/core/adsp2100_dag.sv
+read -formal -sv rtl/core/adsp2100_dag_register_file.sv
+read -formal -sv rtl/core/adsp2100_dm_write_immediate_slice.sv
+read -formal -sv rtl/core/adsp2100_data_bus.sv
+read -formal -sv rtl/core/adsp2100_dm_write_immediate_native_slice.sv
+read -formal -sv formal/harnesses/adsp2100_dm_write_immediate_native_formal.sv
+prep -top adsp2100_dm_write_immediate_native_formal
+
+[files]
+rtl/packages/adsp2100_pkg.sv
+rtl/core/adsp2100_dm_write_immediate_decode.sv
+rtl/core/adsp2100_dag.sv
+rtl/core/adsp2100_dag_register_file.sv
+rtl/core/adsp2100_dm_write_immediate_slice.sv
+rtl/core/adsp2100_data_bus.sv
+rtl/core/adsp2100_dm_write_immediate_native_slice.sv
+formal/harnesses/adsp2100_dm_write_immediate_native_formal.sv

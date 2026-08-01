@@ -8,6 +8,11 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded Type 2/native-DM composition in independent Python and portable
+  RTL, connecting state-8 descriptor acceptance to state-7 native completion,
+  with directed/random differential tests, a formal harness, and a constrained
+  Cyclone V project.
+
 - A source-backed native DM phase controller and structurally independent
   model implementing DMA/DMS states 1–8, DMRD/DMWR states 4–7, DMACK
   qualification at 6–7, DMD read sampling at 7–8, write drive states 5–8,
@@ -340,6 +345,13 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- Type 2/native-DM attachment passes five directed tests and 50,027
+  deterministic model/RTL clocks covering state-8 issue, state-7 commit,
+  complete-cycle DMACK extensions, late-ACK rejection, stable old values,
+  off-boundary rejection, and relinquishment. Its 20 ns Cyclone V fit uses
+  608 ALMs and 466 registers, has +2.590 ns worst setup and +0.159 ns worst
+  hold slack, and reports no unconstrained clocks, ports, or paths.
 
 - Native DM timing passes nine directed model tests and 50,039 deterministic
   model/RTL phase clocks, including repeated full-cycle DMACK extensions,
@@ -765,6 +777,10 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Distinguished the attached Type 2 native write path from the still-logical
+  Type 12 path throughout the memory, cycle, wait-state, interface, confidence,
+  verification, and synthesis records.
+
 - Transcribed the original DM state-edge table and Figure 5.7 state-seven
   extension notation into a machine-readable native-interface contract and
   updated timing/interface status without claiming electrical-delay closure.
@@ -925,9 +941,9 @@ semantic versioning after its first release.
 
 ### Known Issues
 
-- The native DM controller is not yet attached to the Type 2/12 architectural
-  clients; PM concurrency, wait-time event latching, and BR/BG recognition
-  remain outside the bounded controller.
+- Type 12 remains unattached to the native DM controller; PM concurrency,
+  wait-time event latching, and BR/BG recognition remain outside the bounded
+  controller and Type 2 wrapper.
 
 - The exact original ADSP-2100 Cross-Software manual, evaluation-board manual,
   independent data-sheet revisions, and errata remain unavailable. Appendix A

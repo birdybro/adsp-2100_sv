@@ -22,6 +22,12 @@ permits selected-I post-modification. Their 50,035- and 50,069-clock
 model/RTL differentials do not claim asynchronous setup/hold or native pin
 substate accuracy.
 
+Type 2 is now connected to the native controller. Its 50,027-clock attachment
+comparison ensures that a DMACK-low sample causes a complete physical-substate
+repeat while the instruction remains pending, and that the selected I register
+cannot change until the later qualified 7-to-8 completion. Type 12 remains at
+the logical transaction boundary.
+
 The original AC table specifies DMACK setup to CLKIN high at 6-to-7 and hold
 after that edge; those nanosecond requirements are documented but not modeled
 as synthesizable delays [ADI-DATABOOK-1987, printed pp. 2-40 and 2-42,

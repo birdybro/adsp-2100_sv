@@ -220,6 +220,9 @@ advance beyond research until a page-level primary citation is added.
   post-modification only at acknowledgment. Eleven directed tests and 50,035
   deterministic model/RTL clocks cover every I/M selection, both DAGs, DAG1
   bit reversal, reset, conflicts, unknown/invalid DAG state, and waits.
+  Its native-DM wrapper adds five directed checks and 50,027 clocks covering
+  state-8 issue, complete-cycle wait extension, late-ACK rejection, state-7
+  completion-only I writeback, off-boundary rejection, and relinquishment.
   Type 16 has a bounded semantic entry for 1,792 documented words;
   its 256 unassigned-XOP subencodings fail closed. Type 14 has a bounded
   semantic entry for 25,648 canonical words; 39,888 unresolved or unsupported
@@ -691,7 +694,7 @@ advance beyond research until a page-level primary citation is added.
   12 now attaches every DAG1 I/M selection to a DM transaction, including bit
   reversal and completion-only post-modification through arbitrary waits. Type
   2 adds the same sourced waited/post-modified path for immediate DM writes
-  across 50,035 differential clocks.
+  across 50,035 logical differential clocks and 50,027 native-attached clocks.
 - **Unresolved questions:** remaining direct-transfer writeback and stall enables,
   same-cycle external register writes, alternate banking, multifunction
   ordering, loops, interrupts, and externally visible timing.
@@ -978,7 +981,10 @@ advance beyond research until a page-level primary citation is added.
   `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
   `tests/test_data_bus.py`, `sim/unit/tb_adsp2100_data_bus.sv`,
-  `formal/dm_bus.sby`, `make dm-bus-tests`, `make compute-tests`
+  `formal/dm_bus.sby`, `tests/test_dm_write_immediate_native.py`,
+  `sim/unit/tb_adsp2100_dm_write_immediate_native_slice.sv`,
+  `formal/dm_write_immediate_native.sby`, `make dm-bus-tests`,
+  `make dm-write-native-tests`, `make compute-tests`
 - **Implementation notes:** the Type 2 immediate-write and Type 12
   multifunction boundaries expose a distinct logical
   14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
@@ -991,9 +997,18 @@ advance beyond research until a page-level primary citation is added.
   processor state seven while all eight physical substates repeat; nine
   directed tests and 50,039 model/RTL clocks cover repeated low samples,
   late ACK rejection, back-to-back DMS continuity, holds, reset, unknowns,
-  and relinquishment masking. Its forty-sixth formal recipe syntax-checks;
+  and relinquishment masking. A bounded Type 2 wrapper now accepts the
+  old-I/raw-immediate write descriptor only at state 8-to-1 and commits the
+  selected-I postmodify only when the native controller completes at state
+  7-to-8 after a qualified DMACK. Five directed tests and 50,027 connected
+  model/RTL clocks cover issue/commit ordering, complete-cycle waits, late-ACK
+  rejection, stable old values, off-boundary rejection, and relinquishment.
+  Its forty-seventh formal recipe syntax-checks;
   a fully constrained 50 MHz Cyclone V fit uses 100 ALMs and 57 registers.
-  Type 2/12 client attachment and whole-core arbitration do not yet exist.
+  The attached Type 2 fit uses 608 ALMs and 466 registers, meets 50 MHz with
+  +2.590 ns worst setup and +0.159 ns worst hold slack, and has no
+  unconstrained paths. Type 12 attachment and whole-core arbitration do not
+  yet exist.
 - **Unresolved questions:** shared data-bus turnaround, Type 1 dual-memory
   concurrency, event latching during waits, and BR/BG recognition.
 - **Confidence:** CORROBORATED
@@ -1163,17 +1178,22 @@ advance beyond research until a page-level primary citation is added.
   ADI-UM-1989 system-interface chapter
 - **Relevant tests:** `tests/test_dm_write_immediate_slice.py`,
   `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
-  `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`
+  `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
+  `tests/test_data_bus.py`, `formal/dm_bus.sby`,
+  `tests/test_dm_write_immediate_native.py`,
+  `formal/dm_write_immediate_native.sby`
 - **Implementation notes:** Type 2 and Type 12 implement the sourced logical DMACK rule:
   each low sample extends the transaction by a processor clock, bus outputs
   remain stable, state does not commit, and the first high sample commits all
   parallel actions. The Type 2 differential adds 50,035 clocks of raw
-  immediate writes, both DAGs, and completion-only I updates. PM waits,
-  interrupt/BR/HALT latching, and physical state-6/
-  state-7 pin timing remain.
+  immediate writes, both DAGs, and completion-only I updates. The native DM
+  controller and attached Type 2 wrapper add 50,039 standalone and 50,027
+  connected clocks proving the state-6 DMACK sample, complete-cycle extension,
+  and state-7 completion. Type 12 attachment, PM concurrency,
+  interrupt/BR/HALT latching, and electrical constraints remain.
 - **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
   behavior.
-- **Confidence:** UNKNOWN
+- **Confidence:** CORROBORATED
 
 ## M26 — Differential testing
 
@@ -1444,8 +1464,8 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is attaching the existing Type 2/12
-logical clients to the new native DM phase controller; constructing
+The highest-priority unblocked work is attaching the existing Type 12 logical
+client to the new native DM phase controller; constructing
 the next source-closed Type 1/4/5 action graph in
 `ISA-002`/`ISA-001`; and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field

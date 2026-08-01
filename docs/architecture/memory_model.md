@@ -23,6 +23,11 @@ post-modification at the first acknowledged boundary. The 50,035-clock
 model/RTL differential covers every I/M selection, both DAGs, immediate and
 multi-clock completion, reset cancellation, and invalid/unknown DAG state
 [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
+Its native composition accepts that old-value descriptor only on the enabled
+state-8-to-state-1 boundary and returns the physical completion event to the
+architectural slice only on state 7-to-state-8. Five directed tests and 50,027
+connected model/RTL clocks cover qualified and extended writes, late ACK,
+phase conflicts, stable old values, and relinquishment.
 
 The bounded Type 12 boundary adds the multifunction DM transaction path. It
 drives the old selected I (or the DAG1 bit-reversal of that value), direction,
@@ -41,8 +46,9 @@ seven while all eight physical substates repeat; a high sample permits the
 read sample/completion at the following 7-to-8 edge. Nine directed tests and
 50,039 model/RTL clocks cover normal reads/writes, repeated extensions,
 late-ACK rejection, back-to-back select, reset, unknowns, and external
-relinquishment. Type 2/12 attachment and whole-core PM/DM arbitration remain
-outside this standalone boundary [ADI-UM-1989, printed pp. 5-9–5-12,
+relinquishment. Type 2 is attached through a bounded wrapper; Type 12 and
+whole-core PM/DM arbitration remain outside this standalone boundary
+[ADI-UM-1989, printed pp. 5-9–5-12,
 Figures 5.6–5.7; ADI-DATABOOK-1987, printed pp. 2-40–2-43,
 Figures 16–17].
 

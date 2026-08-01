@@ -1,7 +1,7 @@
 # Data-memory cycles
 
 **Status: source-backed eight-substate logical pin phases implemented;
-architectural clients not yet attached**
+Type 2 attached, Type 12 pending**
 
 DM read/write drives DMA and DMS, selects DMRD or DMWR, and transfers DMD.
 DMS can remain asserted without a glitch across consecutive DM cycles
@@ -48,6 +48,10 @@ selected-bank DREG value. Reset cancels a pending transaction and invalidates
 reset-unknown computational and DAG state. The Type 2 and Type 12 differentials
 cover 50,035 and 50,069 clocks respectively, including arbitrary multi-clock
 extension, stable address/data, and completion-only I post-modification.
-These existing architectural clients are not yet attached to the new phase
-controller. PM concurrency, event latching during waits, and BR/BG recognition
-are still unimplemented.
+The bounded Type 2 native wrapper now accepts the captured old-I/raw-immediate
+descriptor only at state 8-to-1, retains it across complete-cycle extensions,
+and returns completion to the architectural slice only at the qualified
+state-7-to-state-8 edge. Its five directed tests and 50,027 connected
+model/RTL clocks verify that selected-I postmodify cannot occur on the state-6
+ACK sample or on a late unsampled ACK. Type 12 attachment, PM concurrency,
+event latching during waits, and BR/BG recognition are still unimplemented.

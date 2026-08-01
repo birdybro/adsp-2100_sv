@@ -276,9 +276,10 @@ postmodify writes atomically on the first ACK-high boundary, and uses the old
 DREG value for a simultaneous store. A separate native DM controller now
 implements DMA/DMS states 1–8, DMRD/DMWR states 4–7, DMACK qualification at
 6–7, DMD read sampling at 7–8, write drive states 5–8, and the original
-full-eight-substate state-seven extension. Type 2/12 request attachment,
-instruction-fetch concurrency, and whole-core interrupt/bus arbitration remain
-open.
+full-eight-substate state-seven extension. A bounded wrapper now attaches Type
+2 writes at state 8-to-1 and returns only the qualified state 7-to-8 completion
+to the architectural slice. Type 12 attachment, instruction-fetch concurrency,
+and whole-core interrupt/bus arbitration remain open.
 The bounded Type 13 slice partitions all 65,536 words into 54,320 supported
 actions, 8,192 unavailable-XOP words, and 3,024 illegal PM-read destination
 collisions. It performs the fixed logical PM data cycle, reads a 24-bit PM
@@ -318,8 +319,9 @@ Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
 tuple. Its logical DM request holds captured address/data over arbitrary
 DMACK-low clocks and commits the selected I only on acknowledgment across
-50,035 model/RTL clocks. Native pin substates, fetch/event concurrency, and
-whole-core arbitration remain unimplemented.
+50,035 logical model/RTL clocks. Its native attachment adds 50,027 clocks of
+state-8 issue, full-cycle wait extension, and state-7 completion coverage.
+Fetch/event concurrency and whole-core arbitration remain unimplemented.
 The bounded Type 8 slice executes documented ALU and fractional-MAC
 computations in parallel with one internal DREG move. Both clauses sample the
 cycle-start selected bank; noncolliding DREG/AR/AF/MR/MF and ASTAT writes

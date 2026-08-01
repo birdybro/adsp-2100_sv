@@ -51,8 +51,10 @@ and external transaction timing remain outside this function block itself.
 The bounded Type 2 slice now uses it for immediate DM writes: all DAG1 I/M
 selections, normal-order post-modification, bit-reversed old-I address output,
 arbitrary DMACK waits, and completion-only selected-I writeback pass directed
-tests and the 50,035-clock model/RTL differential. Physical pin phases and
-whole-core event arbitration remain outside that slice
+tests and the 50,035-clock logical model/RTL differential. A bounded native-DM
+wrapper adds 50,027 clocks verifying state-8 old-value capture, full-cycle
+waits, and state-7 completion-only postmodify. Whole-core event arbitration
+remains outside that slice
 [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
 
 The bounded Type 21 integration slice now supplies the missing stored-register

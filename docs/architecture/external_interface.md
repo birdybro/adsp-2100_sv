@@ -22,10 +22,11 @@ The bounded Type 2 and Type 12 paths currently expose a logical active-high DM
 select/read/write request, 14-bit address, 16-bit write data, validity, and
 DMACK completion. Address/control/write data remain stable through arbitrary
 wait extensions, and no architectural destination changes before completion.
-This is traceable transaction-level behavior. A separate native controller now
+This is traceable transaction-level behavior. A separate native controller
 maps captured descriptors to active-low DMS/DMRD/DMWR, shared-DMD output
 enable, DMACK qualification, and full-cycle state-seven extension. The clients
-are not yet attached to that controller [ADI-UM-1989, printed pp. 5-9–5-12;
+now include a bounded Type 2 attachment; Type 12 remains unattached
+[ADI-UM-1989, printed pp. 5-9–5-12;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43].
 
 The bounded Type 13 path exposes distinct logical active-high PM data and

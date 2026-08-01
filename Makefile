@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests pm-native-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests pm-native-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
@@ -29,6 +29,15 @@ lint:
 			--top-module adsp2100_data_bus \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_data_bus.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_dm_write_immediate_native_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_dm_write_immediate_slice.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_dm_write_immediate_native_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_pm_native_slice \
 			rtl/packages/adsp2100_pkg.sv \
@@ -367,6 +376,29 @@ dm-bus-tests:
 		build/obj_data_bus/Vtb_adsp2100_data_bus; \
 	else \
 		echo "SKIP DM-bus RTL test: Verilator is not installed"; \
+	fi
+
+dm-write-native-tests:
+	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_native
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_dm_write_immediate_native_vectors.py \
+			--output build/dm_write_immediate_native_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_dm_write_immediate_native_slice \
+			--top-module tb_adsp2100_dm_write_immediate_native_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_dm_write_immediate_slice.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_dm_write_immediate_native_slice.sv \
+			sim/unit/tb_adsp2100_dm_write_immediate_native_slice.sv; \
+		build/obj_dm_write_immediate_native_slice/Vtb_adsp2100_dm_write_immediate_native_slice; \
+	else \
+		echo "SKIP Type 2/native-DM RTL test: Verilator is not installed"; \
 	fi
 
 pm-native-tests:
@@ -1072,7 +1104,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests dm-bus-tests pm-native-tests compute-tests
+bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests pm-native-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -1119,6 +1151,16 @@ formal:
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_data_bus.sv \
 			formal/harnesses/adsp2100_data_bus_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_dm_write_immediate_native_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_dm_write_immediate_slice.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_dm_write_immediate_native_slice.sv \
+			formal/harnesses/adsp2100_dm_write_immediate_native_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_pm_native_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -1449,6 +1491,8 @@ formal:
 		sby -f -d build/formal_instruction_cache formal/instruction_cache.sby; \
 		sby -f -d build/formal_pm_bus formal/pm_bus.sby; \
 		sby -f -d build/formal_dm_bus formal/dm_bus.sby; \
+		sby -f -d build/formal_dm_write_immediate_native \
+			formal/dm_write_immediate_native.sby; \
 		sby -f -d build/formal_shifter_pm_native \
 			formal/shifter_pm_native.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
@@ -1536,6 +1580,8 @@ synth-quartus:
 		quartus_sh --flow compile synthesis/quartus/program_bus_smoke; \
 		quartus_sh --flow compile synthesis/quartus/data_bus_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/dm_write_immediate_native_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_native_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_move_smoke; \
@@ -1597,6 +1643,7 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_pm_cache_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name program_bus_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name data_bus_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name dm_write_immediate_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
@@ -1720,6 +1767,9 @@ clean:
 	fi
 	@if [ -d build/obj_data_bus ]; then \
 		find build/obj_data_bus -depth -delete; \
+	fi
+	@if [ -d build/obj_dm_write_immediate_native_slice ]; then \
+		find build/obj_dm_write_immediate_native_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_shifter_pm_native_slice ]; then \
 		find build/obj_shifter_pm_native_slice -depth -delete; \
@@ -1855,6 +1905,9 @@ clean:
 	@if [ -d build/quartus_data_bus ]; then \
 		find build/quartus_data_bus -depth -delete; \
 	fi
+	@if [ -d build/quartus_dm_write_immediate_native ]; then \
+		find build/quartus_dm_write_immediate_native -depth -delete; \
+	fi
 	@if [ -d build/quartus_shifter_pm_native ]; then \
 		find build/quartus_shifter_pm_native -depth -delete; \
 	fi
@@ -1924,6 +1977,7 @@ clean:
 		build/formal_instruction_cache \
 		build/formal_pm_bus \
 		build/formal_dm_bus \
+		build/formal_dm_write_immediate_native \
 		build/formal_shifter_pm_native \
 		build/formal_compute_move \
 		build/formal_conditional_compute \
