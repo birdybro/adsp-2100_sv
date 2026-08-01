@@ -32,3 +32,11 @@ fields to I4–I7 and M4–M7, selects the L corresponding to I, and writes only
 that I at cycle end. PM/DM bus attachment, multifunction updates, and
 wait-state timing remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
+
+The bounded Type 13 path now attaches all I4–I7/M4–M7 selections to PM data.
+The access observes old I, chooses L by I, never applies DAG1 bit reversal,
+and commits the post-modified I with the fixed PM data cycle. A following
+cache-miss recovery fetch does not modify I again. Directed and randomized
+model/RTL checks include positive/negative M, invalid configurations, all
+four I/M selections, and both computational banks [ADI-UM-1989, printed
+pp. 3-1–3-4, 4-26–4-30, 6-3–6-7, A-3].

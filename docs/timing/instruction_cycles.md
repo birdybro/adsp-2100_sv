@@ -17,6 +17,8 @@ Known cases:
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
 | Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
 | Type 12 shifter plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while bus outputs and all architectural destinations remain stable |
+| Type 13 shifter plus PM read/write, cache hit | one processor cycle; PM/PX, shifter/status, and DAG2 post-modify commit in that cycle while the next cached instruction is selected |
+| Type 13 shifter plus PM read/write, cache miss or forced fetch | PM data actions commit in the first processor cycle; exactly one external instruction-fetch cycle follows without repeating those actions |
 | Type 19 indirect JUMP/CALL | one processor cycle for true or false supported conditions; a taken transfer makes DAG2 supply PMA/PC from I4-I7 without modifying I; no PM-data or DM data transfer |
 | Type 20 conditional RTS/RTI | one processor cycle whether true or false; a taken RTS pops PC, a taken RTI pops PC/status and restores status atomically; return NOT CE never post-decrements CNTR; no PM-data or DM data transfer |
 | Type 22 conditional TRAP | one processor cycle whether true or false; accepted condition is retained through phase holds, PC+1 commits at the state-7/state-8 boundary, and a taken form asserts TRAP and holds state 8 until the HALT handshake; TRAP NOT CE never post-decrements CNTR |
@@ -70,6 +72,17 @@ DM-read destination, and selected I. The first acknowledged clock atomically
 commits all three parallel actions. This verifies the sourced logical wait
 contract, not physical sub-cycle setup/hold timing or whole-core PM-fetch and
 event arbitration [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7].
+
+The bounded Type 13 model/RTL slice verifies 50,070 logical clocks. A cache
+hit completes the PM-data instruction in one clock. A miss or HALT-forced
+fetch commits the PM read/write, PX, shifter/status, and DAG2 I update in that
+first clock, then emits exactly one pure instruction-fetch clock before the
+instruction-complete/event boundary. The recovery clock never repeats the
+data actions. The exhaustive decoder partitions all 65,536 words into 54,320
+source-closed actions, 8,192 unavailable-XOP words, and 3,024 read collisions
+[ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
+5-13–5-16, 6-3–6-7, A-3]. Cache monitoring and physical pin phases remain
+outside this bounded evidence under OQ-008.
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no

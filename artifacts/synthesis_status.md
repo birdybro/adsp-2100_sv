@@ -3,7 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
-  Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 14, Type 15,
+  Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, stack-control
   decoder/integration slice, Type 21
@@ -13,6 +13,15 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the bounded Type 13 shifter-plus-PM
+  transaction/cache-recovery slice passes for Cyclone V `5CSEBA6U23I7` at
+  its 21 ns standalone constraint. It uses 1,640 ALMs and 1,002 fitted
+  registers with no RAM or DSP blocks. Across four timing models, worst setup
+  slack is +1.172 ns, worst hold slack is +0.168 ns, and worst slow-corner
+  Fmax is 50.43 MHz, with zero unconstrained clocks, ports, or paths. The
+  unassigned physical clock pin and constant DM-access output are expected in
+  this virtual-pin smoke project; this is bounded logical PM/cache-recovery
+  evidence, not an actual cache monitor, native-pin, or MiSTer timing claim.
 - Quartus 17.0.2 full compilation of the bounded Type 12 shifter-plus-DM
   transaction slice passes for Cyclone V `5CSEBA6U23I7` at its 21 ns
   standalone constraint. It uses 1,704 ALMs and 1,091 fitted registers with

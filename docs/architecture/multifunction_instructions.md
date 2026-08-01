@@ -1,7 +1,8 @@
 # Multifunction execution semantics
 
 **Status: key ordering rule verified; bounded Type 8 ALU/MAC-plus-DREG,
-Type 12 shifter-plus-DM, and Type 14 shifter-plus-DREG forms integrated**
+Type 12 shifter-plus-DM, Type 13 shifter-plus-PM/cache, and Type 14
+shifter-plus-DREG forms integrated**
 
 All computational register reads take their values at the beginning of a cycle
 and all writes become visible at the end. Therefore a simultaneous memory load
@@ -115,18 +116,51 @@ randomized legal transactions [ADI-UM-1989, printed pp. 5-9–5-12]. This is
 logical bus-cycle evidence; physical eight-state pin waveforms, fetch overlap,
 interrupt/BR/HALT latching, and whole-core composition remain open.
 
-PM data access can add an instruction-fetch cycle when the cache cannot source
-the next instruction [ADI-UM-1989, printed pp. 1-7, 4-26, 6-21]. This external
-timing effect is part of the instruction, even though the computation itself is
-single-cycle.
+## Bounded Type 13 execution and PM/cache transaction
+
+Original Type 13 combines one unconditional non-immediate shifter operation
+with a DAG2-addressed PM read or write. The shifter X operand, PM-write DREG,
+PX, and I/M/L registers are cycle-start values. A PM read sends bits 23–8 to
+the DREG and bits 7–0 to PX; a PM write combines the old DREG as bits 23–8
+with old PX as bits 7–0. The selected I4–I7 post-modifies when the PM data
+cycle completes. Read collisions with an SR half or SE written by the
+shifter fail closed; write overlap is legal because the memory observes the
+old DREG/PX values [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-6–3-7,
+6-3–6-7, Tables 6.1–6.2, A-3].
+
+The exact `00010001` class contains 65,536 words. The bounded decoder executes
+54,320: both directions, all sixteen SF functions, seven documented shifter X
+operands, every DREG, and all I4–I7/M4–M7 pairs, excluding only read
+destination collisions. It fails closed for 8,192 unavailable-XOP words and
+3,024 read-collision words. Two independent fixtures, every supported
+assembler/disassembler form, and exhaustive 24-bit RTL decode verify the
+partition.
+
+PM data has fixed timing and no DMACK-like acknowledge. On a valid cache hit,
+the shifter, PM transfer, PX effect, and DAG2 post-modify commit in one cycle
+while the cached next instruction is selected. On a cache miss, those data
+actions still commit in the first cycle and exactly one external instruction
+fetch recovery cycle follows; the recovery cycle does not repeat any data or
+compute action. HALT handoff forces that fetch even if a cache entry is valid.
+Interrupt/event recognition occurs only after the completing hit cycle or
+after the miss recovery cycle [ADI-UM-1989, printed pp. 4-26–4-30,
+5-5–5-8, 5-13–5-16].
+
+Nine directed model tests and 50,070 deterministic model/RTL clocks cover PM
+read/write packing, PX, both banks, all DAG2 selections, fixed cache-hit and
+cache-miss timing, forced fetch, unknown operands/data, reset abort, and live
+input conflicts during recovery. The caller still supplies the next fetch
+address and cache-valid decision. Cache tag monitoring, fills/replacement,
+branches, loops, interrupts, self-modifying PM, physical eight-state pin
+phases, and whole-core arbitration remain open under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap for Types 1, 4, 5, and 13;
-- old store value versus new computation result outside Type 12;
+- source/destination overlap for Types 1, 4, and 5;
+- old store value versus new computation result outside Types 12 and 13;
 - dual PM/DM loads and independent DAG post-modifies;
 - status from the computation visible only to the next cycle;
 - condition-false preservation and cycle/bus activity;
-- PM cache hit/miss, branch, loop-end, interrupt, wait, HALT, and BR boundaries;
+- PM cache branch, loop-end, interrupt, BR, tag-fill, and replacement boundaries;
 - illegal destination collisions and reserved field combinations beyond the
-  bounded Type 8, Type 12, and Type 14 partitions.
+  bounded Type 8 and Type 12–14 partitions.

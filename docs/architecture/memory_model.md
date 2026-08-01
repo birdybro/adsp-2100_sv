@@ -24,3 +24,15 @@ read data and atomically commits the optional DREG load, shifter action, and
 selected-I post-modification [ADI-UM-1989, printed pp. 5-9–5-12,
 6-3–6-7]. It does not yet include PM fetch concurrency, BR/BG ownership,
 interrupt/HALT latching, or a physical state-1-through-state-8 pin wrapper.
+
+The bounded Type 13 boundary implements the corresponding PM-data path with
+fixed original-device timing. It exposes the old DAG2 I address, PM data
+direction, and the old `{DREG,PX}` 24-bit write word. A read atomically loads
+the upper 16 bits into the selected DREG and the low eight bits into PX while
+the shifter and selected-I post-modify commit. There is no invented PM
+acknowledge input [ADI-UM-1989, printed pp. 3-6–3-7, 5-5–5-8,
+6-3–6-7]. A cache hit completes in that cycle; a miss adds one instruction
+fetch cycle without repeating the data action [ADI-UM-1989, printed
+pp. 4-26–4-30]. The bounded slice receives cache validity and the next fetch
+address from its caller; cache monitoring and whole-core PM ownership remain
+OQ-008.

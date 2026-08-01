@@ -91,6 +91,12 @@ semantic versioning after its first release.
   RTL, all supported assembler/disassembler forms, two hand-derived fixtures,
   deterministic state/bus differential vectors, a bus-stability formal
   harness/recipe, and a constrained Cyclone V synthesis project.
+- A bounded original Type 13 shifter-plus-PM semantic/transaction entry
+  covering 54,320 source-closed words; an independent unknown-preserving
+  model with explicit cache-hit/miss recovery, exact fail-closed decoder,
+  portable stateful RTL, all supported assembler/disassembler forms, two
+  hand-derived fixtures, deterministic state/cache/bus differential vectors,
+  a fixed-cycle/recovery formal harness, and a constrained Cyclone V project.
 - A bounded Type 8 ALU/MAC-plus-internal-DREG semantic entry covering 476,672
   source-closed noncolliding words; an independent unknown-preserving parallel
   state model, exact fail-closed decoder, portable execution RTL, canonical
@@ -292,6 +298,19 @@ semantic versioning after its first release.
 
 ### Verified
 
+- Type 13 exhaustive RTL decode traverses all 16,777,216 program words and
+  partitions its 65,536-word class into 54,320 supported actions, 8,192
+  unavailable-XOP words, and 3,024 PM-read destination collisions. The
+  50,070-clock model/RTL differential covers both banks, all DAG2 selections,
+  read DREG/PX packing, old write data, fixed-cycle architectural commits,
+  cache-hit completion, one-cycle miss/forced-fetch recovery, reset aborts,
+  conflicts, and unknown propagation.
+- Quartus full compilation passes for the bounded Type 13 logical PM/cache
+  slice at its 21 ns standalone constraint: 1,640 ALMs, 1,002 fitted
+  registers, no RAM/DSP blocks, +1.172 ns worst setup and +0.168 ns worst
+  multicorner hold slack, 50.43 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths. The unassigned clock pin and constant
+  DM-access output are expected for the standalone smoke project.
 - Type 12 exhaustive RTL decode traverses all 16,777,216 program words and
   partitions its 131,072-word class into 108,640 supported actions, 16,384
   unavailable-XOP words, and 6,048 DM-read destination collisions. The
@@ -322,11 +341,11 @@ semantic versioning after its first release.
   routing duplicates, no RAM/DSP blocks, +8.448 ns worst setup and +0.168 ns
   worst multicorner hold slack, 86.81 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 416 distinct Python checks, 14 local
+- The expanded `make test` passes 427 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
-  twenty exhaustive 24-bit decode traversals, and every existing model/RTL
-  vector regression including the Type 12 state/bus clocks and all Type 23
-  and Type 24 division cycles.
+  twenty-one exhaustive 24-bit decode traversals, and every existing model/RTL
+  vector regression including the Type 12 state/bus clocks, Type 13
+  state/cache/bus clocks, and all Type 23 and Type 24 division cycles.
 
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
@@ -644,6 +663,12 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Closed the original Type 13 field partition, PM read/write packing,
+  old-value parallel semantics, PM-read collision restriction, fixed PM data
+  action, same-cycle cached-next-fetch completion, and exactly one recovery
+  fetch after a miss or forced fetch with exact-device citations; the actual
+  16-entry cache/tag monitor, physical pin phases, and whole-core event
+  arbitration remain open under OQ-008.
 - Closed the original Type 12 field partition, old-value parallel semantics,
   read-collision restriction, logical DM bus ordering, completion-only DAG
   post-modification, and DMACK wait extension with exact-device citations;
@@ -797,6 +822,10 @@ semantic versioning after its first release.
 - Type 12 now supplies verified logical DM transactions and wait stability,
   but not a native active-low state-phase interface, PM fetch concurrency,
   interrupt/BR/HALT latching during waits, or whole-core instruction issue.
+- Type 13 now supplies verified logical PM data/cache-recovery transactions,
+  but the caller still supplies cache hit/valid information and the following
+  fetch address; no actual 16-entry cache/tag monitor, native active-low PM
+  phase interface, or whole-core instruction issue exists.
 - Open-source synthesis and formal tools are not installed in this environment.
 - Type 8 AMF-zero legality and same-destination results are unresolved and are
   rejected rather than assigned invented behavior. Its standalone combined

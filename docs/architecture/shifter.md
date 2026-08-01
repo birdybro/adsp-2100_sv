@@ -1,7 +1,7 @@
 # Barrel shifter
 
 **Status: function block implemented and independently cross-checked; bounded
-Type 12 and Type 14–16 instruction forms integrated**
+Type 12–16 instruction forms integrated**
 
 The original shifter maps a 16-bit input into a 32-bit result with 49
 placements from off-scale right through off-scale left. SR is split into
@@ -76,8 +76,10 @@ operand space for every exponent mode, all flag combinations, and
 deterministic random values.
 
 This is not yet a complete shifter-instruction implementation. Type 13 PM
-multifunction behavior and whole-core fetch/interrupt timing remain outside
-the implemented boundaries. The separate register file now
+multifunction execution is now bounded through a caller-supplied cache-valid
+decision and one-cycle recovery fetch, but the real cache monitor and
+whole-core fetch/interrupt timing remain outside the implemented boundaries.
+The separate register file now
 accepts the explicit result enables for selected-bank SR, SE, or SB
 writeback, and the separate status block accepts EXP's explicit SS update;
 instruction connectivity remains to be verified during core integration.

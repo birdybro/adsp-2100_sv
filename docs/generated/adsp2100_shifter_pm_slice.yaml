@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "BOUNDED_TYPE_13_SHIFTER_PM_CACHE_EXECUTION",
+  "decode": {
+    "opcode_mask": "0xff0000",
+    "opcode_value": "0x110000",
+    "fields": {
+      "D_DIRECTION_WRITE": [15, 15],
+      "SF_SHIFTER_FUNCTION": [14, 11],
+      "XOP_SHIFTER_SOURCE": [10, 8],
+      "DREG_MEMORY_SOURCE_OR_DESTINATION": [7, 4],
+      "I4_TO_I7_LOCAL": [3, 2],
+      "M4_TO_M7_LOCAL": [1, 0]
+    },
+    "class_words": 65536,
+    "source_closed_words": 54320,
+    "unavailable_xop_words": 8192,
+    "read_destination_collision_words": 3024,
+    "xop_sources": ["SI", "UNAVAILABLE", "AR", "MR0", "MR1", "MR2", "SR0", "SR1"],
+    "dag": "DAG2_ONLY"
+  },
+  "parallel_actions": {
+    "cycle_start_reads": [
+      "SELECTED_BANK_SHIFTER_XOP",
+      "SELECTED_BANK_PM_WRITE_DREG_IF_WRITE",
+      "PX_IF_WRITE",
+      "SELECTED_DAG2_I_M_L"
+    ],
+    "data_cycle_writes": [
+      "SHIFTER_DESTINATION",
+      "ASTAT_SS_WHEN_SHIFTER_WRITES_SS",
+      "PM_READ_UPPER_16_TO_DREG_IF_READ",
+      "PM_READ_LOW_8_TO_PX_IF_READ",
+      "POSTMODIFIED_SELECTED_I"
+    ],
+    "pm_read_collision_rule": "SHIFTER_AND_PM_READ_MUST_NOT_WRITE_THE_SAME_REGISTER",
+    "pm_write_overlap_rule": "LEGAL_BECAUSE_WRITE_DATA_USES_OLD_DREG_AND_OLD_PX",
+    "pm_write_packing": "OLD_DREG_AS_BITS_23_TO_8_AND_OLD_PX_AS_BITS_7_TO_0",
+    "base_instruction_cycles": 1,
+    "conditional": false
+  },
+  "cache_contract": {
+    "cache_hit": "NEXT_INSTRUCTION_SELECTED_FROM_VALID_CACHE_AND_INSTRUCTION_COMPLETES_WITH_PM_DATA_CYCLE",
+    "cache_miss": "PM_DATA_ACTION_COMMITS_THEN_ONE_EXTERNAL_INSTRUCTION_FETCH_RECOVERY_CYCLE_OCCURS",
+    "recovery_nonrepetition": "SHIFTER_PM_TRANSFER_PX_AND_DAG_ACTIONS_DO_NOT_REPEAT",
+    "forced_fetch": "HALT_HANDOFF_FORCES_RECOVERY_FETCH_EVEN_WHEN_CACHE_ENTRY_IS_VALID",
+    "event_boundary": "AFTER_DATA_CYCLE_ON_CACHE_HIT_OR_AFTER_RECOVERY_FETCH_ON_MISS",
+    "cache_monitor_input": "CALLER_SUPPLIES_NEXT_FETCH_ADDRESS_AND_CACHE_VALIDITY",
+    "cache_monitor_limitation": "TAG_MONITOR_FILL_REPLACEMENT_BRANCH_LOOP_AND_SELF_MODIFYING_PM_BEHAVIOR_REMAIN_OQ_008"
+  },
+  "bus_contract": {
+    "pm_data_cycle": "FIXED_ONE_PROCESSOR_CYCLE_WITH_NO_ACKNOWLEDGE_INPUT",
+    "pm_recovery_fetch": "FIXED_ONE_ADDITIONAL_PROCESSOR_CYCLE_WHEN_REQUIRED",
+    "dm_access": false,
+    "electrical_pin_substates": "OUTSIDE_BOUNDED_LOGICAL_CYCLE_SLICE"
+  },
+  "unknown_policy": {
+    "reset_unknown": ["COMPUTATIONAL_REGISTERS", "PX", "I_REGISTERS", "M_REGISTERS", "L_REGISTERS"],
+    "unknown_shifter_source": "INVALIDATE_ONLY_DOCUMENTED_SHIFTER_DESTINATION_AT_DATA_CYCLE_COMPLETION",
+    "unknown_pm_read_data": "INVALIDATE_PM_READ_DREG_AND_PX_AT_DATA_CYCLE_COMPLETION",
+    "unknown_or_unsupported_dag_configuration": "ADDRESS_VALID_WHEN_OLD_I_IS_KNOWN_BUT_SELECTED_I_WRITEBACK_BECOMES_UNKNOWN",
+    "unknown_recovery_fetch": "FETCHED_INSTRUCTION_VALIDITY_REMAINS_FALSE"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 3-6–3-7",
+    "ADI-UM-1989 printed pp. 4-26–4-30",
+    "ADI-UM-1989 printed pp. 5-5–5-8 and 5-13–5-16",
+    "ADI-UM-1989 printed pp. 6-3–6-7 and Tables 6.1–6.2",
+    "ADI-UM-1989 printed p. A-3"
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "tests": {
+    "python": "tests/test_shifter_pm.py",
+    "tool_round_trip": "tests/test_assembler_disassembler.py::test_all_source_closed_shifter_pm_forms_round_trip",
+    "rtl_decode": "sim/unit/tb_adsp2100_shifter_pm_decode.sv",
+    "rtl_state_and_bus": "sim/unit/tb_adsp2100_shifter_pm_slice.sv",
+    "formal": "formal/shifter_pm.sby"
+  },
+  "unresolved": [
+    "OQ_008_CACHE_TAG_MONITOR_AND_CONTROL_FLOW_INTERACTION",
+    "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_HALT_BR_AND_BUS_ARBITRATION_INTEGRATION",
+    "PHYSICAL_PIN_SUBSTATE_WAVEFORMS_BEYOND_LOGICAL_CYCLE_BOUNDARY",
+    "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
+  ]
+}

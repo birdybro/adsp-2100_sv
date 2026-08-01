@@ -131,6 +131,18 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             count += 1
         self.assertEqual(count, 108_640)
 
+    def test_all_source_closed_shifter_pm_forms_round_trip(self) -> None:
+        count = 0
+        for payload in range(1 << 16):
+            opcode = 0x110000 | payload
+            decoded = disassemble_word(opcode)
+            if not decoded.implemented:
+                continue
+            self.assertEqual(decoded.classification, "TYPE_13_BOUNDED_EXECUTION")
+            self.assertEqual(assemble_statement(decoded.text).value, opcode)
+            count += 1
+        self.assertEqual(count, 54_320)
+
     def test_all_canonical_compute_operations_round_trip(self) -> None:
         from tools.assembler.adsp2100_assembler import _format_compute_operation
 
@@ -449,6 +461,23 @@ class AssemblerDisassemblerTests(unittest.TestCase):
             assemble_statement("SR = LSHIFT SI (HI), SR0 = DM(I0, M0);")
         with self.assertRaises(AssemblyError):
             assemble_statement("SR = LSHIFT SI (HI), AX0 = DM(I0, M4);")
+
+    def test_shifter_pm_unsupported_forms_fail_closed(self) -> None:
+        cases = {
+            0x110100: "UNVERIFIED_TYPE_13_XOP",
+            0x1100E0: "UNSUPPORTED_TYPE_13_DESTINATION_COLLISION",
+            0x116890: "UNSUPPORTED_TYPE_13_DESTINATION_COLLISION",
+        }
+        for opcode, classification in cases.items():
+            decoded = disassemble_word(opcode)
+            self.assertFalse(decoded.implemented)
+            self.assertEqual(decoded.classification, classification)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI (HI), SR0 = PM(I4, M4);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI (HI), AX0 = PM(I0, M4);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SR = LSHIFT SI (HI), AX0 = PM(I4, M0);")
 
     def test_conditional_shifter_rejects_unavailable_xop_and_bad_condition(self) -> None:
         unavailable = disassemble_word(0x0E010F)

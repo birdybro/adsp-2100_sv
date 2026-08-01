@@ -1,6 +1,7 @@
 # Pipeline and cache
 
-**Status: one-stage instruction pipeline verified; full hazards pending**
+**Status: one-stage pipeline and bounded PM-data hit/miss timing implemented;
+full cache monitor and hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
 following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
@@ -19,3 +20,13 @@ pp. 5-13–5-14].
 
 Cache tag/monitor algorithm, self-modifying PM behavior, branches at cache
 boundaries, and precise miss traces are highest-priority timing tests.
+
+The bounded Type 13 model/RTL makes the sourced two outcomes explicit. With a
+caller-validated next cache entry, the PM-data instruction completes in its
+single data cycle. Without one, that cycle commits the shifter, PM/PX, and
+DAG2 effects and records one recovery fetch address; the next cycle performs
+only the external instruction fetch and then exposes the event-recognition
+boundary. A forced-fetch input models the documented HALT handoff. Fifty
+thousand seventy model/RTL clocks confirm that no architectural data action
+repeats in recovery [ADI-UM-1989, printed pp. 4-26–4-30, 5-13–5-16]. This is
+not yet the 16-entry tag/monitor/fill implementation, which remains OQ-008.
