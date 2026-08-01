@@ -2,7 +2,7 @@
 
 **Updated:** 2026-07-31
 
-**Latest verified engineering commit:** `dcc1b8a`
+**Latest verified engineering commit:** `153789f`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus
@@ -268,7 +268,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 608 distinct Python unit checks plus manifest/hash verification;
+- 614 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -524,7 +524,8 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/17/18 linear fetch owner (61 total)
+  the bounded steady-state Type 6/7/17/18 linear fetch owner and original
+  RESET/logical-phase invariants (62 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
