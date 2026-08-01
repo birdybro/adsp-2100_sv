@@ -233,6 +233,7 @@ Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, 108,640 source-closed Type 12 shifter-plus-DM words,
 54,320 source-closed Type 13 shifter-plus-PM words,
 all 4,194,304 source-closed Type 1 dual-read action words,
+1,556,480 source-closed Type 3 direct-DM action words,
 2,034,688 source-closed Type 4 action words with waited logical DM execution,
 1,017,344 source-closed Type 5 ALU/MAC-plus-PM words with bounded
 cache/native-PM execution,
@@ -276,6 +277,11 @@ restricted DD/PD input destinations, and either AMF-zero dual fetch or an
 implicit AR/MR ALU/MAC result using cycle-start operands. State, cache, and
 native dual-bus execution remain withheld because OQ-023 has not established
 the PM transaction behavior while DMACK extends state seven.
+Type 3 field/action decode is independently closed for its complete
+2,097,152-word class: 770,048 direct reads and 786,432 direct writes are
+supported, while 540,672 reserved-selector or read-only-SSTAT-destination
+words fail closed. State/native-DM execution remains pending, and OQ-016
+still governs narrow status/control write-source extension.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at

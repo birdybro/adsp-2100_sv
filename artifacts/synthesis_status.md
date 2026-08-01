@@ -19,6 +19,14 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the combinational Type 3 direct-DM
+  action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
+  constraint. It uses 46 ALMs (32 combinational ALUTs) and no registers, RAM,
+  or DSP blocks. Across four timing models, worst setup slack is +17.118 ns
+  and worst hold slack is +0.237 ns, with zero unconstrained clocks, ports, or
+  paths. The expected decoder-only LogicLock license warning does not affect
+  compilation; this is action selection, not state/native-DM or whole-core
+  timing closure.
 - Quartus 17.0.2 full compilation of the combinational Type 1 dual-read
   action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
   constraint. It uses 53 ALMs and no registers, RAM, or DSP blocks. Across

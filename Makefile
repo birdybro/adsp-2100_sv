@@ -330,6 +330,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_internal_move_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_direct_dm_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_internal_move_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_internal_move_decode.sv \
@@ -592,6 +594,7 @@ decode-tests:
 	$(PYTHON) tools/generators/validate_mode_control.py
 	$(PYTHON) tools/generators/validate_modify_address.py
 	$(PYTHON) tools/generators/validate_internal_move.py
+	$(PYTHON) tools/generators/validate_direct_dm.py
 	$(PYTHON) tools/generators/generate_opcode_table.py --check
 	$(PYTHON) tools/generators/generate_decode_package.py --check
 	$(PYTHON) tools/generators/generate_instruction_formats.py --check
@@ -599,7 +602,7 @@ decode-tests:
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
 		tests.test_isa_fields tests.test_instruction_formats \
 		tests.test_stack_control tests.test_mr_saturation \
-		tests.test_dm_write_immediate \
+		tests.test_dm_write_immediate tests.test_direct_dm \
 		tests.test_internal_move tests.test_load_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
@@ -775,6 +778,13 @@ decode-tests:
 			rtl/core/adsp2100_internal_move_decode.sv \
 			sim/unit/tb_adsp2100_internal_move_decode.sv; \
 		build/obj_internal_move_decode/Vtb_adsp2100_internal_move_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_direct_dm_decode \
+			--top-module tb_adsp2100_direct_dm_decode \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			sim/unit/tb_adsp2100_direct_dm_decode.sv; \
+		build/obj_direct_dm_decode/Vtb_adsp2100_direct_dm_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			-Wno-TIMESCALEMOD \
 			--Mdir build/obj_modify_address_decode \
@@ -1641,6 +1651,10 @@ formal:
 			rtl/core/adsp2100_internal_move_decode.sv \
 			formal/harnesses/adsp2100_internal_move_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_direct_dm_decode_formal \
+			rtl/core/adsp2100_direct_dm_decode.sv \
+			formal/harnesses/adsp2100_direct_dm_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_internal_move_slice_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_internal_move_decode.sv \
@@ -1868,6 +1882,8 @@ formal:
 			formal/mode_control_decode.sby; \
 		sby -f -d build/formal_internal_move_decode \
 			formal/internal_move_decode.sby; \
+		sby -f -d build/formal_direct_dm_decode \
+			formal/direct_dm_decode.sby; \
 		sby -f -d build/formal_internal_move_slice \
 			formal/internal_move_slice.sby; \
 		sby -f -d build/formal_modify_address_decode \
@@ -1991,6 +2007,8 @@ synth-quartus:
 			synthesis/quartus/mode_control_slice_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/internal_move_decode_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/direct_dm_decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/internal_move_slice_smoke; \
 		quartus_sh --flow compile \
@@ -2278,6 +2296,9 @@ clean:
 	@if [ -d build/quartus_internal_move_decode ]; then \
 		find build/quartus_internal_move_decode -depth -delete; \
 	fi
+	@if [ -d build/quartus_direct_dm_decode ]; then \
+		find build/quartus_direct_dm_decode -depth -delete; \
+	fi
 	@if [ -d build/quartus_internal_move_slice ]; then \
 		find build/quartus_internal_move_slice -depth -delete; \
 	fi
@@ -2402,6 +2423,7 @@ clean:
 		build/formal_mode_control_decode \
 		build/formal_mode_control_slice \
 		build/formal_internal_move_decode \
+		build/formal_direct_dm_decode \
 		build/formal_internal_move_slice \
 		build/formal_load_dreg_immediate \
 		build/formal_immediate_shift \

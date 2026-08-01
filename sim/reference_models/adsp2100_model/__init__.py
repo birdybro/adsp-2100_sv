@@ -143,6 +143,12 @@ from .dm_write_immediate import (
     DMWriteImmediateAction,
     decode_dm_write_immediate,
 )
+from .direct_dm import (
+    DIRECT_DM_MASK,
+    DIRECT_DM_VALUE,
+    DirectDMAction,
+    decode_direct_dm,
+)
 from .dm_write_immediate_slice import (
     DMWriteImmediateCycleResult,
     DMWriteImmediatePending,

@@ -19,6 +19,57 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class AssemblerDisassemblerTests(unittest.TestCase):
+    def test_type_3_direct_dm_forms_round_trip(self) -> None:
+        fixture_data = json.loads(
+            (ROOT / "tests/vectors/direct_dm_fixtures.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for fixture in fixture_data["hand_checked_cases"]:
+            if not fixture["legal"]:
+                continue
+            opcode = int(fixture["opcode"], 16)
+            statement = fixture["statement"]
+            self.assertEqual(assemble_statement(statement).value, opcode)
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(decoded.classification, "TYPE_03_SOURCE_CLOSED_ACTION")
+            self.assertEqual(decoded.text, statement)
+
+        registers = register_map()
+        count = 0
+        for direction in range(2):
+            for code, metadata in registers.items():
+                name = metadata["register"]
+                if not direction and name == "SSTAT":
+                    continue
+                for address in (0, 1, 0x1FFF, 0x2000, 0x3FFF):
+                    memory = f"DM(0x{address:04x})"
+                    statement = (
+                        f"{memory} = {name};"
+                        if direction else f"{name} = {memory};"
+                    )
+                    opcode = (
+                        0x800000 | (direction << 20)
+                        | ((code >> 4) << 18) | (address << 4) | (code & 0xF)
+                    )
+                    self.assertEqual(assemble_statement(statement).value, opcode)
+                    decoded = disassemble_word(opcode)
+                    self.assertEqual(decoded.text, statement)
+                    self.assertEqual(decoded.classification, "TYPE_03_SOURCE_CLOSED_ACTION")
+                    count += 1
+        self.assertEqual(count, 475)
+
+        with self.assertRaises(AssemblyError):
+            assemble_statement("SSTAT = DM(0x0000);")
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AX0 = DM(0x4000);")
+        self.assertFalse(disassemble_word(0x8C0002).implemented)
+        self.assertEqual(
+            disassemble_word(0x8C0002).classification,
+            "UNSUPPORTED_TYPE_03_READ_ONLY_SSTAT_DESTINATION",
+        )
+
     def test_type_2_immediate_dm_write_forms_round_trip(self) -> None:
         count = 0
         for dag in range(2):
@@ -1051,14 +1102,14 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         self.assertEqual(result.classification, "RESERVED_TYPE_29")
         self.assertEqual(result.text, ".WORD 0x010000;")
 
-    def test_unshown_reserved_and_unimplemented_legal_class_are_distinct(self) -> None:
+    def test_unshown_reserved_and_unsupported_legal_class_are_distinct(self) -> None:
         self.assertEqual(
             disassemble_word(0x0B0020).classification,
             "RESERVED_UNSHOWN",
         )
         self.assertEqual(
-            disassemble_word(0x800000).classification,
-            "UNIMPLEMENTED_TYPE_03",
+            disassemble_word(0x8C0008).classification,
+            "UNSUPPORTED_TYPE_03_RESERVED_DESTINATION_SELECTOR",
         )
 
 

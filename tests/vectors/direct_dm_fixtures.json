@@ -1,0 +1,38 @@
+{
+  "source": "ADI-UM-1989 printed p. A-1 Type 3, p. A-7 D, and p. A-9 REG tables",
+  "derivation": "The opcodes were assembled by hand from 100|D|RGP|ADDR|REG before implementation.",
+  "hand_checked_cases": [
+    {
+      "statement": "AX0 = DM(0x1234);",
+      "opcode": "0x812340",
+      "write": false,
+      "address": "0x1234",
+      "register": "AX0",
+      "legal": true
+    },
+    {
+      "statement": "DM(0x3fff) = PX;",
+      "opcode": "0x9ffff7",
+      "write": true,
+      "address": "0x3fff",
+      "register": "PX",
+      "legal": true
+    },
+    {
+      "opcode": "0x8c0002",
+      "write": false,
+      "address": "0x0000",
+      "register": "SSTAT",
+      "legal": false,
+      "invalid_reason": "READ_ONLY_SSTAT_DESTINATION"
+    },
+    {
+      "opcode": "0x9c0008",
+      "write": true,
+      "address": "0x0000",
+      "register": null,
+      "legal": false,
+      "invalid_reason": "RESERVED_SOURCE_SELECTOR"
+    }
+  ]
+}

@@ -8,6 +8,14 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original Type 3 direct-DM action database, independent
+  decoder, two legal and two unsupported hand-derived fixtures, original
+  algebraic/raw assembler-disassembler paths, exact portable RTL decoder,
+  formal assertions, exhaustive 24-bit traversal, and a constrained Cyclone V
+  decoder project. The class partitions into 770,048 reads, 786,432 writes,
+  and 540,672 reserved/read-only-destination words without assigning behavior
+  to unsupported selectors.
+
 - A primary-backed original Type 1 ALU/MAC-plus-dual-read action database,
   independent exhaustive decoder, two hand-derived fixtures, original
   algebraic/raw assembler-disassembler paths, portable exact RTL decoder,

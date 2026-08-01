@@ -11,6 +11,11 @@ from tools.generators.validate_internal_move import (
     register_map as internal_move_register_map,
     validate_database as validate_internal_move_database,
 )
+from tools.generators.validate_direct_dm import (
+    load_database as load_direct_dm_database,
+    register_map as direct_dm_register_map,
+    validate_database as validate_direct_dm_database,
+)
 from tools.generators.validate_condition_codes import (
     load_database as load_condition_database,
     validate_database as validate_condition_database,
@@ -154,6 +159,63 @@ def _assemble_dm_write_immediate(statement: str) -> int | None:
         | ((value & 0xFFFF) << 4)
         | ((i_address & 3) << 2)
         | (m_address & 3)
+    )
+
+
+@lru_cache(maxsize=1)
+def _direct_dm_tables() -> tuple[int, dict[str, int], dict[str, int]]:
+    database = load_direct_dm_database()
+    validate_direct_dm_database(database)
+    registers = direct_dm_register_map()
+    readable = {
+        metadata["register"]: code for code, metadata in registers.items()
+    }
+    writable = {
+        name: code for name, code in readable.items() if name != "SSTAT"
+    }
+    return int(database["instruction"]["opcode_value"], 16), readable, writable
+
+
+def _parse_direct_dm_address(hexadecimal: str | None, decimal: str | None) -> int:
+    value = int(hexadecimal, 16) if hexadecimal is not None else int(decimal, 10)
+    if not 0 <= value <= 0x3FFF:
+        raise AssemblyError("Type 3 direct DM address must fit 14 bits")
+    return value
+
+
+def _assemble_direct_dm(statement: str) -> int | None:
+    read = re.fullmatch(
+        r"([A-Z][A-Z0-9]*)\s*=\s*DM\(\s*"
+        r"(?:(?:0X|H#)([0-9A-F]+)|([0-9]+))\s*\)",
+        statement,
+    )
+    write = re.fullmatch(
+        r"DM\(\s*(?:(?:0X|H#)([0-9A-F]+)|([0-9]+))\s*\)\s*=\s*"
+        r"([A-Z][A-Z0-9]*)",
+        statement,
+    )
+    opcode, readable, writable = _direct_dm_tables()
+    if read is not None:
+        register_name, hexadecimal, decimal = read.groups()
+        if register_name == "SSTAT":
+            raise AssemblyError("SSTAT is read-only")
+        if register_name not in writable:
+            return None
+        address = _parse_direct_dm_address(hexadecimal, decimal)
+        register_code = writable[register_name]
+        direction = 0
+    elif write is not None:
+        hexadecimal, decimal, register_name = write.groups()
+        if register_name not in readable:
+            return None
+        address = _parse_direct_dm_address(hexadecimal, decimal)
+        register_code = readable[register_name]
+        direction = 1
+    else:
+        return None
+    return (
+        opcode | (direction << 20) | ((register_code >> 4) << 18)
+        | (address << 4) | (register_code & 0xF)
     )
 
 
@@ -980,6 +1042,9 @@ def assemble_statement(source: str) -> AssembledWord:
     dm_write_immediate = _assemble_dm_write_immediate(statement)
     if dm_write_immediate is not None:
         return AssembledWord(dm_write_immediate)
+    direct_dm = _assemble_direct_dm(statement)
+    if direct_dm is not None:
+        return AssembledWord(direct_dm)
     # Type 9 precedes the general DREG-immediate parser so its canonical
     # `AR = -0` negate-zero spelling round-trips to the source opcode.
     conditional_compute = _assemble_conditional_compute(statement)

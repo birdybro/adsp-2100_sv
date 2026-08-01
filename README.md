@@ -71,6 +71,9 @@ issue/state-7 completion,
 all 4,194,304 Type 1 words decoded as source-closed fixed-DAG1-DM plus
 DAG2-PM dual-read actions with cycle-start computation operands, cycle-end
 DD/PD loads, implicit AR/MR result selection, and AMF-zero dual fetch,
+all 2,097,152 Type 3 direct-DM words partitioned into 1,556,480 supported
+general-register transfers and 540,672 explicit reserved/read-only-destination
+words at an action-only boundary,
 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented

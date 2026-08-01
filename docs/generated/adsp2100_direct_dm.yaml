@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "program_word_width": 24,
+  "data_word_width": 16,
+  "data_address_width": 14,
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_3_ACTION_DECODE",
+  "confidence": "VERIFIED_PRIMARY",
+  "isa_database": "docs/generated/adsp2100_isa.yaml",
+  "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
+  "register_code_database": "docs/generated/adsp2100_register_codes.yaml",
+  "instruction": {
+    "original_type": 3,
+    "name": "direct DM read/write",
+    "opcode_mask": "0xe00000",
+    "opcode_value": "0x800000",
+    "encoding_pattern": "100xxxxxxxxxxxxxxxxxxxxx",
+    "field_defined_encoding_count": 2097152,
+    "legal_action_count": 1556480,
+    "legal_read_count": 770048,
+    "legal_write_count": 786432,
+    "illegal_or_reserved_subencoding_count": 540672,
+    "source_register_count": 48,
+    "destination_register_count": 47,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "pm_data_transfer": "NONE",
+    "dm_transfer": "READ_OR_WRITE",
+    "wait_state_sensitive": true,
+    "dag_used": "NONE",
+    "status_generated": "NONE"
+  },
+  "fields": [
+    {"id": "D", "msb": 20, "lsb": 20, "role": "DM_DIRECTION"},
+    {"id": "RGP", "msb": 19, "lsb": 18, "role": "GENERAL_REGISTER_GROUP"},
+    {"id": "ADDR", "msb": 17, "lsb": 4, "role": "DIRECT_DM_ADDRESS"},
+    {"id": "REG", "msb": 3, "lsb": 0, "role": "GENERAL_REGISTER_INDEX"}
+  ],
+  "direction": {
+    "0": "DM_READ_TO_REGISTER",
+    "1": "REGISTER_TO_DM_WRITE"
+  },
+  "legality": {
+    "read": "Every writable non-reserved REG table entry is a legal DM-read destination.",
+    "write": "Every readable non-reserved REG table entry, including SSTAT, is a legal DM-write source.",
+    "reserved_selector": "A selector blank in the original REG table has no documented execution behavior.",
+    "read_only_destination": "SSTAT may source a DM write but may not be the destination of a DM read.",
+    "invalid_action_policy": "Reserved selectors and a DM read to SSTAT decode as Type 3 but emit no supported transfer action."
+  },
+  "execution_semantics": {
+    "address": "ADDR is the absolute 14-bit data-memory address carried directly in the instruction; no DAG register is read or modified.",
+    "write_source_sampling": "A legal write sources the selected register from cycle-start architectural state.",
+    "read_destination_commit": "A legal read writes the selected register at the completed cycle boundary.",
+    "memory_timing": "The base instruction is one cycle and a low DMACK sample at state 6 extends state seven by one complete processor cycle.",
+    "status_generation": "The transfer generates no computational status; a read into writable status/control storage replaces that register's documented stored bits.",
+    "source_extension_open": "DM writes sourced by ASTAT, MSTAT, SSTAT, IMASK, or ICNTL retain OQ-016 because their unused upper DMD bits are not primary-closed."
+  },
+  "implementation_boundary": {
+    "action_decode": "COMPLETE",
+    "state_execution": "PENDING",
+    "native_dm_attachment": "PENDING",
+    "provisional_dependency": "OQ-016 applies only to DM writes sourced by narrow status/control registers."
+  },
+  "assembly": {
+    "read_syntax": "reg = DM(address);",
+    "write_syntax": "DM(address) = reg;",
+    "canonical_address": "0x0000 through 0x3fff"
+  },
+  "parallel_actions": [
+    {
+      "action": "DIRECT_DM_READ_OR_WRITE",
+      "reads": ["CYCLE_START_WRITE_SOURCE_IF_D_EQUALS_1"],
+      "writes": ["CYCLE_END_READ_DESTINATION_IF_D_EQUALS_0"],
+      "memory_transaction": "ONE_DIRECT_DM_TRANSACTION",
+      "dag_effect": "NONE",
+      "status_generation": "NONE"
+    }
+  ],
+  "source_citations": [
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 1-5–1-6 and 3-1",
+      "supports": "14-bit DMA width and direct-address distinction"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 6-1–6-2 and 6-12–6-13, Tables 6.6–6.7",
+      "supports": "one-cycle direct DM read/write syntax, 14-bit immediate address, and general-register transfer set"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. A-1 (scan PDF p. 140)",
+      "supports": "Type 3 fixed prefix and D/RGP/ADDR/REG field positions"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. A-7 and A-9 (scan PDF pp. 146 and 148)",
+      "supports": "D direction values and complete original REG selector table"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed p. 4-22",
+      "supports": "SSTAT is read-only"
+    },
+    {
+      "reference_id": "ADI-UM-1989",
+      "authority": "ORIGINAL_DEVICE_PRIMARY",
+      "location": "printed pp. 5-9–5-12, Figures 5.6–5.7",
+      "supports": "logical DM phases, state-6 DMACK sample, and full-cycle state-seven extension"
+    }
+  ],
+  "unresolved_issues": [
+    "OQ-016: unused upper DMD bits for narrow status/control register sources.",
+    "Fetch/event concurrency and whole-core DM ownership arbitration remain unintegrated.",
+    "Execution behavior of reserved selectors or a DM-read SSTAT destination is undocumented and is not treated as NOP."
+  ]
+}

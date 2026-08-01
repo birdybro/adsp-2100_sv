@@ -9,6 +9,7 @@ source-backed compute/address-generation/register/status-storage blocks plus
 bounded semantic instruction decode including Type 4 native-DM execution and
 Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
+exhaustive Type 3 direct-DM action selection,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -53,6 +54,11 @@ cycle-, or Hard Drivin'-complete
   Python, original algebraic/raw toolchain paths, exhaustive RTL traversal,
   formal assertions, and a fully constrained 53-ALM Cyclone V decoder fit;
   state/cache/native dual-bus attachment remains OQ-023;
+- complete original Type 3 action selection: all 2,097,152 words partition
+  into 770,048 direct reads, 786,432 direct writes, and 540,672 unsupported
+  reserved/read-only-destination words, with independent model/database
+  decoders, four hand fixtures, algebraic/raw tools, exhaustive RTL, formal
+  assertions, and a fully constrained 46-ALM Cyclone V decoder fit;
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
@@ -472,8 +478,8 @@ outstanding.
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
   Type 13, Type 2, Type 4, and Type 12 native-attachment invariants, plus
   Type 4 action-decode and waited logical-execution plus Type 5 action,
-  logical/cache/native execution invariants plus Type 1 action decode
-  (56 total)
+  logical/cache/native execution invariants plus Type 1 and Type 3 action decode
+  (57 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -486,8 +492,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Research and construct the Type 3 direct-DM read/write action graph, then
-   attach only source-closed state and timing behavior.
+3. Attach the source-closed Type 3 direct-DM action graph to architectural
+   register state and native DM phases while preserving OQ-016 visibility.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

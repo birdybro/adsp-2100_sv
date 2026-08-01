@@ -10,6 +10,11 @@ from tools.generators.validate_internal_move import (
     load_database as load_internal_move_database,
     validate_database as validate_internal_move_database,
 )
+from tools.generators.validate_direct_dm import (
+    decode_direct_dm,
+    load_database as load_direct_dm_database,
+    validate_database as validate_direct_dm_database,
+)
 from tools.generators.validate_condition_codes import (
     load_database as load_condition_database,
     validate_database as validate_condition_database,
@@ -99,6 +104,38 @@ def _try_disassemble_dm_write_immediate(opcode: int) -> Disassembly | None:
             f"0x{action.immediate:04x};"
         ),
         classification="TYPE_02_ACTION_DECODE",
+        implemented=True,
+    )
+
+
+@lru_cache(maxsize=1)
+def _direct_dm_database() -> dict[str, object]:
+    database = load_direct_dm_database()
+    validate_direct_dm_database(database)
+    return database
+
+
+def _try_disassemble_direct_dm(opcode: int) -> Disassembly | None:
+    decoded = decode_direct_dm(_direct_dm_database(), opcode)
+    if decoded is None:
+        return None
+    if not decoded["legal"]:
+        return Disassembly(
+            opcode=opcode,
+            text=f".WORD 0x{opcode:06x};",
+            classification=f"UNSUPPORTED_TYPE_03_{decoded['invalid_reason']}",
+            implemented=False,
+        )
+    memory = f"DM(0x{decoded['address']:04x})"
+    text = (
+        f"{memory} = {decoded['register']};"
+        if decoded["write"]
+        else f"{decoded['register']} = {memory};"
+    )
+    return Disassembly(
+        opcode=opcode,
+        text=text,
+        classification="TYPE_03_SOURCE_CLOSED_ACTION",
         implemented=True,
     )
 
@@ -722,6 +759,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     dm_write_immediate = _try_disassemble_dm_write_immediate(opcode)
     if dm_write_immediate is not None:
         return dm_write_immediate
+    direct_dm = _try_disassemble_direct_dm(opcode)
+    if direct_dm is not None:
+        return direct_dm
     conditional_compute = _try_disassemble_conditional_compute(opcode)
     if conditional_compute is not None:
         return conditional_compute

@@ -32,6 +32,16 @@ fetch/event and multi-owner DM arbitration remain open
 [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7, 6-12–6-13, A-1,
 A-5–A-11].
 
+The original Type 3 action boundary selects one absolute 14-bit DM address
+directly from the instruction and one general-register source or destination;
+it has no DAG effect. The complete class partitions into 770,048 supported
+reads, 786,432 supported writes, and 540,672 reserved/read-only-destination
+words. Action selection is independently and exhaustively checked, but
+architectural register updates and the native phase controller are not yet
+composed. Writes sourced by narrow status/control registers retain the OQ-016
+upper-DMD-bit question [ADI-UM-1989, printed pp. 1-5–1-6, 4-22,
+6-1–6-2, 6-12–6-13, A-1, A-7, and A-9].
+
 The bounded Type 2 immediate-write path drives the old selected I (or DAG1
 bit reversal), raw 16-bit immediate, and write direction. It holds those
 signals over every DMACK-low extension and commits only the selected-I

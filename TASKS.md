@@ -158,6 +158,7 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
   `tests/test_dm_write_immediate.py`,
+  `tests/test_direct_dm.py`,
   `tests/test_dm_write_immediate_slice.py`,
   `tests/test_assembler_disassembler.py`,
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
@@ -174,6 +175,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_mode_control_decode.sv`,
   `sim/unit/tb_adsp2100_modify_address_decode.sv`,
   `sim/unit/tb_adsp2100_dm_write_immediate_decode.sv`,
+  `sim/unit/tb_adsp2100_direct_dm_decode.sv`,
   `sim/unit/tb_adsp2100_dm_write_immediate_slice.sv`,
   `sim/unit/tb_adsp2100_internal_move_decode.sv`,
   `sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv`,
@@ -189,6 +191,7 @@ advance beyond research until a page-level primary citation is added.
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
   `formal/dm_write_immediate_decode.sby`,
+  `formal/direct_dm_decode.sby`,
   `formal/dm_write_immediate_slice.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
@@ -231,6 +234,13 @@ advance beyond research until a page-level primary citation is added.
   Its native-DM wrapper adds five directed checks and 50,027 clocks covering
   state-8 issue, complete-cycle wait extension, late-ACK rejection, state-7
   completion-only I writeback, off-boundary rejection, and relinquishment.
+  Type 3 now has a primary-backed class-complete action record, independent
+  model/database decoders, two legal plus two invalid hand fixtures,
+  exhaustive 24-bit RTL traversal, assembler/disassembler support, a formal
+  harness, and a constrained decoder fit. All 2,097,152 words partition into
+  770,048 legal reads, 786,432 legal writes, and 540,672 reserved-selector or
+  read-only-SSTAT-destination words. State/native-DM execution remains the
+  next bounded step; narrow status/control write sources retain OQ-016.
   Type 16 has a bounded semantic entry for 1,792 documented words;
   its 256 unassigned-XOP subencodings fail closed. Type 14 has a bounded
   semantic entry for 25,648 canonical words; 39,888 unresolved or unsupported
@@ -447,6 +457,13 @@ advance beyond research until a page-level primary citation is added.
   primary-derived fixtures, assembler/disassembler, formal assertions, and a
   constrained Cyclone V decoder project verify selection. Type 1 state/cache/
   native execution, shared-owner arbitration, and whole-core events remain.
+  Type 3 now has a source-closed direct-DM action graph for all general-register
+  directions and absolute addresses. Independent model/database decode,
+  hand-derived fixtures, exhaustive RTL, formal assertions, algebraic/raw
+  tools, and a constrained Cyclone V decoder fit verify the 1,556,480
+  supported and 540,672 unsupported words. Architectural register state,
+  native DM phases, OQ-016 narrow write sources, and whole-core ownership
+  remain outside the action boundary.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
   Type 8 legality, OQ-023 native PM behavior during Type 1 DMACK extension,
   and result forwarding outside the bounded old-value rule remain high-risk.
@@ -589,7 +606,10 @@ advance beyond research until a page-level primary citation is added.
   preserved exactly. All 32 original `MODIFY (Ix, My);` same-DAG combinations
   also round trip; cross-DAG selections fail closed. All 2,256 legal Type 17
   register pairs round trip while SSTAT destinations and reserved selectors
-  fail closed and report bounded execution. Type 6 accepts hexadecimal and
+  fail closed and report bounded execution. Type 3 accepts every supported
+  `reg = DM(address);` and `DM(address) = reg;` form at representative address
+  boundaries; reserved selectors and reads to SSTAT remain raw unsupported
+  words. Type 6 accepts hexadecimal and
   signed/unsigned decimal 16-bit immediates for every DREG destination and
   round trips through canonical hexadecimal disassembly. Type 15 accepts all
   280 algebraic LSHIFT/ASHIFT PASS/OR HI/LO and source combinations with
@@ -1613,8 +1633,9 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is the Type 3 direct-DM
-read/write action graph. The Type 1 dual-memory action graph is now complete,
+The highest-priority unblocked implementation work is Type 3 direct-DM
+architectural state and native-DM attachment. Its complete action graph is
+source-closed. The Type 1 dual-memory action graph is now complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode

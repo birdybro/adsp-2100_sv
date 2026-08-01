@@ -23,6 +23,7 @@ independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
 loads, the source-closed Type 15
 immediate-shift subset, all 4,194,304 source-closed Type 1 action words,
+1,556,480 source-closed Type 3 direct-DM action words,
 2,034,688 source-closed Type 4 action words,
 1,017,344 source-closed Type 5 action words,
 25,648 bounded Type 14 shifter-plus-DREG words, all
@@ -80,6 +81,23 @@ request conflicts, immediate completion, and multi-clock waits.
 Native active-low phases, fetch/event concurrency, and whole-core arbitration
 remain implementation work
 [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
+
+Type 3 encodes `100 D RGP[1:0] ADDR[13:0] REG[3:0]`. ADDR is an
+absolute 14-bit data-memory address and does not use or modify either DAG.
+`D=0` reads DM into a writable general register; `D=1` writes a readable
+general register to DM. Applying the original 48-readable/47-writable REG
+table to all addresses partitions the 2,097,152 class words into 770,048
+legal reads, 786,432 legal writes, and 540,672 unsupported words. The latter
+are 262,144 writes from reserved source selectors, 262,144 reads to reserved
+destination selectors, and 16,384 reads to read-only SSTAT. They are not
+assigned no-op behavior. Independent model/database decoders, two legal and
+two invalid hand-derived fixtures, representative assembler/disassembler
+round trips, exhaustive 24-bit RTL traversal, formal assertions, and a
+constrained Cyclone V decoder project close the action boundary. Architectural
+register execution and native DM attachment remain pending; OQ-016 applies to
+writes sourced by narrow status/control registers
+[ADI-UM-1989, printed pp. 1-5–1-6, 4-22, 6-1–6-2, 6-12–6-13, A-1,
+A-7, and A-9].
 
 Type 4 encodes `011 G D Z AMF[4:0] YOP[1:0] XOP[2:0] DREG[3:0]
 I[1:0] M[1:0]`. G maps I/M to DAG1 or DAG2 and D selects a DM read or write.
