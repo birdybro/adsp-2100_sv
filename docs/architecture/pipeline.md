@@ -39,5 +39,14 @@ the cache even on a prior hit. The base Type 13 and integrated boundaries pass
 50,070 and 50,086 model/RTL clocks respectively [ADI-UM-1989, printed
 pp. 4-26–4-30, 5-13–5-16]. Ordinary external fetch completion is an explicit
 fill input when Type 13 does not own PM. Unified PC/branch/loop/interrupt/HALT/
-BR ownership, self-modifying PM effects, and attachment to the separate native
-PM phase controller remain OQ-008.
+BR ownership and self-modifying PM effects remain OQ-008.
+
+The bounded native attachment maps each of those logical cycles onto the
+source-backed eight states. Type 13 issue and old-value capture occur at the
+enabled state-8-to-state-1 boundary; architectural data-cycle commit and hit
+instruction release occur at state 7-to-8. On a miss, the recovery descriptor
+is accepted at the immediately following state 8-to-1 and completes at its
+state 7-to-8 edge. Five directed tests and 50,081 model/RTL clocks verify this
+mapping without claiming ordinary-PC fetch arbitration, branch/loop flushes,
+interrupt/HALT recognition, or BR/BG ownership
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].

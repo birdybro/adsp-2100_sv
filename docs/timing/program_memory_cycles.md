@@ -1,7 +1,7 @@
 # Program-memory cycles
 
-**Status: source-backed eight-state logical pin phases implemented in a
-bounded controller; architectural request attachment pending**
+**Status: source-backed eight-state logical pin phases implemented; bounded
+Type 13/cache request attachment verified**
 
 For a PM read, the processor drives PMA and PMDA, asserts PMS, then asserts
 active-low PMRD; memory supplies PMD; the processor samples data and releases
@@ -23,8 +23,8 @@ a miss schedules one fixed instruction-read recovery cycle and uses that
 cycle's returned word to fill the monitor. Ordinary external instruction
 completions populate the same monitor when Type 13 does not own PM
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8]. The Type 13 slice itself ends at
-this logical request boundary; the separately verified pin-phase controller
-below is not yet attached to it.
+this logical request boundary; the phase-attached wrapper below connects it to
+the native controller without assigning whole-core fetch ownership.
 
 ## Eight-state logical pin boundary
 
@@ -55,11 +55,34 @@ model/RTL clocks cover reads, writes, instruction/data selection, state-7
 holds, back-to-back PMS continuity, unknown validity, reset, and bus-output
 masking.
 
+## Type 13/cache attachment
+
+The bounded `adsp2100_shifter_pm_native_slice` admits architectural issue and
+setup controls only on the enabled state-8-to-state-1 edge. It captures the
+old DAG2 address/post-modify, `{DREG,PX}` store word, shifter results, and the
+issue-time cache-hit word there. The native controller retains the descriptor
+through states 1–8. No architectural destination changes until the active
+transaction advances from state 7 to state 8; that edge samples PMD for reads
+and atomically commits the Type 13 data action. If the issue-time lookup
+missed, the completion schedules an instruction-read descriptor, which the
+next state-8-to-state-1 edge accepts as a back-to-back PM transaction. Its
+state-7-to-state-8 edge fills the monitor and produces the instruction/event
+boundary without repeating the data action
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
+
+Five directed tests and 50,081 deterministic model/RTL clocks cover PM reads,
+PM writes, hit capture, miss recovery, state holds, reset, off-boundary
+controls, and externally directed bus relinquishment. Request acceptance and
+architectural commit are checked against the independently modeled native
+controller. This evidence does not establish ordinary-PC fetch arbitration,
+other PM instruction classes, HALT/TRAP/interrupt recognition, or BR/BG
+timing.
+
 The controller exposes separate address, control, and PMD output enables so an
 FPGA wrapper can implement bidirectional pins. A separate arbiter's
 `bus_relinquished` input masks all three enables while preserving descriptor
 state, matching the sourced external-bus release effect but not implementing
 BR/BG recognition timing [ADI-UM-1989, printed p. 5-5]. Nanosecond delays,
-electrical setup/hold requirements, Type 13/cache request attachment, fetch/PC
-ownership, HALT/TRAP behavior, and BR/BG arbitration remain outside this
-bounded controller.
+electrical setup/hold requirements, ordinary fetch/PC ownership, other PM
+instruction classes, HALT/TRAP behavior, and BR/BG arbitration remain outside
+this bounded attachment.

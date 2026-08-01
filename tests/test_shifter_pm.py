@@ -190,6 +190,96 @@ class ShifterPMTests(unittest.TestCase):
         self.assertEqual(recovered.state.dag.i[4], 0x0101)
         self.assertEqual(read_dreg(recovered.state.primary, DREG.AX1), ExactWord(16, 0xCAFE))
 
+    def test_delayed_read_captures_old_values_and_commits_only_on_completion(self) -> None:
+        initial = _known_state()
+        issued = apply_shifter_pm_cycle(
+            initial,
+            execute=True,
+            opcode=_opcode(dreg=DREG.AX1),
+            pm_read_data=ExactWord(24, 0x111111),
+            next_fetch_address=ExactWord(14, 0x0222),
+            cache_next_instruction_valid=True,
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(issued.accepted)
+        self.assertTrue(issued.pm_select and issued.pm_read)
+        self.assertFalse(issued.data_action_complete)
+        self.assertEqual(issued.pm_address, 0x0100)
+        self.assertEqual(issued.state.primary, initial.primary)
+        self.assertEqual(issued.state.dag, initial.dag)
+        self.assertIsNotNone(issued.state.pending)
+
+        held = apply_shifter_pm_cycle(
+            issued.state,
+            execute=True,
+            opcode=_opcode(write=True, dreg=DREG.SR1, i=3, m=3),
+            pm_read_data=ExactWord(24, 0x222222),
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(held.integration_conflict)
+        self.assertEqual(held.pm_address, 0x0100)
+        self.assertTrue(held.pm_read)
+        self.assertEqual(held.state, issued.state)
+
+        completed = apply_shifter_pm_cycle(
+            held.state,
+            pm_read_data=ExactWord(24, 0xCAFE55),
+            pm_cycle_complete=True,
+        )
+        self.assertTrue(completed.data_action_complete)
+        self.assertTrue(completed.instruction_complete)
+        self.assertIsNone(completed.state.pending)
+        self.assertEqual(
+            read_dreg(completed.state.primary, DREG.AX1),
+            ExactWord(16, 0xCAFE),
+        )
+        self.assertEqual(completed.state.px, ExactWord(8, 0x55))
+        self.assertEqual(completed.state.dag.i[4], 0x0101)
+
+    def test_delayed_write_and_recovery_each_hold_one_captured_transaction(self) -> None:
+        state = _dreg(_known_state(), DREG.AX0, 0xABCD)
+        issued = apply_shifter_pm_cycle(
+            state,
+            execute=True,
+            opcode=_opcode(write=True, dreg=DREG.AX0),
+            next_fetch_address=ExactWord(14, 0x0333),
+            cache_next_instruction_valid=False,
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(issued.pm_write)
+        self.assertEqual(issued.pm_write_data, 0xABCD5A)
+        self.assertFalse(issued.data_action_complete)
+
+        data_done = apply_shifter_pm_cycle(
+            issued.state,
+            pm_cycle_complete=True,
+        )
+        self.assertTrue(data_done.data_action_complete)
+        self.assertFalse(data_done.instruction_complete)
+        self.assertIsNone(data_done.state.pending)
+        self.assertIsNotNone(data_done.state.recovery)
+
+        recovery_hold = apply_shifter_pm_cycle(
+            data_done.state,
+            pm_read_data=ExactWord(24, 0x111111),
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(recovery_hold.recovery_fetch)
+        self.assertEqual(recovery_hold.pm_address, 0x0333)
+        self.assertFalse(recovery_hold.instruction_complete)
+        self.assertFalse(recovery_hold.fetched_instruction_known)
+        self.assertEqual(recovery_hold.state, data_done.state)
+
+        recovery_done = apply_shifter_pm_cycle(
+            recovery_hold.state,
+            pm_read_data=ExactWord(24, 0x654321),
+            pm_cycle_complete=True,
+        )
+        self.assertTrue(recovery_done.instruction_complete)
+        self.assertTrue(recovery_done.fetched_instruction_known)
+        self.assertEqual(recovery_done.fetched_instruction, 0x654321)
+        self.assertIsNone(recovery_done.state.recovery)
+
     def test_forced_fetch_overrides_valid_cache_for_halt_handoff(self) -> None:
         issued = apply_shifter_pm_cycle(
             _known_state(),

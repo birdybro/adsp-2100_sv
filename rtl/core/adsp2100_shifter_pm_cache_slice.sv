@@ -7,6 +7,7 @@ module adsp2100_shifter_pm_cache_slice (
     input  logic [23:0] opcode_i,
     input  logic [23:0] pm_read_data_i,
     input  logic        pm_read_data_valid_i,
+    input  logic        pm_cycle_complete_i,
     input  logic [13:0] next_fetch_address_i,
     input  logic        next_fetch_address_valid_i,
     input  logic        force_instruction_fetch_i,
@@ -107,8 +108,12 @@ module adsp2100_shifter_pm_cache_slice (
     logic suppress_controls;
     logic core_integration_conflict;
     logic core_recovery_fetch;
+    logic core_held_transaction;
     logic [23:0] core_fetched_instruction;
     logic core_fetched_instruction_valid;
+    logic pending_cache_q;
+    logic [23:0] pending_cache_instruction_q;
+    logic issue_cache_instruction_valid;
     logic cache_fill_address_valid;
     logic [13:0] cache_fill_address;
     logic cache_fill_instruction_valid;
@@ -149,14 +154,18 @@ module adsp2100_shifter_pm_cache_slice (
         + {3'h0, dag_setup_write_i}
         + {3'h0, px_setup_write_i}
     );
-    assign cache_fill_from_recovery_o = core_recovery_fetch;
+    assign cache_fill_from_recovery_o = (
+        core_recovery_fetch && instruction_complete_o
+    );
     assign external_fill_conflict_o = (
         !reset_i
         && external_fetch_fill_i
-        && (core_recovery_fetch || execute_i || setup_count != 4'h0)
+        && (
+            core_held_transaction || execute_i || setup_count != 4'h0
+        )
     );
     assign external_fill_selected_o = (
-        !reset_i && external_fetch_fill_i && !core_recovery_fetch
+        !reset_i && external_fetch_fill_i && !core_held_transaction
     );
     assign suppress_controls = external_fill_selected_o;
     assign integration_conflict_o = (
@@ -176,9 +185,13 @@ module adsp2100_shifter_pm_cache_slice (
         ? core_fetched_instruction_valid
         : external_fetch_instruction_valid_i;
 
-    assign instruction_from_cache_o = (
+    assign issue_cache_instruction_valid = (
         cache_instruction_selected_o
         && cache_lookup_instruction_valid_o
+    );
+    assign instruction_from_cache_o = (
+        data_action_complete_o
+        && (issue_cache_instruction_valid || pending_cache_q)
     );
     assign instruction_from_external_o = (
         core_recovery_fetch && core_fetched_instruction_valid
@@ -187,7 +200,8 @@ module adsp2100_shifter_pm_cache_slice (
         instruction_from_cache_o || instruction_from_external_o
     );
     assign next_instruction_o = instruction_from_cache_o
-        ? cache_lookup_instruction_o
+        ? (issue_cache_instruction_valid
+            ? cache_lookup_instruction_o : pending_cache_instruction_q)
         : (instruction_from_external_o
             ? core_fetched_instruction : 24'h000000);
     assign fetched_instruction_o = core_fetched_instruction;
@@ -233,6 +247,7 @@ module adsp2100_shifter_pm_cache_slice (
         .opcode_i(opcode_i),
         .pm_read_data_i(pm_read_data_i),
         .pm_read_data_valid_i(pm_read_data_valid_i),
+        .pm_cycle_complete_i(pm_cycle_complete_i),
         .next_fetch_address_i(next_fetch_address_i),
         .next_fetch_address_valid_i(next_fetch_address_valid_i),
         .cache_next_instruction_valid_i(cache_lookup_instruction_valid_o),
@@ -271,6 +286,7 @@ module adsp2100_shifter_pm_cache_slice (
         .data_action_complete_o(data_action_complete_o),
         .instruction_complete_o(instruction_complete_o),
         .transaction_active_o(transaction_active_o),
+        .held_transaction_o(core_held_transaction),
         .busy_o(busy_o),
         .invalid_opcode_o(invalid_opcode_o),
         .integration_conflict_o(core_integration_conflict),
@@ -330,11 +346,25 @@ module adsp2100_shifter_pm_cache_slice (
 
     assign recovery_fetch_o = core_recovery_fetch;
 
+    always_ff @(posedge clk_i) begin
+        if (reset_i) begin
+            pending_cache_q <= 1'b0;
+            pending_cache_instruction_q <= 24'h000000;
+        end else if (data_action_complete_o) begin
+            pending_cache_q <= 1'b0;
+            pending_cache_instruction_q <= 24'h000000;
+        end else if (accepted_o) begin
+            pending_cache_q <= issue_cache_instruction_valid;
+            pending_cache_instruction_q <= cache_lookup_instruction_o;
+        end
+    end
+
     always_comb begin
         assert (next_instruction_valid_o
             == (instruction_from_cache_o || instruction_from_external_o));
         assert (!(instruction_from_cache_o && instruction_from_external_o));
-        assert (cache_fill_from_recovery_o == recovery_fetch_o);
+        assert (cache_fill_from_recovery_o
+            == (recovery_fetch_o && instruction_complete_o));
         assert (!(cache_fill_from_recovery_o && external_fill_selected_o));
         assert (cache_fill_o
             == (cache_fill_from_recovery_o || external_fill_selected_o));
@@ -347,6 +377,9 @@ module adsp2100_shifter_pm_cache_slice (
         if (cache_instruction_selected_o) begin
             assert (cache_lookup_instruction_valid_o);
             assert (!recovery_required_o);
+        end
+        if (pending_cache_q) begin
+            assert (transaction_active_o);
         end
         if (reset_i) begin
             assert (!cache_fill_o && !next_instruction_valid_o);

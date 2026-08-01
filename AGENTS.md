@@ -286,8 +286,13 @@ standalone monitor, supplies its 24-bit instruction in the same data cycle,
 and feeds every miss/forced-fetch recovery word back into that monitor without
 repeating architectural actions. It also accepts ordinary external fetch
 completions when Type 13 does not own PM; 50,086 integration clocks cover
-lookup/fill ownership. Attachment to the separate native PM phase controller
-and whole-core event arbitration remain open under OQ-008.
+lookup/fill ownership. A further bounded native wrapper captures the Type 13
+data descriptor on the enabled state-8-to-state-1 edge, holds old-value
+operands through all eight pin phases, commits the architectural action only
+on the state-7-to-state-8 completion edge, and issues a miss recovery fetch on
+the following state-8-to-state-1 edge. Five directed tests and 50,081
+model/RTL clocks cover that attachment. Unified fetch/PC/control-event
+arbitration remains open under OQ-008.
 The source-bounded cache monitor implements the documented
 16-by-24 array, PMA[3:0] indexing, single contiguous valid region,
 out-of-region invalidation, sequential extension, and circular oldest-word
@@ -303,9 +308,9 @@ active-low PMRD/PMWR for states 4–7, samples reads at the 7-to-8 edge, and
 drives write data for states 5–8. It preserves PMS across back-to-back requests
 and masks all FPGA output enables during externally directed bus
 relinquishment. Ten directed tests and 50,032 model/RTL clocks pass. This block
-does not yet arbitrate or attach Type 13/cache/fetch requests, recognize BR/BG,
-or model analog delays; the request boundary is not a claim about a hidden
-device latch.
+now has one bounded Type 13/cache client, but it does not yet arbitrate ordinary
+whole-core fetches or other PM instruction classes, recognize BR/BG, or model
+analog delays; the request boundary is not a claim about a hidden device latch.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L
 tuple. Its logical DM request holds captured address/data over arbitrary

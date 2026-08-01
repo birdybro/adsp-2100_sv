@@ -32,6 +32,7 @@ class ShifterPMCacheState:
     cache: InstructionCacheState = field(
         default_factory=InstructionCacheState.reset
     )
+    pending_cache_instruction: ExactWord | None = None
 
     @classmethod
     def reset(cls) -> "ShifterPMCacheState":
@@ -68,6 +69,7 @@ def apply_shifter_pm_cache_cycle(
     pm_read_data: ExactWord | object = UNKNOWN,
     next_fetch_address: ExactWord | object = UNKNOWN,
     force_instruction_fetch: bool = False,
+    pm_cycle_complete: bool = True,
     external_fetch_fill: bool = False,
     external_fetch_address: ExactWord | object = UNKNOWN,
     external_fetch_instruction: ExactWord | object = UNKNOWN,
@@ -89,7 +91,9 @@ def apply_shifter_pm_cache_cycle(
     """
 
     lookup = lookup_instruction_cache(state.cache, next_fetch_address)
-    recovery_active = state.core.recovery is not None
+    pm_transaction_active = (
+        state.core.recovery is not None or state.core.pending is not None
+    )
     setup_count = sum(
         item is not None
         for item in (
@@ -104,10 +108,10 @@ def apply_shifter_pm_cache_cycle(
     external_fill_conflict = (
         not reset
         and external_fetch_fill
-        and (recovery_active or execute or setup_count != 0)
+        and (pm_transaction_active or execute or setup_count != 0)
     )
     external_fill_selected = (
-        not reset and external_fetch_fill and not recovery_active
+        not reset and external_fetch_fill and not pm_transaction_active
     )
     suppress_controls = external_fill_selected
 
@@ -120,6 +124,7 @@ def apply_shifter_pm_cache_cycle(
         next_fetch_address=next_fetch_address,
         cache_next_instruction_valid=lookup.instruction_valid,
         force_instruction_fetch=force_instruction_fetch,
+        pm_cycle_complete=pm_cycle_complete,
         setup_astat=None if suppress_controls else setup_astat,
         setup_mstat=None if suppress_controls else setup_mstat,
         setup_dreg=None if suppress_controls else setup_dreg,
@@ -128,7 +133,11 @@ def apply_shifter_pm_cache_cycle(
         setup_px=None if suppress_controls else setup_px,
     )
 
-    cache_fill_from_recovery = not reset and core_result.recovery_fetch
+    cache_fill_from_recovery = (
+        not reset
+        and core_result.recovery_fetch
+        and core_result.instruction_complete
+    )
     cache_fill = cache_fill_from_recovery or external_fill_selected
     if cache_fill_from_recovery:
         fill_address: ExactWord | object = (
@@ -153,24 +162,49 @@ def apply_shifter_pm_cache_cycle(
         fetch_instruction=fill_instruction,
     )
 
-    instruction_from_cache = (
-        core_result.cache_instruction_selected
+    issue_cache_instruction = (
+        lookup.instruction
+        if core_result.cache_instruction_selected
         and lookup.instruction_valid
+        and isinstance(lookup.instruction, ExactWord)
+        else None
+    )
+    instruction_from_cache = bool(
+        core_result.data_action_complete
+        and (
+            issue_cache_instruction is not None
+            or state.pending_cache_instruction is not None
+        )
     )
     instruction_from_external = (
         core_result.recovery_fetch
         and core_result.fetched_instruction_known
     )
     if instruction_from_cache:
-        assert isinstance(lookup.instruction, ExactWord)
-        next_instruction = lookup.instruction.value
+        cached = (
+            issue_cache_instruction
+            if issue_cache_instruction is not None
+            else state.pending_cache_instruction
+        )
+        assert isinstance(cached, ExactWord)
+        next_instruction = cached.value
     elif instruction_from_external:
         next_instruction = core_result.fetched_instruction
     else:
         next_instruction = 0
 
+    pending_cache_instruction = state.pending_cache_instruction
+    if reset or core_result.data_action_complete:
+        pending_cache_instruction = None
+    elif core_result.accepted:
+        pending_cache_instruction = issue_cache_instruction
+
     return ShifterPMCacheCycleResult(
-        state=ShifterPMCacheState(core_result.state, cache_result.state),
+        state=ShifterPMCacheState(
+            core=core_result.state,
+            cache=cache_result.state,
+            pending_cache_instruction=pending_cache_instruction,
+        ),
         core=core_result,
         lookup_address_hit=lookup.address_hit,
         lookup_instruction=(

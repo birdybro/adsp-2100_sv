@@ -97,8 +97,13 @@ exhaustive decoder partitions all 65,536 words into 54,320
 source-closed actions, 8,192 unavailable-XOP words, and 3,024 read collisions
 [ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
 5-13–5-16, 6-3–6-7, A-3]. Hidden monitor/event behavior and attachment to the
-separately verified native PM phase controller remain outside this bounded
-evidence under OQ-008.
+whole-core fetch/control owner remain outside this bounded evidence under
+OQ-008. The native attachment adds 50,081 phase clocks: data issue is captured
+at state 8-to-1 and commits at state 7-to-8; a miss recovery is accepted on the
+following state 8-to-1 and completes at its state 7-to-8 edge. Hit data is
+captured at issue so a later monitor update cannot change the in-flight next
+instruction. Ordinary fetch, branches, loops, interrupts, HALT, and BR/BG are
+not integrated into this owner.
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no

@@ -30,8 +30,9 @@ The bounded Type 13 path exposes distinct logical active-high PM data and
 recovery-fetch cycles. Its connected 16-word cache supplies the actual next
 instruction on a pre-cycle hit and captures each recovery word on a miss; an
 explicit ordinary-fetch-completion input populates the same monitor outside
-Type 13 ownership. This is not yet the sourced active-low PMS/PMDA/PMRD/PMWR
-phase wrapper or unified PC/branch/interrupt bus owner
+Type 13 ownership. A bounded wrapper now connects this owner to the sourced
+active-low PMS/PMDA/PMRD/PMWR phases, but it is not a unified
+PC/branch/interrupt bus owner
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].
 
 A separate native PM controller now converts a captured fetch/read/write
@@ -42,8 +43,11 @@ PMS across back-to-back requests and exposes independent address, control, and
 PMD output enables for bus relinquishment. Ten directed tests and 50,032
 model/RTL clocks pass [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
 pp. 2-36–2-39, parameters 23–60, Figures 14–15; ADI-UM-1989, printed
-pp. 5-5–5-8, Figure 5.5]. This controller is not yet attached to Type 13, the
-cache/fetch issue path, or BR/BG recognition.
+pp. 5-5–5-8, Figure 5.5]. Its bounded Type 13/cache client captures a data
+descriptor at state 8-to-1, commits the architectural data action at state
+7-to-8, and accepts a miss recovery back-to-back. Five directed tests and
+50,081 model/RTL clocks cover the attachment. Ordinary fetch, other PM
+instruction classes, and BR/BG recognition remain unattached.
 
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic
 core exposes phase and transaction trace signals without a generic modern bus

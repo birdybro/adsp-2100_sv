@@ -101,6 +101,15 @@ class ShifterPMRecovery:
 
 
 @dataclass(frozen=True)
+class ShifterPMPending:
+    """Cycle-start Type 13 action held until the PM cycle completes."""
+
+    prepared: "_DataAction"
+    next_fetch_address: ExactWord | object
+    recovery_required: bool
+
+
+@dataclass(frozen=True)
 class ShifterPMState:
     primary: ComputationalBank = field(default_factory=ComputationalBank)
     alternate: ComputationalBank = field(default_factory=ComputationalBank)
@@ -108,6 +117,7 @@ class ShifterPMState:
     dag: DAGRegisterState = field(default_factory=DAGRegisterState)
     px: ExactWord | object = UNKNOWN
     recovery: ShifterPMRecovery | None = None
+    pending: ShifterPMPending | None = None
 
     @classmethod
     def reset(cls) -> "ShifterPMState":
@@ -302,12 +312,13 @@ def _commit_data_action(
             prepared.shifter_result,
         )
     return ShifterPMState(
-        shifted.primary,
-        shifted.alternate,
-        shifted.status,
-        _replace_i(state.dag, action.i_address, prepared.next_i),
-        px,
-        state.recovery,
+        primary=shifted.primary,
+        alternate=shifted.alternate,
+        status=shifted.status,
+        dag=_replace_i(state.dag, action.i_address, prepared.next_i),
+        px=px,
+        recovery=state.recovery,
+        pending=state.pending,
     )
 
 
@@ -327,9 +338,74 @@ def _idle_result(
         class_valid=class_valid,
         action_valid=action is not None,
         unsupported_subencoding=class_valid and action is None,
-        busy=state.recovery is not None,
+        busy=state.recovery is not None or state.pending is not None,
         invalid_opcode=invalid,
         integration_conflict=conflict,
+    )
+
+
+def _data_result(
+    state: ShifterPMState,
+    prepared: _DataAction,
+    *,
+    pm_read_data: ExactWord | object,
+    recovery_required: bool,
+    boundary_valid: bool,
+    accepted: bool,
+    complete: bool,
+    conflict: bool = False,
+) -> ShifterPMCycleResult:
+    """Describe an active Type 13 data cycle at issue, hold, or completion."""
+
+    action = prepared.action
+    address_known = isinstance(prepared.address, ExactWord)
+    write_known = isinstance(prepared.write_data, ExactWord)
+    read_known = isinstance(pm_read_data, ExactWord)
+    shifter = prepared.shifter_result
+    sr_write = complete and shifter is not None and shifter.sr_write
+    se_write = complete and shifter is not None and shifter.se_write
+    sb_write = complete and shifter is not None and shifter.sb_write
+    ss_write = complete and shifter is not None and shifter.ss_write
+    return ShifterPMCycleResult(
+        state=state,
+        action=action,
+        class_valid=True,
+        action_valid=True,
+        boundary_valid=boundary_valid,
+        accepted=accepted,
+        data_action_complete=complete,
+        instruction_complete=complete and not recovery_required,
+        busy=not complete or recovery_required,
+        integration_conflict=conflict,
+        pm_select=True,
+        pm_data_access=True,
+        pm_read=not action.write,
+        pm_write=action.write,
+        pm_address=prepared.address.value if address_known else 0,
+        pm_address_known=address_known,
+        pm_write_data=prepared.write_data.value if write_known else 0,
+        pm_write_data_known=write_known,
+        cache_instruction_selected=(
+            boundary_valid and not recovery_required
+        ),
+        recovery_required=boundary_valid and recovery_required,
+        event_boundary=complete and not recovery_required,
+        shifter_result_known=complete and shifter is not None,
+        dag_configuration_valid=prepared.dag_configuration_valid,
+        i_write=complete,
+        i_write_known=complete and prepared.next_i is not None,
+        dreg_write=complete and not action.write,
+        dreg_write_known=complete and not action.write and read_known,
+        px_write=complete and not action.write,
+        px_write_known=complete and not action.write and read_known,
+        sr_write=sr_write,
+        se_write=se_write,
+        sb_write=sb_write,
+        ss_write=ss_write,
+        sr_result=shifter.sr_result if sr_write else 0,
+        se_result=shifter.se_result if se_write else 0,
+        sb_result=shifter.sb_result if sb_write else 0,
+        ss_result=shifter.ss_result if ss_write else False,
     )
 
 
@@ -343,6 +419,7 @@ def apply_shifter_pm_cycle(
     next_fetch_address: ExactWord | object = UNKNOWN,
     cache_next_instruction_valid: bool = True,
     force_instruction_fetch: bool = False,
+    pm_cycle_complete: bool = True,
     setup_astat: ExactWord | None = None,
     setup_mstat: ExactWord | None = None,
     setup_dreg: DREGWrite | None = None,
@@ -387,12 +464,13 @@ def apply_shifter_pm_cycle(
             StatusCycleInputs(reset=True),
         ).state
         reset_state = ShifterPMState(
-            ComputationalBank(),
-            ComputationalBank(),
-            status,
-            DAGRegisterState(),
-            UNKNOWN,
-            None,
+            primary=ComputationalBank(),
+            alternate=ComputationalBank(),
+            status=status,
+            dag=DAGRegisterState(),
+            px=UNKNOWN,
+            recovery=None,
+            pending=None,
         )
         return _idle_result(
             reset_state,
@@ -405,8 +483,16 @@ def apply_shifter_pm_cycle(
         conflict = execute or setup_count != 0
         recovery = state.recovery
         address_known = isinstance(recovery.next_fetch_address, ExactWord)
-        fetched_known = address_known and isinstance(pm_read_data, ExactWord)
-        completed = replace(state, recovery=None)
+        fetched_known = (
+            pm_cycle_complete
+            and address_known
+            and isinstance(pm_read_data, ExactWord)
+        )
+        completed = (
+            replace(state, recovery=None)
+            if pm_cycle_complete
+            else state
+        )
         return ShifterPMCycleResult(
             state=completed,
             action=action,
@@ -414,7 +500,8 @@ def apply_shifter_pm_cycle(
             class_valid=class_valid,
             action_valid=action is not None,
             unsupported_subencoding=class_valid and action is None,
-            instruction_complete=True,
+            instruction_complete=pm_cycle_complete,
+            busy=not pm_cycle_complete,
             integration_conflict=conflict,
             pm_select=True,
             pm_read=True,
@@ -425,7 +512,58 @@ def apply_shifter_pm_cycle(
             recovery_fetch=True,
             fetched_instruction=(pm_read_data.value if fetched_known else 0),
             fetched_instruction_known=fetched_known,
-            event_boundary=True,
+            event_boundary=pm_cycle_complete,
+        )
+
+    if state.pending is not None:
+        conflict = execute or setup_count != 0
+        pending = state.pending
+        if not pm_cycle_complete:
+            held = _data_result(
+                state,
+                pending.prepared,
+                pm_read_data=pm_read_data,
+                recovery_required=pending.recovery_required,
+                boundary_valid=False,
+                accepted=False,
+                complete=False,
+                conflict=conflict,
+            )
+            return replace(
+                held,
+                action=action,
+                unsupported_reason=reason,
+                class_valid=class_valid,
+                action_valid=action is not None,
+                unsupported_subencoding=class_valid and action is None,
+            )
+        committed = _commit_data_action(
+            replace(state, pending=None),
+            pending.prepared,
+            pm_read_data,
+        )
+        if pending.recovery_required:
+            committed = replace(
+                committed,
+                recovery=ShifterPMRecovery(pending.next_fetch_address),
+            )
+        completed = _data_result(
+            committed,
+            pending.prepared,
+            pm_read_data=pm_read_data,
+            recovery_required=pending.recovery_required,
+            boundary_valid=False,
+            accepted=False,
+            complete=True,
+            conflict=conflict,
+        )
+        return replace(
+            completed,
+            action=action,
+            unsupported_reason=reason,
+            class_valid=class_valid,
+            action_valid=action is not None,
+            unsupported_subencoding=class_valid and action is None,
         )
 
     conflict = (execute and setup_count != 0) or setup_count > 1
@@ -512,60 +650,31 @@ def apply_shifter_pm_cycle(
 
     assert action is not None
     prepared = _prepare_data_action(state, action)
-    committed = _commit_data_action(state, prepared, pm_read_data)
     recovery_required = (
         force_instruction_fetch or not cache_next_instruction_valid
     )
-    if recovery_required:
+    if pm_cycle_complete:
+        committed = _commit_data_action(state, prepared, pm_read_data)
+        if recovery_required:
+            committed = replace(
+                committed,
+                recovery=ShifterPMRecovery(next_fetch_address),
+            )
+    else:
         committed = replace(
-            committed,
-            recovery=ShifterPMRecovery(next_fetch_address),
+            state,
+            pending=ShifterPMPending(
+                prepared=prepared,
+                next_fetch_address=next_fetch_address,
+                recovery_required=recovery_required,
+            ),
         )
-    address_known = isinstance(prepared.address, ExactWord)
-    write_known = isinstance(prepared.write_data, ExactWord)
-    read_known = isinstance(pm_read_data, ExactWord)
-    shifter = prepared.shifter_result
-    sr_write = shifter is not None and shifter.sr_write
-    se_write = shifter is not None and shifter.se_write
-    sb_write = shifter is not None and shifter.sb_write
-    ss_write = shifter is not None and shifter.ss_write
-    return ShifterPMCycleResult(
-        state=committed,
-        action=action,
-        class_valid=True,
-        action_valid=True,
+    return _data_result(
+        committed,
+        prepared,
+        pm_read_data=pm_read_data,
+        recovery_required=recovery_required,
         boundary_valid=True,
         accepted=True,
-        data_action_complete=True,
-        instruction_complete=not recovery_required,
-        busy=recovery_required,
-        pm_select=True,
-        pm_data_access=True,
-        pm_read=not action.write,
-        pm_write=action.write,
-        pm_address=prepared.address.value if address_known else 0,
-        pm_address_known=address_known,
-        pm_write_data=prepared.write_data.value if write_known else 0,
-        pm_write_data_known=write_known,
-        cache_instruction_selected=(
-            cache_next_instruction_valid and not force_instruction_fetch
-        ),
-        recovery_required=recovery_required,
-        event_boundary=not recovery_required,
-        shifter_result_known=shifter is not None,
-        dag_configuration_valid=prepared.dag_configuration_valid,
-        i_write=True,
-        i_write_known=prepared.next_i is not None,
-        dreg_write=not action.write,
-        dreg_write_known=not action.write and read_known,
-        px_write=not action.write,
-        px_write_known=not action.write and read_known,
-        sr_write=sr_write,
-        se_write=se_write,
-        sb_write=sb_write,
-        ss_write=ss_write,
-        sr_result=shifter.sr_result if sr_write else 0,
-        se_result=shifter.se_result if se_write else 0,
-        sb_result=shifter.sb_result if sb_write else 0,
-        ss_result=shifter.ss_result if ss_write else False,
+        complete=pm_cycle_complete,
     )

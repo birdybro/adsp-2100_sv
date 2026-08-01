@@ -115,6 +115,11 @@ semantic versioning after its first release.
   directed bus-relinquishment masking; plus directed/random differential
   tests, a machine-readable contract, formal invariants, and a constrained
   Cyclone V project.
+- A bounded Type 13/cache/native-PM composition model and portable RTL wrapper
+  that admits issue at state 8-to-1, retains the complete old-value action and
+  cache-hit word, commits at state 7-to-8, and accepts miss recovery
+  back-to-back; plus directed/random differential tests, attachment
+  invariants, a formal recipe, and a constrained Cyclone V project.
 - A primary-backed, class-complete original Type 2 immediate-DM-write action
   database, independent decoder, three hand-derived fixtures, portable RTL
   decoder, algebraic assembler/disassembler support, exhaustive 24-bit
@@ -289,6 +294,12 @@ semantic versioning after its first release.
 
 ### Changed
 
+- Type 13 and its cache wrapper now support an explicit delayed PM-cycle
+  completion input. The compatibility path remains a one-clock logical cycle,
+  while the native attachment holds descriptors and defers every architectural
+  write, recovery fill, and next-instruction event until the source-backed
+  state-7-to-state-8 boundary.
+
 - Corrected the Type 23/24 machine-readable operand roles: XOP is the divisor
   for both primitives, while Type 24 YOP is the upper dividend.
 
@@ -323,6 +334,19 @@ semantic versioning after its first release.
 
 ### Verified
 
+- The Type 13/cache/native-PM attachment passes five directed tests and 50,081
+  deterministic model/RTL clocks covering read and write phases, issue-time
+  hit capture, miss recovery, state holds, off-boundary rejection, reset, and
+  bus relinquishment. Existing 50,070 base, 50,086 cache-integrated, and
+  50,032 standalone PM-phase differentials remain green.
+- Quartus full compilation passes for the attached Type 13/cache/native-PM
+  boundary at 20 ns: 2,055 ALMs, 1,648 fitted registers, no RAM/DSP blocks,
+  +3.925 ns worst setup and +0.162 ns worst multicorner hold slack, 62.21 MHz
+  worst slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+- The expanded `make test` passes 484 distinct Python checks and every existing
+  RTL regression. `make formal` syntax-checks 45 recipes; proof execution
+  remains skipped because SymbiYosys/Yosys are unavailable.
+
 - Type 2 exhaustive RTL decode traverses all 16,777,216 program words,
   identifies exactly 2,097,152 field-defined actions, and proves all other
   words action-free. Six model/metadata tests cover both DAGs, all I/M
@@ -353,7 +377,7 @@ semantic versioning after its first release.
   20 ns: 112 ALMs, 71 fitted registers, no RAM/DSP blocks, +12.825 ns worst
   setup and +0.167 ns worst multicorner hold slack, 139.37 MHz worst
   slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 476 distinct Python checks, 14 local
+- The expanded `make test` passes 484 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   twenty-two exhaustive 24-bit decode traversals, and every existing
   model/RTL vector regression.
@@ -718,13 +742,19 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 44 harnesses,
+- `make formal` passes strict assertion syntax lint for all 45 harnesses,
   including exact Type 6/Type 17/Type 21 decode, bounded Type 6/Type 8/
   Type 14/Type 17/Type 21 state execution, Type 13/cache ownership, and native
   PM phase/strobe stability;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
+
+- Recorded the bounded Type 13 state-8 issue/state-7 commit contract in the
+  memory, multifunction, pipeline, external-interface, instruction-cycle, and
+  PM-cycle specifications and in the cycle-model ADR. Ordinary fetch, other PM
+  owners, BR/BG, HALT/interrupt arbitration, and analog timing remain explicit
+  nonclaims.
 
 - Bounded the original cache monitor's observable contract to one contiguous
   up-to-16-word PM region with low-four-bit indexing, discontinuity restart,
@@ -893,8 +923,9 @@ semantic versioning after its first release.
   but not a native active-low state-phase interface, PM fetch concurrency,
   interrupt/BR/HALT latching during waits, or whole-core instruction issue.
 - Type 13 now supplies cache-integrated logical PM data/recovery transactions,
-  and a separate controller supplies the native active-low PM phase interface,
-  but the two are not yet attached to a whole-core instruction/fetch owner.
+  and a bounded client now attaches them to the native active-low PM phase
+  interface, but no whole-core instruction/fetch owner or multi-class PM arbiter
+  exists.
   The exact hidden ahead/behind counter encoding, self-modifying PM behavior,
   and branch/loop/interrupt/HALT/BR arbitration remain unresolved under OQ-008.
 - Open-source synthesis and formal tools are not installed in this environment.

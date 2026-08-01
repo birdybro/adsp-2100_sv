@@ -56,7 +56,11 @@
     "pm_data_cycle": "FIXED_ONE_PROCESSOR_CYCLE_WITH_NO_ACKNOWLEDGE_INPUT",
     "pm_recovery_fetch": "FIXED_ONE_ADDITIONAL_PROCESSOR_CYCLE_WHEN_REQUIRED",
     "dm_access": false,
-    "electrical_pin_substates": "OUTSIDE_BOUNDED_LOGICAL_CYCLE_SLICE"
+    "native_attachment": "TYPE_13_DATA_DESCRIPTOR_CAPTURED_ON_ENABLED_STATE_8_TO_1_AND_ARCHITECTURAL_ACTION_COMMITTED_ON_STATE_7_TO_8",
+    "cache_hit_capture": "ISSUE_TIME_CACHE_WORD_RETAINED_UNTIL_DATA_TRANSACTION_COMPLETION",
+    "cache_miss_recovery": "RECOVERY_DESCRIPTOR_ACCEPTED_BACK_TO_BACK_ON_THE_FOLLOWING_STATE_8_TO_1_AND_COMPLETED_ON_ITS_STATE_7_TO_8",
+    "phase_hold": "CAPTURED_DESCRIPTOR_AND_ARCHITECTURAL_STATE_REMAIN_STABLE_UNTIL_NATIVE_COMPLETION",
+    "electrical_pin_substates": "LOGICAL_STATES_1_THROUGH_8_ATTACHED; ANALOG_DELAYS_REMAIN_OUTSIDE_THE_ARCHITECTURAL_CORE"
   },
   "unknown_policy": {
     "reset_unknown": ["COMPUTATIONAL_REGISTERS", "PX", "I_REGISTERS", "M_REGISTERS", "L_REGISTERS"],
@@ -82,12 +86,17 @@
     "cache_integration_rtl": "sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv",
     "cache_integration_clocks": 50086,
     "cache_integration_formal": "formal/shifter_pm_cache.sby",
+    "native_attachment_python": "tests/test_shifter_pm_native.py",
+    "native_attachment_rtl": "sim/unit/tb_adsp2100_shifter_pm_native_slice.sv",
+    "native_attachment_clocks": 50081,
+    "native_attachment_formal": "formal/shifter_pm_native.sby",
     "formal": "formal/shifter_pm.sby"
   },
   "unresolved": [
     "OQ_008_HIDDEN_MONITOR_CONTROL_FLOW_AND_SELF_MODIFYING_PM_INTERACTION",
     "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_HALT_BR_AND_BUS_ARBITRATION_INTEGRATION",
-    "PHYSICAL_PIN_SUBSTATE_WAVEFORMS_BEYOND_LOGICAL_CYCLE_BOUNDARY",
+    "ORDINARY_FETCH_AND_OTHER_PM_INSTRUCTION_CLASS_OWNERSHIP",
+    "ANALOG_PIN_TIMING_AND_BR_BG_RECOGNITION",
     "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
   ]
 }

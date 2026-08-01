@@ -927,7 +927,10 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make bus-tests`, `tests/test_shifter_pm_cache.py`,
   `sim/unit/tb_adsp2100_shifter_pm_cache_slice.sv`,
   `formal/shifter_pm_cache.sby`, `tests/test_program_bus.py`,
-  `sim/unit/tb_adsp2100_program_bus.sv`, `formal/pm_bus.sby`
+  `sim/unit/tb_adsp2100_program_bus.sv`, `formal/pm_bus.sby`,
+  `tests/test_shifter_pm_native.py`,
+  `sim/unit/tb_adsp2100_shifter_pm_native_slice.sv`,
+  `formal/shifter_pm_native.sby`
 - **Implementation notes:** keep PM physically/logically distinct from DM.
   The Type 13 slice now exposes a bounded logical PM data/fetch boundary with
   separate 14-bit address, 24-bit read/write data, direction, data-cycle, and
@@ -945,8 +948,15 @@ advance beyond research until a page-level primary citation is added.
   states-5-through-8 write-data drive, back-to-back PMS continuity, and
   externally directed bus-output masking. Ten directed tests and 50,032
   model/RTL clocks pass; its formal recipe is assertion-linted and its
-  constrained Cyclone V fit passes. Type 13/cache request attachment and
-  whole-core arbitration remain open.
+  constrained Cyclone V fit passes. A bounded native wrapper now attaches the
+  cache-integrated Type 13 owner: issue/setup controls are accepted only on an
+  enabled state-8-to-state-1 boundary; captured old-value PM data descriptors
+  remain stable; architectural effects commit only at state 7-to-8; and a
+  miss recovery is accepted back-to-back on the following state 8-to-1 edge.
+  Five directed tests and 50,081 model/RTL clocks pass, the forty-fifth formal
+  recipe syntax-checks, and a fully constrained 50 MHz Cyclone V fit uses
+  2,055 ALMs and 1,648 registers. Whole-core fetch/control arbitration remains
+  open.
 - **Unresolved questions:** whole-core PM ownership, BR/BG recognition timing,
   and electrical wrapper constraints.
 - **Confidence:** CORROBORATED
@@ -1003,8 +1013,8 @@ advance beyond research until a page-level primary citation is added.
   word, accepts ordinary external instruction fills, and passes 50,086
   model/RTL clocks.
 - **Unresolved questions:** exact hidden cache-monitor/event interactions,
-  attachment to the native PM phase owner, other original PM-transfer forms,
-  and whole-core fetch/event arbitration.
+  ordinary fetch and other original PM-transfer owners, whole-core fetch/event
+  arbitration, and BR/BG/HALT/interrupt ownership.
 - **Confidence:** CORROBORATED
 
 ## M21 — Loop and stack behavior
@@ -1424,10 +1434,9 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked work is attaching the verified native PM phase
-boundary to the cache-integrated Type 13/fetch owner and constructing the
-native DM phase boundary; constructing the next source-closed Type 1/4/5
-action graph in
+The highest-priority unblocked work is constructing the native DM phase
+boundary and attaching the existing Type 2/12 logical clients; constructing
+the next source-closed Type 1/4/5 action graph in
 `ISA-002`/`ISA-001`; and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field
 placement is closed for the printed Appendix A diagrams, but legality,

@@ -56,8 +56,15 @@ hidden monitor encoding, and self-modifying PM remain OQ-008.
 The separate native PM phase controller accepts one selected logical request
 at its implementation state-8-to-state-1 boundary and produces active-low
 PMS/PMRD/PMWR plus PMA, PMDA, and PMD output-enable timing over the documented
-eight states. This
-closes the bounded pin-phase mapping but does not yet connect the Type 13/cache
-request owner to it [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
+eight states. A bounded Type 13/cache wrapper now connects this request owner:
+the data descriptor and all architectural old values are captured on that
+8-to-1 edge, remain stable through the phase sequence, and commit only on the
+7-to-8 completion edge. A cache hit releases its issue-time captured word at
+that edge; a miss schedules a pure recovery fetch that is accepted on the
+following 8-to-1 edge without deasserting PMS. Five directed tests and 50,081
+model/RTL clocks cover read, write, hit, miss, phase hold, off-boundary
+rejection, and externally directed relinquishment. This closes only the Type
+13 attachment, not ordinary fetch, other PM-transfer classes, or whole-core
+control arbitration [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
 pp. 2-36–2-39, Figures 14–15; ADI-UM-1989, printed pp. 5-5–5-8,
 Figure 5.5].

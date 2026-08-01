@@ -104,6 +104,7 @@ module adsp2100_shifter_pm_cache_formal (
         .opcode_i(opcode),
         .pm_read_data_i(pm_read_data),
         .pm_read_data_valid_i(pm_read_data_valid),
+        .pm_cycle_complete_i(1'b1),
         .next_fetch_address_i(next_fetch_address),
         .next_fetch_address_valid_i(next_fetch_address_valid),
         .force_instruction_fetch_i(force_instruction_fetch),

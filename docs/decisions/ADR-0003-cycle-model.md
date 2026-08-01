@@ -39,6 +39,13 @@ on the state-7-to-state-8 edge, and masks output enables during externally
 commanded bus relinquishment. It does not own or advance the phase counter and
 does not decide fetch/data/cache/BR/HALT/interrupt arbitration.
 
+The first bounded architectural client is the Type 13/cache attachment. It
+admits an instruction action only on state 8-to-1, captures its complete
+old-value PM descriptor, commits that data action only on state 7-to-8, and
+uses the following state 8-to-1 for a required back-to-back recovery fetch.
+This validates the selected request/commit contract while leaving ordinary
+fetch and whole-core control arbitration outside the decision boundary.
+
 ## Consequences
 
 Wrappers must supply a phase-enable rate adequate to represent the original

@@ -17,6 +17,7 @@ set_instance_assignment -name VIRTUAL_PIN ON -to execute_i
 set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to pm_read_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to pm_read_data_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to pm_cycle_complete_i
 set_instance_assignment -name VIRTUAL_PIN ON -to next_fetch_address_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to next_fetch_address_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to cache_next_instruction_valid_i

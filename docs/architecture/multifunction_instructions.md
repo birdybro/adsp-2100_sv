@@ -154,9 +154,20 @@ connects the next-fetch address to the 16-word monitor, returns the actual
 cached word on a hit, fills recovery words on a miss/forced fetch, and accepts
 ordinary external instruction fills while Type 13 does not own PM. Ten
 directed integration tests and 50,086 additional clocks cover selection,
-replacement, unknown entries, reset, and fill ownership. Unified branches,
-loops, interrupts, self-modifying PM, attachment to the separate eight-state
-native PM controller, and whole-core arbitration remain open under OQ-008.
+replacement, unknown entries, reset, and fill ownership.
+
+The phase-attached wrapper captures the complete old-value Type 13 action and
+PM descriptor on an enabled state-8-to-state-1 boundary. Shifter, PM-read/PX,
+and DAG2 results remain architecturally invisible until the corresponding
+state-7-to-state-8 completion. A hit word is captured at issue rather than
+re-read from a possibly changed monitor; a miss recovery becomes the next
+back-to-back PM transaction and its completion alone fills the monitor and
+exposes the next instruction. Five directed tests and 50,081 deterministic
+model/RTL clocks exercise read/write drive windows, hit/miss ownership, held
+phases, off-boundary rejection, reset, and relinquishment
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8]. Unified branches, loops,
+interrupts, self-modifying PM, ordinary fetch ownership, and whole-core
+arbitration remain open under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 

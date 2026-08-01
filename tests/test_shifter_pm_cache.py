@@ -86,6 +86,46 @@ class ShifterPMCacheTests(unittest.TestCase):
         self.assertTrue(result.next_instruction_known)
         self.assertEqual(result.next_instruction, 0xABCDEF)
 
+    def test_delayed_hit_is_captured_at_issue_and_released_at_completion(self):
+        state = _fill(_known_state(), 0x0222, 0xABCDEF)
+        issued = apply_shifter_pm_cache_cycle(
+            state,
+            execute=True,
+            opcode=_opcode(),
+            pm_read_data=ExactWord(24, 0x111111),
+            next_fetch_address=ExactWord(14, 0x0222),
+            pm_cycle_complete=False,
+        )
+        self.assertTrue(issued.core.cache_instruction_selected)
+        self.assertFalse(issued.next_instruction_known)
+        self.assertEqual(
+            issued.state.pending_cache_instruction,
+            ExactWord(24, 0xABCDEF),
+        )
+
+        held = apply_shifter_pm_cache_cycle(
+            issued.state,
+            next_fetch_address=ExactWord(14, 0x0333),
+            pm_read_data=ExactWord(24, 0x222222),
+            pm_cycle_complete=False,
+        )
+        self.assertFalse(held.next_instruction_known)
+        self.assertEqual(
+            held.state.pending_cache_instruction,
+            ExactWord(24, 0xABCDEF),
+        )
+
+        completed = apply_shifter_pm_cache_cycle(
+            held.state,
+            next_fetch_address=ExactWord(14, 0x0333),
+            pm_read_data=ExactWord(24, 0xCAFE55),
+            pm_cycle_complete=True,
+        )
+        self.assertTrue(completed.core.instruction_complete)
+        self.assertTrue(completed.instruction_from_cache)
+        self.assertEqual(completed.next_instruction, 0xABCDEF)
+        self.assertIsNone(completed.state.pending_cache_instruction)
+
     def test_miss_recovery_fills_cache_and_later_hit_uses_same_word(self):
         state = _known_state()
         issued = apply_shifter_pm_cache_cycle(

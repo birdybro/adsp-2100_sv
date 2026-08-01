@@ -44,6 +44,7 @@ module adsp2100_shifter_pm_formal (
     logic data_action_complete;
     logic instruction_complete;
     logic transaction_active;
+    logic held_transaction;
     logic busy;
     logic invalid_opcode;
     logic integration_conflict;
@@ -151,6 +152,7 @@ module adsp2100_shifter_pm_formal (
         .opcode_i(opcode),
         .pm_read_data_i(pm_read_data),
         .pm_read_data_valid_i(pm_read_data_valid),
+        .pm_cycle_complete_i(1'b1),
         .next_fetch_address_i(next_fetch_address),
         .next_fetch_address_valid_i(next_fetch_address_valid),
         .cache_next_instruction_valid_i(cache_next_instruction_valid),
@@ -189,6 +191,7 @@ module adsp2100_shifter_pm_formal (
         .data_action_complete_o(data_action_complete),
         .instruction_complete_o(instruction_complete),
         .transaction_active_o(transaction_active),
+        .held_transaction_o(held_transaction),
         .busy_o(busy),
         .invalid_opcode_o(invalid_opcode),
         .integration_conflict_o(integration_conflict),
@@ -286,6 +289,7 @@ module adsp2100_shifter_pm_formal (
                 || dut.recovery_q))
         );
         assert (transaction_active == (!reset && (expected_issue || dut.recovery_q)));
+        assert (held_transaction == (!reset && (dut.pending_q || recovery_fetch)));
         assert (busy == expected_recovery);
         assert (event_boundary == instruction_complete);
         assert (cache_instruction_selected == (
