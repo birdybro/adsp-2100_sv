@@ -1,0 +1,7 @@
+# Type 5/cache/native-PM client attachment; not whole-core timing closure.
+create_clock -name compute_pm_native_clock -period 25.000 [get_ports {clk_i}]
+set_input_delay -clock compute_pm_native_clock -max 5.000 \
+    [remove_from_collection [all_inputs] [get_ports {clk_i}]]
+set_input_delay -clock compute_pm_native_clock -min 5.000 \
+    [remove_from_collection [all_inputs] [get_ports {clk_i}]]
+set_output_delay -clock compute_pm_native_clock 0.000 [all_outputs]

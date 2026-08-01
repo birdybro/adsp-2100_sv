@@ -64,9 +64,10 @@ external instruction fills, plus a source-backed eight-state native PM
 pin-phase attachment that captures the Type 13 descriptor at state 8-to-1,
 commits its architectural effects at state 7-to-8, performs back-to-back miss
 recovery, preserves select continuity, and masks relinquished bus outputs,
-an exhaustive original Type 5 action boundary with 1,017,344 ALU/MAC-plus-PM
-or PM-only words and 31,232 explicit read collisions (state/cache/native-PM
-execution pending),
+an exhaustive original Type 5 boundary with 1,017,344 ALU/MAC-plus-PM or
+PM-only words and 31,232 explicit read collisions, selected-bank compute/DAG2/
+PX execution, cache-hit or one-cycle recovery selection, and native state-8
+issue/state-7 completion,
 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
@@ -100,7 +101,7 @@ Type 2, Type 4, and Type 12 supply logical DM transaction boundaries, and a sepa
 native controller reproduces the original active-low DM phases and full-cycle
 DMACK extension. All three clients attach at state 8-to-1 and defer every
 architectural destination, including read data and selected-I postmodify, to
-the qualified state 7-to-8 completion. Type 13 supplies a cache-integrated
+the qualified state 7-to-8 completion. Types 5 and 13 supply cache-integrated
 logical PM data/recovery
 boundary attached to the original active-low logical pin phases. These remain
 bounded clients, not an integrated fetch/decode/execute bus owner; ordinary

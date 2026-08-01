@@ -14,7 +14,8 @@ Known cases:
 | ordinary instruction | one eight-state processor cycle |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
 | Type 4 ALU/MAC plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low state-6 sample repeats a complete eight-substate state-seven extension while preserving the captured bus/compute/DAG descriptor, and the qualified state-7-to-state-8 edge atomically commits compute/status, optional read, and selected-I postmodify |
-| Type 5 ALU/MAC plus PM read/write | documented base action is one processor cycle; a next-instruction cache miss adds the sourced PM recovery-fetch cycle, but only action decode is implemented and no automated Type 5 cycle claim exists yet |
+| Type 5 ALU/MAC plus PM read/write, cache hit | one processor cycle; compute/status, optional DREG/PX read, and DAG2 postmodify commit together at state 7-to-8 while the issue-time cached next instruction is selected |
+| Type 5 ALU/MAC plus PM read/write, cache miss or forced fetch | PM data actions commit in the first processor cycle; exactly one back-to-back external instruction-fetch cycle follows without repeating compute, read/PX, or DAG actions |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
 | Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
@@ -116,6 +117,18 @@ through waits, and compute/status, optional DREG read, and selected I commit
 only on the native 7-to-8 completion
 [ADI-UM-1989, printed pp. 5-9–5-12, Figures 5.6–5.7;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43, Figures 16–17].
+
+The bounded Type 5 model/RTL slice verifies 50,071 logical clocks. A cache hit
+commits ALU/MAC status/result, optional PM-read DREG/PX, and DAG2 postmodify in
+the fixed data cycle and selects the issue-time cached next instruction. A
+miss or forced fetch commits those data actions once, then schedules exactly
+one pure instruction-recovery cycle. Its native attachment adds 50,083 phase
+clocks: the descriptor is captured at state 8-to-1, architectural effects
+commit only at state 7-to-8, and recovery is accepted on the following
+state 8-to-1. Ordinary fetch, branch/loop/interrupt/HALT/BR ownership remains
+outside this bounded timing claim under OQ-008
+[ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
+6-3–6-7, A-1].
 
 The bounded Type 13 model/RTL slice verifies 50,070 logical clocks, and the
 connected cache boundary verifies another 50,086. A pre-cycle monitor hit

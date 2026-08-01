@@ -5,7 +5,7 @@
 - Verilator 5.048 parses and lints the generated packages, class decoder,
   Type 2 action decoder and waited execution slice, Type 4 action and waited
   logical-DM slices,
-  Type 5 action decode, Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
+  Type 5 action/logical/cache/native-PM execution, Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
@@ -32,6 +32,17 @@
   slow-corner Fmax is 130.26 MHz, and no paths are unconstrained. The
   constant-output and virtual-pin warnings are expected for this decoder-only
   project; this is not state/cache/native-PM or whole-core timing closure.
+- Quartus 17.0.2 Standard Fits of the bounded Type 5 logical execution,
+  cache composition, and native-PM attachment pass for Cyclone V
+  `5CSEBA6U23I7` at 25 ns virtual constraints. They use respectively 1,681,
+  1,912, and 1,894 ALMs; 1,262, 1,672, and 1,746 fitted registers; one DSP
+  block each; and no RAM. Across four timing models their worst setup slacks
+  are +0.811, +4.571, and +4.233 ns; worst hold slacks are +0.166, +0.164,
+  and +0.164 ns; worst slow-corner Fmax values are 41.34, 48.95, and
+  48.15 MHz; and every project is fully constrained for setup and hold.
+  Expected warnings are limited to virtual/incomplete pins, constant bounded-
+  slice outputs/sources, and the Quartus Lite LogicLock license. These are
+  bounded-client results, not whole-core, physical-I/O, or MiSTer closure.
 - Quartus 17.0.2 Standard Fit of the bounded Type 4 logical-DM slice passes
   for Cyclone V `5CSEBA6U23I7` at a 25 ns virtual constraint. It uses 1,677
   ALMs, 1,258 fitted registers, one DSP block, and no RAM. Across four timing

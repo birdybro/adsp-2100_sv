@@ -1,7 +1,7 @@
 # Multifunction execution semantics
 
 **Status: key ordering rule verified; bounded Type 4 ALU/MAC-plus-DM,
-Type 5 ALU/MAC-plus-PM action decode, Type 8 ALU/MAC-plus-DREG,
+Type 5 ALU/MAC-plus-PM/cache, Type 8 ALU/MAC-plus-DREG,
 Type 12 shifter-plus-DM, Type 13
 shifter-plus-PM/cache, and Type 14 shifter-plus-DREG forms integrated**
 
@@ -64,7 +64,7 @@ model/RTL clocks cover reads, old-value writes, memory-only actions, waits,
 reset cancellation, off-boundary controls, late ACK, and relinquishment.
 Instruction fetch, multiple DM owners, and event arbitration remain open.
 
-## Bounded Type 5 action decode
+## Bounded Type 5 execution
 
 Original Type 5 mirrors the single-memory ALU/MAC action restrictions of
 Type 4 but fixes the memory space and address generator to PM and DAG2. Its
@@ -82,8 +82,19 @@ Independent Python and synthesizable RTL decoders exhaustively partition all
 1,048,576 class words into 1,017,344 source-closed actions and 31,232 read
 collisions. Two hand-concatenated fixtures, canonical and raw toolchain
 round trips, a depth-one assertion harness, and a constrained Cyclone V fit
-verify this action boundary. No Type 5 state, cache-recovery, native-PM, or
-whole-core execution claim is made yet.
+verify action selection. The bounded execution paths capture selected-bank
+ALU/MAC inputs and feedback, the old PM-store DREG/PX word, and old DAG2 state
+once; commit compute/status, optional PM-read DREG/PX, and selected-I
+postmodify atomically; preserve all of that state over a held logical PM
+transaction; and use the shared 16-word monitor for an issue-time cache hit or
+one pure recovery fetch. The native attachment accepts the descriptor only at
+state 8-to-1 and exposes its sole architectural completion at state 7-to-8.
+Fourteen logical, six cache, and five native directed tests plus 50,071 logical
+and 50,083 native model/RTL clocks cover both banks, ALU/MAC and PM-only forms,
+old-value store overlap, read/PX split, cache hits/misses, recovery, reset,
+off-boundary rejection, and bus relinquishment. Ordinary fetch ownership,
+branches/loops/interrupt/HALT/BR arbitration, self-modifying PM, and physical
+hardware confirmation remain outside this bounded client under OQ-008.
 
 ## Bounded Type 8 execution
 

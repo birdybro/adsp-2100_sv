@@ -1,7 +1,7 @@
 # Program-memory cycles
 
 **Status: source-backed eight-state logical pin phases implemented; bounded
-Type 13/cache request attachment verified**
+Type 5 and Type 13 cache/request attachments verified**
 
 For a PM read, the processor drives PMA and PMDA, asserts PMS, then asserts
 active-low PMRD; memory supplies PMD; the processor samples data and releases
@@ -77,6 +77,27 @@ architectural commit are checked against the independently modeled native
 controller. This evidence does not establish ordinary-PC fetch arbitration,
 other PM instruction classes, HALT/TRAP/interrupt recognition, or BR/BG
 timing.
+
+## Type 5/cache attachment
+
+The bounded `adsp2100_compute_pm_native_slice` applies the same phase and cache
+contract to Type 5. On the enabled state-8-to-state-1 edge it captures the
+selected-bank ALU/MAC inputs and feedback, old `{DREG,PX}` store word, DAG2
+address/postmodify, and issue-time cache-hit instruction. The native controller
+holds that descriptor through states 1–8. The state-7-to-state-8 edge is the
+sole data completion and atomically commits computation/status, optional PM
+read into DREG/PX, and selected-I postmodify. A miss schedules a back-to-back
+instruction recovery at the following state-8-to-state-1 edge; its completion
+fills the shared monitor and never repeats the computation or DAG update
+[ADI-UM-1989, printed pp. 2-6–2-7, 3-6–3-7, 4-26–4-30, 5-5–5-8,
+6-3–6-7].
+
+Fourteen logical, six cache-composition, and five native directed tests pass;
+50,071 logical and 50,083 native model/RTL clocks cover ALU/MAC and PM-only
+reads/writes, old-value overlap, cache hit/miss/forced recovery, reset,
+off-boundary controls, and relinquishment. Ordinary fetch/other PM owners,
+branch/loop/interrupt/HALT/BR arbitration, and hidden self-modifying-cache
+behavior remain OQ-008.
 
 The controller exposes separate address, control, and PMD output enables so an
 FPGA wrapper can implement bidirectional pins. A separate arbiter's

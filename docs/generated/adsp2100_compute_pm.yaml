@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "SOURCE_CLOSED_TYPE_5_ALU_MAC_PLUS_PM_ACTION_DECODE",
+  "scope": "SOURCE_CLOSED_TYPE_5_ALU_MAC_PLUS_PM_BOUNDED_EXECUTION",
   "decode": {
     "original_type": 5,
     "opcode_mask": "0xf00000",
@@ -38,6 +38,27 @@
     "base_instruction_cycles": 1,
     "conditional": false
   },
+  "execution_boundary": {
+    "issue_reads": "CYCLE_START_SELECTED_BANK_DREG_FEEDBACK_PX_AND_DAG2_STATE",
+    "data_completion": "ATOMIC_COMPUTE_STATUS_OPTIONAL_PM_READ_PX_AND_SELECTED_I_WRITEBACK",
+    "logical_wait_behavior": "CAPTURE_DESCRIPTOR_ONCE_AND_HOLD_STATE_UNTIL_PM_CYCLE_COMPLETE",
+    "event_boundary": "SAME_CYCLE_ON_CACHE_HIT_OR_AFTER_ONE_PURE_RECOVERY_FETCH",
+    "event_outputs": "PRE_EDGE_STATE_WITH_POST_EDGE_STATE_RETURNED_SEPARATELY"
+  },
+  "instruction_cache": {
+    "lookup": "PRE_CYCLE_NEXT_FETCH_ADDRESS",
+    "hit": "ISSUE_TIME_INSTRUCTION_CAPTURED_UNTIL_DATA_COMPLETION",
+    "miss_or_forced_fetch": "ONE_BACK_TO_BACK_EXTERNAL_INSTRUCTION_RECOVERY_CYCLE",
+    "recovery_fill": "RECOVERED_INSTRUCTION_UPDATES_THE_SHARED_16_WORD_MONITOR",
+    "external_fill_conflicts": "EXPLICIT_AND_FAIL_CLOSED_WHILE_TYPE_5_OWNS_PM"
+  },
+  "native_pm_attachment": {
+    "issue_edge": "ENABLED_STATE_8_TO_STATE_1",
+    "commit_edge": "ENABLED_STATE_7_TO_STATE_8",
+    "recovery_issue_edge": "FOLLOWING_ENABLED_STATE_8_TO_STATE_1",
+    "read_sample_edge": "ENABLED_STATE_7_TO_STATE_8",
+    "bus_relinquishment": "MASK_OUTPUT_ENABLES_AND_PRESERVE_IN_FLIGHT_STATE"
+  },
   "source_citations": [
     "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
     "ADI-UM-1989 printed pp. 3-6–3-7",
@@ -51,13 +72,23 @@
     "hand_fixtures": "tests/vectors/compute_pm_fixtures.json",
     "tool_round_trip": "tests/test_assembler_disassembler.py",
     "rtl_decode": "sim/unit/tb_adsp2100_compute_pm_decode.sv",
+    "python_execution": "tests/test_compute_pm.py",
+    "python_cache": "tests/test_compute_pm_cache.py",
+    "python_native": "tests/test_compute_pm_native.py",
+    "rtl_execution": "sim/unit/tb_adsp2100_compute_pm_slice.sv",
+    "rtl_native": "sim/unit/tb_adsp2100_compute_pm_native_slice.sv",
     "formal_decode": "formal/compute_pm_decode.sby",
-    "quartus_decode": "synthesis/quartus/compute_pm_decode_smoke.qpf"
+    "formal_execution": "formal/compute_pm.sby",
+    "formal_cache": "formal/compute_pm_cache.sby",
+    "formal_native": "formal/compute_pm_native.sby",
+    "quartus_decode": "synthesis/quartus/compute_pm_decode_smoke.qpf",
+    "quartus_execution": "synthesis/quartus/compute_pm_smoke.qpf",
+    "quartus_cache": "synthesis/quartus/compute_pm_cache_smoke.qpf",
+    "quartus_native": "synthesis/quartus/compute_pm_native_smoke.qpf"
   },
   "unresolved": [
-    "PM_CACHE_AND_RECOVERY_EXECUTION",
-    "NATIVE_PM_PHASE_ATTACHMENT",
     "WHOLE_CORE_FETCH_PC_LOOP_INTERRUPT_AND_BUS_ARBITRATION",
+    "SELF_MODIFYING_PM_AND_HIDDEN_CACHE_MONITOR_TRANSITIONS",
     "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
   ]
 }

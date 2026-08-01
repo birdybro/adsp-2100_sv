@@ -61,10 +61,13 @@ old store data; and commits MR/MF plus ASTAT.MV atomically with the
 acknowledged DM action. Immediate and waited completion pass the 50,072-clock
 logical comparison; the 50,082-clock native attachment comparison additionally
 checks state-8 issue, complete-cycle waits, and state-7-only MAC/status commit.
-Type 5 action selection covers every MAC AMF/X/Y/Z selection and rejects
-MR0/MR1/MR2 PM-read double destinations. Its state/cache/native-PM execution,
-Type 1 action selection, and all remaining memory multifunction timing remain
-unimplemented [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-7].
+Type 5 execution covers every MAC AMF/X/Y/Z selection and rejects
+MR0/MR1/MR2 PM-read double destinations. It captures cycle-start operands,
+MR feedback, old `{DREG,PX}`, and DAG2 state, then commits MR/MF, ASTAT.MV,
+optional DREG/PX read, and I postmodify on the fixed PM completion. Its
+cache/native attachment passes 50,083 phase clocks; Type 1 action selection
+and whole-core PM/event arbitration remain unimplemented
+[ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8, 6-3–6-7, A-1, A-5–A-7].
 
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the

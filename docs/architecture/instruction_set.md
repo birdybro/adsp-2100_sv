@@ -93,8 +93,15 @@ partitions into 1,017,344 supported actions and 31,232 prohibited PM-read
 destination collisions. The independent decoder, two manual-derived field
 fixtures, assembler/disassembler paths, exhaustive 24-bit RTL traversal,
 formal assertions, and constrained Cyclone V fit close action selection.
-Architectural state execution, cache recovery, native PM phases, and
-whole-core ownership remain open
+A bounded independent state model and portable RTL slice capture all
+selected-bank ALU/MAC operands, feedback, old `{DREG,PX}`, and DAG2 state;
+atomically commit computation/status, optional PM read/PX, and selected-I
+postmodify at data completion; select an issue-time cache hit or one pure
+recovery fetch; and attach issue/commit to native PM state 8-to-1 and
+state 7-to-8. Fourteen logical, six cache, and five native directed tests,
+plus 50,071 logical and 50,083 native model/RTL clocks pass. Whole-core fetch,
+shared-PM ownership, control-event arbitration, and hidden cache cases remain
+open
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-6–3-7, 6-3–6-7,
 6-12–6-13, A-1, A-5–A-11].
 

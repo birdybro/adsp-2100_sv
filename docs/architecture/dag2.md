@@ -38,10 +38,13 @@ at acknowledgment. Its native attachment preserves that completion rule.
 Other PM/DM multifunction updates remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
-Original Type 5 action decode fixes every I/M selection to DAG2: the two-bit
-fields map to I4-I7 and M4-M7, with L selected by I. All sixteen I/M pairs are
-covered exhaustively. The execution-time old-I address, post-modification,
-cache recovery, and native PM attachment remain unimplemented for Type 5
+Original Type 5 fixes every I/M selection to DAG2: the two-bit fields map to
+I4-I7 and M4-M7, with L selected by I. All sixteen I/M pairs are covered
+exhaustively. Its bounded execution captures old I/M/L at issue, uses old I as
+the PM-data address, and commits the selected-I postmodify only at the fixed PM
+data completion; a cache-miss recovery fetch does not modify I again. The
+native attachment verifies state-8 issue and state-7-only I commit. Whole-core
+PM ownership and event arbitration remain open
 [ADI-UM-1989, printed pp. 3-1–3-7, 6-3–6-7, A-1, A-7–A-8].
 
 The bounded Type 13 path now attaches all I4–I7/M4–M7 selections to PM data.

@@ -47,9 +47,12 @@ bounded Type 4, Type 8, and Type 9 slices, ALU multifunction execution remains
 excluded. Type 23 DIVQ and Type 24
 DIVS are implemented in separate bounded execution slices.
 
-The Type 5 action decoder covers every ALU AMF/X/Y/Z selection paired with
-one PM transfer and rejects AR/PM-read double destinations. This is decode
-evidence only; no Type 5 ALU state or PM/cache execution is claimed
+The Type 5 path covers every ALU AMF/X/Y/Z selection paired with one PM
+transfer, rejects AR/PM-read double destinations, samples the selected-bank
+operands and old PM-store word at issue, and commits AR/AF plus ASTAT together
+with the fixed PM data action. Its cache/native composition passes 50,083
+phase clocks with state-8 issue and state-7-only ALU/status/read/I completion;
+whole-core PM ownership and event arbitration remain open
 [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-7].
 
 Operands and destinations will use the old/new timing in

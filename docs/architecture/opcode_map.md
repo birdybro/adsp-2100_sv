@@ -61,8 +61,10 @@ and M occupy bits 19 through 0 without gaps; I/M always map to DAG2. Its
 source-backed destination rule partitions all 1,048,576 class words into
 1,017,344 bounded actions and 31,232 prohibited PM-read/computation
 destination collisions. AMF zero retains PM-only transfers. Exhaustive model
-and RTL checks close action decode; state/cache/native-PM execution remains
-open [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-11].
+and RTL checks close action decode, while bounded state/cache/native-PM
+execution covers the supported partition; whole-core PM ownership remains
+open [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8, 6-3–6-7,
+A-1, A-5–A-11].
 
 The 19 finite abbreviation tables for AMF, data registers, DAG selectors,
 stack controls, jump/return types, shifter functions, and X/Y/Z operands are

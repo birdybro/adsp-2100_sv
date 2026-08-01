@@ -8,6 +8,14 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded original Type 5 state/cache/native-PM composition in structurally
+  independent Python and portable SystemVerilog. It captures selected-bank
+  ALU/MAC, old `{DREG,PX}`, and DAG2 state once; commits compute/status,
+  optional PM-read DREG/PX, and selected-I effects atomically; selects an
+  issue-time cache hit or one pure recovery fetch; and attaches issue/commit
+  to state 8-to-1/state 7-to-8, with directed/random differential tests,
+  formal assertions, and three constrained Cyclone V projects.
+
 - A primary-backed original Type 5 ALU/MAC-plus-PM action database,
   independent exhaustive decoder, two hand-derived field fixtures,
   algebraic/raw assembler-disassembler paths, portable exact RTL decoder,
@@ -360,6 +368,11 @@ semantic versioning after its first release.
 
 ### Fixed
 
+- Corrected the Type 5 logical test expectation for the issuing edge of a
+  subsequently held PM transaction. Observable event fields describe pre-edge
+  state, so `held_transaction` becomes true on the following clock; the RTL
+  and independent model already agreed on that contract and were unchanged.
+
 - Moved the assembler/disassembler legal-but-unimplemented sentinel from
   newly supported Type 5 to still-unimplemented Type 3. The distinction from
   reserved-unshown encodings remains tested; no expected opcode behavior was
@@ -405,6 +418,14 @@ semantic versioning after its first release.
   collisions. Seven model/schema tests, two independent fixtures, 512
   canonical memory-only forms, 2,649 representative compute forms, raw
   aliases, exhaustive RTL decode, and strict formal syntax lint pass.
+- Fourteen Type 5 logical, six cache-composition, and five native-PM directed
+  tests plus 50,071 logical and 50,083 native model/RTL clocks pass. Three new
+  assertion harnesses pass strict syntax lint; proof execution remains skipped
+  because SymbiYosys/Yosys are unavailable.
+- Quartus Standard Fit closes the bounded Type 5 logical/cache/native projects
+  at 25 ns with respectively 1,681/1,912/1,894 ALMs,
+  1,262/1,672/1,746 registers, one DSP, no RAM, positive multicorner setup/hold
+  slack, and fully constrained setup/hold paths.
 - Quartus full compilation closes the Type 5 combinational decoder at 20 ns
   on Cyclone V: 51 ALMs, no registers/RAM/DSPs, +12.323 ns worst setup,
   +4.281 ns worst hold, 130.26 MHz worst slow-corner Fmax, and no
@@ -869,18 +890,19 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 45 harnesses,
-  including exact Type 6/Type 17/Type 21 decode, bounded Type 6/Type 8/
-  Type 14/Type 17/Type 21 state execution, Type 13/cache ownership, and native
-  PM phase/strobe stability;
+- `make formal` passes strict assertion syntax lint for all 55 harnesses,
+  including exact Type 6/Type 17/Type 21 decode, bounded Type 5/Type 6/Type 8/
+  Type 14/Type 17/Type 21 state execution, Type 5/Type 13 cache ownership, and
+  native PM phase/strobe stability;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
 
 - Recorded the exact Type 5 PM/DAG2 fields, AMF-zero PM-only behavior,
   `{DREG,PX}` transfer packing, old-value store ordering, read collision rule,
-  objective action counts, and the boundary between closed decode and open
-  state/cache/native-PM execution.
+  objective action counts, fixed PM/cache recovery timing, native state-8 issue
+  and state-7 completion, and the boundary between closed bounded execution and
+  open whole-core ownership.
 
 - Updated the Type 4 execution, memory, wait-state, cycle, confidence,
   verification, synthesis, and backlog records to distinguish the closed
@@ -1061,9 +1083,10 @@ semantic versioning after its first release.
 
 ### Known Issues
 
-- Type 5 action legality and toolchain support are source-closed, but selected-
-  bank compute state, DAG2 postmodify, PX effects, cache recovery, native PM
-  phases, and whole-core ownership are not yet attached.
+- Type 5 action legality, selected-bank compute, DAG2 postmodify, PX effects,
+  cache recovery, and native PM phases are source-bounded, but whole-core PM
+  ownership, fetch/control-event arbitration, hidden cache cases, and physical
+  hardware comparison remain unattached.
 
 - Type 4 now has selected-register/DAG state, waited logical DM execution, and
   a separately verified native eight-state attachment, but fetch, shared-DM

@@ -46,6 +46,13 @@ uses the following state 8-to-1 for a required back-to-back recovery fetch.
 This validates the selected request/commit contract while leaving ordinary
 fetch and whole-core control arbitration outside the decision boundary.
 
+The Type 5/cache attachment now applies the same sourced PM boundary to
+ALU/MAC-plus-PM actions. It captures selected-bank computation, old
+`{DREG,PX}`, and DAG2 state at state 8-to-1; makes state 7-to-8 the sole
+compute/status/read/PX/I commit edge; and accepts a miss recovery on the next
+state 8-to-1 without repeating the architectural data action. This remains an
+independent bounded client, not a shared PM-owner decision.
+
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains
 architectural state seven while the physical phase input traverses one complete

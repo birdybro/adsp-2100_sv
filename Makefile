@@ -178,6 +178,55 @@ lint:
 			rtl/core/adsp2100_register_file.sv \
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_compute_dm_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_cache_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_native_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_compute_pm_native_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_conditional_compute_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -553,6 +602,7 @@ decode-tests:
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
 		tests.test_compute_move tests.test_compute_dm tests.test_compute_pm \
+		tests.test_compute_pm_cache tests.test_compute_pm_native \
 		tests.test_conditional_compute tests.test_direct_jump \
 		tests.test_do_until tests.test_indirect_jump \
 		tests.test_conditional_return tests.test_conditional_trap \
@@ -742,6 +792,7 @@ compute-tests:
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
 		tests.test_compute_move tests.test_compute_dm tests.test_compute_pm \
+		tests.test_compute_pm_cache tests.test_compute_pm_native \
 		tests.test_conditional_compute tests.test_divide_quotient \
 		tests.test_divide_sign
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
@@ -932,6 +983,51 @@ compute-tests:
 			rtl/core/adsp2100_compute_dm_slice.sv \
 			sim/unit/tb_adsp2100_compute_dm_slice.sv; \
 		build/obj_compute_dm_slice/Vtb_adsp2100_compute_dm_slice; \
+		$(PYTHON) tools/generators/generate_compute_pm_vectors.py \
+			--output build/compute_pm_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_pm_slice \
+			--top-module tb_adsp2100_compute_pm_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			sim/unit/tb_adsp2100_compute_pm_slice.sv; \
+		build/obj_compute_pm_slice/Vtb_adsp2100_compute_pm_slice; \
+		$(PYTHON) tools/generators/generate_compute_pm_native_vectors.py \
+			--output build/compute_pm_native_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_pm_native_slice \
+			--top-module tb_adsp2100_compute_pm_native_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_compute_pm_native_slice.sv \
+			sim/unit/tb_adsp2100_compute_pm_native_slice.sv; \
+		build/obj_compute_pm_native_slice/Vtb_adsp2100_compute_pm_native_slice; \
 		$(PYTHON) tools/generators/generate_conditional_compute_vectors.py \
 			--output build/conditional_compute_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -1255,7 +1351,7 @@ bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-shifte
 	else \
 		echo "SKIP Type 2 transaction RTL test: Verilator is not installed"; \
 	fi
-	@echo "PASS bounded cache, Type 2/4/12 DM, and Type 13 PM transaction regressions"
+	@echo "PASS bounded cache, Type 2/4/12 DM, and Type 5/13 PM transaction regressions"
 
 interrupt-tests:
 	@echo "SKIP interrupt tests: interrupt RTL does not exist"
@@ -1453,6 +1549,58 @@ formal:
 			rtl/core/adsp2100_status_registers.sv \
 			rtl/core/adsp2100_compute_dm_slice.sv \
 			formal/harnesses/adsp2100_compute_dm_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			formal/harnesses/adsp2100_compute_pm_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_cache_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			formal/harnesses/adsp2100_compute_pm_cache_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_pm_native_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_pm_decode.sv \
+			rtl/core/adsp2100_compute_dm_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_instruction_cache.sv \
+			rtl/core/adsp2100_compute_dm_slice.sv \
+			rtl/core/adsp2100_compute_pm_slice.sv \
+			rtl/core/adsp2100_compute_pm_cache_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_compute_pm_native_slice.sv \
+			formal/harnesses/adsp2100_compute_pm_native_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_conditional_compute_formal \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -1688,6 +1836,11 @@ formal:
 		sby -f -d build/formal_compute_dm formal/compute_dm.sby; \
 		sby -f -d build/formal_compute_dm_native \
 			formal/compute_dm_native.sby; \
+		sby -f -d build/formal_compute_pm formal/compute_pm.sby; \
+		sby -f -d build/formal_compute_pm_cache \
+			formal/compute_pm_cache.sby; \
+		sby -f -d build/formal_compute_pm_native \
+			formal/compute_pm_native.sby; \
 		sby -f -d build/formal_conditional_compute \
 			formal/conditional_compute.sby; \
 		sby -f -d build/formal_stack_control_decode \
@@ -1788,6 +1941,12 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_dm_native_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/compute_pm_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/compute_pm_cache_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/compute_pm_native_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/conditional_compute_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/direct_jump_smoke; \
@@ -1879,6 +2038,8 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_pm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_move_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_dm_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name compute_pm_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name compute_pm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name conditional_compute_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name direct_jump_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name do_until_vectors.txt -delete
@@ -2002,6 +2163,12 @@ clean:
 	fi
 	@if [ -d build/obj_compute_dm_slice ]; then \
 		find build/obj_compute_dm_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_compute_pm_slice ]; then \
+		find build/obj_compute_pm_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_compute_pm_native_slice ]; then \
+		find build/obj_compute_pm_native_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_conditional_compute_decode ]; then \
 		find build/obj_conditional_compute_decode -depth -delete; \
@@ -2149,6 +2316,15 @@ clean:
 	@if [ -d build/quartus_compute_dm_native ]; then \
 		find build/quartus_compute_dm_native -depth -delete; \
 	fi
+	@if [ -d build/quartus_compute_pm ]; then \
+		find build/quartus_compute_pm -depth -delete; \
+	fi
+	@if [ -d build/quartus_compute_pm_cache ]; then \
+		find build/quartus_compute_pm_cache -depth -delete; \
+	fi
+	@if [ -d build/quartus_compute_pm_native ]; then \
+		find build/quartus_compute_pm_native -depth -delete; \
+	fi
 	@if [ -d build/quartus_conditional_compute ]; then \
 		find build/quartus_conditional_compute -depth -delete; \
 	fi
@@ -2220,6 +2396,9 @@ clean:
 		build/formal_compute_pm_decode \
 		build/formal_compute_dm \
 		build/formal_compute_dm_native \
+		build/formal_compute_pm \
+		build/formal_compute_pm_cache \
+		build/formal_compute_pm_native \
 		build/formal_conditional_compute \
 		build/formal_direct_jump \
 		build/formal_do_until \
