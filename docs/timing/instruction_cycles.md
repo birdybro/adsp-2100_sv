@@ -50,6 +50,7 @@ Known cases:
 | PM data access, invalid cache | one additional instruction-fetch cycle |
 | interrupt vectoring | two cycles described, including vector jump |
 | DMACK low | extend state 7 by whole processor cycles until high |
+| HALT during ordinary instruction fetch | asserted active-low input is recognized at state 3; the current cycle completes at state 7-to-8, stopped outputs hold state 8, and a DMACK-high release resumes at state 8-to-1 |
 | HALT during PM data | forced instruction-fetch cycle before stop |
 
 Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
@@ -195,10 +196,17 @@ fetch. The bounded BR/BG composition adds five directed tests and 50,003
 clocks with 93 complete handshakes: the recognized request permits current
 retirement, blocks the next issue, masks PM output enables only during grant,
 and restarts at state 8-to-1 after release. This still is not a multi-owner
-core; reset first-fetch, loop/transfer/event selection, PM-data/cache, HALT,
-DM ownership, and interrupt arbitration remain open [ADI-UM-1989, printed
+core; reset first-fetch, loop/transfer/event selection, PM-data/cache,
+DM ownership, and interrupt arbitration remain open. The bounded ordinary-
+fetch HALT attachment adds seven directed tests and 50,003 clocks with 790
+recognized stops and restarts: active-low HALT is sampled at state 3, the
+current fetch retires at state 7-to-8, state 8 and its PM levels hold static,
+and release advances only when DMACK is high. This result does not cover the
+PM-data forced-fetch path, HALT during grant/waits, TRAP, BR while stopped,
+interrupts, or reset [ADI-UM-1989, printed
 pp. 1-5, 2-6, 2-15, 2-18,
-2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24, 5-5–5-8, 6-1–6-2,
+2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24, 5-5–5-8,
+5-13–5-14, 6-1–6-2,
 6-12, 6-14–6-15, A-3, and A-9].
 
 The bounded Type 15 model/RTL slice verifies a cycle-start selected-bank

@@ -1,0 +1,47 @@
+[options]
+mode prove
+depth 32
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/packages/adsp2100_pkg.sv
+read -formal -sv rtl/packages/adsp2100_register_pkg.sv
+read -formal -sv rtl/core/adsp2100_load_dreg_immediate_decode.sv
+read -formal -sv rtl/core/adsp2100_load_non_dreg_immediate_decode.sv
+read -formal -sv rtl/core/adsp2100_mode_control_decode.sv
+read -formal -sv rtl/core/adsp2100_internal_move_decode.sv
+read -formal -sv rtl/core/adsp2100_register_file.sv
+read -formal -sv rtl/core/adsp2100_dag_register_file.sv
+read -formal -sv rtl/core/adsp2100_status_registers.sv
+read -formal -sv rtl/core/adsp2100_counter.sv
+read -formal -sv rtl/core/adsp2100_sequencer_stacks.sv
+read -formal -sv rtl/core/adsp2100_status_stack.sv
+read -formal -sv rtl/core/adsp2100_internal_move_slice.sv
+read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv rtl/core/adsp2100_linear_core_slice.sv
+read -formal -sv rtl/core/adsp2100_halt_control.sv
+read -formal -sv rtl/core/adsp2100_linear_halt_control_slice.sv
+read -formal -sv formal/harnesses/adsp2100_linear_halt_control_formal.sv
+prep -top adsp2100_linear_halt_control_formal
+
+[files]
+rtl/packages/adsp2100_pkg.sv
+rtl/packages/adsp2100_register_pkg.sv
+rtl/core/adsp2100_load_dreg_immediate_decode.sv
+rtl/core/adsp2100_load_non_dreg_immediate_decode.sv
+rtl/core/adsp2100_mode_control_decode.sv
+rtl/core/adsp2100_internal_move_decode.sv
+rtl/core/adsp2100_register_file.sv
+rtl/core/adsp2100_dag_register_file.sv
+rtl/core/adsp2100_status_registers.sv
+rtl/core/adsp2100_counter.sv
+rtl/core/adsp2100_sequencer_stacks.sv
+rtl/core/adsp2100_status_stack.sv
+rtl/core/adsp2100_internal_move_slice.sv
+rtl/core/adsp2100_program_bus.sv
+rtl/core/adsp2100_linear_core_slice.sv
+rtl/core/adsp2100_halt_control.sv
+rtl/core/adsp2100_linear_halt_control_slice.sv
+formal/harnesses/adsp2100_linear_halt_control_formal.sv

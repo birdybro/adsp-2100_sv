@@ -3,13 +3,13 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
 test: lint reference-check repository-check decode-tests assembler-tests model-tests \
-	cache-tests reset-tests bus-control-tests linear-bus-control-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests \
+	cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests \
 	bus-tests
 	@echo "PASS implemented foundation regression"
 
@@ -172,6 +172,25 @@ lint:
 			rtl/wrappers/adsp2100_reset_bus_grant.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			rtl/core/adsp2100_linear_bus_control_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_linear_halt_control_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			rtl/core/adsp2100_linear_halt_control_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_immediate_shift_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -790,6 +809,39 @@ linear-bus-control-tests:
 		build/obj_linear_bus_control/Vtb_adsp2100_linear_bus_control_slice; \
 	else \
 		echo "SKIP linear-fetch/BR-BG RTL test: Verilator is not installed"; \
+	fi
+
+halt-tests:
+	$(PYTHON) -m unittest -v tests.test_halt_control
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_linear_halt_control_vectors.py \
+			--output build/linear_halt_control_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_linear_halt_control \
+			--top-module tb_adsp2100_linear_halt_control_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			rtl/core/adsp2100_linear_halt_control_slice.sv \
+			sim/unit/tb_adsp2100_linear_halt_control_slice.sv; \
+		build/obj_linear_halt_control/Vtb_adsp2100_linear_halt_control_slice; \
+	else \
+		echo "SKIP bounded linear-fetch/HALT RTL test: Verilator is not installed"; \
 	fi
 
 decode-tests:
@@ -1705,6 +1757,27 @@ formal:
 			rtl/core/adsp2100_linear_bus_control_slice.sv \
 			formal/harnesses/adsp2100_linear_bus_control_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			-Wno-PINCONNECTEMPTY \
+			--top-module adsp2100_linear_halt_control_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			rtl/core/adsp2100_linear_halt_control_slice.sv \
+			formal/harnesses/adsp2100_linear_halt_control_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_data_bus_formal \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_data_bus.sv \
@@ -2211,6 +2284,8 @@ formal:
 		sby -f -d build/formal_linear_core formal/linear_core.sby; \
 		sby -f -d build/formal_linear_bus_control \
 			formal/linear_bus_control.sby; \
+		sby -f -d build/formal_linear_halt_control \
+			formal/linear_halt_control.sby; \
 		sby -f -d build/formal_dm_bus formal/dm_bus.sby; \
 		sby -f -d build/formal_dm_write_immediate_native \
 			formal/dm_write_immediate_native.sby; \
@@ -2302,7 +2377,9 @@ synth-yosys:
 			synthesis/yosys/linear_core.ys; \
 		yosys -q -l build/yosys_linear_bus_control.log \
 			synthesis/yosys/linear_bus_control.ys; \
-		echo "PASS bounded reset/phase, BR/BG, linear, and composed Yosys synthesis"; \
+		yosys -q -l build/yosys_linear_halt_control.log \
+			synthesis/yosys/linear_halt_control.ys; \
+		echo "PASS bounded reset/phase, BR/BG, HALT, linear, and composed Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
 	fi
@@ -2321,6 +2398,8 @@ synth-quartus:
 			synthesis/quartus/linear_core_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/linear_bus_control_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/linear_halt_control_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/immediate_shift_smoke; \
 		quartus_sh --flow compile \
@@ -2593,6 +2672,12 @@ clean:
 	@if [ -d build/obj_linear_core_slice ]; then \
 		find build/obj_linear_core_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_linear_bus_control ]; then \
+		find build/obj_linear_bus_control -depth -delete; \
+	fi
+	@if [ -d build/obj_linear_halt_control ]; then \
+		find build/obj_linear_halt_control -depth -delete; \
+	fi
 	@if [ -d build/obj_compute_move_decode ]; then \
 		find build/obj_compute_move_decode -depth -delete; \
 	fi
@@ -2723,6 +2808,12 @@ clean:
 	fi
 	@if [ -d build/quartus_linear_core ]; then \
 		find build/quartus_linear_core -depth -delete; \
+	fi
+	@if [ -d build/quartus_linear_bus_control ]; then \
+		find build/quartus_linear_bus_control -depth -delete; \
+	fi
+	@if [ -d build/quartus_linear_halt_control ]; then \
+		find build/quartus_linear_halt_control -depth -delete; \
 	fi
 	@if [ -d build/quartus_immediate_shift ]; then \
 		find build/quartus_immediate_shift -depth -delete; \
@@ -2860,6 +2951,7 @@ clean:
 		build/formal_bus_control \
 		build/formal_linear_core \
 		build/formal_linear_bus_control \
+		build/formal_linear_halt_control \
 		build/formal_dm_bus \
 		build/formal_dm_write_immediate_native \
 		build/formal_shifter_dm_native \

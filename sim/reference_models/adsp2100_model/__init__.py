@@ -12,6 +12,17 @@ from .linear_bus_control import (
     LinearBusControlState,
     apply_linear_bus_control_cycle,
 )
+from .halt_control import (
+    HaltControlCycleResult,
+    HaltControlMode,
+    HaltControlState,
+    apply_halt_control_cycle,
+)
+from .linear_halt_control import (
+    LinearHaltControlCycleResult,
+    LinearHaltControlState,
+    apply_linear_halt_control_cycle,
+)
 from .conditions import (
     ConditionInputs,
     DO_TERMINATION_MNEMONICS,

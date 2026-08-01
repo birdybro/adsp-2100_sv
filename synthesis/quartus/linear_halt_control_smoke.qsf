@@ -1,0 +1,42 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_linear_halt_control_slice
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_linear_halt_control
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/packages/adsp2100_register_pkg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_load_dreg_immediate_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_load_non_dreg_immediate_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mode_control_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_move_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_register_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag_register_file.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_registers.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_counter.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer_stacks.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_status_stack.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_move_slice.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_core_slice.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_halt_control.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_halt_control_slice.sv
+set_global_assignment -name SDC_FILE linear_halt_control_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name FITTER_EFFORT "STANDARD FIT"
+set_global_assignment -name SEED 12
+
+set_location_assignment PIN_V11 -to clk_i
+set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
+set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
+set_instance_assignment -name VIRTUAL_PIN ON -to phase_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to phase_advance_i
+set_instance_assignment -name VIRTUAL_PIN ON -to halt_n_i
+set_instance_assignment -name VIRTUAL_PIN ON -to dmack_i
+set_instance_assignment -name VIRTUAL_PIN ON -to instruction_setup_i
+set_instance_assignment -name VIRTUAL_PIN ON -to instruction_setup_pc_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to instruction_setup_opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to probe_code_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to "*_o"
+
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"

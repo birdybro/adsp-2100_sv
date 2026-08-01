@@ -1,7 +1,8 @@
 # Pipeline and cache
 
-**Status: one-stage pipeline, bounded ordinary linear fetch, and bounded
-cache-integrated PM-data hit/miss timing implemented; unified hazards pending**
+**Status: one-stage pipeline, bounded ordinary linear fetch/BR/HALT control,
+and bounded cache-integrated PM-data hit/miss timing implemented; unified
+hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
 following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
@@ -38,6 +39,17 @@ inhibition, grant-time PM masking, and state-8-to-state-1 restart; it does not
 attach any other PM/DM owner [ADI-UM-1989, printed pp. 1-5,
 2-6, 2-15, 2-18, 2-21, 3-2–3-3, 3-7, 4-3–4-4, 4-10, 4-20–4-24,
 5-5–5-8, 6-1–6-2, 6-12, 6-14–6-15, A-3, and A-9].
+
+Another bounded composition now verifies the ordinary-fetch HALT pipeline
+case. Active-low HALT recognition at state 3 does not squash the word already
+executing or its overlapped fetch. That fetch retires at state 7-to-8, the
+pipeline then remains stopped with the fetched PC/opcode and external PM
+levels stable in state 8, and a DMACK-qualified HALT release issues the next
+fetch at state 8-to-1. The independent-model/RTL comparison covers 50,003
+clocks and 790 stop/restart sequences. The distinct PM-data case still requires
+the documented forced external instruction fetch even on a cache hit and is
+not implemented by this ordinary-fetch attachment [ADI-UM-1989, printed
+pp. 5-13–5-14].
 
 PM data use conflicts with external instruction fetch. The 16×24 cache can
 supply a valid next instruction; otherwise an additional external fetch cycle

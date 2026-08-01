@@ -12,7 +12,8 @@
   Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the bounded NOP/Type 6/Type 7/Type 17/Type 18
-  linear owner and its bounded normal-BR/BG composition,
+  linear owner and its bounded normal-BR/BG and ordinary-fetch/HALT
+  compositions,
   the standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
   Type 4/Type 12 attachments,
@@ -24,8 +25,8 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment. Original RESET/phase, normal
-  BR/BG, bounded linear-owner, and linear-owner/BR/BG composition synthesis
-  scripts are wired into
+  BR/BG, bounded HALT, bounded linear-owner, and linear-owner/BR/BG and
+  linear-owner/HALT composition synthesis scripts are wired into
   `make synth-yosys` for an equipped host.
 - Quartus 17.0.2 full compilation of the normal BR/BG controller passes for
   Cyclone V `5CSEBA6U23I7`. It uses 27 ALMs, 7 fitted registers, no block
@@ -60,6 +61,17 @@
   constant outputs in this read-only bounded fetch path, and virtual-pin
   optimization. This is not multi-owner, physical-I/O, or whole-core timing
   closure.
+- Quartus 17.0.2 full compilation of the bounded linear-owner/HALT
+  composition passes for Cyclone V `5CSEBA6U23I7`. It uses 914 ALMs and 1,008
+  fitted registers, no block memory, and no DSP blocks. Against its documented
+  25 ns virtual-pin smoke constraint, worst multicorner setup slack is
+  +12.168 ns, worst hold slack is +0.169 ns, worst slow-corner Fmax is
+  77.93 MHz, and TimeQuest reports zero unconstrained clocks, inputs, outputs,
+  or paths. Expected warnings are limited to the Quartus Lite LogicLock
+  license, asynchronous-read small arrays, constant outputs in the bounded
+  read-only owner, and virtual-pin optimization. This is ordinary-fetch HALT
+  composition, not PM-data forced fetch, physical-I/O, multi-event, or
+  whole-core timing closure.
 - Quartus 17.0.2 full compilation of the combinational Type 3 direct-DM
   action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
   constraint. It uses 46 ALMs (32 combinational ALUTs) and no registers, RAM,

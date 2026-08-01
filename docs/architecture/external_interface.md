@@ -60,6 +60,17 @@ issue, masks all PM output enables during grant, and restarts issue at state
 complete handshakes. It is not yet composed with this Type 13 PM-data client,
 Type 5, other PM instruction classes, or a whole-core PM arbiter.
 
+A separate active-low HALT controller is now composed with the same bounded
+ordinary-fetch owner. It samples HALT at the enabled end of state 3, lets the
+current PM read complete at state 7-to-8, holds the owner and its driven PM
+outputs in state 8, and resumes at state 8-to-1 only when HALT is inactive and
+DMACK is high. Seven directed tests and 50,003 model/RTL clocks cover 790
+stops/resumes, including 161 DMACK-low blocked releases and 742 held clocks.
+Unlike BG, HALT does not mask the PM output enables in this stopped ordinary-
+fetch case. PM-data forced fetch, HALT during BG or DM waits, TRAP/interrupt
+priority, reset interaction, and analog input timing remain uncomposed
+[ADI-UM-1989, printed pp. 5-13–5-14, 5-17–5-20].
+
 Pin-compatible electrical timing belongs in a separate I/O wrapper. The generic
 core exposes phase and transaction trace signals without a generic modern bus
 that would erase original PM/DM concurrency.

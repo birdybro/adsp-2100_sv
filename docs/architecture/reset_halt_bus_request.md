@@ -1,6 +1,7 @@
 # Reset, halt, trap, and bus request
 
-**Status: reset phase, normal BR/BG, and Type 22 handshake bounded in RTL**
+**Status: reset phase, ordinary-fetch HALT, normal BR/BG, and Type 22
+handshake bounded in RTL**
 
 RESET is recognized on a CLKIN rising edge, must remain asserted for at least
 four CLKIN cycles, holds state 4 and CLKOUT low, and releases into state 5 on
@@ -61,6 +62,43 @@ HALT is recognized at state 3 and stops at state 8. If the current cycle is PM
 data, a forced instruction fetch completes first; this makes the stopped PMA
 observable. Releasing HALT resumes, with DMACK required high
 [ADI-UM-1989, printed pp. 5-13–5-14].
+
+## Ordinary-fetch HALT attachment
+
+The original HALT input is active low, as shown by the pin-name overbar and
+pin/timing figures [ADI-UM-1989, printed pp. 5-17–5-20;
+ADI-DATABOOK-1987, printed pp. 2-24–2-25 and Figure 10 p. 2-33]. For an
+ordinary external instruction-fetch cycle, the source sequence is now
+implemented independently in Python and portable RTL:
+
+- an asserted HALT input is sampled only at the enabled end of state 3;
+- recognition is latched even if the input is released before the stop edge;
+- the already-active instruction fetch remains driven and retires at the
+  enabled state-7-to-state-8 edge;
+- no following instruction is issued while stopped;
+- the controller holds logical state 8, preserving the stopped PMA, PMS, and
+  PMRD levels rather than relinquishing the bus; and
+- release advances from state 8 to state 1 only when HALT is inactive and
+  DMACK is high. A DMACK-low release request fails closed by retaining the
+  stopped state; this is a protective digital contract for the manual's
+  requirement that DMACK be high, not a characterization of an out-of-spec
+  board sequence.
+
+`rtl/core/adsp2100_halt_control.sv` separates new-issue inhibition from phase
+hold. `rtl/core/adsp2100_linear_halt_control_slice.sv` attaches both effects
+to the bounded ordinary NOP/Type 6/Type 7/Type 17/Type 18 PM owner without
+gating a clock. Seven directed tests and 50,003 deterministic independent-
+model/RTL clocks cover 790 complete recognize/stop/resume sequences, 161
+DMACK-low blocked-release observations, and 742 held state-8 clocks. The
+machine-readable boundary is `docs/generated/adsp2100_halt_control.yaml`.
+
+This evidence is deliberately narrower than general HALT support. It excludes
+the required forced instruction-fetch cycle after PM data, HALT recognition
+while BG is active or a DMACK wait is incomplete, TRAP clear/release handoff,
+BR recognition while already halted, interrupt priority, reset interaction,
+and electrical synchronization/metastability. Those cases require composition
+with their respective owners and are not inferred from the ordinary-fetch
+result [ADI-UM-1989, printed pp. 5-13–5-15].
 
 TRAP is an output asserted by the TRAP instruction at the state 7/8 boundary
 and cleared by asserting HALT; release of HALT resumes

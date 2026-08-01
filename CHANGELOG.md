@@ -8,6 +8,21 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed bounded ordinary-fetch HALT controller and structural
+  attachment in independent Python and portable SystemVerilog. It recognizes
+  the active-low input at enabled state 3, latches a short assertion, lets the
+  current PM read retire at state 7-to-8, holds driven PM outputs stable in
+  state 8, and resumes at state 8-to-1 only after HALT is inactive with DMACK
+  high. Seven directed tests and 50,003 deterministic differential clocks
+  cover 790 complete recognize/stop/resume sequences, 161 DMACK-low blocked
+  releases, and 742 held clocks. A machine-readable contract, formal harness,
+  Yosys flow, and fully constrained Cyclone V project bound the attachment.
+  The fit uses 914 ALMs and 1,008 registers, no RAM/DSP blocks, +12.168 ns
+  worst setup, +0.169 ns worst hold, 77.93 MHz worst slow-corner Fmax, and no
+  unconstrained paths at 25 ns. PM-data forced fetch, HALT during BG or DMACK
+  waits, TRAP handoff, BR while halted, interrupt/reset priority, and analog
+  synchronization remain explicitly outside this result.
+
 - A bounded structural composition of the ordinary linear PM owner and the
   source-backed BR/BG controller in independent Python and portable
   SystemVerilog. It lets an in-flight fetch remain driven and retire after

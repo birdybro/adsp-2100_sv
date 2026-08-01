@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "status": "SOURCE_BOUNDED_ORDINARY_FETCH_HALT_CONTROL",
+  "pin_polarity": {
+    "HALT": "ACTIVE_LOW"
+  },
+  "recognition": "ENABLED_END_OF_STATE_3_SAMPLE",
+  "recognition_cycle": "PROGRAM_MEMORY_INSTRUCTION_FETCH_ONLY",
+  "current_cycle_effect": "CURRENT_EXTERNAL_INSTRUCTION_FETCH_COMPLETES",
+  "stop": "STATE_8_AFTER_CURRENT_STATE_7_TO_STATE_8_COMPLETION",
+  "stopped_outputs": "ALL_PROCESSOR_OUTPUTS_RETAIN_STATE_8_LEVELS_FOR_OBSERVATION",
+  "release_requirement": "HALT_DEASSERTED_AND_DMACK_HIGH",
+  "resume": "ENABLED_HELD_STATE_8_TO_STATE_1_BOUNDARY",
+  "sources": [
+    "ADI-UM-1989 printed pp. 5-2 through 5-3 and 5-13 through 5-14",
+    "ADI-UM-1989 printed p. 5-17 pin description",
+    "ADI-DATABOOK-1987 printed pp. 2-24 through 2-25 and 2-33 Figure 10"
+  ],
+  "excluded_claims": [
+    "PROGRAM_MEMORY_DATA_CYCLE_FORCED_FETCH",
+    "HALT_DURING_BUS_GRANT",
+    "HALT_DURING_DMACK_WAIT",
+    "TRAP_TO_HALT_HANDOFF",
+    "BR_WHILE_HALTED",
+    "INTERRUPT_PRIORITY",
+    "ANALOG_SYNCHRONIZATION_OR_METASTABILITY"
+  ],
+  "confidence": "VERIFIED_PRIMARY_BOUNDED"
+}

@@ -1343,9 +1343,11 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make bus-tests`, `make interrupt-tests`,
   `make reset-tests`, `make bus-control-tests`, `tests/test_reset_phase.py`,
   `tests/test_bus_control.py`, `make linear-bus-control-tests`,
-  `tests/test_linear_bus_control.py`,
+  `tests/test_linear_bus_control.py`, `make halt-tests`,
+  `tests/test_halt_control.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
   `formal/bus_control.sby`, `formal/linear_bus_control.sby`,
+  `formal/linear_halt_control.sby`,
   `formal/conditional_trap.sby`,
   `formal/system_control.sby`
 - **Implementation notes:** use clock enables and phase state, never gated
@@ -1367,7 +1369,7 @@ advance beyond research until a page-level primary citation is added.
   path outside architectural state. Invalid early withdrawal/reassertion
   fails closed and is explicitly an implementation contract. The raw
   asynchronous HALT synchronizer and general pin-driven halt remain
-  unimplemented. A bounded structural composition now attaches BR/BG to the
+  incomplete. A bounded structural composition now attaches BR/BG to the
   ordinary linear PM owner: current fetch completes through state 7, the next
   issue is stopped, all PM output enables are masked during grant, and issue
   resumes at state 8-to-1 after release. Five directed tests and 50,003
@@ -1375,6 +1377,17 @@ advance beyond research until a page-level primary citation is added.
   and 5,376 issues. The composition has a formal recipe and a fully constrained
   Cyclone V fit; PM-data/cache, DM, transfer, loop, interrupt, HALT, and reset-
   first-fetch ownership remain unimplemented.
+  A second structurally independent model/RTL composition now implements the
+  primary-backed active-low ordinary-fetch HALT path: recognition at enabled
+  state 3, current-fetch retirement at state 7, stopped state-8 PM outputs
+  held driven and stable, and state-8-to-state-1 restart only after HALT is
+  released with DMACK high. Seven directed tests and 50,003 differential
+  clocks pass, covering 790 recognize/stop/resume sequences, 161 blocked
+  DMACK-low release attempts, and 742 held clocks. Its formal recipe passes
+  strict syntax lint and a constrained Cyclone V fit closes at 25 ns. The
+  forced instruction fetch after a PM-data cycle, HALT while BG or a DMACK
+  wait is active, TRAP handoff, BR requests while halted, interrupts, reset,
+  and analog input synchronization remain explicitly outside this attachment.
 - **Unresolved questions:** OQ-024 reset/initial-fetch strobes and exact
   composition priority among general HALT, TRAP, BR/BG, DMACK waits, reset,
   and interrupts; analog BR setup/metastability behavior and invalid

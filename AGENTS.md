@@ -229,10 +229,13 @@ bounded steady-state owner now executes NOP, legal Type 6/7, every legal Type
 17 internal MOVE, and every Type 18 MODE CONTROL word while fetching PC+1
 through the native PM phase controller. Type 17 narrow status/control-source
 extension remains an observable OQ-016 provisional behavior; reset
-first-fetch, transfers, loops, interrupts, PM-data/cache, and HALT remain
-outside that owner. Normal BR/BG is attached only to this bounded linear
+first-fetch, transfers, loops, interrupts, and PM-data/cache remain outside
+that owner. Normal BR/BG and ordinary-fetch HALT are attached separately only
+to this bounded linear
 owner: the current fetch completes, new issue is inhibited, PM output enables
-are masked during grant, and restart occurs at state 8-to-1. Other bounded
+are masked during grant, HALT instead holds driven PM outputs in state 8, and
+restart occurs at state 8-to-1. PM-data forced fetch and cross-event priority
+remain open. Other bounded
 source-backed RTL
 execution slices implement all
 original Type 2
@@ -376,8 +379,13 @@ yet provide whole-core PM arbitration or attach other PM instruction classes.
 The normal BR/BG controller passes 50,084 standalone model/RTL clocks, and its
 bounded linear-owner composition passes 50,003 more clocks for current-fetch
 completion, next-issue inhibition, grant-time PM masking, and state-1 resume.
+The separate ordinary-fetch HALT composition passes seven directed tests and
+50,003 clocks with 790 recognize/stop/resume handshakes, DMACK-qualified
+release, and stable driven state-8 PM outputs.
 No PM-data/cache or DM client is attached to BR/BG, analog delays are not
-modeled, and the request boundary is not a claim about a hidden device latch.
+modeled, and the request boundaries are not claims about hidden device
+latches. HALT after PM data, during BG or DMACK waits, and in TRAP/interrupt/
+reset arbitration remains unimplemented.
 The RESET-time direct pin path is confined to a wrapper.
 Original Type 2 immediate DM-write execution is bounded and class-complete:
 all 2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L

@@ -1,0 +1,23 @@
+read_verilog -sv rtl/packages/adsp2100_pkg.sv
+read_verilog -sv rtl/packages/adsp2100_register_pkg.sv
+read_verilog -sv rtl/core/adsp2100_load_dreg_immediate_decode.sv
+read_verilog -sv rtl/core/adsp2100_load_non_dreg_immediate_decode.sv
+read_verilog -sv rtl/core/adsp2100_mode_control_decode.sv
+read_verilog -sv rtl/core/adsp2100_internal_move_decode.sv
+read_verilog -sv rtl/core/adsp2100_register_file.sv
+read_verilog -sv rtl/core/adsp2100_dag_register_file.sv
+read_verilog -sv rtl/core/adsp2100_status_registers.sv
+read_verilog -sv rtl/core/adsp2100_counter.sv
+read_verilog -sv rtl/core/adsp2100_sequencer_stacks.sv
+read_verilog -sv rtl/core/adsp2100_status_stack.sv
+read_verilog -sv rtl/core/adsp2100_internal_move_slice.sv
+read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_linear_core_slice.sv
+read_verilog -sv rtl/core/adsp2100_halt_control.sv
+read_verilog -sv rtl/core/adsp2100_linear_halt_control_slice.sv
+
+hierarchy -check -top adsp2100_linear_halt_control_slice
+synth -top adsp2100_linear_halt_control_slice
+check
+stat
+write_json build/yosys_linear_halt_control.json
