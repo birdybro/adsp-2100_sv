@@ -7,6 +7,13 @@ fetches, waits, and control events add externally visible cycles
 [ADI-UM-1989, printed pp. 1-2, 6-21]. The project therefore records both
 architectural execution and bus-phase count.
 
+“Waits” here means sourced DMACK-low data-memory extensions. The original
+program-memory interface has no acknowledge input, so the ordinary overlapped
+instruction fetch is fixed at one processor cycle. The integrated reference
+model now rejects its former synthetic PM-fetch wait argument rather than
+recording behavior the original interface cannot request
+[ADI-UM-1989, printed pp. 4-3, 4-10, 5-5–5-12].
+
 Known cases:
 
 | Case | Current sourced timing |
@@ -29,8 +36,8 @@ Known cases:
 | Type 22 conditional TRAP | one processor cycle whether true or false; accepted condition is retained through phase holds, PC+1 commits at the state-7/state-8 boundary, and a taken form asserts TRAP and holds state 8 until the HALT handshake; TRAP NOT CE never post-decrements CNTR |
 | Type 23 `DIVQ divisor;` | one processor cycle; old selected-bank AF/AY0/divisor/AQ values produce simultaneous cycle-end AF, AY0, and AQ writes; no PM-data or DM transfer |
 | Type 24 `DIVS upper, divisor;` | one processor cycle; old selected-bank upper/AY0/divisor values produce simultaneous cycle-end AF, AY0, and AQ writes; no PM-data or DM transfer |
-| Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer |
-| Type 7 immediate non-data-register load | one processor cycle; no PM-data or DM transfer; a valid CNTR load performs its count-stack push at the same cycle-end boundary |
+| Type 6 immediate DREG load | one processor cycle; no PM-data or DM transfer; bounded integrated linear flow executes the current word while fetching PC+1 |
+| Type 7 immediate non-data-register load | one processor cycle; no PM-data or DM transfer; a valid CNTR load performs its count-stack push at the same cycle-end boundary; bounded integrated linear flow executes the current word while fetching PC+1 |
 | Type 14 shifter plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 15 immediate LSHIFT/ASHIFT | one processor cycle; no PM-data or DM transfer |
 | Type 16 conditional shifter | one processor cycle whether true or false; no PM-data or DM transfer |
@@ -167,6 +174,15 @@ and same-boundary CNTR/count-stack load effects without adding a data-memory
 or PM-data transaction. It likewise does not yet connect normal fetch overlap,
 active-loop/interrupt arbitration, or external PM fetch phases
 [ADI-UM-1989, printed pp. 4-4, 4-22, 6-1–6-2, 6-12–6-13, A-2, and A-9].
+
+The top-level independent model additionally composes NOP and legal Type 6/7
+state execution with ordinary linear PC progression and the overlapped next
+instruction fetch. Sixteen foundation tests verify PC/fetch separation,
+loaded next-word visibility, fixed one-cycle timing, selected-bank and narrow
+register effects, DAG/status writes, CNTR stack saturation/SSTAT, and
+fail-closed reserved Type 7 destinations. This closes the model boundary only;
+native eight-state RTL attachment and multi-owner arbitration remain open
+[ADI-UM-1989, printed pp. 1-5, 4-3, 4-10].
 
 The bounded Type 15 model/RTL slice verifies a cycle-start selected-bank
 operand read, optional old-SR read for OR forms, and one cycle-end SR write.

@@ -530,6 +530,14 @@ advance beyond research until a page-level primary citation is added.
   register state, preserves reset unknowns, performs selected-bank SB and
   CNTR/count-stack writes, and fails closed for computational-group, reserved,
   and read-only-SSTAT destinations.
+  The integrated model now retires NOP and legal Type 6/7 words in a bounded
+  linear-flow context. It applies their state actions, advances the PC, records
+  the overlapped fetch at PC+1 rather than at the retiring address, and rejects
+  the former synthetic PM-fetch wait extension. Sixteen foundation tests cover
+  this boundary, including selected-bank loads, narrow registers, DAG/status,
+  count-stack saturation/SSTAT, and reserved Type 7 selectors. Native RTL
+  phase attachment, active loops, control transfers, interrupts, PM-data/cache,
+  HALT, and BR/BG remain outside this model increment.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
   an independently structured compute model, commits SR at cycle end, and
@@ -1330,6 +1338,10 @@ advance beyond research until a page-level primary citation is added.
   hits, discontinuity invalidation, oldest replacement, hit-word selection,
   and recovery fills; this does not yet close branch/loop/interrupt/HALT/BR
   arbitration under OQ-008.
+  The independent top-level model now enforces the sourced ordinary-flow
+  overlap for NOP and Type 6/7: the current-PC instruction retires while PC+1
+  is fetched and becomes the next PC. It no longer permits an invented
+  ordinary-PM wait extension. The matching native RTL owner is still pending.
 - **Unresolved questions:** fetch/decode/execute visibility and PM-data conflict
   penalties.
 - **Confidence:** UNKNOWN
@@ -1681,8 +1693,9 @@ advance beyond research until a page-level primary citation is added.
 ## Next task selection
 
 The highest-priority unblocked implementation work is the first integrated
-instruction owner joining source-closed no-data instructions to ordinary PM
-fetch, PC progression, and the native eight-state phase boundary. Type 7
+RTL instruction owner joining the now-integrated-model NOP/Type 6/Type 7
+linear flow to ordinary PM fetch, PC progression, and the native eight-state
+phase boundary. Type 7
 immediate non-data-register execution and Type 3 state/native-DM execution are
 now bounded and verified. The Type 1 dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM

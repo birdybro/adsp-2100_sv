@@ -378,6 +378,12 @@ semantic versioning after its first release.
 
 ### Changed
 
+- Corrected the independent model's ordinary linear-flow contract: NOP and
+  legal Type 6/7 words now execute at the current PC while the trace records
+  the overlapped instruction fetch at PC+1, and their state effects and PC
+  progression commit in the same one-cycle boundary. Ordinary PM fetch waits
+  now fail closed because the original interface has no acknowledge input.
+
 - The Type 4 execution boundary now captures every cycle-start compute,
   memory, bank, and DAG input once; DMACK-low clocks freeze the descriptor and
   all destinations, while acknowledgment atomically commits compute/status,
@@ -402,6 +408,12 @@ semantic versioning after its first release.
   ADI data book at printed pages 2-15 onward.
 
 ### Fixed
+
+- Removed the prior model expectation that treated the currently executing
+  word as a same-cycle instruction fetch and allowed a caller to extend that
+  fetch by arbitrary instruction cycles. The 1989 manual instead defines the
+  PC as the executing address and PMA as the sequencer-selected following
+  address during normal flow.
 
 - Invalid Type 3 DM read data now invalidates a CNTR destination without
   fabricating a value or pushing a phantom count-stack entry. The counter has

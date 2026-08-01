@@ -8,6 +8,16 @@ following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
 inputs are read at cycle start and writes/status latch at cycle end
 [ADI-UM-1989, printed pp. 2-6, 4-21].
 
+The PC names the instruction currently executing. During ordinary linear
+flow, the PC incrementer drives the following address onto PMA and that value
+is loaded into the PC at cycle end [ADI-UM-1989, printed pp. 4-3, 4-10]. The
+integrated Python model now enforces this distinction for NOP and Type 6/7:
+retiring address `N` records an overlapped instruction fetch at `N+1`, then
+commits PC=`N+1`. It rejects a requested ordinary-PM fetch wait extension
+because the original interface exposes no PM acknowledge input. Active-loop,
+branch, interrupt-abort, PM-data/cache, HALT, and BR/BG ownership remain
+outside that bounded linear-flow result.
+
 PM data use conflicts with external instruction fetch. The 16×24 cache can
 supply a valid next instruction; otherwise an additional external fetch cycle
 occurs [ADI-UM-1989, printed pp. 1-7, 4-26–4-28]. Cache fills transparently with

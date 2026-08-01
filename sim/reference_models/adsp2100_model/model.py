@@ -1,8 +1,8 @@
 """Exact-width foundation for an independent original ADSP-2100 model.
 
-This module intentionally implements only reset classification and the
-hand-verified all-zero NOP fixture. Unsupported behavior fails closed instead
-of becoming an accidental no-op.
+The integrated instruction boundary currently covers linear-flow NOP and the
+source-closed Type 6/7 immediate-load classes.  Unsupported behavior fails
+closed instead of becoming an accidental no-op.
 """
 
 from __future__ import annotations
@@ -298,15 +298,56 @@ class ADSP2100Model:
     def step(self, opcode: int, *, fetch_wait_instruction_cycles: int = 0) -> TraceFrame:
         """Retire one verified instruction.
 
-        Only all-zero NOP in empty-loop/no-interrupt baseline state is currently
-        supported. This restriction prevents the seed from implying sequencer
-        behavior that has not yet been encoded.
+        The original program-memory interface has no acknowledge input: in the
+        verified linear baseline, the current instruction executes while the
+        next instruction word is fetched in the same processor cycle.  Loop
+        terminal handling remains fail-closed until integrated sequencing owns
+        it.
         """
 
         instruction = ExactWord(PROGRAM_WORD_WIDTH, opcode)
         if fetch_wait_instruction_cycles < 0:
             raise ValueError("fetch wait cycles cannot be negative")
-        if instruction.value != 0:
+        if fetch_wait_instruction_cycles:
+            raise UnsupportedFeature(
+                "the original ADSP-2100 PM fetch has no wait-state extension"
+            )
+        if self.state.loop_stack:
+            raise UnsupportedFeature("loop-terminal handling is not implemented")
+
+        next_state = self.state
+        if instruction.value == 0:
+            pass
+        elif instruction.value & 0xF00000 == 0x400000:
+            from .load_dreg_immediate import decode_load_dreg_immediate
+            from .registers import DREGWrite, apply_dreg_cycle
+
+            action = decode_load_dreg_immediate(instruction.value)
+            assert action is not None
+            registers = apply_dreg_cycle(
+                self.state.primary,
+                self.state.alternate,
+                alternate_selected=bool(self.state.mstat.value & 1),
+                writes=(DREGWrite(action.destination, action.data),),
+            )
+            next_state = replace(
+                self.state,
+                primary=registers.primary,
+                alternate=registers.alternate,
+            )
+        elif instruction.value & 0xF00000 == 0x300000:
+            from .load_non_dreg_immediate import decode_load_non_dreg_immediate
+
+            action = decode_load_non_dreg_immediate(instruction.value)
+            assert action is not None
+            if not action.legal:
+                raise ReservedOpcode(
+                    f"opcode {instruction.hex()} has reserved Type 7 destination: "
+                    f"{action.invalid_reason}"
+                )
+            assert action.register is not None
+            next_state = _apply_type7_immediate(self.state, action.register, action.data)
+        else:
             database = load_database()
             classes = classify_opcode(database, instruction.value)
             if not classes or classes[0]["name"] == "reserved":
@@ -317,19 +358,16 @@ class ADSP2100Model:
                 f"opcode {instruction.hex()} is source-classified as "
                 f"type {classes[0]['original_type']} but not semantically implemented"
             )
-        if self.state.loop_stack:
-            raise UnsupportedFeature("NOP loop-terminal handling is not implemented")
 
         pc_before = self.state.pc
         pc_after = pc_before.incremented()
-        instruction_cycles = 1 + fetch_wait_instruction_cycles
+        instruction_cycles = 1
         transaction = MemoryTransaction(
             space=MemorySpace.PROGRAM,
             kind=TransactionKind.INSTRUCTION_FETCH,
-            address=pc_before,
+            address=pc_after,
             width=PROGRAM_WORD_WIDTH,
-            data=instruction,
-            wait_instruction_cycles=fetch_wait_instruction_cycles,
+            data=self.program_memory.get(pc_after.value),
         )
         frame = TraceFrame(
             retirement_index=len(self.trace),
@@ -340,9 +378,81 @@ class ADSP2100Model:
             transactions=(transaction,),
         )
         self.state = replace(
-            self.state,
+            next_state,
             pc=pc_after,
             total_instruction_cycles=self.state.total_instruction_cycles + instruction_cycles,
         )
         self.trace.append(frame)
         return frame
+
+
+def _replace_word(
+    values: tuple[KnownOrUnknown, ...],
+    index: int,
+    value: ExactWord,
+) -> tuple[KnownOrUnknown, ...]:
+    updated = list(values)
+    updated[index] = value
+    return tuple(updated)
+
+
+def _apply_type7_immediate(
+    state: ArchitecturalState,
+    register: str,
+    data: ExactWord,
+) -> ArchitecturalState:
+    """Apply one already-validated Type 7 destination write.
+
+    The action is kept local to the integrated model rather than converting to
+    the bounded RTL-slice state.  This preserves the model/RTL structural
+    independence while sharing the source-derived decode classification.
+    """
+
+    if data.width != 14:
+        raise ValueError("Type 7 immediate must be exactly 14 bits")
+    if register[0] in ("I", "M", "L") and register[1:].isdigit():
+        index = int(register[1:])
+        if not 0 <= index < 8:
+            raise AssertionError("validated DAG destination outside I/M/L0..7")
+        value = ExactWord(14, data.value)
+        if register[0] == "I":
+            dag = replace(state.dag, i=_replace_word(state.dag.i, index, value))
+        elif register[0] == "M":
+            dag = replace(state.dag, m=_replace_word(state.dag.m, index, value))
+        else:
+            dag = replace(state.dag, l=_replace_word(state.dag.l, index, value))
+        return replace(state, dag=dag)
+    if register == "ASTAT":
+        return replace(state, astat=ExactWord(8, data.value & 0xFF))
+    if register == "MSTAT":
+        return replace(state, mstat=ExactWord(4, data.value & 0xF))
+    if register == "IMASK":
+        return replace(state, imask=ExactWord(4, data.value & 0xF))
+    if register == "ICNTL":
+        return replace(state, icntl=ExactWord(5, data.value & 0x1F))
+    if register == "CNTR":
+        count_stack = state.count_stack
+        sstat = state.sstat.value
+        if isinstance(state.cntr, ExactWord):
+            if len(count_stack) < 4:
+                count_stack += (state.cntr,)
+                sstat &= ~(1 << 2)
+            else:
+                sstat |= 1 << 3
+        return replace(
+            state,
+            cntr=ExactWord(14, data.value),
+            count_stack=count_stack,
+            sstat=ExactWord(8, sstat),
+        )
+    if register == "SB":
+        bank = state.alternate if state.mstat.value & 1 else state.primary
+        bank = replace(bank, sb=ExactWord(5, data.value & 0x1F))
+        return replace(
+            state,
+            alternate=bank if state.mstat.value & 1 else state.alternate,
+            primary=state.primary if state.mstat.value & 1 else bank,
+        )
+    if register == "PX":
+        return replace(state, px=ExactWord(8, data.value & 0xFF))
+    raise AssertionError(f"validated Type 7 destination {register} was not handled")

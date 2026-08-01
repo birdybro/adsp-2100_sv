@@ -80,6 +80,10 @@ cycle-, or Hard Drivin'-complete
   exhaustive Python/RTL partitioning, shared exact-width state, selected-bank
   SB and CNTR/count-stack effects, 50,299 differential clocks, a formal
   harness, and a fully constrained Cyclone V fit;
+- bounded top-level model integration for NOP and legal Type 6/7 instructions:
+  the executing-PC state action, wrapped PC increment, and overlapped PC+1
+  program fetch now share one fixed instruction boundary; synthetic ordinary
+  PM-fetch waits and active-loop contexts fail closed;
 - bounded Type 8 ALU/MAC-plus-internal-MOVE semantics, two hand-derived
   fixtures, representative canonical assembler/disassembler coverage,
   exhaustive three-way class partitioning, cycle-start selected-bank operand,
@@ -231,8 +235,8 @@ cycle-, or Hard Drivin'-complete
   bank selection, DAG1 bit reversal, sticky AV, and AR saturation in both the
   independent model and portable RTL;
 - 48-code general-MOVE register table with reserved-code accounting;
-- independent exact-width/reset/image-loading/reserved-rejection/NOP model
-  foundation;
+- independent exact-width/reset/image-loading/reserved-rejection model
+  foundation with bounded NOP and Type 6/7 linear fetch/execute integration;
 - partial NOP, Type 2, Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15,
   Type 16, Type 17, Type 18, Type 19, Type 20, Type 21, Type 22, Type 23,
   Type 24, and
@@ -246,7 +250,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 588 distinct Python unit checks plus manifest/hash verification;
+- 593 distinct Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 4,194,304 Type 1 words decode as source-closed actions in independent
@@ -512,8 +516,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Build the first integrated instruction owner for source-closed no-data
-   instructions, ordinary PM fetch, PC progression, and native phase timing.
+3. Attach the bounded integrated-model NOP/Type 6/Type 7 linear flow to an RTL
+   owner for ordinary PM fetch, PC progression, and native phase timing.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.
