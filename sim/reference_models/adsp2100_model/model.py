@@ -3,9 +3,9 @@
 The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
 Type 14 shifter-plus-move packets, Type 15 immediate shifts, Type 16
-conditional shifts, original Type 18 mode control, exact Type 25 MR
-saturation, and legal Type 17 internal moves from known sources. Unsupported
-behavior fails closed instead of becoming an accidental no-op.
+conditional shifts, original Type 18 mode control, Type 23 DIVQ, exact Type 25
+MR saturation, and legal Type 17 internal moves from known sources.
+Unsupported behavior fails closed instead of becoming an accidental no-op.
 """
 
 from __future__ import annotations
@@ -427,6 +427,48 @@ class ADSP2100Model:
                 mstat=computed.state.status.mstat,
                 icntl=computed.state.status.icntl,
                 imask=computed.state.status.imask,
+            )
+        elif instruction.value & 0xFFF8FF == 0x071000:
+            from .divide_quotient import (
+                DivideQuotientInputs,
+                DivideQuotientState,
+                apply_divide_quotient_cycle,
+            )
+            from .status import ASTATState, StatusRegisters
+
+            quotient = apply_divide_quotient_cycle(
+                DivideQuotientState(
+                    primary=self.state.primary,
+                    alternate=self.state.alternate,
+                    status=StatusRegisters(
+                        astat=(
+                            ASTATState()
+                            if self.state.astat is UNKNOWN
+                            else ASTATState.from_word(self.state.astat)
+                        ),
+                        mstat=self.state.mstat,
+                        icntl=self.state.icntl,
+                        imask=self.state.imask,
+                    ),
+                ),
+                DivideQuotientInputs(
+                    execute=True,
+                    opcode=instruction.value,
+                ),
+            )
+            next_astat = (
+                quotient.state.status.astat.to_word()
+                if quotient.state.status.astat.is_fully_known
+                else UNKNOWN
+            )
+            next_state = replace(
+                self.state,
+                primary=quotient.state.primary,
+                alternate=quotient.state.alternate,
+                astat=next_astat,
+                mstat=quotient.state.status.mstat,
+                icntl=quotient.state.status.icntl,
+                imask=quotient.state.status.imask,
             )
         elif instruction.value == 0x050000:
             from .mr_saturation_slice import (

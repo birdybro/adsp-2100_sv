@@ -75,7 +75,10 @@ end of its instruction cycle and is therefore first usable in the next cycle
 The bounded Type 23 DIVQ and Type 24 DIVS boundaries exercise that
 division-specific write path. Each samples the selected bank from cycle-start
 MSTAT, atomically writes selected-bank AF and AY0 plus AQ at cycle end, and
-proves that every other ASTAT bit and the inactive bank are preserved.
+proves that every other ASTAT bit and the inactive bank are preserved. Type 23
+is additionally connected to the ordinary-fetch owner, where a consecutive
+pair proves that the next instruction reads the complete retired divide state;
+Type 24 remains standalone.
 Reset-cleared validity metadata distinguishes unknown original register/ASTAT
 contents from deterministic FPGA values; the metadata is not architectural state
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21].

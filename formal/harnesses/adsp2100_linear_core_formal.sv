@@ -159,6 +159,9 @@ module adsp2100_linear_core_formal (
         );
         cover (retire_event && (opcode == 24'h050000));
         cover (
+            retire_event && ((opcode & 24'hfff8ff) == 24'h071000)
+        );
+        cover (
             retire_event && ((opcode & 24'hff8000) == 24'h0f0000)
         );
         cover (

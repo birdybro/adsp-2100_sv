@@ -2,7 +2,8 @@
 
 **Status: standard function and both division primitives implemented in
 bounded model/RTL; Type 1 action selection and Type 4 native-DM execution
-closed; Type 8, Type 9, Type 23, and Type 24 integrations complete**
+closed; Type 8 and Type 9 integrations plus fetched Type 23 execution
+complete; Type 24 remains a standalone bounded state slice**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
 from ASTAT.AC. It generates AZ, AN, AV, AC, AS, and AQ
@@ -42,10 +43,10 @@ cycle, consistent with cycle-start operand use and cycle-end register writes
 X/Y/Z field, rejects AR read-load collisions, captures cycle-start operands,
 and commits AR/AF plus ASTAT atomically with the acknowledged DM action. Its
 50,072-clock logical and 50,082-clock native comparisons include immediate and
-wait-extended completion. Outside the
-bounded Type 4, Type 8, and Type 9 slices, ALU multifunction execution remains
-excluded. Type 23 DIVQ and Type 24
-DIVS are implemented in separate bounded execution slices.
+wait-extended completion. Outside the bounded Type 4, Type 8, and Type 9
+slices, ALU multifunction execution remains excluded. Type 23 DIVQ is also
+attached to the bounded ordinary-fetch owner; Type 24 DIVS remains a separate
+bounded execution slice.
 
 The Type 5 path covers every ALU AMF/X/Y/Z selection paired with one PM
 transfer, rejects AR/PM-read double destinations, samples the selected-bank
@@ -104,10 +105,14 @@ unsigned sequence starts with software clearing AQ and performs sixteen DIVQ
 instructions. A composed model regression covers positive and negative signed
 examples. Appendix B documents exceptional inputs for which the primitive
 sequence can be off by one; those software correction rules are deliberately
-not folded into a single DIVQ instruction. The separate slices establish the
-two atomic instruction transformations, not integrated consecutive fetch,
-loop, interrupt, wait-state, or bus behavior. Unknown divisor, AF, AY0, or AQ
-invalidates only AF, AY0, and AQ.
+not folded into a single DIVQ instruction. The Type 23 transformation is
+additionally attached to the bounded native ordinary-fetch owner. Two directed
+tests and 443,740 phase clocks cover all eight divisors in both banks, both
+old-AQ paths, and a following DIVQ that reads the just-retired AF/AY0/AQ state.
+This establishes consecutive fetched DIVQ ordering but not DIVS-to-DIVQ fetch
+composition, active-loop, interrupt, or unified PM/cache/event behavior. Type
+24 remains standalone. Unknown divisor, AF, AY0, or AQ invalidates only AF,
+AY0, and AQ in the standalone unknown-aware slices.
 
 The separate `adsp2100_compute_move_slice` connects every standard ALU AMF
 to original Type 8 X/Y/Z selection, selected-bank AR/AF writeback, ASTAT

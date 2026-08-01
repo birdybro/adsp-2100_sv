@@ -8,6 +8,24 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of all eight original Type 23 `DIVQ XOP;` words in the
+  bounded ordinary linear owner. A stateless action producer samples the
+  cycle-start selected-bank divisor, AF, AY0, and AQ; performs the documented
+  old-AQ-selected 16-bit add/subtract; and drives atomic AF/AY0/AQ retirement
+  while preserving every non-AQ ASTAT bit. Two new directed owner tests cover
+  all divisor sources in both banks, both old-AQ arithmetic paths, and a
+  consecutive-iteration dependency. The 20-test owner suite and 443,740
+  deterministic model/RTL phase clocks pass, as do the unchanged BR/BG,
+  shared-PM/BR-BG, and HALT compositions. Strict lint is clean and all 686
+  Python checks pass. A fully constrained 25 ns Cyclone V fit uses 2,742 ALMs,
+  1,182 registers, one DSP, no RAM, +2.073 ns worst multicorner setup slack,
+  +0.164 ns worst hold slack, 43.62 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths. The stricter 20 ns shared-PM/BR-BG
+  composition also fits (2,856 ALMs, 1,233 registers, one DSP, no RAM) but
+  misses setup by 4.494 ns at the worst slow corner; timing optimization,
+  reset-first-fetch, active control flow, interrupts, and unified PM/cache/
+  event ownership remain open.
+
 - Fetched execution of the exact Type 25 `IF MV SAT MR;` word in the bounded
   ordinary linear owner. A stateless action producer samples cycle-start MV
   and selected-bank MR, then conditionally drives the existing shared full-MR

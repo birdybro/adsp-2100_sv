@@ -18,7 +18,8 @@ all 25,648 canonical Type 14 shifter-plus-DREG packets,
 all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
 16 conditional-shift words, all 2,256 legal Type 17 internal MOVE source/
 destination pairs from fully initialized state, all Type 18 MODE CONTROL
-words, and the exact Type 25 conditional MR-saturation word:
+words, all eight Type 23 DIVQ forms, and the exact Type 25 conditional
+MR-saturation word:
 address `N` executes while an ordinary fetch for `N+1` occupies the native PM
 phases, then the state-7-to-8 edge commits the current action, PC=`N+1`, and
 the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
@@ -35,17 +36,21 @@ samples the selected-bank X operand, immediate exponent, and old SR for OR
 forms at cycle start, then commits SR at that edge. Type 16 samples its
 predicate, X operand, SE/SR/SB, and ASTAT feedback at cycle start; a true form
 commits only the function-selected SR/SE/SB/SS destinations, while a false
-form preserves them without changing the fetch cycle. Type 25 samples cycle-start MV,
+form preserves them without changing the fetch cycle. Type 23 samples the
+selected-bank divisor, AF, AY0, and AQ at cycle start, then commits AF, AY0,
+and AQ together at retirement while preserving every other ASTAT bit. A
+following DIVQ therefore observes the just-retired division state. Type 25 samples cycle-start MV,
 selected-bank MR, and bank selection; MV true commits the sign-selected MR
 limit at state 7-to-8 without altering ASTAT, while MV false retires on the
 same boundary without an MR write. The request is admitted at the enabled
 state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Eighteen directed tests and 443,712
+interface exposes no PM acknowledge input. Twenty directed tests and 443,740
 phase clocks compare the independent model with RTL, including every legal
 Type 17 pair, every Type 9 AMF/condition combination, every canonical Type 14
 packet, every supported Type 15 and Type 16 word, every Type 18 encoding,
-the Type 25 true/false paths in both banks, phase holds, bus-output
+all Type 23 divisors in both banks and both old-AQ paths, the Type 25
+true/false paths in both banks, phase holds, bus-output
 relinquishment, PC wrap, selected-bank state,
 CNTR-stack effects, invalid fetched data, and fail-closed unsupported words. A
 Type 17 move sourced from ASTAT, MSTAT,

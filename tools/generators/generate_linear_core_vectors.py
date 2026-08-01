@@ -39,6 +39,16 @@ READABLE_CODES = tuple(
     + list(range(0x30, 0x38))
 )
 LEGAL_SHIFTER_XOPS = (0, 2, 3, 4, 5, 6, 7)
+DIVIDE_X_DREG = (
+    DREG.AX0,
+    DREG.AX1,
+    DREG.AR,
+    DREG.MR0,
+    DREG.MR1,
+    DREG.MR2,
+    DREG.SR0,
+    DREG.SR1,
+)
 
 
 def _append(packed: int, value: int | bool, width: int) -> int:
@@ -89,6 +99,10 @@ def _type14(*, sf: int, xop: int, destination: int, source: int) -> int:
         | ((destination & 0xF) << 4)
         | (source & 0xF)
     )
+
+
+def _type23(xop: int) -> int:
+    return 0x071000 | ((xop & 0x7) << 8)
 
 
 def _type14_destination_legal(sf: int, destination: int) -> bool:
@@ -185,6 +199,22 @@ def _directed_opcodes() -> tuple[int, ...]:
             0x050000,
         )
     )
+    # Exercise every DIVQ divisor in both banks and both old-AQ paths. Each
+    # packet receives newly initialized divisor, AY0, and AF state so the
+    # fetched comparison observes only sourced cycle-start dependencies.
+    for bank, old_aq, af_seed in ((0, 0, 0x0003), (1, 1, 0xFFFF)):
+        opcodes.append(_type7(writable["MSTAT"], bank))
+        for xop, source in enumerate(DIVIDE_X_DREG):
+            opcodes.extend(
+                (
+                    _type6(int(source), (0x1111 * (xop + 1)) & 0xFFFF),
+                    _type6(int(DREG.AY0), 0x8001),
+                    _type6(int(DREG.AY1), af_seed),
+                    _type9(z=1, amf=0x10, yop=1, xop=0, condition=0xF),
+                    _type7(writable["ASTAT"], old_aq << 5),
+                    _type23(xop),
+                )
+            )
     # Type 14 executes its shifter and move in parallel. Traverse every
     # canonical, source-backed, noncolliding packet through fetched retirement;
     # the current known register bank makes both old-value results observable.
@@ -219,7 +249,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(22)
+    choice = rng.randrange(23)
     if choice == 0:
         return 0
     if choice < 5:
@@ -261,7 +291,9 @@ def _legal_opcode(rng: random.Random) -> int:
             destination=rng.choice(legal_destinations),
             source=rng.randrange(16),
         )
-    return 0x050000
+    if choice == 21:
+        return 0x050000
+    return _type23(rng.randrange(8))
 
 
 def _exact(value: object) -> tuple[bool, int]:

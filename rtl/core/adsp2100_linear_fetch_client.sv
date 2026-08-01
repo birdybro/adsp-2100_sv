@@ -55,6 +55,7 @@ module adsp2100_linear_fetch_client (
     output logic        count_stack_overflow_o
 );
     import adsp2100_pkg::*;
+    import adsp2100_register_pkg::*;
 
     logic [13:0] pc_q;
     logic [23:0] opcode_q;
@@ -118,6 +119,20 @@ module adsp2100_linear_fetch_client (
     logic type9_mac_write;
     logic [39:0] type9_mac_result;
     logic type9_mac_mv;
+    logic type23_class_valid_unused;
+    logic type23_action_valid;
+    logic [2:0] type23_xop_unused;
+    logic [3:0] type23_divisor_source_dreg;
+    logic type23_add_divisor_unused;
+    logic [15:0] type23_alu_result_unused;
+    logic type23_new_aq_unused;
+    logic type23_quotient_bit_unused;
+    logic type23_af_write;
+    logic [15:0] type23_af_result;
+    logic type23_ay0_write;
+    logic [15:0] type23_ay0_result;
+    logic type23_aq_write;
+    logic type23_aq_result;
     logic type25_action_valid;
     logic type25_condition_mv_unused;
     logic type25_mr_write;
@@ -203,7 +218,8 @@ module adsp2100_linear_fetch_client (
     assign supported_instruction = (
         nop_valid || type6_valid || type7_action_valid || type17_action_valid
         || type18_valid || type9_action_valid || type15_action_valid
-        || type16_action_valid || type14_action_valid || type25_action_valid
+        || type16_action_valid || type14_action_valid || type23_action_valid
+        || type25_action_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
@@ -246,6 +262,9 @@ module adsp2100_linear_fetch_client (
         );
     always_comb begin
         state_read_code = {2'b00, type9_x_source_dreg};
+        if (type23_action_valid) begin
+            state_read_code = {2'b00, type23_divisor_source_dreg};
+        end
         if (type14_action_valid) begin
             state_read_code = {2'b00, type14_shifter_source_dreg};
         end
@@ -394,6 +413,28 @@ module adsp2100_linear_fetch_client (
         .mr_result_o(type25_mr_result)
     );
 
+    adsp2100_divide_quotient_action type23_action (
+        .opcode_i(opcode_q),
+        .divisor_i(state_read_data),
+        .partial_remainder_i(state_af),
+        .ay0_i(state_dreg_read_data),
+        .old_aq_i(astat_o[5]),
+        .class_valid_o(type23_class_valid_unused),
+        .action_valid_o(type23_action_valid),
+        .xop_o(type23_xop_unused),
+        .divisor_source_dreg_o(type23_divisor_source_dreg),
+        .add_divisor_o(type23_add_divisor_unused),
+        .alu_result_o(type23_alu_result_unused),
+        .new_aq_o(type23_new_aq_unused),
+        .quotient_bit_o(type23_quotient_bit_unused),
+        .af_write_o(type23_af_write),
+        .af_result_o(type23_af_result),
+        .ay0_write_o(type23_ay0_write),
+        .ay0_result_o(type23_ay0_result),
+        .aq_write_o(type23_aq_write),
+        .aq_result_o(type23_aq_result)
+    );
+
     adsp2100_immediate_shift_action type15_action (
         .opcode_i(opcode_q),
         .source_data_i(state_read_data),
@@ -441,19 +482,27 @@ module adsp2100_linear_fetch_client (
         .probe_code_i(probe_code_i),
         .probe_data_o(probe_data_o),
         .dreg_read_address_i(
-            type14_action_valid
-                ? type14_move_source_dreg : type9_y_source_dreg
+            type23_action_valid
+                ? DREG_AY0
+                : (
+                    type14_action_valid
+                        ? type14_move_source_dreg : type9_y_source_dreg
+                )
         ),
         .dreg_read_data_o(state_dreg_read_data),
         .dreg_write_enable_1_i(retire_event_o && type14_move_write),
         .dreg_write_address_1_i(type14_move_destination_dreg),
         .dreg_write_data_1_i(type14_move_data),
-        .dreg_write_enable_2_i(1'b0),
-        .dreg_write_address_2_i(4'h0),
-        .dreg_write_data_2_i(16'h0000),
-        .alu_write_enable_i(retire_event_o && type9_alu_write),
-        .alu_destination_feedback_i(type9_destination_feedback),
-        .alu_result_i(type9_alu_result),
+        .dreg_write_enable_2_i(retire_event_o && type23_ay0_write),
+        .dreg_write_address_2_i(DREG_AY0),
+        .dreg_write_data_2_i(type23_ay0_result),
+        .alu_write_enable_i(
+            retire_event_o && (type9_alu_write || type23_af_write)
+        ),
+        .alu_destination_feedback_i(
+            type23_af_write ? 1'b1 : type9_destination_feedback
+        ),
+        .alu_result_i(type23_af_write ? type23_af_result : type9_alu_result),
         .mac_write_enable_i(
             retire_event_o && (type9_mac_write || type25_mr_write)
         ),
@@ -507,8 +556,8 @@ module adsp2100_linear_fetch_client (
         .alu_ac_i(type9_alu_ac),
         .alu_as_write_enable_i(type9_alu_as_write),
         .alu_as_i(type9_alu_as),
-        .divide_status_write_enable_i(1'b0),
-        .divide_aq_i(1'b0),
+        .divide_status_write_enable_i(retire_event_o && type23_aq_write),
+        .divide_aq_i(type23_aq_result),
         .mac_status_write_enable_i(retire_event_o && type9_mac_write),
         .mac_mv_i(type9_mac_mv),
         .shifter_status_write_enable_i(
@@ -578,6 +627,9 @@ module adsp2100_linear_fetch_client (
         type9_class_valid, type9_nop_action, type9_condition_true,
         type9_is_mac, type9_is_alu, type9_x_source_data_unused,
         type9_y_source_data_unused, type16_condition_true,
+        type23_class_valid_unused, type23_xop_unused,
+        type23_add_divisor_unused, type23_alu_result_unused,
+        type23_new_aq_unused, type23_quotient_bit_unused,
         type25_condition_mv_unused,
         type14_unverified_unused_x_unused, type14_unavailable_xop_unused,
         type14_destination_collision_unused,

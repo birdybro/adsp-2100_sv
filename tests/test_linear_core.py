@@ -12,6 +12,7 @@ from sim.reference_models.adsp2100_model import (
     UNKNOWN,
     apply_linear_core_cycle,
     read_dreg,
+    register_code_by_name,
 )
 
 
@@ -72,6 +73,10 @@ def _type14(
 
 def _type25() -> int:
     return 0x050000
+
+
+def _type23(xop: int) -> int:
+    return 0x071000 | ((xop & 0x7) << 8)
 
 
 def _type15(*, sf: int, xop: int, exponent: int) -> int:
@@ -149,6 +154,10 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "EXACT_TYPE_25_MR_SATURATION_WORD",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "ALL_8_TYPE_23_DIVQ_WORDS",
             contract["supported_current_instructions"],
         )
         self.assertIn(
@@ -389,6 +398,80 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0))
 
+    def test_type23_all_sources_banks_and_old_aq_paths(self) -> None:
+        sources = (
+            (DREG.AX0, 0x0002),
+            (DREG.AX1, 0x8002),
+            (DREG.AR, 0x7FFF),
+            (DREG.MR0, 0x8000),
+            (DREG.MR1, 0x0001),
+            (DREG.MR2, 0xFFFE),
+            (DREG.SR0, 0xFFFF),
+            (DREG.SR1, 0x0000),
+        )
+        writable = register_code_by_name(writable=True)
+        for mstat, old_aq, af_before in ((0, 0, 0x0003), (1, 1, 0xFFFF)):
+            for xop, (source, divisor) in enumerate(sources):
+                state = _setup(
+                    LinearCoreState.reset(),
+                    _type7(writable["MSTAT"], mstat),
+                )
+                for opcode in (
+                    _type6(source, divisor),
+                    _type6(DREG.AY0, 0x8001),
+                    _type6(DREG.AY1, af_before),
+                    _type9(z=1, amf=0x10, yop=1, xop=0, condition=0xF),
+                    _type7(writable["ASTAT"], 0xD5 | (old_aq << 5)),
+                    _type23(xop),
+                ):
+                    state = _complete(_issue(state).state, opcode).state
+
+                retired = _complete(_issue(state).state, 0)
+                selected = (
+                    retired.state.architecture.alternate
+                    if mstat else retired.state.architecture.primary
+                )
+                raw = (
+                    af_before + divisor if old_aq else af_before - divisor
+                ) & 0xFFFF
+                new_aq = ((divisor ^ raw) >> 15) & 1
+                self.assertEqual(
+                    selected.af,
+                    ExactWord(16, ((raw << 1) & 0xFFFF) | 1),
+                )
+                self.assertEqual(
+                    selected.ay[0],
+                    ExactWord(16, 0x0002 | (new_aq ^ 1)),
+                )
+                self.assertEqual(
+                    retired.state.architecture.astat,
+                    ExactWord(8, (0xD5 & ~0x20) | (new_aq << 5)),
+                )
+
+    def test_type23_following_iteration_reads_retired_divide_state(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            LinearCoreState.reset(),
+            _type7(writable["MSTAT"], 0),
+        )
+        for opcode in (
+            _type6(DREG.AX0, 0x0002),
+            _type6(DREG.AY0, 0x8001),
+            _type6(DREG.AY1, 0x0003),
+            _type9(z=1, amf=0x10, yop=1, xop=0, condition=0xF),
+            _type7(writable["ASTAT"], 0x00),
+            _type23(0),
+            _type23(0),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        retired = _complete(_issue(state).state, 0)
+        self.assertEqual(retired.state.architecture.primary.af, ExactWord(16, 0x0002))
+        self.assertEqual(
+            retired.state.architecture.primary.ay[0], ExactWord(16, 0x0007)
+        )
+        self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0x00))
+
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))
         for value in range(1, 7):
@@ -402,6 +485,7 @@ class LinearCoreTests(unittest.TestCase):
         for opcode, reserved in (
             (0x000001, False),
             (0x050001, False),
+            (0x071001, False),
             (_type7(0x32, 1), True),
             (_type17(0x32, 0x00), True),
             (

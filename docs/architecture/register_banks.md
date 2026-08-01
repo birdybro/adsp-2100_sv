@@ -131,9 +131,16 @@ old SR/SE value before shifter writeback. The decoder excludes every
 same-destination request, and the register file atomically commits the
 remaining DREG plus SR/SE/SB writeback. The inactive bank is preserved across
 all 82,597 standalone comparison cycles. The shared fetched owner independently
-retires all 25,648 canonical packets across 443,712 clocks while committing
+retires all 25,648 canonical packets across 443,740 clocks while committing
 both write families atomically with PC and the next fetched word
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
+
+Fetched Type 23 DIVQ uses the same cycle-start selected-bank contract for its
+divisor, AF, and AY0 reads. State-7 retirement atomically replaces AF and AY0
+in that bank and unbanked ASTAT.AQ; the inactive bank and non-AQ status bits
+remain unchanged. The integrated comparison covers every divisor source in
+both banks, both old-AQ paths, and a dependent following iteration across
+443,740 clocks [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4].
 
 `adsp2100_compute_move_slice` extends that parallel boundary through all
 source-backed Type 8 ALU and MAC functions. X, Y, optional MR feedback, and

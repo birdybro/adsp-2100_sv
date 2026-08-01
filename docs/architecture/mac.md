@@ -51,7 +51,7 @@ random tests and 50,112 model-versus-RTL cycles cover both signs, both banks,
 false condition, reset unknowns, invalid words, and fail-closed setup
 collisions. The shared ordinary-fetch owner additionally samples the same
 cycle-start state and conditionally commits MR with PC and the next word at
-state 7-to-8; two directed owner tests plus the 443,712-clock fetched
+state 7-to-8; two directed owner tests plus the 443,740-clock fetched
 comparison cover both signs/banks and MV false. Exact interrupt-adjacent
 ordering remains OQ-015.
 
