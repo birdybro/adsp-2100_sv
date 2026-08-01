@@ -59,6 +59,28 @@ def _normalize_statement(source: str) -> str:
     return " ".join(statement.upper().split())
 
 
+def _split_top_level_clauses(statement: str) -> list[str]:
+    """Split multifunction clauses without splitting I/M argument pairs."""
+
+    clauses: list[str] = []
+    start = 0
+    depth = 0
+    for index, character in enumerate(statement):
+        if character == "(":
+            depth += 1
+        elif character == ")":
+            depth -= 1
+            if depth < 0:
+                return []
+        elif character == "," and depth == 0:
+            clauses.append(statement[start:index].strip())
+            start = index + 1
+    if depth != 0:
+        return []
+    clauses.append(statement[start:].strip())
+    return clauses
+
+
 def exact_mnemonics() -> dict[str, int]:
     database = load_database()
     validate_database(database)
@@ -389,6 +411,75 @@ def _assemble_compute_pm(statement: str) -> int | None:
         | (register << 4)
         | ((int(i_text) & 3) << 2)
         | (int(m_text) & 3)
+    )
+
+
+def _assemble_compute_dual(statement: str) -> int | None:
+    """Assemble original Type 1 ALU/MAC plus simultaneous DM/PM reads."""
+
+    clauses = _split_top_level_clauses(statement)
+    if len(clauses) not in (2, 3):
+        return None
+    dm_match = None
+    pm_match = None
+    computation = None
+    for clause in clauses:
+        match = re.fullmatch(
+            r"([A-Z][A-Z0-9]*)\s*=\s*"
+            r"DM\s*\(\s*I([0-3])\s*,\s*M([0-3])\s*\)",
+            clause,
+        )
+        if match is not None:
+            if dm_match is not None:
+                return None
+            dm_match = match
+            continue
+        match = re.fullmatch(
+            r"([A-Z][A-Z0-9]*)\s*=\s*"
+            r"PM\s*\(\s*I([4-7])\s*,\s*M([4-7])\s*\)",
+            clause,
+        )
+        if match is not None:
+            if pm_match is not None:
+                return None
+            pm_match = match
+            continue
+        if computation is not None:
+            return None
+        computation = clause
+    if dm_match is None or pm_match is None:
+        return None
+
+    dm_names = {"AX0": 0, "AX1": 1, "MX0": 2, "MX1": 3}
+    pm_names = {"AY0": 0, "AY1": 1, "MY0": 2, "MY1": 3}
+    dm_name, dm_i_text, dm_m_text = dm_match.groups()
+    pm_name, pm_i_text, pm_m_text = pm_match.groups()
+    if dm_name not in dm_names:
+        raise AssemblyError("Type 1 DM read destination must be AX0/AX1/MX0/MX1")
+    if pm_name not in pm_names:
+        raise AssemblyError("Type 1 PM read destination must be AY0/AY1/MY0/MY1")
+
+    if computation is None:
+        amf, yop, xop = 0, 0, 0
+    else:
+        computation_fields = _compute_operation_codes().get(computation)
+        if computation_fields is None:
+            return None
+        z, amf, yop, xop = computation_fields
+        if z:
+            raise AssemblyError("Type 1 computation destination must be AR or MR")
+
+    return (
+        0xC00000
+        | (pm_names[pm_name] << 20)
+        | (dm_names[dm_name] << 18)
+        | (amf << 13)
+        | (yop << 11)
+        | (xop << 8)
+        | ((int(pm_i_text) & 3) << 6)
+        | ((int(pm_m_text) & 3) << 4)
+        | (int(dm_i_text) << 2)
+        | int(dm_m_text)
     )
 
 
@@ -927,6 +1018,9 @@ def assemble_statement(source: str) -> AssembledWord:
     compute_move = _assemble_compute_move(statement)
     if compute_move is not None:
         return AssembledWord(compute_move)
+    compute_dual = _assemble_compute_dual(statement)
+    if compute_dual is not None:
+        return AssembledWord(compute_dual)
     compute_dm = _assemble_compute_dm(statement)
     if compute_dm is not None:
         return AssembledWord(compute_dm)

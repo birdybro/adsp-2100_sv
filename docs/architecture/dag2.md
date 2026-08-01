@@ -38,6 +38,13 @@ at acknowledgment. Its native attachment preserves that completion rule.
 Other PM/DM multifunction updates remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
+Original Type 1 action selection fixes its PM address to DAG2 and exposes all
+I4–I7/M4–M7 combinations independently of the simultaneous DAG1 DM read. The
+selected old I supplies the address and its corresponding L supplies modulo
+context. State execution and both-I atomic completion remain open under
+OQ-023 rather than assuming how a DMACK extension affects the PM read
+[ADI-UM-1989, printed pp. 3-1–3-5, 6-3–6-5, A-1].
+
 Original Type 5 fixes every I/M selection to DAG2: the two-bit fields map to
 I4-I7 and M4-M7, with L selected by I. All sixteen I/M pairs are covered
 exhaustively. Its bounded execution captures old I/M/L at issue, uses old I as

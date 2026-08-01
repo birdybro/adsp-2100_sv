@@ -1,0 +1,28 @@
+set_global_assignment -name FAMILY "Cyclone V"
+set_global_assignment -name DEVICE 5CSEBA6U23I7
+set_global_assignment -name TOP_LEVEL_ENTITY adsp2100_compute_dual_decode
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../../build/quartus_compute_dual_decode
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_dual_decode.sv
+set_global_assignment -name SDC_FILE compute_dual_decode_smoke.sdc
+set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
+set_global_assignment -name LAST_QUARTUS_VERSION "17.0.2 Lite Edition"
+set_instance_assignment -name VIRTUAL_PIN ON -to opcode_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to class_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to action_valid_o
+set_instance_assignment -name VIRTUAL_PIN ON -to unsupported_subencoding_o
+set_instance_assignment -name VIRTUAL_PIN ON -to computation_enable_o
+set_instance_assignment -name VIRTUAL_PIN ON -to is_mac_o
+set_instance_assignment -name VIRTUAL_PIN ON -to destination_feedback_o
+set_instance_assignment -name VIRTUAL_PIN ON -to amf_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to yop_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to xop_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to x_source_dreg_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to y_source_dreg_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to compute_destination_ar_o
+set_instance_assignment -name VIRTUAL_PIN ON -to compute_destination_mr_o
+set_instance_assignment -name VIRTUAL_PIN ON -to pm_destination_dreg_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dm_destination_dreg_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pm_i_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to pm_m_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dm_i_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dm_m_address_o[*]

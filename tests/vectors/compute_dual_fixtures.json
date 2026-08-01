@@ -1,0 +1,39 @@
+{
+  "device": "ADSP-2100",
+  "source": "ADI-UM-1989 printed pp. 6-3–6-5 and A-1, A-7–A-11",
+  "derivation": "Hand-derived from primary-source prose and bit tables; not assembler-generated",
+  "fixtures": [
+    {
+      "id": "HAND-TYPE1-MAC-DUAL-E96011",
+      "statement": "MR = MR + MX0 * MY0 (UU), MX0 = DM(I0, M1), MY0 = PM(I4, M5);",
+      "opcode": "0xe96011",
+      "fields": {
+        "PD": 2,
+        "DD": 2,
+        "AMF": 11,
+        "YOP": 0,
+        "XOP": 0,
+        "PM_I": 0,
+        "PM_M": 1,
+        "DM_I": 0,
+        "DM_M": 1
+      }
+    },
+    {
+      "id": "HAND-TYPE1-DUAL-ONLY-C00028",
+      "statement": "AX0 = DM(I2, M0), AY0 = PM(I4, M6);",
+      "opcode": "0xc00028",
+      "fields": {
+        "PD": 0,
+        "DD": 0,
+        "AMF": 0,
+        "YOP": 0,
+        "XOP": 0,
+        "PM_I": 0,
+        "PM_M": 2,
+        "DM_I": 2,
+        "DM_M": 0
+      }
+    }
+  ]
+}

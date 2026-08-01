@@ -1,8 +1,8 @@
 # Arithmetic/logic unit
 
 **Status: standard function and both division primitives implemented in
-bounded model/RTL; Type 4 native-DM execution closed; Type 8, Type 9, Type 23, and
-Type 24 integrations complete**
+bounded model/RTL; Type 1 action selection and Type 4 native-DM execution
+closed; Type 8, Type 9, Type 23, and Type 24 integrations complete**
 
 The original ALU has 16-bit X and Y inputs, a 16-bit result, and carry input
 from ASTAT.AC. It generates AZ, AN, AV, AC, AS, and AQ
@@ -54,6 +54,14 @@ with the fixed PM data action. Its cache/native composition passes 50,083
 phase clocks with state-8 issue and state-7-only ALU/status/read/I completion;
 whole-core PM ownership and event arbitration remain open
 [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-7].
+
+The Type 1 action decoder covers every ALU AMF/X/Y selection with an implicit
+AR destination, one DD-selected DAG1 DM read, and one PD-selected DAG2 PM
+read. Both loads occur after the old computation operands are consumed. The
+action graph is exhaustive, but ALU/status execution and dual-bus completion
+are not yet connected because OQ-023 leaves native PM behavior during a
+DMACK extension unresolved
+[ADI-UM-1989, printed pp. 2-6–2-7, 6-3–6-5, A-1, A-5–A-7].
 
 Operands and destinations will use the old/new timing in
 `multifunction_instructions.md`. Boundary fixtures must independently cover

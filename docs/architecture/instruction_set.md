@@ -22,7 +22,8 @@ and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
 MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
 loads, the source-closed Type 15
-immediate-shift subset, 2,034,688 source-closed Type 4 action words,
+immediate-shift subset, all 4,194,304 source-closed Type 1 action words,
+2,034,688 source-closed Type 4 action words,
 1,017,344 source-closed Type 5 action words,
 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
@@ -43,6 +44,23 @@ Automated checks compare those field positions with a separate hand-reviewed
 fixture, require them to partition each class mask exactly, and exhaustively
 compare the synthesizable class decoder over all 16,777,216 program words with
 an independent SystemVerilog transcription.
+
+Type 1 encodes `11 PD[1:0] DD[1:0] AMF[4:0] YOP[1:0] XOP[2:0]
+PM-I[1:0] PM-M[1:0] DM-I[1:0] DM-M[1:0]`. PD selects AY0, AY1, MY0,
+or MY1 for the PM read; DD independently selects AX0, AX1, MX0, or MX1 for
+the DM read. PM always uses DAG2 and DM always uses DAG1. A nonzero AMF is an
+unconditional ALU or MAC operation whose result is forced to AR or MR; AMF
+zero retains both reads without a computation. All computation operands and
+DAG values are cycle-start values, while both data loads, PX, compute/status,
+and both I postmodifications are cycle-end effects. The three destination sets
+are disjoint, so every one of the class's 4,194,304 words has a source-closed
+parallel action. An independent exhaustive model decoder, two primary-derived
+fixtures, algebraic/raw assembler-disassembler paths, exhaustive RTL, formal
+assertions, and a constrained Cyclone V project verify action selection.
+Architectural execution, cache recovery, and the native PM relationship while
+DMACK extends state seven remain unimplemented under OQ-023
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-1–3-7, 6-3–6-5,
+A-1, A-5–A-11].
 
 Type 2 encodes `101 G DATA[19:4] I[3:2] M[1:0]`. Every one of its
 2,097,152 field combinations is defined: G selects DAG1 or DAG2, DATA is the

@@ -12,6 +12,7 @@ Known cases:
 | Case | Current sourced timing |
 |---|---|
 | ordinary instruction | one eight-state processor cycle |
+| Type 1 ALU/MAC plus DM and PM reads | one processor cycle with full-speed DMACK; computation consumes old operands and both reads complete at cycle end; DMACK-low extends state 7 by whole processor cycles, but the native PM strobe/data behavior during that extension remains OQ-023 |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
 | Type 4 ALU/MAC plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low state-6 sample repeats a complete eight-substate state-seven extension while preserving the captured bus/compute/DAG descriptor, and the qualified state-7-to-state-8 edge atomically commits compute/status, optional read, and selected-I postmodify |
 | Type 5 ALU/MAC plus PM read/write, cache hit | one processor cycle; compute/status, optional DREG/PX read, and DAG2 postmodify commit together at state 7-to-8 while the issue-time cached next instruction is selected |

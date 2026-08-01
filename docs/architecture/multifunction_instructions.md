@@ -1,6 +1,6 @@
 # Multifunction execution semantics
 
-**Status: key ordering rule verified; bounded Type 4 ALU/MAC-plus-DM,
+**Status: key ordering rule and Type 1 action selection verified; bounded Type 4 ALU/MAC-plus-DM,
 Type 5 ALU/MAC-plus-PM/cache, Type 8 ALU/MAC-plus-DREG,
 Type 12 shifter-plus-DM, Type 13
 shifter-plus-PM/cache, and Type 14 shifter-plus-DREG forms integrated**
@@ -25,6 +25,33 @@ The original explicitly supports:
 - compute plus an internal data-register move.
 
 [ADI-UM-1989, printed pp. 6-3–6-7 and Appendix A types 1, 4, 5, 8, 12–14.]
+
+## Type 1 dual-read action boundary
+
+Original Type 1 is the widest multifunction format: fixed prefix `11`, PM
+destination PD, DM destination DD, AMF/YOP/XOP, independent DAG2 PM I/M, and
+independent DAG1 DM I/M fields. PD maps only to AY0/AY1/MY0/MY1, DD maps only
+to AX0/AX1/MX0/MX1, and a nonzero AMF result is restricted to AR or MR. The
+three destination sets therefore cannot collide. AMF zero is explicitly the
+dual-fetch-only special case. Every computation operand is read at cycle
+start; the two newly fetched operands overwrite their input registers only at
+cycle end and are first available to the following instruction. A PM read
+also loads PX with PMD7-0, while PD receives PMD23-8
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-6–3-7, 6-3–6-5,
+A-1, A-7–A-11].
+
+The independent action decoder and portable RTL decoder expose every field,
+both fixed DAG mappings, selected computation operands, forced AR/MR result,
+and both read destinations. Exhaustive Python and RTL traversals classify all
+4,194,304 Type 1 words as source-closed. Two hand-derived manual examples,
+1,024 representative dual-read-only round trips, every 685 uniquely
+spellable result-register computation form, raw aliases, a formal harness,
+and a constrained Cyclone V decoder project verify this boundary. This does
+not yet execute state. The manual says DMACK extends processor state seven by
+one complete processor cycle but does not explicitly state whether the
+simultaneous PM read strobe is retained, repeated, or internally completed
+during that extension; OQ-023 prevents the native dual-bus attachment from
+inventing that behavior.
 
 ## Bounded Type 4 execution and logical DM transaction
 

@@ -386,6 +386,7 @@ advance beyond research until a page-level primary citation is added.
 - **Source references:** ADI-UM-1989, ADI-UM-FAMILY-1995,
   ADI-ASM-1994
 - **Relevant tests:** `make compute-tests`, `tests/test_shift_move.py`,
+  `tests/test_compute_dual.py`,
   `tests/test_shifter_dm.py`, `tests/test_compute_move.py`,
   `tests/test_compute_dm.py`, `tests/test_shifter_pm.py`,
   `tests/test_compute_pm.py`, `tests/test_compute_pm_cache.py`,
@@ -397,6 +398,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_compute_dm_slice.sv`, `formal/shift_move.sby`,
   `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
   `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
+  `formal/compute_dual_decode.sby`,
   `formal/compute_pm_decode.sby`, `formal/compute_pm.sby`,
   `formal/compute_pm_cache.sby`, `formal/compute_pm_native.sby`,
   `formal/compute_dm.sby`
@@ -438,11 +440,16 @@ advance beyond research until a page-level primary citation is added.
   native composition adds old-value selected-bank and DAG2 capture, atomic
   compute/status/read/PX/I completion, issue-time cache-hit selection, one
   pure miss-recovery fetch, 25 directed tests, 50,071 logical clocks, and
-  50,083 native phase clocks. The Type 1 dual-memory action graph, PM/DM
-  concurrency, shared-owner arbitration, and whole-core events remain.
+  50,083 native phase clocks. Type 1 now has a source-closed action graph for
+  all 4,194,304 words: fixed DAG1 DM plus DAG2 PM reads, restricted DD/PD
+  destinations, implicit AR/MR compute results, AMF-zero dual fetch, and
+  cycle-start/cycle-end ordering. Independent exhaustive Python and RTL,
+  primary-derived fixtures, assembler/disassembler, formal assertions, and a
+  constrained Cyclone V decoder project verify selection. Type 1 state/cache/
+  native execution, shared-owner arbitration, and whole-core events remain.
 - **Unresolved questions:** OQ-014 same-destination behavior, OQ-022 AMF-zero
-  Type 8 legality, and result forwarding outside the bounded old-value rule
-  remain high-risk.
+  Type 8 legality, OQ-023 native PM behavior during Type 1 DMACK extension,
+  and result forwarding outside the bounded old-value rule remain high-risk.
 - **Confidence:** UNKNOWN
 
 ## M8 — Executable architectural model
@@ -1606,10 +1613,10 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is the Type 1 dual-memory
-ALU/MAC action graph, now that Type 4 and Type 5 independently establish the
-single-DM and single-PM compute ordering. Research must close legal dual-move
-combinations and simultaneous PM/DM ownership before implementation.
+The highest-priority unblocked implementation work is the Type 3 direct-DM
+read/write action graph. The Type 1 dual-memory action graph is now complete,
+but its state/native attachment remains withheld under OQ-023 until the PM
+pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
 reference. Field placement and bounded Type 4/Type 5 execution/native
 attachments are closed, while whole-core integration and the remaining

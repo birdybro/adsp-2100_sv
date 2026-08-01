@@ -70,3 +70,10 @@ only at acknowledged completion. Its native attachment now preserves that
 rule through state-6 DMACK qualification and state-7 completion. Other direct
 DM transfers and multifunction instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
+
+Original Type 1 action selection now fixes its DM address to DAG1 and exposes
+all I0–I3/M0–M3 combinations independently of the simultaneous DAG2 PM read.
+The selected old I supplies the address and its corresponding L supplies
+modulo context. State execution and both-I atomic completion remain open until
+the dual-bus DMACK/PM relationship is resolved under OQ-023
+[ADI-UM-1989, printed pp. 3-1–3-5, 6-3–6-5, A-1].

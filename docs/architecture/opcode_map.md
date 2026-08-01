@@ -48,12 +48,22 @@ The masks are not instruction completeness. Function meanings, register
 effects, legality constraints, timing, and parallel-action semantics remain to
 be independently transcribed into complete semantic instruction records.
 
+Type 1 has mask/value `0xc00000`/`0xc00000`. PD, DD, AMF, YOP, XOP, PM-I,
+PM-M, DM-I, and DM-M occupy bits 21 through 0 without gaps. PD maps to the
+four Y-input registers, DD maps to the four X-input registers, PM I/M map to
+DAG2, and DM I/M map to DAG1. A nonzero AMF is forced to AR or MR; AMF zero
+retains the two reads. These disjoint destinations make all 4,194,304 class
+words source-closed at the action boundary. Exhaustive independent Python and
+RTL traversal closes field/action selection, not state/cache/native dual-bus
+execution [ADI-UM-1989, printed pp. 6-3–6-5, A-1, A-5–A-11].
+
 Type 4 has mask/value `0xe00000`/`0x600000`. Its G, D, Z, AMF, YOP,
 XOP, DREG, I, and M fields occupy bits 20 through 0 without gaps. The sourced
 destination rule partitions all 2,097,152 class words into 2,034,688 bounded
 actions and 62,464 prohibited DM-read/computation destination collisions;
 AMF zero retains memory-only transfers. Exhaustive model and RTL checks close
-this field/action partition, not stateful or bus execution
+this field/action partition, and bounded logical/native execution covers the
+supported partition; whole-core ownership and event arbitration remain open
 [ADI-UM-1989, printed pp. 6-3–6-7, 6-12–6-13, A-1, A-5–A-11].
 
 Type 5 has mask/value `0xf00000`/`0x500000`. D, Z, AMF, YOP, XOP, DREG, I,

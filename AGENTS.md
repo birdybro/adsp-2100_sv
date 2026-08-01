@@ -232,6 +232,7 @@ MR saturation, all Type 6 immediate-to-DREG loads, the 14,336 source-closed
 Type 15 immediate LSHIFT/ASHIFT words, 25,648 canonical Type 14
 shifter-plus-DREG words, 108,640 source-closed Type 12 shifter-plus-DM words,
 54,320 source-closed Type 13 shifter-plus-PM words,
+all 4,194,304 source-closed Type 1 dual-read action words,
 2,034,688 source-closed Type 4 action words with waited logical DM execution,
 1,017,344 source-closed Type 5 ALU/MAC-plus-PM words with bounded
 cache/native-PM execution,
@@ -269,6 +270,12 @@ cache, and native-PM composition now captures old state at issue, commits
 compute/status/read/PX/I effects atomically at data completion, and selects an
 issue-time cache hit or one pure recovery fetch. Whole-core fetch/PC/control-
 event ownership, hidden cache behavior, and physical validation remain open.
+Type 1 field/action decode is independently closed for its complete
+4,194,304-word class. Every word selects fixed DAG1 DM and DAG2 PM reads,
+restricted DD/PD input destinations, and either AMF-zero dual fetch or an
+implicit AR/MR ALU/MAC result using cycle-start operands. State, cache, and
+native dual-bus execution remain withheld because OQ-023 has not established
+the PM transaction behavior while DMACK extends state seven.
 Type 15 exhaustively partitions its 32,768-word class: XOP `001` and SF 8–15
 remain explicit unsupported subencodings rather than receiving invented
 behavior. Its bounded state slice samples the selected bank and OR feedback at

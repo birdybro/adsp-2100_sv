@@ -345,6 +345,122 @@ class AssemblerDisassemblerTests(unittest.TestCase):
         with self.assertRaises(AssemblyError):
             assemble_statement("AX0 = DM(I0, M4);")
 
+    def test_type_1_hand_fixtures_and_dual_read_forms_round_trip(self) -> None:
+        fixture_data = json.loads(
+            (ROOT / "tests/vectors/compute_dual_fixtures.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        for fixture in fixture_data["fixtures"]:
+            opcode = int(fixture["opcode"], 16)
+            self.assertEqual(
+                assemble_statement(fixture["statement"]).value,
+                opcode,
+            )
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(
+                decoded.classification,
+                "TYPE_01_SOURCE_CLOSED_ACTION",
+            )
+            self.assertEqual(decoded.text, fixture["statement"])
+
+        dm_names = ("AX0", "AX1", "MX0", "MX1")
+        pm_names = ("AY0", "AY1", "MY0", "MY1")
+        count = 0
+        for pd, pm_name in enumerate(pm_names):
+            for dd, dm_name in enumerate(dm_names):
+                for pm_i in range(4):
+                    for pm_m in range(4):
+                        for dm_i in range(4):
+                            dm_m = (pd + dd + pm_i + pm_m + dm_i) & 3
+                            statement = (
+                                f"{dm_name} = DM(I{dm_i}, M{dm_m}), "
+                                f"{pm_name} = PM(I{4 + pm_i}, M{4 + pm_m});"
+                            )
+                            opcode = (
+                                0xC00000
+                                | (pd << 20)
+                                | (dd << 18)
+                                | (pm_i << 6)
+                                | (pm_m << 4)
+                                | (dm_i << 2)
+                                | dm_m
+                            )
+                            self.assertEqual(
+                                assemble_statement(statement).value,
+                                opcode,
+                            )
+                            decoded = disassemble_word(opcode)
+                            self.assertEqual(decoded.text, statement)
+                            self.assertEqual(
+                                decoded.classification,
+                                "TYPE_01_SOURCE_CLOSED_ACTION",
+                            )
+                            count += 1
+        self.assertEqual(count, 1_024)
+
+        self.assertEqual(
+            assemble_statement(
+                "MR = 0, MY0 = PM(I4, M4), MX0 = DM(I0, M0);"
+            ).value,
+            0xE89800,
+        )
+
+    def test_type_1_canonical_compute_forms_and_aliases(self) -> None:
+        count = 0
+        for amf in range(1, 32):
+            for yop in range(4):
+                for xop in range(8):
+                    computation = _format_compute_operation(0, amf, yop, xop)
+                    if computation is None:
+                        continue
+                    pd = (amf + yop) & 3
+                    dd = (amf + xop) & 3
+                    pm_name = ("AY0", "AY1", "MY0", "MY1")[pd]
+                    dm_name = ("AX0", "AX1", "MX0", "MX1")[dd]
+                    statement = (
+                        f"{computation}, {dm_name} = DM(I3, M2), "
+                        f"{pm_name} = PM(I5, M7);"
+                    )
+                    opcode = (
+                        0xC00000
+                        | (pd << 20)
+                        | (dd << 18)
+                        | (amf << 13)
+                        | (yop << 11)
+                        | (xop << 8)
+                        | (1 << 6)
+                        | (3 << 4)
+                        | (3 << 2)
+                        | 2
+                    )
+                    self.assertEqual(assemble_statement(statement).value, opcode)
+                    decoded = disassemble_word(opcode)
+                    self.assertEqual(decoded.text, statement)
+                    self.assertEqual(
+                        decoded.classification,
+                        "TYPE_01_SOURCE_CLOSED_ACTION",
+                    )
+                    count += 1
+        self.assertEqual(count, 685)
+
+        for opcode in (0xC00100, 0xC00800, 0xC01800):
+            decoded = disassemble_word(opcode)
+            self.assertTrue(decoded.implemented)
+            self.assertEqual(
+                decoded.classification,
+                "TYPE_01_SOURCE_CLOSED_ALIAS",
+            )
+            self.assertEqual(assemble_statement(decoded.text).value, opcode)
+
+        with self.assertRaises(AssemblyError):
+            assemble_statement(
+                "AF = AX0 + AY0, AX0 = DM(I0, M0), AY0 = PM(I4, M4);"
+            )
+        with self.assertRaises(AssemblyError):
+            assemble_statement("AY0 = DM(I0, M0), AX0 = PM(I4, M4);")
+
     def test_type_5_hand_fixtures_and_memory_only_forms_round_trip(self) -> None:
         fixture_data = json.loads(
             (ROOT / "tests/vectors/compute_pm_fixtures.json").read_text(

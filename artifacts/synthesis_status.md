@@ -3,6 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
+  Type 1 dual-read action decoder,
   Type 2 action decoder and waited execution slice, Type 4 action and waited
   logical-DM slices,
   Type 5 action/logical/cache/native-PM execution, Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
@@ -18,6 +19,14 @@
   PC/count/loop stack plus bounded sequencer-integration RTL with `-Wall` and
   no warnings.
 - Yosys is not installed in this environment.
+- Quartus 17.0.2 full compilation of the combinational Type 1 dual-read
+  action decoder passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual
+  constraint. It uses 53 ALMs and no registers, RAM, or DSP blocks. Across
+  four timing models, worst setup slack is +11.769 ns and worst hold slack is
+  +4.309 ns, with zero unconstrained clocks, ports, or paths. The
+  constant-output and virtual-pin warnings are expected for this
+  decoder-only project; this is action selection, not state, dual-bus, or
+  whole-core timing closure.
 - Quartus 17.0.2 full compilation of the combinational Type 4 action decoder
   passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual constraint. It uses
   53 ALMs and no registers, RAM, or DSP blocks. Across four timing models,

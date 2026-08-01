@@ -8,6 +8,12 @@ semantic versioning after its first release.
 
 ### Added
 
+- A primary-backed original Type 1 ALU/MAC-plus-dual-read action database,
+  independent exhaustive decoder, two hand-derived fixtures, original
+  algebraic/raw assembler-disassembler paths, portable exact RTL decoder,
+  formal assertions, exhaustive class traversal, and a constrained Cyclone V
+  decoder project.
+
 - A bounded original Type 5 state/cache/native-PM composition in structurally
   independent Python and portable SystemVerilog. It captures selected-bank
   ALU/MAC, old `{DREG,PX}`, and DAG2 state once; commits compute/status,
@@ -412,6 +418,17 @@ semantic versioning after its first release.
   indirect flow and conditional return are Types 19/20.
 
 ### Verified
+
+- All 4,194,304 Type 1 words decode as source-closed parallel actions with
+  fixed DAG1 DM and DAG2 PM reads, DD/PD input-register destinations, implicit
+  AR/MR computation destinations, and AMF-zero dual fetch. Six model/schema
+  tests, two independent fixtures, 1,024 representative dual-read-only forms,
+  685 canonical computation forms, a contemporary `0xe89800` listing
+  cross-check, raw aliases, exhaustive RTL decode, and strict formal syntax
+  lint pass.
+- Quartus full compilation closes the Type 1 combinational decoder at 20 ns
+  on Cyclone V: 53 ALMs, no registers/RAM/DSPs, +11.769 ns worst setup,
+  +4.309 ns worst multicorner hold, and no unconstrained paths.
 
 - All 1,048,576 Type 5 words partition into 1,017,344 source-closed
   ALU/MAC-plus-PM or PM-only actions and 31,232 prohibited read-destination
@@ -890,13 +907,19 @@ semantic versioning after its first release.
   388 ALMs, 383 fitted combinational ALUTs, exactly 381 design registers plus
   fourteen fitter-created routing duplicates, no RAM/DSPs, +6.776 ns worst
   setup, +0.166 ns worst hold slack, and zero unconstrained ports or paths.
-- `make formal` passes strict assertion syntax lint for all 55 harnesses,
-  including exact Type 6/Type 17/Type 21 decode, bounded Type 5/Type 6/Type 8/
+- `make formal` passes strict assertion syntax lint for all 56 harnesses,
+  including Type 1 action decode, exact Type 6/Type 17/Type 21 decode,
+  bounded Type 5/Type 6/Type 8/
   Type 14/Type 17/Type 21 state execution, Type 5/Type 13 cache ownership, and
   native PM phase/strobe stability;
   proof execution remains explicitly skipped without SymbiYosys/Yosys.
 
 ### Documentation
+
+- Recorded the exact Type 1 dual-read fields, fixed DAG ownership, DD/PD
+  destination restrictions, implicit AR/MR result, AMF-zero dual-fetch form,
+  cycle-start/cycle-end ordering, PX effect, exhaustive action count, and
+  OQ-023 native PM/DMACK timing boundary.
 
 - Recorded the exact Type 5 PM/DAG2 fields, AMF-zero PM-only behavior,
   `{DREG,PX}` transfer packing, old-value store ordering, read collision rule,
@@ -1082,6 +1105,11 @@ semantic versioning after its first release.
   arbitration and empty-stack effects remain explicitly outside this boundary.
 
 ### Known Issues
+
+- Type 1 action selection is source-closed and exhaustive, but architectural
+  state execution, cache recovery, and native dual-bus attachment are not
+  implemented. OQ-023 withholds a guess about PM address/strobe/data behavior
+  while DMACK extends the simultaneous DM transaction.
 
 - Type 5 action legality, selected-bank compute, DAG2 postmodify, PX effects,
   cache recovery, and native PM phases are source-bounded, but whole-core PM

@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "scope": "SOURCE_CLOSED_TYPE_1_ALU_MAC_PLUS_DM_AND_PM_READ_ACTIONS",
+  "decode": {
+    "original_type": 1,
+    "opcode_mask": "0xc00000",
+    "opcode_value": "0xc00000",
+    "fields": {
+      "PD_PM_READ_DESTINATION": [21, 20],
+      "DD_DM_READ_DESTINATION": [19, 18],
+      "AMF_ALU_MAC_FUNCTION": [17, 13],
+      "YOP_COMPUTE_SOURCE": [12, 11],
+      "XOP_COMPUTE_SOURCE": [10, 8],
+      "PM_I4_TO_I7_LOCAL": [7, 6],
+      "PM_M4_TO_M7_LOCAL": [5, 4],
+      "DM_I0_TO_I3_LOCAL": [3, 2],
+      "DM_M0_TO_M3_LOCAL": [1, 0]
+    },
+    "class_words": 4194304,
+    "source_closed_words": 4194304,
+    "unsupported_words": 0,
+    "amf_zero": "DUAL_READ_ONLY_WITH_COMPUTATION_FIELDS_IGNORED"
+  },
+  "parallel_actions": {
+    "cycle_start_reads": [
+      "SELECTED_BANK_COMPUTE_OPERANDS_IF_AMF_NONZERO",
+      "SELECTED_DAG1_I_M_L",
+      "SELECTED_DAG2_I_M_L",
+      "MSTAT_BIT_REVERSE_FOR_DAG1"
+    ],
+    "completion_writes": [
+      "AR_OR_MR_AND_STATUS_IF_AMF_NONZERO",
+      "DM_READ_TO_DD_SELECTED_X_INPUT_REGISTER",
+      "PM_READ_UPPER_16_TO_PD_SELECTED_Y_INPUT_REGISTER",
+      "PM_READ_LOWER_8_TO_PX",
+      "POSTMODIFIED_SELECTED_DAG1_I",
+      "POSTMODIFIED_SELECTED_DAG2_I"
+    ],
+    "compute_destination": "AR_FOR_ALU_OR_MR_FOR_MAC; FEEDBACK_DESTINATIONS_UNAVAILABLE",
+    "destination_collision_rule": "NONE_BECAUSE_DD_X_INPUT_PD_Y_INPUT_AND_AR_OR_MR_ARE_DISJOINT",
+    "base_instruction_cycles": 1,
+    "conditional": false,
+    "memory_directions": "DM_READ_AND_PM_READ_ONLY"
+  },
+  "source_citations": [
+    "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
+    "ADI-UM-1989 printed pp. 3-1–3-7",
+    "ADI-UM-1989 printed pp. 6-3–6-5",
+    "ADI-UM-1989 printed pp. A-1 and A-5–A-11"
+  ],
+  "confidence": "VERIFIED_PRIMARY",
+  "tests": {
+    "python": "tests/test_compute_dual.py",
+    "hand_fixtures": "tests/vectors/compute_dual_fixtures.json",
+    "tool_round_trip": "tests/test_assembler_disassembler.py",
+    "rtl_decode": "sim/unit/tb_adsp2100_compute_dual_decode.sv",
+    "formal_decode": "formal/compute_dual_decode.sby",
+    "quartus_decode": "synthesis/quartus/compute_dual_decode_smoke.qpf"
+  },
+  "unresolved": [
+    "OQ_023_NATIVE_PM_BEHAVIOR_DURING_DMACK_EXTENSION",
+    "CACHE_RECOVERY_AND_WHOLE_CORE_FETCH_EVENT_ARBITRATION",
+    "ATOMIC_DUAL_BUS_EXECUTION_STATE_AND_NATIVE_ATTACHMENT",
+    "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
+  ]
+}

@@ -69,6 +69,14 @@ cache/native attachment passes 50,083 phase clocks; Type 1 action selection
 and whole-core PM/event arbitration remain unimplemented
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8, 6-3–6-7, A-1, A-5–A-7].
 
+The Type 1 action decoder covers every MAC AMF/X/Y selection with an implicit
+full-MR destination plus simultaneous DD-selected DAG1 DM and PD-selected
+DAG2 PM reads. Both new operands arrive after the old values participate in
+the product/accumulate. Action selection is exhaustive; MAC/status execution,
+cache recovery, and native dual-bus wait behavior remain unconnected under
+OQ-023
+[ADI-UM-1989, printed pp. 2-15–2-18, 6-3–6-5, A-1, A-5–A-7].
+
 The implementation rounds the complete 40-bit result, including the current
 MR contribution, as the primary manual requires. Pinned MAME instead uses the
 product low word for its midpoint test in rounded accumulate/subtract paths;

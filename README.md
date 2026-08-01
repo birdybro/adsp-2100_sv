@@ -68,6 +68,9 @@ an exhaustive original Type 5 boundary with 1,017,344 ALU/MAC-plus-PM or
 PM-only words and 31,232 explicit read collisions, selected-bank compute/DAG2/
 PX execution, cache-hit or one-cycle recovery selection, and native state-8
 issue/state-7 completion,
+all 4,194,304 Type 1 words decoded as source-closed fixed-DAG1-DM plus
+DAG2-PM dual-read actions with cycle-start computation operands, cycle-end
+DD/PD loads, implicit AR/MR result selection, and AMF-zero dual fetch,
 476,672 Type 8
 ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback, all 32,768 Type 9 conditional ALU/MAC words including documented
@@ -107,6 +110,9 @@ boundary attached to the original active-low logical pin phases. These remain
 bounded clients, not an integrated fetch/decode/execute bus owner; ordinary
 fetch arbitration, other PM instruction classes, and BR/BG remain
 unimplemented.
+Type 1 remains an action boundary rather than executable dual-bus state:
+OQ-023 records the unresolved native PM behavior when DMACK extends the
+simultaneous DM cycle.
 Commands return nonzero on a real failure.
 Optional commands report `SKIP` when their named tool is unavailable.
 

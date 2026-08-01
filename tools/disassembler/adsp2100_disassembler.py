@@ -369,6 +369,47 @@ def _try_disassemble_compute_dm(opcode: int) -> Disassembly | None:
     return Disassembly(opcode, text, "TYPE_04_BOUNDED_ACTION", True)
 
 
+def _try_disassemble_compute_dual(opcode: int) -> Disassembly | None:
+    """Disassemble original Type 1 ALU/MAC plus simultaneous DM/PM reads."""
+
+    if opcode & 0xC00000 != 0xC00000:
+        return None
+    pd = (opcode >> 20) & 3
+    dd = (opcode >> 18) & 3
+    amf = (opcode >> 13) & 0x1F
+    yop = (opcode >> 11) & 3
+    xop = (opcode >> 8) & 7
+    pm_i = 4 | ((opcode >> 6) & 3)
+    pm_m = 4 | ((opcode >> 4) & 3)
+    dm_i = (opcode >> 2) & 3
+    dm_m = opcode & 3
+    pm_names = ("AY0", "AY1", "MY0", "MY1")
+    dm_names = ("AX0", "AX1", "MX0", "MX1")
+    dm_clause = f"{dm_names[dd]} = DM(I{dm_i}, M{dm_m})"
+    pm_clause = f"{pm_names[pd]} = PM(I{pm_i}, M{pm_m})"
+
+    if amf == 0:
+        if yop != 0 or xop != 0:
+            return Disassembly(
+                opcode,
+                f".WORD 0x{opcode:06x};",
+                "TYPE_01_SOURCE_CLOSED_ALIAS",
+                True,
+            )
+        text = f"{dm_clause}, {pm_clause};"
+    else:
+        computation = _format_compute_operation(0, amf, yop, xop)
+        if computation is None:
+            return Disassembly(
+                opcode,
+                f".WORD 0x{opcode:06x};",
+                "TYPE_01_SOURCE_CLOSED_ALIAS",
+                True,
+            )
+        text = f"{computation}, {dm_clause}, {pm_clause};"
+    return Disassembly(opcode, text, "TYPE_01_SOURCE_CLOSED_ACTION", True)
+
+
 def _try_disassemble_compute_pm(opcode: int) -> Disassembly | None:
     """Disassemble the source-closed original Type 5 action forms."""
 
@@ -708,6 +749,9 @@ def disassemble_word(opcode: int) -> Disassembly:
     compute_move = _try_disassemble_compute_move(opcode)
     if compute_move is not None:
         return compute_move
+    compute_dual = _try_disassemble_compute_dual(opcode)
+    if compute_dual is not None:
+        return compute_dual
     compute_dm = _try_disassemble_compute_dm(opcode)
     if compute_dm is not None:
         return compute_dm

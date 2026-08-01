@@ -46,6 +46,13 @@ from .compute_dm_native import (
     ComputeDMNativeState,
     apply_compute_dm_native_cycle,
 )
+from .compute_dual import (
+    COMPUTE_DUAL_CLASS_MASK,
+    COMPUTE_DUAL_CLASS_VALUE,
+    ComputeDualAction,
+    decode_compute_dual,
+    is_compute_dual_class,
+)
 from .compute_pm import (
     COMPUTE_PM_CLASS_MASK,
     COMPUTE_PM_CLASS_VALUE,
@@ -448,6 +455,9 @@ __all__ = [
     "ComputeDMNativeState",
     "ComputeDMPending",
     "ComputeDMState",
+    "COMPUTE_DUAL_CLASS_MASK",
+    "COMPUTE_DUAL_CLASS_VALUE",
+    "ComputeDualAction",
     "COMPUTE_PM_CLASS_MASK",
     "COMPUTE_PM_CLASS_VALUE",
     "ComputePMAction",
@@ -643,6 +653,7 @@ __all__ = [
     "decode_divide_quotient",
     "decode_divide_sign",
     "decode_compute_dm",
+    "decode_compute_dual",
     "decode_compute_pm",
     "decode_compute_move",
     "decode_mr_saturation",
@@ -665,6 +676,7 @@ __all__ = [
     "is_conditional_shift_class",
     "is_conditional_compute_class",
     "is_compute_dm_class",
+    "is_compute_dual_class",
     "is_compute_pm_class",
     "is_compute_move_class",
     "is_direct_jump_class",

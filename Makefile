@@ -167,6 +167,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_compute_pm_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_compute_dual_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_dm_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
 			rtl/core/adsp2100_compute_dm_decode.sv \
@@ -601,7 +603,8 @@ decode-tests:
 		tests.test_internal_move tests.test_load_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
-		tests.test_compute_move tests.test_compute_dm tests.test_compute_pm \
+		tests.test_compute_move tests.test_compute_dual \
+		tests.test_compute_dm tests.test_compute_pm \
 		tests.test_compute_pm_cache tests.test_compute_pm_native \
 		tests.test_conditional_compute tests.test_direct_jump \
 		tests.test_do_until tests.test_indirect_jump \
@@ -666,6 +669,13 @@ decode-tests:
 			rtl/core/adsp2100_compute_move_decode.sv \
 			sim/unit/tb_adsp2100_compute_move_decode.sv; \
 		build/obj_compute_move_decode/Vtb_adsp2100_compute_move_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_dual_decode \
+			--top-module tb_adsp2100_compute_dual_decode \
+			rtl/core/adsp2100_compute_dual_decode.sv \
+			sim/unit/tb_adsp2100_compute_dual_decode.sv; \
+		build/obj_compute_dual_decode/Vtb_adsp2100_compute_dual_decode; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
 			-Wno-TIMESCALEMOD \
 			--Mdir build/obj_compute_dm_decode \
@@ -791,7 +801,8 @@ compute-tests:
 		tests.test_mac_model tests.test_shifter_model tests.test_mr_saturation \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
-		tests.test_compute_move tests.test_compute_dm tests.test_compute_pm \
+		tests.test_compute_move tests.test_compute_dual \
+		tests.test_compute_dm tests.test_compute_pm \
 		tests.test_compute_pm_cache tests.test_compute_pm_native \
 		tests.test_conditional_compute tests.test_divide_quotient \
 		tests.test_divide_sign
@@ -1529,6 +1540,10 @@ formal:
 			rtl/core/adsp2100_compute_move_slice.sv \
 			formal/harnesses/adsp2100_compute_move_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_dual_decode_formal \
+			rtl/core/adsp2100_compute_dual_decode.sv \
+			formal/harnesses/adsp2100_compute_dual_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_dm_decode_formal \
 			rtl/core/adsp2100_compute_dm_decode.sv \
 			formal/harnesses/adsp2100_compute_dm_decode_formal.sv; \
@@ -1829,6 +1844,8 @@ formal:
 		sby -f -d build/formal_shifter_pm_native \
 			formal/shifter_pm_native.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
+		sby -f -d build/formal_compute_dual_decode \
+			formal/compute_dual_decode.sby; \
 		sby -f -d build/formal_compute_dm_decode \
 			formal/compute_dm_decode.sby; \
 		sby -f -d build/formal_compute_pm_decode \
@@ -1932,6 +1949,8 @@ synth-quartus:
 			synthesis/quartus/shifter_pm_native_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_move_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/compute_dual_decode_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_dm_decode_smoke; \
 		quartus_sh --flow compile \
@@ -2155,6 +2174,9 @@ clean:
 	@if [ -d build/obj_compute_move_slice ]; then \
 		find build/obj_compute_move_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_compute_dual_decode ]; then \
+		find build/obj_compute_dual_decode -depth -delete; \
+	fi
 	@if [ -d build/obj_compute_dm_decode ]; then \
 		find build/obj_compute_dm_decode -depth -delete; \
 	fi
@@ -2304,6 +2326,9 @@ clean:
 	@if [ -d build/quartus_compute_move ]; then \
 		find build/quartus_compute_move -depth -delete; \
 	fi
+	@if [ -d build/quartus_compute_dual_decode ]; then \
+		find build/quartus_compute_dual_decode -depth -delete; \
+	fi
 	@if [ -d build/quartus_compute_dm_decode ]; then \
 		find build/quartus_compute_dm_decode -depth -delete; \
 	fi
@@ -2392,6 +2417,7 @@ clean:
 		build/formal_shifter_dm_native \
 		build/formal_shifter_pm_native \
 		build/formal_compute_move \
+		build/formal_compute_dual_decode \
 		build/formal_compute_dm_decode \
 		build/formal_compute_pm_decode \
 		build/formal_compute_dm \

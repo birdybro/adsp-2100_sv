@@ -8,6 +8,7 @@
 source-backed compute/address-generation/register/status-storage blocks plus
 bounded semantic instruction decode including Type 4 native-DM execution and
 Type 5 logical/cache/native-PM execution,
+exhaustive Type 1 dual-read action selection,
 logical DM/PM transactions, a Type 13/
 cache client attached to native PM pin phases, and Type 2, Type 4, plus Type 12 clients
 attached to native DM pin phases
@@ -45,6 +46,13 @@ cycle-, or Hard Drivin'-complete
   execution with 25 directed tests, 50,071 logical and 50,083 native model/RTL
   clocks, three formal harnesses, and fully constrained logical/cache/native
   Cyclone V fits; whole-core ownership remains open;
+- complete original Type 1 action selection: all 4,194,304 words decode as
+  source-closed fixed-DAG1-DM/DAG2-PM dual reads with DD/PD destinations,
+  cycle-start computation operands, implicit AR/MR results, AMF-zero dual
+  fetch, and cycle-end loads; with two primary-derived fixtures, independent
+  Python, original algebraic/raw toolchain paths, exhaustive RTL traversal,
+  formal assertions, and a fully constrained 53-ALM Cyclone V decoder fit;
+  state/cache/native dual-bus attachment remains OQ-023;
 - class-complete original Type 2 immediate-DM-write action semantics,
   independent model, three hand-derived fixtures, all 160 boundary/selector
   assembler-disassembler forms, exhaustive 24-bit fail-closed RTL decode, and
@@ -221,9 +229,13 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 504 implemented Python unit checks plus manifest/hash verification;
+- 559 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
+- all 4,194,304 Type 1 words decode as source-closed actions in independent
+  Python and exhaustive RTL; six model/schema checks, two primary-derived
+  fixtures, 1,024 representative dual-read-only forms, 685 uniquely spellable
+  computation forms, raw aliases, and a contemporary listing cross-check pass;
 - all 2,097,152 Type 2 words decode to exact immediate/G/I/M fields in Python
   and exhaustive RTL traversal; every other 24-bit word is action-free;
 - 50,035 Type 2 model/RTL clocks cover both DAGs, every I/M selection, DAG1
@@ -460,7 +472,8 @@ outstanding.
   Type 13/cache-integration, native PM and DM phase/strobe, and the bounded
   Type 13, Type 2, Type 4, and Type 12 native-attachment invariants, plus
   Type 4 action-decode and waited logical-execution plus Type 5 action,
-  logical/cache/native execution invariants (55 total)
+  logical/cache/native execution invariants plus Type 1 action decode
+  (56 total)
   pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
@@ -473,8 +486,8 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Research and construct the Type 1 dual-memory ALU/MAC action graph, then
-   connect its simultaneous PM/DM ordering without inventing arbitration.
+3. Research and construct the Type 3 direct-DM read/write action graph, then
+   attach only source-closed state and timing behavior.
 4. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
 5. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.
