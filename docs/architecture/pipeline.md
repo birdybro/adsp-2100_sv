@@ -1,7 +1,7 @@
 # Pipeline and cache
 
-**Status: one-stage pipeline and bounded PM-data hit/miss timing implemented;
-full cache monitor and hazards pending**
+**Status: one-stage pipeline, bounded PM-data hit/miss timing, and functional
+contiguous-region cache monitor implemented; unified hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
 following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
@@ -18,8 +18,14 @@ Interrupt entry aborts an already fetched instruction and later refetches it
 also forces an instruction fetch before stopping [ADI-UM-1989, printed
 pp. 5-13–5-14].
 
-Cache tag/monitor algorithm, self-modifying PM behavior, branches at cache
-boundaries, and precise miss traces are highest-priority timing tests.
+The standalone functional monitor implements the documented 16-by-24 array,
+PMA[3:0] indexing, one contiguous valid region, out-of-region invalidation,
+and oldest-word circular replacement. It passes 50,028 deterministic model/
+RTL clocks. The manual describes hidden ahead/behind registers but does not
+expose their exact encoding, so this is the externally visible region contract,
+not a gate-level reconstruction [ADI-UM-1989, printed pp. 4-26–4-28].
+Self-modifying PM behavior and unified branch/loop/interrupt/HALT/BR arbitration
+remain OQ-008.
 
 The bounded Type 13 model/RTL makes the sourced two outcomes explicit. With a
 caller-validated next cache entry, the PM-data instruction completes in its
@@ -29,4 +35,5 @@ only the external instruction fetch and then exposes the event-recognition
 boundary. A forced-fetch input models the documented HALT handoff. Fifty
 thousand seventy model/RTL clocks confirm that no architectural data action
 repeats in recovery [ADI-UM-1989, printed pp. 4-26–4-30, 5-13–5-16]. This is
-not yet the 16-entry tag/monitor/fill implementation, which remains OQ-008.
+not yet wired to the standalone cache monitor or a unified fetch controller;
+that integration remains OQ-008.

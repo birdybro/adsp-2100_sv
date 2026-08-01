@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "status": "SOURCE_BOUNDED_FUNCTIONAL_MONITOR",
+  "authority": [{
+    "publication": "ADSP-2100 User's Manual",
+    "revision": "First Edition, November 1989",
+    "publication_id": "ADI-UM-1989",
+    "pages": ["1-6", "4-26", "4-27", "4-28", "4-29", "4-30", "5-13"]
+  }],
+  "organization": {
+    "entries": 16,
+    "instruction_width": 24,
+    "address_width": 14,
+    "array_index": "PMA[3:0]"
+  },
+  "monitor_contract": {
+    "valid_region": "ONE_CONTIGUOUS_PROGRAM_MEMORY_REGION",
+    "maximum_valid_words": 16,
+    "normal_external_fetch": {
+      "writes_instruction_register": true,
+      "writes_cache_entry": true
+    },
+    "sequential_fill_below_capacity": "EXTEND_VALID_REGION_BY_ONE",
+    "sequential_fill_at_capacity": "REPLACE_OLDEST_WORD_MODULO_16",
+    "fetch_inside_region": "RETAIN_REGION_AND_REFRESH_INDEXED_WORD",
+    "discontinuous_fetch": "DISCARD_PRIOR_REGION_AND_BEGIN_ONE_WORD_REGION",
+    "lookup_use": "ONLY_WHEN_PMD_IS_OCCUPIED_BY_A_PM_DATA_TRANSFER",
+    "reset": "INVALIDATE_MONITOR_WITHOUT_REQUIRING_DATA_ARRAY_INITIALIZATION"
+  },
+  "implementation_boundary": {
+    "model": "sim/reference_models/adsp2100_model/instruction_cache.py",
+    "rtl": "rtl/core/adsp2100_instruction_cache.sv",
+    "testbench": "sim/unit/tb_adsp2100_instruction_cache.sv",
+    "formal": "formal/instruction_cache.sby"
+  },
+  "verification": {
+    "directed_tests": 10,
+    "differential_clocks": 50028,
+    "seed": "0x2100ca",
+    "formal_status": "ASSERTION_SYNTAX_ONLY_WITHOUT_INSTALLED_SOLVER"
+  },
+  "unresolved": [
+    "EXACT_HIDDEN_AHEAD_BEHIND_REGISTER_ENCODINGS_AND_TRANSITIONS",
+    "SELF_MODIFYING_PM_WRITE_INTERACTION_WITH_CACHED_INSTRUCTION",
+    "UNIFIED_BRANCH_LOOP_INTERRUPT_HALT_AND_BR_ARBITRATION",
+    "NATIVE_PM_PIN_PHASES_AND_INSTRUCTION_REGISTER_TIMING"
+  ],
+  "open_question": "OQ-008"
+}

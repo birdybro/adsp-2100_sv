@@ -34,5 +34,7 @@ acknowledge input [ADI-UM-1989, printed pp. 3-6–3-7, 5-5–5-8,
 6-3–6-7]. A cache hit completes in that cycle; a miss adds one instruction
 fetch cycle without repeating the data action [ADI-UM-1989, printed
 pp. 4-26–4-30]. The bounded slice receives cache validity and the next fetch
-address from its caller; cache monitoring and whole-core PM ownership remain
-OQ-008.
+address from its caller. A separate source-bounded cache monitor now supplies
+the documented contiguous-region hit/data decision and external-fetch fill
+behavior, but it is not yet connected to Type 13 or whole-core PM ownership;
+that integration remains OQ-008.

@@ -10,6 +10,11 @@ Reset initializes clocking, resets stack pointers, invalidates cache monitoring,
 clears IRQ/HALT latches, drives PMA=0x0004 unless BG is active, clears IMASK
 and MSTAT, and leaves ICNTL undefined [ADI-UM-1989, printed p. 5-13].
 
+The standalone cache RTL clears only monitor/data-valid state on reset. It
+does not fabricate zeros in the 16-by-24 data array, matching the documented
+monitor invalidation without inventing a cache-data reset value [ADI-UM-1989,
+printed p. 5-13].
+
 HALT is recognized at state 3 and stops at state 8. If the current cycle is PM
 data, a forced instruction fetch completes first; this makes the stopped PMA
 observable. Releasing HALT resumes, with DMACK required high

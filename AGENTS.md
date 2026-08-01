@@ -282,9 +282,16 @@ word into old-selected-bank DREG upper 16 bits plus PX lower 8 bits, writes an
 old `{DREG,PX}` word, and commits DAG2 post-modification with the shifter
 action. A caller-provided next-fetch cache hit completes in the same cycle;
 a miss or forced fetch emits exactly one pure recovery-fetch cycle without
-repeating architectural actions. The actual 16-entry cache/tag monitor,
+repeating architectural actions. Connection to the standalone cache monitor,
 physical active-low PM pin phases, and whole-core event arbitration remain
 open under OQ-008.
+A standalone source-bounded cache monitor now implements the documented
+16-by-24 array, PMA[3:0] indexing, single contiguous valid region,
+out-of-region invalidation, sequential extension, and circular oldest-word
+replacement. It preserves authentic invalid data state and passes 50,028
+model/RTL clocks. It is not yet wired to Type 13 or a unified fetch controller;
+the manual's hidden ahead/behind register encoding, self-modifying PM effects,
+and event arbitration remain OQ-008.
 The bounded Type 8 slice executes documented ALU and fractional-MAC
 computations in parallel with one internal DREG move. Both clauses sample the
 cycle-start selected bank; noncolliding DREG/AR/AF/MR/MF and ASTAT writes

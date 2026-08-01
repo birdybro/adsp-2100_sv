@@ -3,13 +3,13 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
 test: lint reference-check repository-check decode-tests assembler-tests model-tests \
-	compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
+	cache-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
 	@echo "PASS implemented foundation regression"
 
 lint:
@@ -17,6 +17,9 @@ lint:
 	$(PYTHON) scripts/lint_text.py
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_instruction_cache \
+			rtl/core/adsp2100_instruction_cache.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			-Wno-UNUSEDPARAM \
 			--top-module adsp2100_class_decode \
@@ -249,6 +252,23 @@ repository-check:
 
 model-tests:
 	$(PYTHON) -m unittest -v tests.test_model_foundation
+
+cache-tests:
+	$(PYTHON) -m unittest -v tests.test_instruction_cache
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_instruction_cache_vectors.py \
+			--output build/instruction_cache_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_instruction_cache \
+			--top-module tb_adsp2100_instruction_cache \
+			rtl/core/adsp2100_instruction_cache.sv \
+			sim/unit/tb_adsp2100_instruction_cache.sv; \
+		build/obj_instruction_cache/Vtb_adsp2100_instruction_cache; \
+	else \
+		echo "SKIP instruction-cache RTL test: Verilator is not installed"; \
+	fi
 
 decode-tests:
 	$(PYTHON) tools/generators/validate_isa.py
@@ -916,13 +936,13 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: compute-tests
-	@echo "PASS bounded Type 12 DM and Type 13 PM logical transaction regressions"
+bus-tests: cache-tests compute-tests
+	@echo "PASS bounded cache, Type 12 DM, and Type 13 PM transaction regressions"
 
 interrupt-tests:
 	@echo "SKIP interrupt tests: interrupt RTL does not exist"
 
-differential: compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
+differential: cache-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests
 	@echo "PASS available bounded model/RTL differential regressions"
 
 fuzz:
@@ -931,6 +951,10 @@ fuzz:
 formal:
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_instruction_cache_formal \
+			rtl/core/adsp2100_instruction_cache.sv \
+			formal/harnesses/adsp2100_instruction_cache_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_class_decode_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -1216,6 +1240,7 @@ formal:
 		sby -f -d build/formal_shift_move formal/shift_move.sby; \
 		sby -f -d build/formal_shifter_dm formal/shifter_dm.sby; \
 		sby -f -d build/formal_shifter_pm formal/shifter_pm.sby; \
+		sby -f -d build/formal_instruction_cache formal/instruction_cache.sby; \
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_conditional_compute \
 			formal/conditional_compute.sby; \
@@ -1289,6 +1314,8 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_smoke; \
 		quartus_sh --flow compile \
+			synthesis/quartus/instruction_cache_smoke; \
+		quartus_sh --flow compile \
 			synthesis/quartus/compute_move_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/conditional_compute_smoke; \
@@ -1344,6 +1371,7 @@ docs:
 	$(PYTHON) -m unittest -v tests.test_repository.RepositoryTests.test_required_documentation
 
 clean:
+	@find build -maxdepth 1 -type f -name instruction_cache_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
 	@find build -maxdepth 1 -type f -name condition_expected.mem -delete
@@ -1454,6 +1482,9 @@ clean:
 	@if [ -d build/obj_shifter_pm_slice ]; then \
 		find build/obj_shifter_pm_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_instruction_cache ]; then \
+		find build/obj_instruction_cache -depth -delete; \
+	fi
 	@if [ -d build/obj_compute_move_decode ]; then \
 		find build/obj_compute_move_decode -depth -delete; \
 	fi
@@ -1561,6 +1592,9 @@ clean:
 	@if [ -d build/quartus_shifter_pm ]; then \
 		find build/quartus_shifter_pm -depth -delete; \
 	fi
+	@if [ -d build/quartus_instruction_cache ]; then \
+		find build/quartus_instruction_cache -depth -delete; \
+	fi
 	@if [ -d build/quartus_compute_move ]; then \
 		find build/quartus_compute_move -depth -delete; \
 	fi
@@ -1623,6 +1657,7 @@ clean:
 		build/formal_shift_move \
 		build/formal_shifter_dm \
 		build/formal_shifter_pm \
+		build/formal_instruction_cache \
 		build/formal_compute_move \
 		build/formal_conditional_compute \
 		build/formal_direct_jump \

@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 20
+
+[engines]
+smtbmc boolector
+
+[script]
+read -formal -sv rtl/core/adsp2100_instruction_cache.sv
+read -formal -sv formal/harnesses/adsp2100_instruction_cache_formal.sv
+prep -top adsp2100_instruction_cache_formal
+
+[files]
+rtl/core/adsp2100_instruction_cache.sv
+formal/harnesses/adsp2100_instruction_cache_formal.sv

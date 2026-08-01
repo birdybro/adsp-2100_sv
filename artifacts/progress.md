@@ -81,6 +81,10 @@ cycle-, or Hard Drivin'-complete
   exact 24-bit DREG/PX packing, old-value stores, fixed-cycle shifter/read/DAG2
   commits, same-cycle next-fetch cache hits, and exactly one pure recovery
   fetch after a miss or forced fetch;
+- source-bounded 16-by-24 instruction cache and contiguous-region monitor,
+  including low-four-bit indexing, sequential fills, inside-region refresh,
+  discontinuity restart, 14-bit wrap, circular oldest replacement, and reset/
+  unknown validity handling in independent model and portable RTL;
 - bounded Type 15 immediate LSHIFT/ASHIFT semantics, two manual fixtures,
   original-syntax assembler/disassembler support, exhaustive class
   partitioning, selected-bank SR execution, and explicit fail-closed handling
@@ -162,7 +166,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 427 implemented Python unit checks plus manifest/hash verification;
+- 437 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
@@ -224,6 +228,10 @@ outstanding.
   conflicts in Python and exhaustive RTL; 50,070 model/RTL clocks cover both
   banks, all DAG2 selections, read packing, old writes, cache-hit completion,
   miss/forced-fetch recovery, reset, invalid, and unknown-state cases;
+- the instruction cache passes ten directed tests and 50,028 deterministic
+  model/RTL clocks across all 16 slots, contiguous-region fill/lookup,
+  seventeenth-word replacement, discontinuities, PM-address wrap, and unknown
+  address/data handling;
 - all 32,768 Type 15 class words partition into 14,336 source-closed actions
   and 18,432 unsupported subencodings in Python and exhaustive RTL traversal;
   58,709 model/RTL cycles cover every supported word in both banks;
@@ -257,8 +265,8 @@ outstanding.
   554,309, the Type 19 state slice adds 50,259, the Type 20 slice adds 50,254,
   the phase-aware Type 22 slice adds 50,168 clocks, the Type 23 slice adds
   50,081 cycles, the Type 24 slice adds 50,109 cycles, the Type 12 slice adds
-  50,069 state/bus clocks, and the Type 13 slice adds 50,070 state/cache/bus
-  clocks,
+  50,069 state/bus clocks, the Type 13 slice adds 50,070 state/cache/bus
+  clocks, and the standalone cache adds 50,028 clocks,
   and the Type 14 state slice adds
   82,597, the Type 15 state slice adds
   58,709, and the Type 16 state slice adds 54,403;
@@ -292,6 +300,10 @@ outstanding.
   or DSP blocks, +1.172 ns setup, +0.168 ns worst multicorner hold, 50.43 MHz
   worst slow-corner Fmax, and no unconstrained paths against its 21 ns
   standalone constraint;
+  the standalone instruction cache fits in 310 ALMs and 429 fitted registers
+  with no RAM or DSP blocks, +7.071 ns setup, +0.163 ns worst multicorner
+  hold, 77.35 MHz worst slow-corner Fmax, and no unconstrained paths against
+  its 20 ns constraint;
   the Type 8 slice fits in 983 ALMs and 693 fitted registers with one DSP and
   no RAM, +1.131 ns setup, +0.177 ns hold, 47.92 MHz worst slow-corner Fmax,
   and no unconstrained paths against its 22 ns standalone constraint; it
@@ -338,7 +350,7 @@ outstanding.
   Type 25 decode/execution plus Type 17 action/state execution
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
-  Type 23, and Type 24 decode/execution (39 total) pass
+  Type 23, Type 24, and instruction-cache invariants (40 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -350,9 +362,9 @@ outstanding.
    separately identifiable original data sheet.
 2. Locate primary or physical evidence for OQ-016 to replace or reject the
    bounded Type 17 slice's explicitly provisional zero-extension hypothesis.
-3. Implement and independently verify the original 16-entry next-instruction
-   cache/tag monitor needed to replace the bounded Type 13 caller oracle under
-   OQ-008.
+3. Connect the source-bounded 16-entry instruction-cache monitor to Type 13
+   and a unified fetch owner, replacing the bounded caller oracle while
+   retaining OQ-008 event-interaction limits.
 4. Extend the bounded logical DM and PM paths into sourced native pin phases and
    whole-core transaction arbitration.
 5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.

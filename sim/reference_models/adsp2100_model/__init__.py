@@ -90,6 +90,15 @@ from .divide_quotient import (
     is_divide_quotient_class,
 )
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
+from .instruction_cache import (
+    CACHE_WORDS,
+    InstructionCacheCycleResult,
+    InstructionCacheLookup,
+    InstructionCacheState,
+    apply_instruction_cache_cycle,
+    cache_region_contains,
+    lookup_instruction_cache,
+)
 from .mac import MACResult, compute_mac, saturate_mr
 from .mr_saturation import MR_SATURATION_OPCODE, decode_mr_saturation
 from .mr_saturation_slice import (
@@ -490,6 +499,7 @@ __all__ = [
     "apply_counter_cycle",
     "apply_computational_cycle",
     "apply_dreg_cycle",
+    "apply_instruction_cache_cycle",
     "apply_divide_quotient_cycle",
     "apply_divide_sign_cycle",
     "apply_direct_jump_cycle",
@@ -535,6 +545,7 @@ __all__ = [
     "compute_dag",
     "compute_mac",
     "compute_shifter",
+    "cache_region_contains",
     "mask_to_width",
     "original_base_mask",
     "reverse_address",
@@ -554,6 +565,7 @@ __all__ = [
     "is_shift_move_class",
     "is_shifter_dm_class",
     "is_shifter_pm_class",
+    "lookup_instruction_cache",
     "read_dreg",
     "read_internal_move_register",
     "register_code_by_name",
@@ -568,4 +580,8 @@ __all__ = [
     "decode_shift_move",
     "decode_shifter_dm",
     "decode_shifter_pm",
+    "CACHE_WORDS",
+    "InstructionCacheCycleResult",
+    "InstructionCacheLookup",
+    "InstructionCacheState",
 ]

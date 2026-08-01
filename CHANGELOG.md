@@ -97,6 +97,11 @@ semantic versioning after its first release.
   portable stateful RTL, all supported assembler/disassembler forms, two
   hand-derived fixtures, deterministic state/cache/bus differential vectors,
   a fixed-cycle/recovery formal harness, and a constrained Cyclone V project.
+- A source-bounded original instruction-cache model and portable RTL block
+  implementing the documented 16-by-24 array, PMA[3:0] indexing, single
+  contiguous valid region, discontinuity restart, sequential fill, and
+  circular oldest-word replacement; plus deterministic differential vectors,
+  invariant harness, machine-readable contract, and Quartus smoke project.
 - A bounded Type 8 ALU/MAC-plus-internal-DREG semantic entry covering 476,672
   source-closed noncolliding words; an independent unknown-preserving parallel
   state model, exact fail-closed decoder, portable execution RTL, canonical
@@ -298,6 +303,15 @@ semantic versioning after its first release.
 
 ### Verified
 
+- The instruction-cache regression passes ten directed tests and 50,028
+  deterministic model/RTL clocks covering reset invalidation, all 16 slots,
+  region fill and wrap, inside-region refresh, seventeenth-word replacement,
+  discontinuous fetches, 14-bit PM-address wrap, and unknown address/data.
+- Quartus full compilation passes for the standalone instruction cache at its
+  20 ns constraint: 310 ALMs, 429 fitted registers, no RAM/DSP blocks,
+  +7.071 ns worst setup and +0.163 ns worst multicorner hold slack, 77.35 MHz
+  worst slow-corner Fmax, and zero unconstrained clocks, ports, or paths.
+  The asynchronous lookup intentionally leaves the small array in registers.
 - Type 13 exhaustive RTL decode traverses all 16,777,216 program words and
   partitions its 65,536-word class into 54,320 supported actions, 8,192
   unavailable-XOP words, and 3,024 PM-read destination collisions. The
@@ -341,7 +355,7 @@ semantic versioning after its first release.
   routing duplicates, no RAM/DSP blocks, +8.448 ns worst setup and +0.168 ns
   worst multicorner hold slack, 86.81 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 427 distinct Python checks, 14 local
+- The expanded `make test` passes 437 distinct Python checks, 14 local
   reference hashes, all generated-data checks, strict Verilator lint,
   twenty-one exhaustive 24-bit decode traversals, and every existing model/RTL
   vector regression including the Type 12 state/bus clocks, Type 13
@@ -663,11 +677,16 @@ semantic versioning after its first release.
 
 ### Documentation
 
+- Bounded the original cache monitor's observable contract to one contiguous
+  up-to-16-word PM region with low-four-bit indexing, discontinuity restart,
+  and circular oldest replacement using original pp. 4-26–4-30. Hidden
+  ahead/behind encodings, self-modifying PM, and unified event arbitration
+  remain OQ-008.
 - Closed the original Type 13 field partition, PM read/write packing,
   old-value parallel semantics, PM-read collision restriction, fixed PM data
   action, same-cycle cached-next-fetch completion, and exactly one recovery
   fetch after a miss or forced fetch with exact-device citations; the actual
-  16-entry cache/tag monitor, physical pin phases, and whole-core event
+  standalone-cache wiring, physical pin phases, and whole-core event
   arbitration remain open under OQ-008.
 - Closed the original Type 12 field partition, old-value parallel semantics,
   read-collision restriction, logical DM bus ordering, completion-only DAG
@@ -824,8 +843,12 @@ semantic versioning after its first release.
   interrupt/BR/HALT latching during waits, or whole-core instruction issue.
 - Type 13 now supplies verified logical PM data/cache-recovery transactions,
   but the caller still supplies cache hit/valid information and the following
-  fetch address; no actual 16-entry cache/tag monitor, native active-low PM
-  phase interface, or whole-core instruction issue exists.
+  fetch address; it is not yet wired to the standalone monitor, native
+  active-low PM phase interface, or whole-core instruction issue.
+- The functional cache monitor is not yet wired to the Type 13 slice or a
+  whole-core fetch controller. Its exact hidden ahead/behind counter encoding,
+  self-modifying PM behavior, and branch/loop/interrupt/HALT/BR arbitration
+  remain unresolved under OQ-008.
 - Open-source synthesis and formal tools are not installed in this environment.
 - Type 8 AMF-zero legality and same-destination results are unresolved and are
   rejected rather than assigned invented behavior. Its standalone combined
