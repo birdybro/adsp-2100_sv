@@ -12,9 +12,9 @@ exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/
-Type 18 ordinary-fetch ownership with Type 9 ALU/MAC, Type 14 parallel move/
-shifter, and Type 15/16 shifter/status actions attached directly to the shared
-architectural state,
+Type 18/Type 25 ordinary-fetch ownership with Type 9 ALU/MAC, Type 14 parallel
+move/shifter, Type 15/16 shifter/status, and Type 25 conditional MR actions
+attached directly to the shared architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
 attached separately to that owner, standalone PM-data HALT forced-fetch
@@ -32,6 +32,19 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- fetched exact Type 25 conditional MR saturation attached to the shared
+  architectural-state owner and native ordinary-fetch phases: two new
+  directed tests cover both signs/banks and MV false, while the complete
+  18-test owner suite and 443,712 model/RTL clocks retain exhaustive Type
+  9/14/15/16/17/18 coverage and add atomic state-7 MR/PC/next-word retirement.
+  The pre-existing nine-test, 50,112-cycle standalone Type 25 evidence remains
+  passing. Strict lint is clean, and a fully constrained 25 ns Cyclone V fit
+  uses 2,702 ALMs, 1,175 registers, one DSP, no RAM, +1.564 ns worst setup,
+  +0.164 ns worst hold, 42.67 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths; OQ-015 interrupt adjacency,
+  reset-first-fetch, control flow, and unified PM/cache/event ownership remain
+  open;
 
 - fetched Type 14 shifter-plus-DREG execution attached to the shared
   architectural-state owner and native ordinary-fetch phases: 16 directed
@@ -447,7 +460,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 682 distinct Python unit checks plus manifest/hash verification;
+- 684 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -587,7 +600,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/9/14/15/16/17/18 linear owner adds 443,794 phase clocks,
+  the bounded Type 6/7/9/14/15/16/17/18/25 linear owner adds 443,712 phase clocks,
   the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across
@@ -745,7 +758,7 @@ outstanding.
   Type 4 action-decode and waited logical-execution plus Type 5 action,
   logical/cache/native execution invariants plus Type 1 and Type 3 action decode
   and Type 3 logical state execution plus exact Type 7 state execution and
-  the bounded steady-state Type 6/7/9/14/15/16/17/18 linear fetch owner and original
+  the bounded steady-state Type 6/7/9/14/15/16/17/18/25 linear fetch owner and original
   RESET/logical-phase, normal BR/BG, bounded linear BR/BG attachment, and
   standalone HALT sequencing, bounded ordinary-fetch HALT attachment, and
   Type 5/native-PM/HALT and Type 13/native-PM/HALT attachment invariants

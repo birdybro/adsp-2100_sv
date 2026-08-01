@@ -131,7 +131,7 @@ old SR/SE value before shifter writeback. The decoder excludes every
 same-destination request, and the register file atomically commits the
 remaining DREG plus SR/SE/SB writeback. The inactive bank is preserved across
 all 82,597 standalone comparison cycles. The shared fetched owner independently
-retires all 25,648 canonical packets across 443,794 clocks while committing
+retires all 25,648 canonical packets across 443,712 clocks while committing
 both write families atomically with PC and the next fetched word
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 

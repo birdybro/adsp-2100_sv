@@ -118,6 +118,10 @@ module adsp2100_linear_fetch_client (
     logic type9_mac_write;
     logic [39:0] type9_mac_result;
     logic type9_mac_mv;
+    logic type25_action_valid;
+    logic type25_condition_mv_unused;
+    logic type25_mr_write;
+    logic [39:0] type25_mr_result;
     logic type14_class_valid;
     logic type14_action_valid;
     logic type14_unsupported_subencoding;
@@ -199,7 +203,7 @@ module adsp2100_linear_fetch_client (
     assign supported_instruction = (
         nop_valid || type6_valid || type7_action_valid || type17_action_valid
         || type18_valid || type9_action_valid || type15_action_valid
-        || type16_action_valid || type14_action_valid
+        || type16_action_valid || type14_action_valid || type25_action_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
@@ -380,6 +384,16 @@ module adsp2100_linear_fetch_client (
         .ss_result_o(type14_ss_result)
     );
 
+    adsp2100_mr_saturation_action type25_action (
+        .opcode_i(opcode_q),
+        .mr_i(state_mr),
+        .mv_i(astat_o[6]),
+        .action_valid_o(type25_action_valid),
+        .condition_mv_o(type25_condition_mv_unused),
+        .mr_write_o(type25_mr_write),
+        .mr_result_o(type25_mr_result)
+    );
+
     adsp2100_immediate_shift_action type15_action (
         .opcode_i(opcode_q),
         .source_data_i(state_read_data),
@@ -440,9 +454,15 @@ module adsp2100_linear_fetch_client (
         .alu_write_enable_i(retire_event_o && type9_alu_write),
         .alu_destination_feedback_i(type9_destination_feedback),
         .alu_result_i(type9_alu_result),
-        .mac_write_enable_i(retire_event_o && type9_mac_write),
-        .mac_destination_feedback_i(type9_destination_feedback),
-        .mac_result_i(type9_mac_result),
+        .mac_write_enable_i(
+            retire_event_o && (type9_mac_write || type25_mr_write)
+        ),
+        .mac_destination_feedback_i(
+            type25_mr_write ? 1'b0 : type9_destination_feedback
+        ),
+        .mac_result_i(
+            type25_mr_write ? type25_mr_result : type9_mac_result
+        ),
         .shifter_sr_write_enable_i(
             retire_event_o
             && (type14_sr_write || type15_sr_write || type16_sr_write)
@@ -558,6 +578,7 @@ module adsp2100_linear_fetch_client (
         type9_class_valid, type9_nop_action, type9_condition_true,
         type9_is_mac, type9_is_alu, type9_x_source_data_unused,
         type9_y_source_data_unused, type16_condition_true,
+        type25_condition_mv_unused,
         type14_unverified_unused_x_unused, type14_unavailable_xop_unused,
         type14_destination_collision_unused,
         state_invalid_setup,

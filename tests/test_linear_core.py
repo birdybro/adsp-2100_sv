@@ -70,6 +70,10 @@ def _type14(
     )
 
 
+def _type25() -> int:
+    return 0x050000
+
+
 def _type15(*, sf: int, xop: int, exponent: int) -> int:
     return 0x0F0000 | ((sf & 0xF) << 11) | ((xop & 0x7) << 8) | (exponent & 0xFF)
 
@@ -141,6 +145,10 @@ class LinearCoreTests(unittest.TestCase):
         )
         self.assertIn(
             "ALL_25648_CANONICAL_TYPE_14_SHIFT_MOVE_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
+            "EXACT_TYPE_25_MR_SATURATION_WORD",
             contract["supported_current_instructions"],
         )
         self.assertIn(
@@ -333,6 +341,54 @@ class LinearCoreTests(unittest.TestCase):
         self.assertEqual(read_dreg(bank, DREG.SR1), ExactWord(16, 0x1234))
         self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0))
 
+    def test_type25_saturates_selected_mr_and_preserves_astat(self) -> None:
+        for mstat, mr2, expected in (
+            (0, 0x00, (0xFFFF, 0x7FFF, 0x00)),
+            (1, 0xFF, (0x0000, 0x8000, 0xFF)),
+        ):
+            state = _setup(LinearCoreState.reset(), _type7(0x30, 0x40))
+            for opcode in (
+                _type7(0x31, mstat),
+                _type6(DREG.MR0, 0x1357),
+                _type6(DREG.MR1, 0x2468),
+                _type6(DREG.MR2, mr2),
+                _type25(),
+            ):
+                state = _complete(_issue(state).state, opcode).state
+
+            retired = _complete(_issue(state).state, 0)
+            architecture = retired.state.architecture
+            selected = (
+                architecture.alternate if mstat else architecture.primary
+            )
+            self.assertEqual(
+                tuple(segment.value for segment in selected.mr),
+                expected,
+            )
+            self.assertEqual(architecture.astat, ExactWord(8, 0x40))
+
+    def test_type25_mv_false_retires_without_mr_write(self) -> None:
+        state = _setup(LinearCoreState.reset(), _type7(0x30, 0))
+        for opcode in (
+            _type7(0x31, 0),
+            _type6(DREG.MR0, 0x1357),
+            _type6(DREG.MR1, 0x2468),
+            _type6(DREG.MR2, 0xA5),
+            _type25(),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        retired = _complete(_issue(state).state, 0)
+        self.assertTrue(retired.retire_event)
+        self.assertEqual(
+            tuple(
+                segment.value
+                for segment in retired.state.architecture.primary.mr
+            ),
+            (0x1357, 0x2468, 0xA5),
+        )
+        self.assertEqual(retired.state.architecture.astat, ExactWord(8, 0))
+
     def test_type7_cntr_pushes_and_saturates_count_stack(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x35, 0))
         for value in range(1, 7):
@@ -345,6 +401,7 @@ class LinearCoreTests(unittest.TestCase):
     def test_unsupported_and_reserved_words_never_start_fetch(self) -> None:
         for opcode, reserved in (
             (0x000001, False),
+            (0x050001, False),
             (_type7(0x32, 1), True),
             (_type17(0x32, 0x00), True),
             (

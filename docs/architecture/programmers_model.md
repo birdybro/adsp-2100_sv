@@ -109,7 +109,7 @@ from that same cycle-start bank. A move may replace a computational source or
 read an old shifter result, and the noncolliding DREG plus SR/SE/SB/SS results
 become visible together at cycle end. Same-destination requests never execute
 in the bounded slice. The shared fetched owner now retires every canonical
-packet through native PC+1 overlap in its 443,794-clock comparison
+packet through native PC+1 overlap in its 443,712-clock comparison
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 The bounded Type 8 path applies the same bank and timing rule to ALU/MAC X/Y,
 optional MR feedback, and the DREG move source. Noncolliding AR/AF or MR/MF,

@@ -343,7 +343,7 @@ selected-bank state and commit together at cycle end. This defines 25,648
 executable words; 32,768 unresolved bit-15-one words, 4,096 XOP `001` words,
 and 3,024 same-destination words fail closed. Two hand fixtures, all supported
 syntax forms, exhaustive Python/RTL partitioning, and 82,597 stateful cycles
-provide bounded evidence. A separate 443,794-clock fetched comparison retires
+provide bounded evidence. A separate 443,712-clock fetched comparison retires
 every canonical packet with PC+1 native PM overlap and atomic DREG/shifter/
 status/PC/next-word commit
 [ADI-UM-1989, printed pp. 1-5, 2-6–2-7, 2-18, 5-5–5-8, 6-4–6-7, A-3,
@@ -404,7 +404,10 @@ commits a positive or negative MR limit only when MV is set, preserves status,
 and retains the instruction's one-cycle boundary when MV is clear
 [ADI-UM-1989, printed pp. 1-2, 2-18–2-19, A-4; ADI-ASM-1994, printed
 pp. 3-47 and A-4]. The hand fixture also drives the database-based
-assembler/disassembler round trip.
+assembler/disassembler round trip. The shared ordinary-fetch owner now also
+retires this exact word at its native state-7 completion; directed sequences
+cover positive and negative saturation in both banks plus the MV-false path
+within the 443,712-clock fetched comparison.
 
 A primary-backed Type 18 record closes all 256 field-defined mode-control
 words. The four independent two-bit fields are AS `[11:10]`, OL `[9:8]`,

@@ -2,7 +2,9 @@ PYTHON ?= python3
 VERILATOR ?= verilator
 LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_conditional_compute_decode.sv \
-	rtl/core/adsp2100_alu.sv rtl/core/adsp2100_mr_saturate.sv \
+	rtl/core/adsp2100_alu.sv rtl/core/adsp2100_mr_saturation_decode.sv \
+	rtl/core/adsp2100_mr_saturate.sv \
+	rtl/core/adsp2100_mr_saturation_action.sv \
 	rtl/core/adsp2100_mac.sv \
 	rtl/core/adsp2100_conditional_compute_action.sv \
 	rtl/core/adsp2100_immediate_shift_decode.sv \

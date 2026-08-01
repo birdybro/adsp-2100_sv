@@ -8,6 +8,22 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of the exact Type 25 `IF MV SAT MR;` word in the bounded
+  ordinary linear owner. A stateless action producer samples cycle-start MV
+  and selected-bank MR, then conditionally drives the existing shared full-MR
+  write port at state-7 retirement without modifying ASTAT. Two new directed
+  owner tests cover positive and negative saturation in both banks plus the
+  MV-false no-write path; the 18-test owner suite and 443,712 deterministic
+  model/RTL phase clocks pass while retaining complete Type 9/14/15/16/17/18
+  traversal. The pre-existing exact decoder, nine standalone model tests, and
+  50,112 standalone stateful comparison cycles remain passing. Strict lint is
+  clean. A fully constrained 25 ns Cyclone V fit uses 2,702 ALMs, 1,175 fitted
+  registers, one DSP, no block RAM, +1.564 ns worst multicorner setup slack,
+  +0.164 ns worst hold slack, 42.67 MHz worst slow-corner Fmax, and zero
+  unconstrained clocks, ports, or paths. Interrupt-adjacent ordering,
+  reset-first-fetch, active control flow, and unified PM/cache/event ownership
+  remain open.
+
 - Fetched Type 14 shifter-plus-DREG execution in the bounded ordinary linear
   owner. A stateless parallel-action producer samples both DREG sources,
   SR/SE/SB, and ASTAT from cycle-start selected-bank state, then drives the

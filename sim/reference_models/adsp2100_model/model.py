@@ -3,9 +3,9 @@
 The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
 Type 14 shifter-plus-move packets, Type 15 immediate shifts, Type 16
-conditional shifts, original Type 18 mode control, and legal Type 17 internal
-moves from known sources. Unsupported behavior fails closed instead of
-becoming an accidental no-op.
+conditional shifts, original Type 18 mode control, exact Type 25 MR
+saturation, and legal Type 17 internal moves from known sources. Unsupported
+behavior fails closed instead of becoming an accidental no-op.
 """
 
 from __future__ import annotations
@@ -427,6 +427,48 @@ class ADSP2100Model:
                 mstat=computed.state.status.mstat,
                 icntl=computed.state.status.icntl,
                 imask=computed.state.status.imask,
+            )
+        elif instruction.value == 0x050000:
+            from .mr_saturation_slice import (
+                MRSaturationSliceInputs,
+                MRSaturationSliceState,
+                apply_mr_saturation_slice_cycle,
+            )
+            from .status import ASTATState, StatusRegisters
+
+            saturated = apply_mr_saturation_slice_cycle(
+                MRSaturationSliceState(
+                    status=StatusRegisters(
+                        astat=(
+                            ASTATState()
+                            if self.state.astat is UNKNOWN
+                            else ASTATState.from_word(self.state.astat)
+                        ),
+                        mstat=self.state.mstat,
+                        icntl=self.state.icntl,
+                        imask=self.state.imask,
+                    ),
+                    primary=self.state.primary,
+                    alternate=self.state.alternate,
+                ),
+                MRSaturationSliceInputs(
+                    execute=True,
+                    opcode=instruction.value,
+                ),
+            )
+            next_astat = (
+                saturated.state.status.astat.to_word()
+                if saturated.state.status.astat.is_fully_known
+                else UNKNOWN
+            )
+            next_state = replace(
+                self.state,
+                primary=saturated.state.primary,
+                alternate=saturated.state.alternate,
+                astat=next_astat,
+                mstat=saturated.state.status.mstat,
+                icntl=saturated.state.status.icntl,
+                imask=saturated.state.status.imask,
             )
         elif instruction.value & 0xFF0000 == 0x100000:
             from .shift_move import (

@@ -541,8 +541,8 @@ advance beyond research until a page-level primary citation is added.
   The integrated model now retires NOP, legal Type 6/7, every Type 9
   conditional ALU/MAC word, all 25,648 canonical Type 14 shifter-plus-DREG
   packets, all supported Type 15 immediate-shift and Type 16 conditional-shift
-  words, known-source legal Type 17 internal MOVE, and all
-  Type 18 MODE CONTROL words in a bounded linear-flow context. It applies their state
+  words, known-source legal Type 17 internal MOVE, all Type 18 MODE CONTROL
+  words, and exact Type 25 MR saturation in a bounded linear-flow context. It applies their state
   actions, advances the PC, records the overlapped fetch at PC+1 rather than
   at the retiring address, and rejects the former synthetic PM-fetch wait
   extension. Nineteen foundation tests cover this boundary, including atomic
@@ -555,13 +555,13 @@ advance beyond research until a page-level primary citation is added.
   interrupts, PM-data/cache, HALT, and BR/BG remain outside this model
   increment.
   A structurally separate phase model now composes that architectural state
-  with the native PM transaction model. Sixteen directed tests and 443,794
+  with the native PM transaction model. Eighteen directed tests and 443,712
   deterministic model/RTL clocks cover enabled state-8 issue, state-7 retire,
   phase holds, bus-output relinquishment, PC wrap, invalid fetched data,
-  selected-bank Type 6/7/9/14/15/16/17/18 ordering, every legal Type 17 pair,
+  selected-bank Type 6/7/9/14/15/16/17/18/25 ordering, every legal Type 17 pair,
   every Type 9 AMF/condition combination, every canonical Type 14 packet,
-  every supported Type 15 and Type 16 word, every Type 18 encoding, CNTR stack
-  saturation, and fail-closed
+  every supported Type 15 and Type 16 word, every Type 18 encoding, Type 25
+  true/false behavior in both banks, CNTR stack saturation, and fail-closed
   unsupported/reserved words. Type 17
   ASTAT/MSTAT/SSTAT/IMASK/ICNTL source extension raises a
   dedicated retirement pulse so the OQ-016 provisional boundary is
@@ -796,7 +796,10 @@ advance beyond research until a page-level primary citation is added.
   saturation instruction now has a machine-readable semantic entry,
   assembler/disassembler fixture, exact decoder, independent state model,
   selected-bank execution RTL, formal recipes, exhaustive decode, nine model
-  tests, and 50,112 model/RTL cycles. Type 8 now connects every source-closed
+  tests, and 50,112 model/RTL cycles. A stateless Type 25 action is now also
+  attached to the shared ordinary-fetch owner; two directed fetched tests and
+  443,712 model/RTL phase clocks cover both banks/signs, MV false, and atomic
+  state-7 MR/PC/next-word retirement. Type 8 now connects every source-closed
   fractional MAC field to selected-bank operand/feedback selection and atomic
   MR/MF/MV plus parallel DREG writeback; all supported Type 8 words execute in
   both banks within the 983,386-cycle differential run. Type 9 connects all
@@ -1276,20 +1279,21 @@ advance beyond research until a page-level primary citation is added.
   all 25,648 canonical Type 14 shifter-plus-DREG packets,
   all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
   16 conditional-shift words, all 2,256 legal Type 17 internal MOVE source/
-  destination pairs, and every Type 18 MODE CONTROL word. It
+  destination pairs, every Type 18 MODE CONTROL word, and exact Type 25 MR
+  saturation. It
   admits PC+1 fetch only at enabled state 8-to-1, commits the current action
   and loaded next word at state 7-to-8, preserves pending state through phase
   holds/relinquishment, and fails closed for unsupported or reserved current
-  words. Sixteen directed tests and 443,794 phase clocks pass, with each legal
+  words. Eighteen directed tests and 443,712 phase clocks pass, with each legal
   Type 17 pair, each Type 9 AMF/condition combination, every canonical Type 14
-  packet, every supported Type 15 and Type 16 word, and each Type 18 encoding
-  exercised in the integrated
+  packet, every supported Type 15 and Type 16 word, each Type 18 encoding, and
+  Type 25 true/false behavior in both banks exercised in the integrated
   flow.
   Narrow Type 17 status/control sources raise an OQ-016 provisional retirement
   pulse. Reset's special first-fetch
   waveform, PM-data/cache ownership, transfers, loops, interrupts, and HALT
   remain separate work. A bounded NOP/Type 6/Type 7/Type 9/Type 14/Type 15/
-  Type 16/Type 17/Type 18
+  Type 16/Type 17/Type 18/Type 25
   composition now attaches normal BR/BG issue inhibition and PM output masking
   through five tests and 50,003 clocks, including 86 full handshakes; every
   other owner remains outside that result.
@@ -1594,13 +1598,14 @@ advance beyond research until a page-level primary citation is added.
   the sourced ordinary-flow overlap for NOP, legal Type 6/7, every Type 9
   conditional ALU/MAC word, every canonical Type 14 shifter-plus-DREG packet,
   every supported Type 15/16 shifter word, all legal
-  Type 17 internal MOVE words from initialized state, and all Type 18 MODE
-  CONTROL words: the current-PC
+  Type 17 internal MOVE words from initialized state, all Type 18 MODE CONTROL
+  words, and exact Type 25 MR saturation: the current-PC
   instruction executes while PC+1 is
   fetched, then action/PC/next-word state retires at state 7-to-8. The phase
-  model and RTL agree for 443,794 clocks, including every Type 9 AMF/condition
+  model and RTL agree for 443,712 clocks, including every Type 9 AMF/condition
   combination, every canonical Type 14 packet, every supported Type 15/16
-  word, every legal Type 17 pair, and every Type 18 encoding, and no
+  word, every legal Type 17 pair, every Type 18 encoding, and Type 25
+  true/false behavior in both banks, and no
   longer permit an invented ordinary-PM wait
   extension. OQ-016 narrow-source extension is exposed at retirement. A
   separate bounded composition adds 50,003 clocks and 86 complete normal
@@ -1965,7 +1970,8 @@ advance beyond research until a page-level primary citation is added.
 ## Next task selection
 
 The highest-priority unblocked implementation work is replacing the bounded
-steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/Type 18
+steady-state NOP/Type 6/Type 7/Type 9/Type 14/Type 15/Type 16/Type 17/Type 18/
+Type 25
 owner's
 deterministic
 preload with the sourced reset-release/first-fetch sequence and a documented
@@ -1977,7 +1983,7 @@ dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
-reference. Fetched Type 9/14/15/16 compute/multifunction execution is now
+reference. Fetched Type 9/14/15/16/25 compute/multifunction execution is now
 attached to the single shared state owner. Field placement and bounded Type 4/Type 5 execution/native
 attachments are closed, while whole-core integration and the remaining
 multifunction classes are not.

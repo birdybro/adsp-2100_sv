@@ -231,14 +231,15 @@ its dependent Type 3/6/7/linear paths retain their verified behavior through
 a compatibility action wrapper. Direct parallel DREG, ALU/MAC/shifter,
 DAG-I, automatic-status, and mode-control action ports are exposed and
 directly tested at that owner. Fetched Type 9 conditional ALU/MAC, canonical
-Type 14 shifter-plus-DREG, Type 15 immediate shift, and Type 16 conditional
-shift now drive those shared parallel result/move/status actions; a single
+Type 14 shifter-plus-DREG, Type 15 immediate shift, Type 16 conditional shift,
+and exact Type 25 MR saturation now drive those shared parallel result/move/
+status actions; a single
 cache shared by real Type 5/Type 13/fetch clients and
 the remaining fetched classes remain open, so this is not yet a unified core.
 A bounded steady-state owner now executes NOP, legal Type 6/7, every Type 9
 conditional compute word, every supported Type 15/16 shifter word, every legal
 canonical Type 14 shifter-plus-DREG packet, every legal Type 17 internal MOVE,
-and every Type 18 MODE CONTROL word while
+every Type 18 MODE CONTROL word, and exact Type 25 MR saturation while
 fetching PC+1 through the native PM phase controller. Type 17 narrow
 status/control-source
 extension remains an observable OQ-016 provisional behavior; reset

@@ -49,7 +49,11 @@ at cycle end without changing ASTAT [ADI-UM-1989, printed pp. 2-18–2-19 and
 A-4; ADI-ASM-1994, printed pp. 3-47 and A-4]. Nine directed/schema/
 random tests and 50,112 model-versus-RTL cycles cover both signs, both banks,
 false condition, reset unknowns, invalid words, and fail-closed setup
-collisions. Exact interrupt-adjacent ordering remains OQ-015.
+collisions. The shared ordinary-fetch owner additionally samples the same
+cycle-start state and conditionally commits MR with PC and the next word at
+state 7-to-8; two directed owner tests plus the 443,712-clock fetched
+comparison cover both signs/banks and MV false. Exact interrupt-adjacent
+ordering remains OQ-015.
 
 The separate register file accepts a full MAC result for atomic MR or
 MF-middle-word writeback in the selected bank.

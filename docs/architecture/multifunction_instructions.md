@@ -184,7 +184,7 @@ Two hand-derived fixtures, all 25,648 canonical assembler/disassembler forms,
 an exhaustive 24-bit RTL class traversal, ten model checks, and 82,597
 stateful model-versus-RTL cycles cover every supported word in both banks.
 A stateless parallel-action boundary now attaches every canonical packet to
-the shared ordinary-fetch owner. Sixteen directed tests and 443,794 model/RTL
+the shared ordinary-fetch owner. Eighteen directed tests and 443,712 model/RTL
 phase clocks cover native state-8 PC+1 issue, cycle-start reads, and atomic
 state-7 DREG/shifter/status/PC/next-word retirement; 50,003-clock BR/BG,
 shared-PM/BR-BG, and HALT compositions separately preserve the packet across

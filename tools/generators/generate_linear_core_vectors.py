@@ -163,6 +163,28 @@ def _directed_opcodes() -> tuple[int, ...]:
         for amf in range(32)
         for condition in range(16)
     )
+    # Exercise exact Type 25 through both banks, both saturation signs, and a
+    # false MV predicate. The standalone slice remains the exhaustive opcode
+    # and unknown-state reference; these sequences prove fetched retirement.
+    opcodes.extend(
+        (
+            _type7(writable["MSTAT"], 0),
+            _type7(writable["ASTAT"], 0x40),
+            _type6(int(DREG.MR0), 0x1357),
+            _type6(int(DREG.MR1), 0x2468),
+            _type6(int(DREG.MR2), 0x0000),
+            0x050000,
+            _type7(writable["MSTAT"], 1),
+            _type7(writable["ASTAT"], 0x40),
+            _type6(int(DREG.MR0), 0x89AB),
+            _type6(int(DREG.MR1), 0xCDEF),
+            _type6(int(DREG.MR2), 0x00FF),
+            0x050000,
+            _type7(writable["ASTAT"], 0x00),
+            _type6(int(DREG.MR2), 0x005A),
+            0x050000,
+        )
+    )
     # Type 14 executes its shifter and move in parallel. Traverse every
     # canonical, source-backed, noncolliding packet through fetched retirement;
     # the current known register bank makes both old-value results observable.
@@ -197,7 +219,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(21)
+    choice = rng.randrange(22)
     if choice == 0:
         return 0
     if choice < 5:
@@ -226,18 +248,20 @@ def _legal_opcode(rng: random.Random) -> int:
             xop=rng.choice(LEGAL_SHIFTER_XOPS),
             condition=rng.randrange(16),
         )
-    sf = rng.randrange(16)
-    legal_destinations = tuple(
-        destination
-        for destination in range(16)
-        if _type14_destination_legal(sf, destination)
-    )
-    return _type14(
-        sf=sf,
-        xop=rng.choice(LEGAL_SHIFTER_XOPS),
-        destination=rng.choice(legal_destinations),
-        source=rng.randrange(16),
-    )
+    if choice < 21:
+        sf = rng.randrange(16)
+        legal_destinations = tuple(
+            destination
+            for destination in range(16)
+            if _type14_destination_legal(sf, destination)
+        )
+        return _type14(
+            sf=sf,
+            xop=rng.choice(LEGAL_SHIFTER_XOPS),
+            destination=rng.choice(legal_destinations),
+            source=rng.randrange(16),
+        )
+    return 0x050000
 
 
 def _exact(value: object) -> tuple[bool, int]:
