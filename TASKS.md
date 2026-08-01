@@ -535,9 +535,17 @@ advance beyond research until a page-level primary citation is added.
   the overlapped fetch at PC+1 rather than at the retiring address, and rejects
   the former synthetic PM-fetch wait extension. Sixteen foundation tests cover
   this boundary, including selected-bank loads, narrow registers, DAG/status,
-  count-stack saturation/SSTAT, and reserved Type 7 selectors. Native RTL
-  phase attachment, active loops, control transfers, interrupts, PM-data/cache,
-  HALT, and BR/BG remain outside this model increment.
+  count-stack saturation/SSTAT, and reserved Type 7 selectors. Reset-first-
+  fetch and multi-owner RTL attachment, active loops, control transfers,
+  interrupts, PM-data/cache, HALT, and BR/BG remain outside this model
+  increment.
+  A structurally separate phase model now composes that architectural state
+  with the native PM transaction model. Eight directed tests and 53,588
+  deterministic model/RTL clocks cover enabled state-8 issue, state-7 retire,
+  phase holds, bus-output relinquishment, PC wrap, invalid fetched data,
+  selected-bank Type 6/7 ordering, CNTR stack saturation, and fail-closed
+  unsupported/reserved words. Its instruction preload is explicitly a
+  deterministic test hook rather than an architectural loading mechanism.
   A separate Type 15 model samples a supported shifter X operand and optional
   old SR from the selected bank, applies the signed immediate exponent through
   an independently structured compute model, commits SR at cycle end, and
@@ -1089,7 +1097,9 @@ advance beyond research until a page-level primary citation is added.
   `formal/shifter_pm_native.sby`, `tests/test_compute_pm_cache.py`,
   `tests/test_compute_pm_native.py`,
   `sim/unit/tb_adsp2100_compute_pm_native_slice.sv`,
-  `formal/compute_pm_cache.sby`, `formal/compute_pm_native.sby`
+  `formal/compute_pm_cache.sby`, `formal/compute_pm_native.sby`,
+  `tests/test_linear_core.py`,
+  `sim/unit/tb_adsp2100_linear_core_slice.sv`, `formal/linear_core.sby`
 - **Implementation notes:** keep PM physically/logically distinct from DM.
   The Type 13 slice now exposes a bounded logical PM data/fetch boundary with
   separate 14-bit address, 24-bit read/write data, direction, data-cycle, and
@@ -1120,7 +1130,14 @@ advance beyond research until a page-level primary citation is added.
   DAG2 capture, state-7 atomic completion, hit/miss recovery, and
   relinquishment; its fully constrained 25 ns native fit uses 1,894 ALMs,
   1,746 registers, one DSP, and no RAM. Whole-core fetch/control arbitration
-  remains open.
+  remains open. A bounded ordinary linear-fetch owner now shares the native PM
+  controller with NOP and legal Type 6/7 state. It admits PC+1 fetch only at
+  enabled state 8-to-1, commits the current instruction and loaded next word
+  at state 7-to-8, preserves pending state through phase holds/relinquishment,
+  and fails closed for unsupported or reserved current words. Eight directed
+  tests and 53,588 phase clocks pass. Reset's special first-fetch waveform,
+  PM-data/cache ownership, transfers, loops, interrupts, HALT, and BR/BG
+  arbitration remain separate work.
 - **Unresolved questions:** whole-core PM ownership, BR/BG recognition timing,
   and electrical wrapper constraints.
 - **Confidence:** CORROBORATED
@@ -1338,10 +1355,12 @@ advance beyond research until a page-level primary citation is added.
   hits, discontinuity invalidation, oldest replacement, hit-word selection,
   and recovery fills; this does not yet close branch/loop/interrupt/HALT/BR
   arbitration under OQ-008.
-  The independent top-level model now enforces the sourced ordinary-flow
-  overlap for NOP and Type 6/7: the current-PC instruction retires while PC+1
-  is fetched and becomes the next PC. It no longer permits an invented
-  ordinary-PM wait extension. The matching native RTL owner is still pending.
+  The independent top-level model and a bounded native RTL owner now enforce
+  the sourced ordinary-flow overlap for NOP and legal Type 6/7: the current-PC
+  instruction executes while PC+1 is fetched, then action/PC/next-word state
+  retires at state 7-to-8. The phase model and RTL agree for 53,588 clocks and
+  no longer permit an invented ordinary-PM wait extension. Reset first-fetch,
+  all other instruction owners, control events, and arbitration are pending.
 - **Unresolved questions:** fetch/decode/execute visibility and PM-data conflict
   penalties.
 - **Confidence:** UNKNOWN
@@ -1692,12 +1711,13 @@ advance beyond research until a page-level primary citation is added.
 
 ## Next task selection
 
-The highest-priority unblocked implementation work is the first integrated
-RTL instruction owner joining the now-integrated-model NOP/Type 6/Type 7
-linear flow to ordinary PM fetch, PC progression, and the native eight-state
-phase boundary. Type 7
-immediate non-data-register execution and Type 3 state/native-DM execution are
-now bounded and verified. The Type 1 dual-memory action graph is complete,
+The highest-priority unblocked implementation work is extending the bounded
+steady-state NOP/Type 6/Type 7 owner with additional source-closed,
+non-memory linear instruction classes, followed by replacing its deterministic
+preload with the sourced reset-release/first-fetch sequence and a documented
+next-PC/PM-owner arbiter. Type 7 immediate non-data-register execution and
+Type 3 state/native-DM execution are bounded and verified. The Type 1
+dual-memory action graph is complete,
 but its state/native attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode

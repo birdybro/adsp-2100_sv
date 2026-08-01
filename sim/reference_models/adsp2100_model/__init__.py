@@ -447,6 +447,11 @@ from .model import (
     mask_to_width,
     sign_extend,
 )
+from .linear_core import (
+    LinearCoreCycleResult,
+    LinearCoreState,
+    apply_linear_core_cycle,
+)
 
 __all__ = [
     "ADSP2100Model",
@@ -551,6 +556,8 @@ __all__ = [
     "InternalMoveSetup",
     "InternalMoveSliceState",
     "LogicalPhase",
+    "LinearCoreCycleResult",
+    "LinearCoreState",
     "ImmediateShiftAction",
     "ImmediateShiftCycleResult",
     "ImmediateShiftState",
@@ -746,6 +753,7 @@ __all__ = [
     "compute_shifter",
     "cache_region_contains",
     "mask_to_width",
+    "apply_linear_core_cycle",
     "original_base_mask",
     "reverse_address",
     "is_immediate_shift_class",

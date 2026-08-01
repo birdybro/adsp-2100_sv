@@ -8,6 +8,16 @@ semantic versioning after its first release.
 
 ### Added
 
+- A bounded steady-state linear instruction owner in structurally independent
+  Python and portable SystemVerilog. It executes NOP and legal Type 6/7 at the
+  current PC while the native PM controller fetches PC+1, admits the fetch at
+  state 8-to-1, atomically retires state/PC/next word at state 7-to-8, and
+  fails closed for unsupported or reserved words. Eight directed tests,
+  53,588 deterministic differential clocks, a formal recipe, a machine-
+  readable boundary contract, Yosys flow, and a fully constrained Cyclone V
+  project bound the claim; reset first-fetch and all multi-owner/event/cache
+  arbitration remain explicitly excluded.
+
 - A primary-backed original Type 7 immediate-to-non-data-register database,
   independent decoder and state model, exact assembler/disassembler support,
   portable RTL decoder/state composition, hand-derived fixtures, exhaustive

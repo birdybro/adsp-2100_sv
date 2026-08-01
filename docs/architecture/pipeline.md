@@ -1,7 +1,7 @@
 # Pipeline and cache
 
-**Status: one-stage pipeline and bounded cache-integrated PM-data hit/miss
-timing implemented; unified hazards pending**
+**Status: one-stage pipeline, bounded ordinary linear fetch, and bounded
+cache-integrated PM-data hit/miss timing implemented; unified hazards pending**
 
 An instruction fetched in one processor cycle executes in the next while the
 following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
@@ -11,12 +11,20 @@ inputs are read at cycle start and writes/status latch at cycle end
 The PC names the instruction currently executing. During ordinary linear
 flow, the PC incrementer drives the following address onto PMA and that value
 is loaded into the PC at cycle end [ADI-UM-1989, printed pp. 4-3, 4-10]. The
-integrated Python model now enforces this distinction for NOP and Type 6/7:
-retiring address `N` records an overlapped instruction fetch at `N+1`, then
-commits PC=`N+1`. It rejects a requested ordinary-PM fetch wait extension
-because the original interface exposes no PM acknowledge input. Active-loop,
-branch, interrupt-abort, PM-data/cache, HALT, and BR/BG ownership remain
-outside that bounded linear-flow result.
+integrated Python model and bounded steady-state RTL owner now enforce this
+distinction for NOP and legal Type 6/7: address `N` executes while an ordinary
+fetch for `N+1` occupies the native PM phases, then the state-7-to-8 edge
+commits the current action, PC=`N+1`, and the fetched word. The request is
+admitted at the enabled state-8-to-1 edge, and neither model invents an
+ordinary-PM wait extension because the original interface exposes no PM
+acknowledge input. Eight directed tests and 53,588 phase clocks compare the
+independent model with RTL, including phase holds, bus-output relinquishment,
+PC wrap, selected-bank state, CNTR-stack effects, invalid fetched data, and
+fail-closed unsupported words. The deterministic instruction preload is a
+verification hook, not an architectural interface. Reset release/first fetch,
+active-loop and branch selection, interrupt abort, PM-data/cache ownership,
+HALT, and BR/BG arbitration remain outside this bounded result
+[ADI-UM-1989, printed pp. 1-5, 4-3, 4-10, and 5-5–5-8].
 
 PM data use conflicts with external instruction fetch. The 16×24 cache can
 supply a valid next instruction; otherwise an additional external fetch cycle

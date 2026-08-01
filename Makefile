@@ -3,7 +3,7 @@ VERILATOR ?= verilator
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
@@ -124,6 +124,22 @@ lint:
 			rtl/core/adsp2100_status_stack.sv \
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_load_non_dreg_immediate_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_linear_core_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_linear_core_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_immediate_shift_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -640,6 +656,36 @@ pm-native-tests:
 		build/obj_shifter_pm_native_slice/Vtb_adsp2100_shifter_pm_native_slice; \
 	else \
 		echo "SKIP Type 13/native-PM RTL test: Verilator is not installed"; \
+	fi
+
+linear-core-tests:
+	$(PYTHON) -m unittest -v tests.test_linear_core
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_linear_core_vectors.py \
+			--output build/linear_core_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_linear_core_slice \
+			--top-module tb_adsp2100_linear_core_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			sim/unit/tb_adsp2100_linear_core_slice.sv; \
+		build/obj_linear_core_slice/Vtb_adsp2100_linear_core_slice; \
+	else \
+		echo "SKIP bounded linear-core RTL test: Verilator is not installed"; \
 	fi
 
 decode-tests:
@@ -1460,7 +1506,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests compute-tests
+bus-tests: cache-tests pm-bus-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -1502,6 +1548,24 @@ formal:
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			formal/harnesses/adsp2100_program_bus_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			-Wno-PINCONNECTEMPTY \
+			--top-module adsp2100_linear_core_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			formal/harnesses/adsp2100_linear_core_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_data_bus_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -2004,6 +2068,7 @@ formal:
 			formal/shifter_pm_cache.sby; \
 		sby -f -d build/formal_instruction_cache formal/instruction_cache.sby; \
 		sby -f -d build/formal_pm_bus formal/pm_bus.sby; \
+		sby -f -d build/formal_linear_core formal/linear_core.sby; \
 		sby -f -d build/formal_dm_bus formal/dm_bus.sby; \
 		sby -f -d build/formal_dm_write_immediate_native \
 			formal/dm_write_immediate_native.sby; \
@@ -2086,7 +2151,10 @@ formal:
 
 synth-yosys:
 	@if command -v yosys >/dev/null 2>&1; then \
-		echo "SKIP Yosys synthesis: no architectural RTL top exists yet"; \
+		set -e; \
+		yosys -q -l build/yosys_linear_core.log \
+			synthesis/yosys/linear_core.ys; \
+		echo "PASS bounded linear-core Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
 	fi
@@ -2099,6 +2167,8 @@ synth-quartus:
 			synthesis/quartus/load_dreg_immediate_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/load_non_dreg_immediate_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/linear_core_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/immediate_shift_smoke; \
 		quartus_sh --flow compile \
@@ -2209,6 +2279,9 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_native_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name linear_core_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name yosys_linear_core.log -delete
+	@find build -maxdepth 1 -type f -name yosys_linear_core.json -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_vectors.txt -delete
 	@find scripts tools sim tests -type d -name __pycache__ -prune -exec rm -r {} +
 	@find . -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
@@ -2365,6 +2438,9 @@ clean:
 	@if [ -d build/obj_shifter_pm_native_debug ]; then \
 		find build/obj_shifter_pm_native_debug -depth -delete; \
 	fi
+	@if [ -d build/obj_linear_core_slice ]; then \
+		find build/obj_linear_core_slice -depth -delete; \
+	fi
 	@if [ -d build/obj_compute_move_decode ]; then \
 		find build/obj_compute_move_decode -depth -delete; \
 	fi
@@ -2492,6 +2568,9 @@ clean:
 	fi
 	@if [ -d build/quartus_load_non_dreg_immediate ]; then \
 		find build/quartus_load_non_dreg_immediate -depth -delete; \
+	fi
+	@if [ -d build/quartus_linear_core ]; then \
+		find build/quartus_linear_core -depth -delete; \
 	fi
 	@if [ -d build/quartus_immediate_shift ]; then \
 		find build/quartus_immediate_shift -depth -delete; \
@@ -2625,6 +2704,7 @@ clean:
 		build/formal_shifter_pm_cache \
 		build/formal_instruction_cache \
 		build/formal_pm_bus \
+		build/formal_linear_core \
 		build/formal_dm_bus \
 		build/formal_dm_write_immediate_native \
 		build/formal_shifter_dm_native \
