@@ -12,6 +12,7 @@ LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_dag.sv \
 	rtl/core/adsp2100_modify_address_action.sv \
 	rtl/core/adsp2100_stack_control_decode.sv \
+	rtl/core/adsp2100_direct_jump_decode.sv \
 	rtl/core/adsp2100_alu.sv rtl/core/adsp2100_mr_saturation_decode.sv \
 	rtl/core/adsp2100_mr_saturate.sv \
 	rtl/core/adsp2100_mr_saturation_action.sv \

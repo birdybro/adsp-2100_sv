@@ -235,7 +235,8 @@ conditional ALU/MAC, canonical Type 14 shifter-plus-DREG, Type 15 immediate
 shift, Type 16 conditional shift,
 all eight Type 23 DIVQ forms, all sixteen source-closed Type 24 DIVS forms,
 exact Type 25 MR saturation, all 32 Type 21 address-modify words, and all 32
-Type 26 stack-control words now drive
+Type 26 stack-control words plus all 507,904 source-closed Type 10 direct
+transfers now drive
 those
 shared parallel result/move/status/DAG actions; a single
 cache shared by real Type 5/Type 13/fetch clients and
@@ -247,13 +248,14 @@ canonical Type 14 shifter-plus-DREG packet, every legal Type 17 internal MOVE,
 every Type 18 MODE CONTROL word, all eight Type 23 DIVQ forms, all sixteen
 source-closed Type 24 DIVS forms, and exact Type
 25 MR saturation plus all 32 Type 21 address-modify and Type 26 stack-control
-words while
-fetching PC+1 through the native PM phase controller. Type 17 narrow
+words plus all source-closed Type 10 direct transfers while fetching the
+selected PC+1 or direct target through the native PM phase controller. Type 17 narrow
 status/control-source
 extension remains an observable OQ-016 provisional behavior; reset
-first-fetch, control transfers, automatic loops, interrupts, and PM-data/cache
-remain outside that owner. Valid status/count Type 26 pops are fetched; valid
-PC/loop pops remain standalone because this owner cannot populate those stacks.
+first-fetch, non-Type-10 transfers, automatic loops, interrupts, and PM-data/cache
+remain outside that owner. Valid status/count Type 26 pops are fetched; Type
+10 CALL supplies one verified valid PC-pop context, while valid loop pops and
+arbitrary combined valid pops remain standalone evidence.
 Normal BR/BG and ordinary-fetch HALT are attached separately only
 to this bounded linear
 owner: the current fetch completes, new issue is inhibited, PM output enables
@@ -482,7 +484,9 @@ owner; interrupt/RTI and automatic-flow arbitration remain absent. A bounded
 Type 10 slice is the first semantic decoder connected to a
 14-bit PC register, CALL PC-stack pushes, and JUMP NOT CE counter-stack
 transitions. It fails closed for all 16,384 CALL NOT CE encodings under
-OQ-012 and excludes active-loop, fetch/cache, interrupt, bus, and phase
+OQ-012. Its action is now attached to the bounded native fetched owner with
+selected-target state-8 issue and state-7 retirement, but excludes active-loop,
+cache invalidation, interrupt, reset-first-fetch, and other transfer
 integration. A separate bounded Type 11 slice executes every DO UNTIL setup,
 including PC+1/descriptor pushes and source-backed nesting legality, while
 holding DO-on-active-terminal under OQ-018. A bounded Type 19 slice connects

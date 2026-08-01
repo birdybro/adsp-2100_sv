@@ -113,7 +113,8 @@ ordinary-fetch, Type 5, and Type 13 architectural clients plus sourced event
 priority remains open.
 
 The ordinary-fetch architectural owner is also attached in a third separate
-composition. Its current instruction retains the PC+1 request after a
+composition. Its current instruction retains the selected PC+1 or Type 10
+target request after a
 fail-closed collision or BR/BG issue inhibition, and only the routed fetch
 completion advances PC and installs the returned opcode. Six directed tests
 and 50,003 model/RTL clocks cover 4,247 accepted fetches, 781 retries, 4,246

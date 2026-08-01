@@ -242,9 +242,14 @@ source-closed actions and 16,384 fail-closed words. Two hand-derived fixtures,
 all supported numeric-target assembler/disassembler forms, exhaustive 24-bit
 RTL decode, twelve directed model tests, and 554,412 model-versus-RTL cycles
 cover the bounded execution state [ADI-UM-1989, printed pp. 4-3–4-5,
-4-12–4-13, 6-13–6-14, A-2, and A-6]. Active-loop terminal arbitration,
-fetch overlap, interrupts, wait states, and external bus phases remain outside
-this slice.
+4-12–4-13, 6-13–6-14, A-2, and A-6]. The native ordinary-fetch owner now
+also executes all 507,904 source-closed words. It issues the taken target or
+false-path PC+1 at state 8, commits the same address and any CALL/CNTR action
+at state 7, and fails closed before issue when NOT CE lacks valid CNTR context.
+Twenty-eight owner tests and 442,330 model/RTL phase clocks pass, including a
+fetched CALL return consumed by Type 26 POP PC. Active-loop terminal
+arbitration, cache invalidation/ownership, interrupts, reset-first-fetch, and
+non-Type-10 control transfers remain outside this attachment.
 
 Type 19 encodes fixed prefix `0000101100000000`, I `[7:6]`, fixed-zero bit
 `[5]`, S `[4]`, and COND `[3:0]`. I selects I4 through I7, S selects JUMP or
@@ -458,11 +463,11 @@ empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and whole-core logical bus ownership remain
 open. The bounded ordinary-fetch owner now also accepts all 32 words. Fetched
-status push/pop and count pop use valid live stack context; PC and loop pops
-exercise only fail-closed empty preservation because this owner does not yet
-fetch Type 10/11/19/20 control flow that would populate those stacks. All
+status push/pop and count pop use valid live stack context. A fetched Type 10
+CALL now populates the PC stack, and a following Type 26 POP PC verifies that
+valid path; loop pops still exercise only fail-closed empty preservation. All
 payloads retire atomically with PC and the fetched next word at native state 7
-across the 442,383-clock comparison. NOP,
+across the superseding 442,330-clock comparison. NOP,
 Type 2 bounded logical execution, Type 6, Type 7, Type 9, Type 18, Type 21,
 and Type 25 are the class-complete
 source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic

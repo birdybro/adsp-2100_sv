@@ -3,8 +3,9 @@
 // Bounded steady-state ordinary-fetch architectural client.
 //
 // The client retains the current instruction and all supported architectural
-// state.  It presents PC+1 until an external PM owner accepts the request,
-// then retires only when that owner routes the corresponding completion back.
+// state. It presents the selected next PC until an external PM owner accepts
+// the request, then retires only when that owner routes the corresponding
+// completion back.
 // Native PM pin phases and multi-owner arbitration are deliberately external.
 module adsp2100_linear_fetch_client (
     input  logic        clk_i,
@@ -100,6 +101,16 @@ module adsp2100_linear_fetch_client (
     logic type26_loop_pop;
     logic type26_pc_pop;
     logic type26_has_effect_unused;
+    logic type10_class_valid;
+    logic type10_action_valid;
+    logic type10_unsupported_call_ce;
+    logic type10_call;
+    logic [13:0] type10_address;
+    logic [3:0] type10_condition;
+    logic type10_condition_true;
+    logic type10_condition_state_valid;
+    logic type10_taken;
+    logic type10_invalid_condition_state;
     logic type17_class_valid;
     logic type17_action_valid;
     logic type17_invalid_subencoding;
@@ -257,6 +268,9 @@ module adsp2100_linear_fetch_client (
     logic state_dag_m_read_valid;
     logic [13:0] state_dag_l_read_data;
     logic state_dag_l_read_valid;
+    logic [13:0] state_pc_stack_top_unused;
+    logic state_pc_stack_top_valid_unused;
+    logic state_internal_conflict;
     logic unused_observation;
 
     assign issue_boundary_o = (
@@ -283,7 +297,7 @@ module adsp2100_linear_fetch_client (
         || type18_valid || type9_action_valid || type15_action_valid
         || type16_action_valid || type14_action_valid || type23_action_valid
         || type21_action_valid || type24_action_valid || type25_action_valid
-        || type26_action_valid
+        || type26_action_valid || type10_action_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
@@ -301,11 +315,26 @@ module adsp2100_linear_fetch_client (
         issue_boundary_o && instruction_valid_q
         && !supported_instruction && !reserved_subencoding_o
     );
-    assign fetch_address_o = pc_q + 14'h0001;
+    // The one-stage pipeline fetches the selected next address in the current
+    // instruction cycle. This bounded preload owner assumes required ASTAT
+    // bits are initialized; CNTR retains an explicit validity state.
+    assign type10_condition_state_valid = (
+        (type10_condition != 4'he) || cntr_valid_o
+    );
+    assign type10_taken = (
+        type10_action_valid && type10_condition_state_valid
+        && type10_condition_true
+    );
+    assign type10_invalid_condition_state = (
+        issue_boundary_o && type10_action_valid
+        && !type10_condition_state_valid
+    );
+    assign fetch_address_o = type10_taken
+        ? type10_address : (pc_q + 14'h0001);
     assign fetch_request_presented_o = (
         issue_boundary_o && instruction_valid_q
         && supported_instruction && !pending_q
-        && !instruction_setup_i
+        && !instruction_setup_i && !type10_invalid_condition_state
     );
     assign instruction_issue_o = pm_request_accepted_i;
     assign retire_event_o = pending_q && pm_completion_event_i;
@@ -355,6 +384,9 @@ module adsp2100_linear_fetch_client (
     assign transaction_pending_o = pending_q;
     assign pc_o = pc_q;
     assign opcode_o = opcode_q;
+    assign internal_conflict_o = (
+        state_internal_conflict || type10_invalid_condition_state
+    );
     assign provisional_source_extension_o = (
         retire_event_o && type17_action_valid
         && (type17_source_code[5:4] == 2'b11)
@@ -438,6 +470,28 @@ module adsp2100_linear_fetch_client (
         .loop_pop_o(type26_loop_pop),
         .pc_pop_o(type26_pc_pop),
         .has_effect_o(type26_has_effect_unused)
+    );
+
+    adsp2100_direct_jump_decode type10_decode (
+        .opcode_i(opcode_q),
+        .class_valid_o(type10_class_valid),
+        .action_valid_o(type10_action_valid),
+        .unsupported_call_ce_o(type10_unsupported_call_ce),
+        .call_o(type10_call),
+        .address_o(type10_address),
+        .condition_o(type10_condition)
+    );
+
+    adsp2100_condition_logic type10_condition_logic (
+        .condition_i(type10_condition),
+        .az_i(astat_o[0]),
+        .an_i(astat_o[1]),
+        .av_i(astat_o[2]),
+        .ac_i(astat_o[3]),
+        .as_i(astat_o[4]),
+        .mv_i(astat_o[6]),
+        .not_counter_expired_i(state_not_counter_expired),
+        .condition_true_o(type10_condition_true)
     );
 
     adsp2100_compute_move_action type8_action (
@@ -792,21 +846,31 @@ module adsp2100_linear_fetch_client (
             retire_event_o && type26_action_valid
                 ? type26_status_operation : 2'b00
         ),
+        .stack_counter_ce_test_i(
+            retire_event_o && type10_action_valid && !type10_call
+            && (type10_condition == 4'he)
+        ),
         .stack_count_pop_i(
             retire_event_o && type26_action_valid && type26_count_pop
         ),
         .stack_loop_pop_i(
             retire_event_o && type26_action_valid && type26_loop_pop
         ),
+        .stack_pc_push_i(
+            retire_event_o && type10_taken && type10_call
+        ),
+        .stack_pc_push_data_i(pc_q + 14'h0001),
         .stack_pc_pop_i(
             retire_event_o && type26_action_valid && type26_pc_pop
         ),
         .invalid_move_write_o(state_invalid_setup),
-        .internal_conflict_o(internal_conflict_o),
+        .internal_conflict_o(state_internal_conflict),
         .count_stack_push_o(state_count_push_unused),
         .count_stack_push_data_o(state_count_push_data_unused),
         .count_stack_depth_o(count_stack_depth_o),
         .count_stack_overflow_o(count_stack_overflow_o),
+        .pc_stack_top_o(state_pc_stack_top_unused),
+        .pc_stack_top_valid_o(state_pc_stack_top_valid_unused),
         .astat_o(astat_o),
         .mstat_o(mstat_o),
         .icntl_o(icntl_o),
@@ -866,6 +930,8 @@ module adsp2100_linear_fetch_client (
         type21_dag2_unused, type21_operands_valid_unused,
         type21_configuration_valid_unused,
         type26_has_effect_unused,
+        type10_class_valid, type10_unsupported_call_ce,
+        state_pc_stack_top_unused, state_pc_stack_top_valid_unused,
         type9_class_valid, type9_nop_action, type9_condition_true,
         type9_is_mac, type9_is_alu, type9_x_source_data_unused,
         type9_y_source_data_unused, type16_condition_true,
@@ -904,6 +970,20 @@ module adsp2100_linear_fetch_client (
         if (reserved_subencoding_o || unsupported_instruction_o) begin
             assert (!fetch_request_presented_o);
             assert (!instruction_issue_o);
+        end
+        if (type10_invalid_condition_state) begin
+            assert (!fetch_request_presented_o);
+            assert (!instruction_issue_o);
+        end
+        if (fetch_request_presented_o && type10_action_valid) begin
+            if (type10_taken) begin
+                assert (fetch_address_o == type10_address);
+            end else begin
+                assert (fetch_address_o == pc_q + 14'h0001);
+            end
+        end
+        if (type10_action_valid && type10_call) begin
+            assert (type10_condition != 4'he);
         end
     end
 `endif

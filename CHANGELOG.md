@@ -8,6 +8,29 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of all 507,904 source-closed original Type 10 direct
+  JUMP/CALL words in the bounded native ordinary-fetch owner. The current
+  instruction now selects either wrapped PC+1 or the taken 14-bit target for
+  the overlapped PM fetch, then commits that same selected address to PC at
+  state-7 retirement. Taken CALL pushes cycle-start PC+1 into the shared
+  16-entry PC stack; a following fetched Type 26 POP PC proves the stored
+  return address is consumable. JUMP NOT CE samples live CNTR before applying
+  the documented retirement-time decrement or outer-count restore. Unknown
+  CE context and all 16,384 OQ-012 CALL NOT CE words fail closed without a PM
+  request. Twenty-eight directed owner tests and 442,330 deterministic
+  model/RTL phase clocks pass, as do the unchanged BR/BG, retained-fetch/
+  shared-PM/BR-BG, and HALT compatibility flows at 50,003 clocks each. Strict
+  lint and all 73 formal assertion recipes parse cleanly; SymbiYosys and Yosys
+  are unavailable. Four fully constrained Cyclone V fits have zero
+  unconstrained paths: the 25 ns private owner and BR/BG composition use
+  3,518/3,528 ALMs and close with +0.062/+0.159 ns worst multicorner setup;
+  the 25 ns HALT composition uses 3,511 ALMs and narrowly misses setup by
+  0.045 ns at 39.93 MHz; and the stricter 20 ns retained-fetch/shared-PM/BR-BG
+  composition uses 3,628 ALMs and misses by 4.349 ns at 41.07 MHz. All use
+  two DSPs and no block RAM. Active-loop terminal arbitration, cache
+  invalidation/ownership, interrupt abort/vectoring, reset-first-fetch, and
+  Types 19/20 fetched integration remain open.
+
 - Fetched execution of all 32 original Type 26 manual stack-control words in
   the bounded ordinary linear owner. The shared architectural-state owner now
   accepts retirement-gated status-stack push/pop, count-stack-to-CNTR pop,

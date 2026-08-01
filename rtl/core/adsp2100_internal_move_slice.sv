@@ -80,6 +80,8 @@ module adsp2100_internal_move_slice (
     logic        dag_m_read_valid_unused;
     logic [13:0] dag_l_read_unused;
     logic        dag_l_read_valid_unused;
+    logic [13:0] pc_stack_top_unused;
+    logic        pc_stack_top_valid_unused;
     logic       unused_observation;
 
     function automatic logic selector_present (
@@ -205,8 +207,11 @@ module adsp2100_internal_move_slice (
         .shifter_status_write_enable_i(1'b0),
         .shifter_ss_i(1'b0),
         .stack_status_operation_i(2'b00),
+        .stack_counter_ce_test_i(1'b0),
         .stack_count_pop_i(1'b0),
         .stack_loop_pop_i(1'b0),
+        .stack_pc_push_i(1'b0),
+        .stack_pc_push_data_i(14'h0000),
         .stack_pc_pop_i(1'b0),
         .invalid_move_write_o(state_invalid_move_write),
         .internal_conflict_o(internal_conflict_o),
@@ -214,6 +219,8 @@ module adsp2100_internal_move_slice (
         .count_stack_push_data_o(count_stack_push_data_o),
         .count_stack_depth_o(count_stack_depth_o),
         .count_stack_overflow_o(count_stack_overflow_o),
+        .pc_stack_top_o(pc_stack_top_unused),
+        .pc_stack_top_valid_o(pc_stack_top_valid_unused),
         .astat_o(astat_o),
         .mstat_o(mstat_o),
         .icntl_o(icntl_o),
@@ -245,7 +252,8 @@ module adsp2100_internal_move_slice (
         mr_unused, se_unused, sb_unused, sr_unused,
         dag_i_read_unused, dag_i_read_valid_unused,
         dag_m_read_unused, dag_m_read_valid_unused,
-        dag_l_read_unused, dag_l_read_valid_unused
+        dag_l_read_unused, dag_l_read_valid_unused,
+        pc_stack_top_unused, pc_stack_top_valid_unused
     };
 
 `ifndef SYNTHESIS

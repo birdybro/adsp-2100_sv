@@ -11,7 +11,7 @@ Type 5 logical/cache/native-PM execution,
 exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
-bounded steady-state NOP/Type 6/Type 7/Type 8/Type 9/Type 14/Type 15/Type 16/
+bounded steady-state NOP/Type 6/Type 7/Type 8/Type 9/Type 10/Type 14/Type 15/Type 16/
 Type 17/Type 18/Type 21/Type 23/Type 24/Type 25/Type 26 ordinary-fetch ownership with Type 8
 ALU/MAC-plus-DREG and Type 9 ALU/MAC,
 Type 14 parallel move/shifter, Type 15/16 shifter/status, Type 26 manual stack,
@@ -36,14 +36,33 @@ cycle-, or Hard Drivin'-complete
 
 ## Completed increments
 
-- all 32 original Type 26 manual stack-control words attached to native
+- all 507,904 source-closed original Type 10 direct JUMP/CALL words attached
+  to the native ordinary-fetch owner and shared PC/CNTR/stack state. The owner
+  issues a taken target or false-path PC+1 at state 8 and commits that selected
+  PC plus CALL or JUMP NOT CE effects only at routed state-7 completion.
+  Invalid CE context and all 16,384 CALL NOT CE words fail closed before issue.
+  A fetched CALL followed by Type 26 POP PC proves the return address survives
+  in shared PC-stack state. Twenty-eight tests and 442,330 model/RTL phase
+  clocks pass; the BR/BG, retained-fetch/shared-PM/BR-BG, and HALT compositions
+  remain green across 50,003 clocks each. Strict lint and all 73 formal recipes
+  pass assertion syntax; SymbiYosys/Yosys are unavailable. Fully constrained
+  Cyclone V fits have zero unconstrained paths. At 25 ns the 3,518-ALM private
+  and 3,528-ALM BR/BG owners close with +0.062/+0.159 ns worst setup; the
+  3,511-ALM HALT owner misses by 0.045 ns at 39.93 MHz. At 20 ns the 3,628-ALM
+  retained/shared-PM owner misses by 4.349 ns at 41.07 MHz. All use two DSPs
+  and no RAM. Active loops, cache ownership/invalidation, interrupts,
+  reset-first-fetch, Types 19/20 attachment, and timing optimization remain;
+
+- at the Type 26 checkpoint, all 32 original manual stack-control words were
+  attached to native
   ordinary-fetch retirement and the shared architectural-state owner. Valid
   fetched status push/pop restores cycle-start ASTAT/MSTAT/IMASK, count pop
   restores the prior CNTR, and empty PC/loop pops preserve state under OQ-013.
   The 25-test owner suite traverses every payload across 442,383 deterministic
-  model/RTL phase clocks; valid PC/loop pops remain established only by the
-  standalone 50,015-cycle slice until fetched control flow can populate those
-  stacks. BR/BG, retained-fetch/shared-PM/BR-BG, and HALT compatibility flows
+  model/RTL phase clocks; valid PC/loop pops were then established only by the
+  standalone 50,015-cycle slice. The superseding Type 10 increment above now
+  adds one fetched valid PC-pop context; loop context remains standalone-only.
+  BR/BG, retained-fetch/shared-PM/BR-BG, and HALT compatibility flows
   each pass 50,003 clocks. Strict lint and 73 formal recipes pass syntax
   checking; SymbiYosys/Yosys are unavailable. Fully constrained Cyclone V
   fits have zero unconstrained paths. At 25 ns the 3,483-ALM BR/BG and
@@ -547,7 +566,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 690 distinct Python unit checks plus manifest/hash verification;
+- 693 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -601,7 +620,9 @@ outstanding.
   JUMP/CALL actions and 16,384 OQ-012 CALL NOT CE words in Python and
   exhaustive RTL; 554,412 model/RTL cycles execute every supported word plus
   deterministic reset, predicate, counter restore, stack overflow, invalid,
-  and conflict cases;
+  and conflict cases; the fetched owner additionally covers representative
+  targets and every condition within 442,330 phase clocks, including selected-
+  target issue, false PC+1, CALL/Type-26-pop context, and JUMP NOT CE retirement;
 - all 262,144 Type 11 words decode to exact ADDR/TERM fields in Python and
   exhaustive RTL; 554,309 model/RTL cycles execute every word plus nesting,
   CE-context, overflow, reset, invalid, and integration-conflict cases;
@@ -687,7 +708,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/8/9/14/15/16/17/18/21/23/24/25/26 linear owner adds 442,383 phase clocks,
+  the bounded Type 6/7/8/9/10/14/15/16/17/18/21/23/24/25/26 linear owner adds 442,330 phase clocks,
   the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across

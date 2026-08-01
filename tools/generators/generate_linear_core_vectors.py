@@ -86,6 +86,15 @@ def _type26(payload: int) -> int:
     return 0x040000 | (payload & 0x1F)
 
 
+def _type10(*, call: bool, address: int, condition: int) -> int:
+    return (
+        0x180000
+        | (int(call) << 18)
+        | ((address & 0x3FFF) << 4)
+        | (condition & 0xF)
+    )
+
+
 def _type9(
     *,
     z: int,
@@ -231,6 +240,41 @@ def _directed_opcodes() -> tuple[int, ...]:
         )
     )
     opcodes.extend(_type26(payload) for payload in range(32))
+    # Direct transfers select the same-cycle instruction-fetch address. Cover
+    # true/false JUMP/CALL, wrapped return stacking, all predicates, and the
+    # sourced JUMP NOT CE decrement/outer-count restoration.
+    opcodes.extend(
+        (
+            _type7(writable["ASTAT"], 0x0000),
+            _type10(call=False, address=0x2345, condition=0xF),
+            _type10(call=False, address=0x1234, condition=0x0),
+            _type10(call=True, address=0x3456, condition=0xF),
+            _type26(0x10),
+            _type10(call=True, address=0x2222, condition=0x0),
+            _type7(writable["CNTR"], 0x0007),
+            _type7(writable["CNTR"], 0x0001),
+            _type10(call=False, address=0x1111, condition=0xE),
+            _type10(call=False, address=0x1111, condition=0xE),
+        )
+    )
+    for astat in (0x00, 0xFF):
+        opcodes.append(_type7(writable["ASTAT"], astat))
+        for condition in range(16):
+            opcodes.append(
+                _type10(
+                    call=False,
+                    address=(0x0800 + (astat << 2) + condition) & 0x3FFF,
+                    condition=condition,
+                )
+            )
+            if condition != 0xE:
+                opcodes.append(
+                    _type10(
+                        call=True,
+                        address=(0x1800 + (astat << 2) + condition) & 0x3FFF,
+                        condition=condition,
+                    )
+                )
     # Establish known feedback registers in both banks, then traverse every
     # Type 9 AMF/condition combination through the fetched retirement path.
     opcodes.extend(
@@ -392,7 +436,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(27)
+    choice = rng.randrange(28)
     if choice == 0:
         return 0
     if choice < 5:
@@ -448,6 +492,16 @@ def _legal_opcode(rng: random.Random) -> int:
         return _type24(rng.choice((1, 2)), rng.randrange(8))
     if choice == 25:
         return _type26(rng.randrange(32))
+    if choice == 26:
+        call = bool(rng.randrange(2))
+        condition = rng.randrange(16)
+        if call and condition == 0xE:
+            condition = 0xF
+        return _type10(
+            call=call,
+            address=rng.randrange(1 << 14),
+            condition=condition,
+        )
     z = rng.randrange(2)
     amf = rng.randrange(1, 32)
     destination = rng.randrange(16)
@@ -585,7 +639,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (result.reserved_subencoding, 1),
             (result.phase_conflict, 1),
             (result.integration_conflict, 1),
-            (False, 1),
+            (result.internal_conflict, 1),
             (result.provisional_source_extension, 1),
             (state.architecture.pc.value, 14),
             (

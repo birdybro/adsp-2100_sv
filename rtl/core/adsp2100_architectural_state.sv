@@ -83,8 +83,11 @@ module adsp2100_architectural_state (
     input  logic        shifter_ss_i,
 
     input  logic [1:0]  stack_status_operation_i,
+    input  logic        stack_counter_ce_test_i,
     input  logic        stack_count_pop_i,
     input  logic        stack_loop_pop_i,
+    input  logic        stack_pc_push_i,
+    input  logic [13:0] stack_pc_push_data_i,
     input  logic        stack_pc_pop_i,
 
     output logic        invalid_move_write_o,
@@ -93,6 +96,8 @@ module adsp2100_architectural_state (
     output logic [13:0] count_stack_push_data_o,
     output logic [2:0]  count_stack_depth_o,
     output logic        count_stack_overflow_o,
+    output logic [13:0] pc_stack_top_o,
+    output logic        pc_stack_top_valid_o,
     output logic [7:0]  astat_o,
     output logic [3:0]  mstat_o,
     output logic [4:0]  icntl_o,
@@ -172,8 +177,6 @@ module adsp2100_architectural_state (
     logic        unused_empty_ce_invalidate;
     logic        unused_invalid_ce_test;
     logic        unused_empty_manual_pop;
-    logic [13:0] unused_pc_top;
-    logic        unused_pc_top_valid;
     logic        unused_pc_pop_valid;
     logic        unused_pc_empty;
     logic        unused_pc_overflow;
@@ -474,7 +477,7 @@ module adsp2100_architectural_state (
             state_write && !move_data_valid_i && (move_code_i == 6'h35)
         ),
         .load_data_i(move_data_i[13:0]),
-        .ce_test_i(1'b0),
+        .ce_test_i(!reset_i && stack_counter_ce_test_i),
         .manual_pop_i(!reset_i && stack_count_pop_i),
         .count_stack_top_data_i(count_stack_top),
         .count_stack_top_valid_i(count_stack_top_valid),
@@ -497,11 +500,11 @@ module adsp2100_architectural_state (
     adsp2100_sequencer_stacks sequencer_stacks (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .pc_push_i(1'b0),
+        .pc_push_i(!reset_i && stack_pc_push_i),
         .pc_pop_i(!reset_i && stack_pc_pop_i),
-        .pc_push_data_i(14'h0000),
-        .pc_top_data_o(unused_pc_top),
-        .pc_top_valid_o(unused_pc_top_valid),
+        .pc_push_data_i(stack_pc_push_data_i),
+        .pc_top_data_o(pc_stack_top_o),
+        .pc_top_valid_o(pc_stack_top_valid_o),
         .pc_pop_valid_o(unused_pc_pop_valid),
         .pc_empty_o(unused_pc_empty),
         .pc_overflow_o(unused_pc_overflow),

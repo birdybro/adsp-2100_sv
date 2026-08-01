@@ -94,7 +94,8 @@ ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
 `adsp2100_linear_owner_control_slice` attaches a retained ordinary-fetch
 architectural client to that same boundary. The client owns its current
-instruction until PC+1 is accepted and the routed fetch completion arrives;
+instruction until its selected PC+1 or Type 10 target is accepted and the
+routed fetch completion arrives;
 a fail-closed Type 5/Type 13 collision or BR/BG issue inhibition therefore
 causes a later state-8 retry rather than a dropped instruction. Six directed
 tests and 50,003 independent-model/RTL clocks cover 4,247 accepted fetches,

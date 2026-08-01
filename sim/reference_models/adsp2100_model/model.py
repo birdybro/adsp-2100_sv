@@ -5,9 +5,9 @@ source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
 Type 8 ALU/MAC-plus-move packets, Type 14 shifter-plus-move packets, Type 15
 immediate shifts, Type 16 conditional shifts, original Type 18 mode control,
 all 32 Type 21 MODIFY selections, all 32 Type 26 manual stack controls, Type
-23 DIVQ, the
-source-closed Type 24 DIVS forms, exact Type 25 MR saturation, and legal Type
-17 internal moves from known sources.
+23 DIVQ, the source-closed Type 24 DIVS forms, exact Type 25 MR saturation,
+all 507,904 source-closed Type 10 direct transfers, and legal Type 17 internal
+moves from known sources.
 Unsupported behavior fails closed instead of becoming an accidental no-op.
 """
 
@@ -324,10 +324,16 @@ class ADSP2100Model:
             raise UnsupportedFeature("loop-terminal handling is not implemented")
 
         next_state = self.state
+        pc_after = self.state.pc.incremented()
         if instruction.value == 0:
             pass
         elif instruction.value & 0xFFFFE0 == 0x040000:
             next_state = _apply_type26_stack_control(
+                self.state,
+                instruction.value,
+            )
+        elif instruction.value & 0xF80000 == 0x180000:
+            next_state, pc_after = _apply_type10_direct_jump(
                 self.state,
                 instruction.value,
             )
@@ -752,7 +758,6 @@ class ADSP2100Model:
             )
 
         pc_before = self.state.pc
-        pc_after = pc_before.incremented()
         instruction_cycles = 1
         transaction = MemoryTransaction(
             space=MemorySpace.PROGRAM,
@@ -786,6 +791,88 @@ def _replace_word(
     updated = list(values)
     updated[index] = value
     return tuple(updated)
+
+
+def _apply_type10_direct_jump(
+    state: ArchitecturalState,
+    opcode: int,
+) -> tuple[ArchitecturalState, ExactWord]:
+    """Apply one source-closed direct transfer and select its fetch address."""
+
+    from .counter import CounterState
+    from .direct_jump import decode_direct_jump
+    from .flow_condition import evaluate_flow_condition
+    from .status import ASTATState
+
+    action = decode_direct_jump(opcode)
+    assert action is not None
+    if not action.supported:
+        raise UnsupportedFeature(
+            "Type 10 CALL NOT CE remains unresolved under OQ-012"
+        )
+
+    astat = (
+        ASTATState()
+        if state.astat is UNKNOWN
+        else ASTATState.from_word(state.astat)
+    )
+    condition = evaluate_flow_condition(
+        action.condition,
+        astat,
+        CounterState(
+            None if state.cntr is UNKNOWN else state.cntr.value
+        ),
+    )
+    if condition is UNKNOWN:
+        raise UnsupportedFeature(
+            "Type 10 execution requires known condition inputs"
+        )
+
+    taken = bool(condition)
+    sequential_pc = state.pc.incremented()
+    pc_after = ExactWord(14, action.address) if taken else sequential_pc
+    pc_stack = state.pc_stack
+    count_stack = state.count_stack
+    cntr = state.cntr
+    sstat = state.sstat.value & 0xAA
+
+    if taken and action.call:
+        if len(pc_stack) < 16:
+            pc_stack += (sequential_pc,)
+        else:
+            sstat |= 1 << 1
+
+    if not action.call and action.condition == 0xE:
+        assert isinstance(state.cntr, ExactWord)
+        if state.cntr.value == 1:
+            if count_stack:
+                cntr = count_stack[-1]
+                count_stack = count_stack[:-1]
+            else:
+                cntr = UNKNOWN
+        else:
+            cntr = ExactWord(14, (state.cntr.value - 1) & 0x3FFF)
+
+    if not pc_stack:
+        sstat |= 1 << 0
+    if not count_stack:
+        sstat |= 1 << 2
+    if not state.status_stack:
+        sstat |= 1 << 4
+    if not state.loop_stack:
+        sstat |= 1 << 6
+
+    return (
+        replace(
+            state,
+            pc=pc_after,
+            cntr=cntr,
+            pc_stack=pc_stack,
+            count_stack=count_stack,
+            sstat=ExactWord(8, sstat),
+        ),
+        pc_after,
+    )
 
 
 def _apply_type21_modify(

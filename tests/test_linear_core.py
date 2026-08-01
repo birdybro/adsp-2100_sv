@@ -44,6 +44,15 @@ def _type26(payload: int) -> int:
     return 0x040000 | (payload & 0x1F)
 
 
+def _type10(*, call: bool, address: int, condition: int) -> int:
+    return (
+        0x180000
+        | (int(call) << 18)
+        | ((address & 0x3FFF) << 4)
+        | (condition & 0xF)
+    )
+
+
 def _type17(destination: int, source: int) -> int:
     return (
         0x0D0000
@@ -208,6 +217,14 @@ class LinearCoreTests(unittest.TestCase):
             contract["supported_current_instructions"],
         )
         self.assertIn(
+            "ALL_507904_SOURCE_CLOSED_TYPE_10_DIRECT_TRANSFERS",
+            contract["supported_current_instructions"],
+        )
+        self.assertEqual(
+            contract["ordinary_fetch_address"],
+            "SELECTED_NEXT_PC_IS_PC_PLUS_ONE_OR_TAKEN_TYPE_10_TARGET",
+        )
+        self.assertIn(
             "ALL_14336_SUPPORTED_TYPE_15_IMMEDIATE_SHIFT_WORDS",
             contract["supported_current_instructions"],
         )
@@ -351,6 +368,93 @@ class LinearCoreTests(unittest.TestCase):
         self.assertEqual(architecture.status_stack, ())
         self.assertEqual(architecture.count_stack, ())
         self.assertEqual(architecture.sstat.value & 0x54, 0x54)
+
+    def test_type10_redirects_fetch_and_connects_call_stack(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            LinearCoreState.reset(),
+            _type7(writable["ASTAT"], 0),
+            pc=0x0100,
+        )
+        state = _complete(
+            _issue(state).state,
+            _type10(call=False, address=0x2345, condition=0xF),
+        ).state
+
+        jumped = _issue(state)
+        self.assertEqual(jumped.state.bus.address, ExactWord(14, 0x2345))
+        state = _complete(
+            jumped.state,
+            _type10(call=True, address=0x3456, condition=0xF),
+        ).state
+        self.assertEqual(state.architecture.pc, ExactWord(14, 0x2345))
+
+        called = _issue(state)
+        self.assertEqual(called.state.bus.address, ExactWord(14, 0x3456))
+        state = _complete(called.state, _type26(0x10)).state
+        self.assertEqual(state.architecture.pc, ExactWord(14, 0x3456))
+        self.assertEqual(state.architecture.pc_stack, (ExactWord(14, 0x2346),))
+        self.assertEqual(state.architecture.sstat.value & 0x01, 0)
+
+        popped = _complete(_issue(state).state, 0)
+        self.assertEqual(popped.state.architecture.pc_stack, ())
+        self.assertEqual(popped.state.architecture.sstat.value & 0x01, 1)
+
+    def test_type10_false_and_not_ce_fetch_paths(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            LinearCoreState.reset(),
+            _type7(writable["ASTAT"], 0),
+            pc=0x0200,
+        )
+        state = _complete(
+            _issue(state).state,
+            _type10(call=False, address=0x1234, condition=0x0),
+        ).state
+        false_jump = _issue(state)
+        self.assertEqual(false_jump.state.bus.address, ExactWord(14, 0x0202))
+        state = _complete(
+            false_jump.state,
+            _type7(writable["CNTR"], 7),
+        ).state
+        state = _complete(
+            _issue(state).state,
+            _type7(writable["CNTR"], 1),
+        ).state
+        state = _complete(
+            _issue(state).state,
+            _type10(call=False, address=0x1111, condition=0xE),
+        ).state
+
+        expired = _issue(state)
+        self.assertEqual(
+            expired.state.bus.address,
+            state.architecture.pc.incremented(),
+        )
+        state = _complete(
+            expired.state,
+            _type10(call=False, address=0x1111, condition=0xE),
+        ).state
+        self.assertEqual(state.architecture.cntr, ExactWord(14, 7))
+        self.assertEqual(state.architecture.count_stack, ())
+
+        not_expired = _issue(state)
+        self.assertEqual(not_expired.state.bus.address, ExactWord(14, 0x1111))
+        retired = _complete(not_expired.state, 0)
+        self.assertEqual(retired.state.architecture.pc, ExactWord(14, 0x1111))
+        self.assertEqual(retired.state.architecture.cntr, ExactWord(14, 6))
+
+    def test_type10_unknown_ce_context_fails_closed(self) -> None:
+        state = _setup(
+            LinearCoreState.reset(),
+            _type10(call=False, address=0x1234, condition=0xE),
+        )
+        result = _issue(state)
+        self.assertTrue(result.supported_instruction)
+        self.assertTrue(result.internal_conflict)
+        self.assertFalse(result.instruction_issue)
+        self.assertFalse(result.state.pending)
+        self.assertEqual(result.state.architecture.pc, ExactWord(14, 4))
 
     def test_type9_alu_retires_with_next_fetch_and_false_form_preserves(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x30, 0))
@@ -704,6 +808,7 @@ class LinearCoreTests(unittest.TestCase):
             (0x000001, False),
             (0x050001, False),
             (0x071001, False),
+            (_type10(call=True, address=0x1234, condition=0xE), False),
             (_type24(0, 0), True),
             (_type24(3, 7), True),
             (

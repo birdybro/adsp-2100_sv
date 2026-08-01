@@ -21,10 +21,12 @@ all 14,336 supported Type 15 immediate-shift words, all 1,792 supported Type
 destination pairs from fully initialized state, all Type 18 MODE CONTROL
 words, all eight Type 23 DIVQ forms, all sixteen source-closed Type 24 DIVS
 forms, the exact Type 25 conditional MR-saturation word, all 32 Type 21
-MODIFY words, and all 32 Type 26 stack-control words:
-address `N` executes while an ordinary fetch for `N+1` occupies the native PM
-phases, then the state-7-to-8 edge commits the current action, PC=`N+1`, and
-the fetched word. Type 18 therefore transforms cycle-start MSTAT atomically at
+MODIFY words, all 32 Type 26 stack-control words, and all 507,904
+source-closed Type 10 direct-transfer words. Address `N` executes while the
+selected next fetch occupies the native PM phases. Ordinary and false Type 10
+flow select `N+1`; a taken Type 10 selects its 14-bit target. The state-7-to-8
+edge commits the current action, PC=selected fetch address, and the fetched
+word. Type 18 therefore transforms cycle-start MSTAT atomically at
 that completion edge and its bank-select effect is visible to the following
 instruction. Type 8 samples ALU/MAC operands, feedback, ASTAT, and the
 parallel DREG move source from one cycle-start selected-bank snapshot, then
@@ -54,11 +56,13 @@ I-corresponding L at cycle start and commits only the selected I at state
 7-to-8, without a PM-data, DM, or status action. Type 26 reads status and stack
 tops at cycle start and commits its independent manual actions only at
 retirement. Valid fetched status and count pops are covered; PC/loop pops see
-empty stacks in this owner and retain state under OQ-013. The request is admitted at
-the enabled state-8-to-1 edge, and
+empty stacks in the standalone Type 26 sequence and retain state under
+OQ-013. A fetched Type 10 CALL additionally creates valid PC-stack context
+that a following Type 26 POP PC consumes. The request is admitted at the
+enabled state-8-to-1 edge, and
 neither model invents an ordinary-PM wait extension because the original
-interface exposes no PM acknowledge input. Twenty-five directed tests and
-442,383 phase clocks compare the independent model with RTL. They traverse
+interface exposes no PM acknowledge input. Twenty-eight directed tests and
+442,330 phase clocks compare the independent model with RTL. They traverse
 every Type 8 compute-field tuple and every move source/destination pair in both
 banks, every legal Type 17 pair, every Type 9 AMF/condition combination, every canonical Type 14
 packet, every supported Type 15 and Type 16 word, every Type 18 encoding,
@@ -66,15 +70,18 @@ all Type 23 divisors in both banks and both old-AQ paths, every legal Type 24
 divisor/upper-source form in both banks, dependent DIVS-to-DIVQ, the Type 25
 true/false paths in both banks, every Type 21 DAG/I/M selection with positive
 and negative linear/circular modification, every Type 26 payload with valid
-status/count and empty PC/loop context, phase holds, bus-output
+status/count context, representative Type 10 targets and every condition plus
+directed false, CALL/POP-PC, counter-restore, and counter-decrement sequences, phase
+holds, bus-output
 relinquishment, PC wrap, selected-bank state,
 CNTR-stack effects, invalid fetched data, and fail-closed unsupported words. A
 Type 17 move sourced from ASTAT, MSTAT,
 SSTAT, IMASK, or ICNTL raises a dedicated retirement pulse so the OQ-016
 zero-extension hypothesis cannot become invisible. The deterministic
 instruction preload and complete state initialization are verification hooks,
-not architectural interfaces. Reset release/first fetch, active-loop and branch
-selection, interrupt abort, PM-data/cache ownership, HALT, and whole-core
+not architectural interfaces. Reset release/first fetch, active-loop and
+non-Type-10 branch selection, interrupt abort, PM-data/cache ownership, HALT,
+and whole-core
 BR/BG arbitration remain outside this bounded result. A separate bounded
 composition now proves the ordinary linear owner across 50,003 more clocks and
 86 complete BR/BG handshakes, including current-fetch retirement, next-issue

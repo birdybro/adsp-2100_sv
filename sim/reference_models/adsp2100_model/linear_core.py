@@ -17,6 +17,9 @@ from .shift_move import decode_shift_move, is_shift_move_class
 from .compute_move import decode_compute_move, is_compute_move_class
 from .divide_quotient import decode_divide_quotient
 from .divide_sign import decode_divide_sign, is_divide_sign_class
+from .direct_jump import decode_direct_jump
+from .counter import CounterState
+from .flow_condition import evaluate_flow_condition
 from .mr_saturation import decode_mr_saturation
 from .mode_control import decode_mode_control
 from .modify_address import decode_modify_address
@@ -29,6 +32,7 @@ from .model import (
     _UnknownValue,
 )
 from .phase import LogicalPhase
+from .status import ASTATState
 from .program_bus import (
     ProgramBusCycleResult,
     ProgramBusRequest,
@@ -66,6 +70,7 @@ class LinearCoreCycleResult:
     provisional_source_extension: bool = False
     phase_conflict: bool = False
     integration_conflict: bool = False
+    internal_conflict: bool = False
 
 
 @dataclass(frozen=True)
@@ -85,6 +90,7 @@ class LinearFetchClientCycleResult:
     provisional_source_extension: bool = False
     phase_conflict: bool = False
     integration_conflict: bool = False
+    internal_conflict: bool = False
 
 
 def _instruction_class(
@@ -105,6 +111,9 @@ def _instruction_class(
         return (True, False)
     if decode_stack_control(instruction.value) is not None:
         return (True, False)
+    type10 = decode_direct_jump(instruction.value)
+    if type10 is not None:
+        return (type10.supported, False)
     if decode_conditional_compute(instruction.value) is not None:
         return (True, False)
     if decode_divide_quotient(instruction.value) is not None:
@@ -201,14 +210,46 @@ def apply_linear_fetch_client_cycle(
         and not supported
         and not reserved_event
     )
+    type10_condition = None
+    if (
+        supported
+        and state.instruction_valid
+        and isinstance(state.instruction, ExactWord)
+    ):
+        type10 = decode_direct_jump(state.instruction.value)
+        if type10 is not None:
+            astat = (
+                ASTATState()
+                if state.architecture.astat is UNKNOWN
+                else ASTATState.from_word(state.architecture.astat)
+            )
+            type10_condition = evaluate_flow_condition(
+                type10.condition,
+                astat,
+                CounterState(
+                    None
+                    if state.architecture.cntr is UNKNOWN
+                    else state.architecture.cntr.value
+                ),
+            )
+    invalid_condition_state = bool(
+        issue_boundary and type10_condition is UNKNOWN
+    )
     fetch_request = bool(
         issue_boundary
         and state.instruction_valid
         and supported
         and not state.pending
         and instruction_setup is None
+        and not invalid_condition_state
     )
     fetch_address = state.architecture.pc.incremented()
+    if type10_condition is not None and type10_condition is not UNKNOWN:
+        assert isinstance(state.instruction, ExactWord)
+        type10 = decode_direct_jump(state.instruction.value)
+        assert type10 is not None
+        if bool(type10_condition):
+            fetch_address = ExactWord(14, type10.address)
     retire_event = bool(state.pending and pm_completion_event)
     provisional_source_extension = False
 
@@ -262,6 +303,7 @@ def apply_linear_fetch_client_cycle(
         provisional_source_extension=provisional_source_extension,
         phase_conflict=phase_conflict,
         integration_conflict=integration_conflict,
+        internal_conflict=invalid_condition_state,
     )
 
 
@@ -335,4 +377,5 @@ def apply_linear_core_cycle(
         provisional_source_extension=client.provisional_source_extension,
         phase_conflict=client.phase_conflict,
         integration_conflict=client.integration_conflict,
+        internal_conflict=client.internal_conflict,
     )

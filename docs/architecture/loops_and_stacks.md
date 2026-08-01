@@ -52,12 +52,13 @@ The same action decoder is now attached to the shared architectural state in
 the bounded ordinary-fetch owner. Status PUSH captures live cycle-start
 ASTAT/MSTAT/IMASK, status POP restores that tuple, and a count POP restores a
 valid prior CNTR only on the fetched instruction's state-7 retirement. The
-25-test, 442,383-clock owner comparison traverses all 32 payloads. Its PC and
-loop stacks are necessarily empty because active control-transfer/DO execution
-is not yet attached; those fetched pops therefore verify only the explicit
-OQ-013 fail-closed preservation rule. Valid PC/loop pops and arbitrary combined
-valid actions remain established by the standalone 50,015-cycle slice rather
-than being overclaimed as fetched coverage.
+superseding 28-test, 442,330-clock owner comparison traverses all 32 payloads.
+A fetched Type 10 CALL now creates valid PC-stack context and a following Type
+26 POP PC consumes it. The loop stack remains empty because DO execution is
+not attached; those fetched loop pops therefore verify only the explicit
+OQ-013 fail-closed preservation rule. Arbitrary combined valid actions remain
+established by the standalone 50,015-cycle slice rather than being overclaimed
+as fetched coverage.
 
 The sequencer storage exposes each current top with an explicit valid bit,
 accepted pushes, valid pops, overflow events, and empty-pop indications. Its
@@ -101,11 +102,11 @@ remains OQ-012. Competing automatic/manual actions and DO setup on an active
 outer loop's final instruction are rejected under OQ-018 instead of receiving
 an invented priority.
 
-The bounded Type 10 direct-transfer slice connects CALL pushes and JUMP NOT CE
+The bounded Type 10 direct-transfer slice and fetched owner connect CALL pushes and JUMP NOT CE
 counter restoration to the same PC/count stack rules. A stack-full CALL still
 takes its target while the newest return address is lost and overflow sticks,
-matching the sourced global stack-overflow behavior. This boundary deliberately
-excludes an active loop descriptor: it cannot yet prove the documented
+matching the sourced global stack-overflow behavior. These boundaries deliberately
+exclude an active loop descriptor: they cannot yet prove the documented
 explicit-transfer precedence on a loop-final instruction. All CALL NOT CE
 encodings remain action-free under OQ-012 rather than assigning an unsupported
 counter-stack interaction [ADI-UM-1989, printed pp. 4-3–4-7, 4-22].

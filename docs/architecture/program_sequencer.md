@@ -90,14 +90,14 @@ OQ-013 empty-pop boundary.
 All 32 Type 26 words are also recognized by the bounded ordinary-fetch owner.
 Their requests are gated by native state-7 retirement into its shared status,
 CNTR, and stack state. Directed fetched sequences cover valid status push/pop,
-valid count pop, and empty PC/loop pop preservation; the 442,383-clock flow
-traverses every payload. Because no fetched direct/indirect transfer, DO, or
-return instruction yet populates the PC/loop stacks, valid fetched PC/loop pops
-are explicitly unclaimed. Next-PC changes, loop actions, and interrupt actions
-remain outside this owner, so OQ-018 arbitration is not resolved by this
-attachment.
+valid count pop, and empty PC/loop pop preservation; the superseding
+442,330-clock flow traverses every payload. Fetched Type 10 CALL now populates
+the PC stack, and a following Type 26 POP PC verifies that valid path. No
+fetched DO yet populates the loop stack, and arbitrary combined valid pops
+remain standalone-only evidence. Loop actions and interrupt actions remain
+outside this owner, so OQ-018 arbitration is not resolved by this attachment.
 
-The bounded Type 10 direct-transfer slice is the first decoder-connected PC
+The bounded Type 10 direct-transfer slice was the first decoder-connected PC
 register boundary. Its authentic reset path sets PC to `0x0004`, then every
 accepted instruction commits exactly one of wrapped PC+1 or the 14-bit direct
 target. Taken CALL also pushes cycle-start PC+1; false CALL does not push.
@@ -107,9 +107,15 @@ decode classifies 507,904 supported words and 16,384 OQ-012 CALL NOT CE words;
 554,412 deterministic model/RTL cycles cover every supported word plus reset,
 stack overflow, counter restore, unknown predicates, and integration conflicts
 [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 5-13, 6-13–6-14, A-2,
-A-6]. The slice intentionally has no active-loop descriptor, fetch/cache,
-interrupt, wait-state, bus, or eight-state phase input, so it is not a complete
-program sequencer.
+A-6]. The same action is now attached to the bounded native ordinary-fetch
+owner. It presents the selected direct target or wrapped PC+1 at the enabled
+state-8 issue boundary and commits PC, CALL push, and JUMP NOT CE counter
+effects only on routed state-7 completion. Twenty-eight tests and 442,330
+model/RTL phase clocks cover representative targets, every condition, and a
+fetched CALL followed by Type 26 POP PC. The standalone 554,412-cycle slice is
+the exhaustive per-word execution evidence. Active-loop precedence, cache invalidation/ownership,
+interrupt abort/vectoring, reset-first-fetch, and other transfer classes remain
+outside this attachment, so it is not a complete program sequencer.
 
 The bounded Type 11 slice connects exact DO decode to PC, PC-stack,
 loop-stack, and CNTR-valid state. Every accepted word samples cycle-start PC,

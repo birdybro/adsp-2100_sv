@@ -26,7 +26,7 @@ Known cases:
 | Type 5 ALU/MAC plus PM read/write, cache miss or forced fetch | PM data actions commit in the first processor cycle; exactly one back-to-back external instruction-fetch cycle follows without repeating compute, read/PX, or DAG actions |
 | Type 8 ALU/MAC plus internal DREG move | one processor cycle; both clauses read at cycle start and commit at cycle end; no PM-data or DM transfer |
 | Type 9 conditional ALU/MAC | one processor cycle whether true, false, or AMF-zero no-operation; no PM-data or DM transfer |
-| Type 10 direct JUMP/CALL | one processor cycle at the bounded instruction boundary for true or false supported conditions; no PM-data or DM data transfer |
+| Type 10 direct JUMP/CALL | one processor cycle for true or false supported conditions; at enabled state 8 the fetched owner requests the taken target or false-path PC+1, and routed state-7 completion atomically commits PC plus any CALL/CNTR action; no PM-data or DM data transfer |
 | Type 11 DO UNTIL setup | one processor cycle; PC+1 and `{TERM,ADDR}` push simultaneously while PC advances to the first loop instruction; no PM-data or DM data transfer |
 | Type 12 shifter plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while bus outputs and all architectural destinations remain stable |
 | Type 13 shifter plus PM read/write, cache hit | one processor cycle; PM/PX, shifter/status, and DAG2 post-modify commit in that cycle while the next cached instruction is selected |
@@ -302,9 +302,13 @@ Exhaustive decode covers all 524,288 class words: 507,904 source-closed words
 execute, while 16,384 CALL NOT CE words fail closed under OQ-012. The 554,412
 stateful comparison cycles cover true/false predicates, sequential 14-bit
 wrap, direct target selection, CALL return pushes, and JUMP NOT CE counter
-transitions. This is instruction-boundary evidence only; fetch redirection,
-cache invalidation, loop-terminal arbitration, interrupt recognition, waits,
-and external logical bus phases remain open
+transitions. The native ordinary-fetch attachment adds 28 directed tests and
+442,330 phase clocks. A taken target or false PC+1 request issues at state 8;
+routed state-7 completion commits the identical PC, CALL return push, and JUMP
+NOT CE decrement/restore. Invalid CE context starts no request, and a fetched
+CALL return is consumed by a following Type 26 POP PC. Cache invalidation,
+loop-terminal arbitration, interrupt recognition, reset-first-fetch, and
+non-Type-10 transfer priority remain open
 [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 6-13–6-14, A-2, A-6].
 
 The bounded Type 11 model/RTL slice verifies cycle-start PC and active-loop
@@ -386,9 +390,10 @@ The bounded Type 26 model/RTL execution slice verifies that every selected
 status/count/loop/PC action reads cycle-start state and commits on the same
 cycle-end edge across 50,015 stateful cycles. The bounded fetched owner adds
 native state-8 issue and state-7 retirement evidence for all 32 payloads across
-25 directed tests and 442,383 phase clocks. Its valid status/count actions
-commit atomically with PC and the fetched next word; its PC/loop stacks are
-empty, so valid PC/loop pops remain standalone-only evidence. No Type 26 form
+28 directed tests and 442,330 phase clocks. Its valid status/count actions
+commit atomically with PC and the fetched next word; Type 10 CALL supplies one
+verified valid PC-pop path, while valid loop pops remain standalone-only
+evidence. No Type 26 form
 starts a PM-data or DM transaction. Automatic flow/interrupt arbitration and
 the OQ-013 physical empty-pop result remain open.
 

@@ -65,8 +65,11 @@ module tb_adsp2100_architectural_state;
     logic shifter_status_write_enable;
     logic shifter_ss;
     logic [1:0] stack_status_operation;
+    logic stack_counter_ce_test;
     logic stack_count_pop;
     logic stack_loop_pop;
+    logic stack_pc_push;
+    logic [13:0] stack_pc_push_data;
     logic stack_pc_pop;
     logic invalid_move_write;
     logic internal_conflict;
@@ -74,6 +77,8 @@ module tb_adsp2100_architectural_state;
     logic [13:0] count_stack_push_data;
     logic [2:0] count_stack_depth;
     logic count_stack_overflow;
+    logic [13:0] pc_stack_top;
+    logic pc_stack_top_valid;
     logic [7:0] astat;
     logic [3:0] mstat;
     logic [4:0] icntl;
@@ -144,8 +149,11 @@ module tb_adsp2100_architectural_state;
             shifter_status_write_enable = 1'b0;
             shifter_ss = 1'b0;
             stack_status_operation = 2'b00;
+            stack_counter_ce_test = 1'b0;
             stack_count_pop = 1'b0;
             stack_loop_pop = 1'b0;
+            stack_pc_push = 1'b0;
+            stack_pc_push_data = 14'h0000;
             stack_pc_pop = 1'b0;
         end
     endtask
@@ -255,8 +263,11 @@ module tb_adsp2100_architectural_state;
         .shifter_status_write_enable_i(shifter_status_write_enable),
         .shifter_ss_i(shifter_ss),
         .stack_status_operation_i(stack_status_operation),
+        .stack_counter_ce_test_i(stack_counter_ce_test),
         .stack_count_pop_i(stack_count_pop),
         .stack_loop_pop_i(stack_loop_pop),
+        .stack_pc_push_i(stack_pc_push),
+        .stack_pc_push_data_i(stack_pc_push_data),
         .stack_pc_pop_i(stack_pc_pop),
         .invalid_move_write_o(invalid_move_write),
         .internal_conflict_o(internal_conflict),
@@ -264,6 +275,8 @@ module tb_adsp2100_architectural_state;
         .count_stack_push_data_o(count_stack_push_data),
         .count_stack_depth_o(count_stack_depth),
         .count_stack_overflow_o(count_stack_overflow),
+        .pc_stack_top_o(pc_stack_top),
+        .pc_stack_top_valid_o(pc_stack_top_valid),
         .astat_o(astat),
         .mstat_o(mstat),
         .icntl_o(icntl),
@@ -532,11 +545,18 @@ module tb_adsp2100_architectural_state;
             $fatal(1, "count-stack pop/restore mismatch");
         end
         clear_actions();
+        stack_pc_push = 1'b1;
+        stack_pc_push_data = 14'h2345;
+        tick();
+        if (!pc_stack_top_valid || pc_stack_top !== 14'h2345 || sstat[0]) begin
+            $fatal(1, "PC-stack push/top mismatch");
+        end
+        clear_actions();
         stack_pc_pop = 1'b1;
         stack_loop_pop = 1'b1;
         tick();
         if (internal_conflict || sstat[0] !== 1'b1 || sstat[6] !== 1'b1) begin
-            $fatal(1, "empty PC/loop pops changed shared stack state");
+            $fatal(1, "PC pop or empty loop pop produced invalid state");
         end
 
         // Reset suppresses direct computational writes while retaining the

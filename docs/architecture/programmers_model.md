@@ -44,12 +44,14 @@ listed among the initialized state and remains architecturally unknown
 computational or DAG registers reset to zero, so the authentic model keeps them
 unknown until written.
 
-The bounded Type 10 slice now stores a 14-bit PC and applies that documented
+The bounded Type 10 slice stores a 14-bit PC and applies that documented
 `0x0004` reset value. Accepted direct JUMP/CALL words sample the old PC, use
 wrapped PC+1 for the sequential or CALL-return value, and commit the next PC at
-cycle end. This is the first instruction decoder connected to PC state, but it
-does not yet connect the fetch address, instruction register, cache, active
-loop, interrupt, or bus-phase machinery
+cycle end. The bounded native ordinary-fetch owner now connects that selected
+next address to PM fetch issue and uses the same shared PC-stack/CNTR storage
+at state-7 retirement. A fetched CALL/Type 26 POP PC sequence verifies the
+return context end to end. The attachment still does not connect the cache,
+active loop, interrupt, reset-first-fetch, or other transfer machinery
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-12–4-13, 5-13].
 
 The bounded Type 11 slice uses the same exact-width PC and sequencer-stack

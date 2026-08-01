@@ -54,13 +54,14 @@ internal MOVE source/destination pairs, all 25,648 canonical Type 14 shifter-
 plus-DREG packets, all eight Type 23 DIVQ words, all sixteen source-closed
 Type 24 DIVS words, the exact Type 25 conditional
 MR-saturation word, all 32 Type 21 address-modify words, all 32 Type 26
-manual stack-control words, all
+manual stack-control words, all 507,904 source-closed Type 10 direct JUMP/CALL
+words, all
 14,336 supported Type 15 immediate
 shift words, all 1,792 supported Type 16 conditional shift words, and all Type
 18 MODE CONTROL words
-execute at the current PC while the
-following word is fetched at PC+1 across the sourced state-8 issue/state-7
-retire phases, with 442,383 model/RTL phase clocks and an explicit OQ-016
+execute at the current PC while the selected sequential or Type 10 target word
+is fetched across the sourced state-8 issue/state-7 retire phases, with
+442,330 model/RTL phase clocks and an explicit OQ-016
 provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
 50,003 clocks and 86 complete current-fetch/inhibit/grant/restart handshakes,
 and a separate bounded active-low HALT attachment adds 50,003 clocks and 788
@@ -110,8 +111,9 @@ ALU/MAC-plus-DREG multifunction words with atomic result/status/move
 writeback in both the exhaustive standalone slice and the bounded fetched
 owner, all 32,768 Type 9 conditional ALU/MAC words including documented
 AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
-words with a decoder-connected PC register, CALL return stacking, and JUMP
-NOT CE counter transitions, all 262,144 Type 11 DO UNTIL setup words with
+words with a decoder-connected PC register, native target fetch, shared CALL
+return stacking, JUMP NOT CE counter transitions, and a fetched Type 26 POP PC
+consumer, all 262,144 Type 11 DO UNTIL setup words with
 simultaneous PC/loop-stack state, 124 source-closed Type 19 DAG2-indirect
 JUMP/CALL words with PMA target observation, all 32 Type 20 conditional RTS/RTI
 words with valid-stack PC/status restoration, all 16 Type 22 conditional TRAP
@@ -136,8 +138,9 @@ Type 22 controller. Pinned MAME's
 conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
 division-flag conflict is recorded as SC-014. Both division primitives now
-execute in the bounded ordinary-fetch owner, but active control flow,
-interrupts, reset-first-fetch, and unified PM/cache ownership remain open.
+execute in the bounded ordinary-fetch owner, but active loops, non-Type-10
+control flow, interrupts, reset-first-fetch, and unified PM/cache ownership
+remain open.
 Type 2, Type 3, Type 4, and Type 12 supply logical DM transaction boundaries, and a separate
 native controller reproduces the original active-low DM phases and full-cycle
 DMACK extension. All four clients attach at state 8-to-1 and defer every
