@@ -44,6 +44,10 @@ start, and writes only that I at cycle end. A separate setup interface exists
 for bounded verification; conflicting setup/instruction writes are suppressed
 and reported rather than assigned an unsupported priority
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
+The shared fetched owner selects these same I/M/L values through a dedicated
+execution-read port and retires all 32 Type 21 results only at native state 7;
+the external debug probe remains independent, and M/L/status state is
+preserved across MODIFY.
 
 ## Status registers
 

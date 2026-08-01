@@ -8,6 +8,29 @@ semantic versioning after its first release.
 
 ### Added
 
+- Fetched execution of all 32 original Type 21 `MODIFY (Ix, My);` words in
+  the bounded ordinary linear owner. A stateless action producer selects the
+  addressed I and M plus the L corresponding to I from the shared
+  architectural-state owner, applies the original ADSP-2100 linear/circular
+  rule, and commits only the selected I at state-7 retirement. Directed tests
+  prove cycle-start operand sampling, completion-only writeback, both DAGs,
+  positive and negative linear/circular modification, and preservation of
+  M/L, ASTAT, and both external data buses. The 24-test owner suite and
+  442,405 deterministic model/RTL phase clocks pass, as do the unchanged
+  shared-PM/BR-BG and HALT compositions. The standalone exhaustive/fuzzed
+  Type 21 evidence remains 50,124 stateful comparison clocks. Strict lint is
+  clean and all 73 formal recipes pass assertion syntax lint; SymbiYosys and
+  Yosys remain unavailable. Four fully constrained Cyclone V fits have zero
+  unconstrained clocks, ports, or paths: the 25 ns private-PM owner uses
+  3,365 ALMs, 1,244 registers, two DSPs, no RAM, +0.359 ns worst setup,
+  +0.166 ns worst hold, and 40.58 MHz worst slow-corner Fmax; the 25 ns
+  private-PM/BR-BG composition uses 3,417 ALMs and 1,206 registers with
+  +0.477 ns setup and 40.78 MHz Fmax. The 25 ns HALT composition misses setup
+  by 0.628 ns at 39.02 MHz, and the stricter 20 ns retained-fetch/shared-PM/
+  BR-BG owner composition misses by 4.322 ns at 41.12 MHz. Reset-first-fetch, control transfers, loops,
+  interrupts, unified PM/cache/event ownership, datapath sharing, and timing
+  optimization remain open.
+
 - Fetched execution of all 476,672 source-closed original Type 8
   ALU/MAC-plus-DREG packets in the bounded ordinary linear owner. A stateless
   action producer reads all compute operands, feedback, ASTAT, and the parallel

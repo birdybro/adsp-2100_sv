@@ -38,6 +38,12 @@ at acknowledgment. Its native attachment preserves that completion rule.
 Other PM/DM multifunction updates remain unimplemented
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
+The ordinary fetched owner now applies the same completion boundary to all 16
+`G=1` Type 21 words. A dedicated execution selector reads I4-I7, M4-M7, and
+the I-corresponding L from cycle-start shared state; only the selected I
+changes at native state 7. The 442,405-clock comparison covers every selector
+and both linear and circular directions without PM-data, DM, or status action.
+
 Original Type 1 action selection fixes its PM address to DAG2 and exposes all
 I4–I7/M4–M7 combinations independently of the simultaneous DAG1 DM read. The
 selected old I supplies the address and its corresponding L supplies modulo

@@ -4,7 +4,7 @@ The integrated instruction boundary currently covers linear-flow NOP, the
 source-closed Type 6/7 immediate-load classes, Type 9 conditional compute,
 Type 8 ALU/MAC-plus-move packets, Type 14 shifter-plus-move packets, Type 15
 immediate shifts, Type 16 conditional shifts, original Type 18 mode control,
-Type 23 DIVQ, the
+all 32 Type 21 MODIFY selections, Type 23 DIVQ, the
 source-closed Type 24 DIVS forms, exact Type 25 MR saturation, and legal Type
 17 internal moves from known sources.
 Unsupported behavior fails closed instead of becoming an accidental no-op.
@@ -361,6 +361,8 @@ class ADSP2100Model:
                 self.state,
                 mstat=apply_mode_control(self.state.mstat, action),
             )
+        elif instruction.value & 0xFFFFE0 == 0x090000:
+            next_state = _apply_type21_modify(self.state, instruction.value)
         elif instruction.value & 0xFFF000 == 0x0D0000:
             from .internal_move import decode_internal_move
 
@@ -776,6 +778,51 @@ def _replace_word(
     updated = list(values)
     updated[index] = value
     return tuple(updated)
+
+
+def _apply_type21_modify(
+    state: ArchitecturalState,
+    opcode: int,
+) -> ArchitecturalState:
+    """Commit one Type 21 action through the independent DAG model."""
+
+    from .modify_address import (
+        DAGRegisterState,
+        apply_modify_address_cycle,
+    )
+
+    def bounded(values: tuple[KnownOrUnknown, ...]) -> tuple[int | None, ...]:
+        return tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in values
+        )
+
+    result = apply_modify_address_cycle(
+        DAGRegisterState(
+            i=bounded(state.dag.i),
+            m=bounded(state.dag.m),
+            l=bounded(state.dag.l),
+        ),
+        execute=True,
+        opcode=opcode,
+    )
+
+    def architectural(
+        values: tuple[int | None, ...],
+    ) -> tuple[KnownOrUnknown, ...]:
+        return tuple(
+            UNKNOWN if value is None else ExactWord(ADDRESS_WIDTH, value)
+            for value in values
+        )
+
+    return replace(
+        state,
+        dag=DAGRegisters(
+            i=architectural(result.state.i),
+            m=architectural(result.state.m),
+            l=architectural(result.state.l),
+        ),
+    )
 
 
 def _apply_type7_immediate(

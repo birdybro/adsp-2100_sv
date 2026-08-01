@@ -441,6 +441,12 @@ It performs no PM-data or DM transaction and generates no status
 The bounded model/RTL slice checks every selection, positive and negative
 modifiers, circular wrap in both directions, reset-invalid storage, unsupported
 configuration invalidation, and deterministic mixed state sequences.
+The bounded ordinary-fetch owner now connects the same action to the single
+shared architectural-state owner. An enabled state-8-to-1 edge captures the
+cycle-start I/M/L operands with the PC+1 fetch request; only the state-7-to-8
+retirement edge writes the selected I together with PC and the fetched next
+word. All 32 words execute in the 442,405-clock comparison, and directed
+checks prove preservation of M/L, ASTAT, and the PM-data/DM interfaces.
 
 A bounded stateful execution slice now connects Type 26 to all four stack
 classes, live CNTR, ASTAT/MSTAT/IMASK, and composed SSTAT. It samples all

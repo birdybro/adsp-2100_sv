@@ -74,6 +74,12 @@ module adsp2100_internal_move_slice (
     logic [7:0] se_unused;
     logic [4:0] sb_unused;
     logic [31:0] sr_unused;
+    logic [13:0] dag_i_read_unused;
+    logic        dag_i_read_valid_unused;
+    logic [13:0] dag_m_read_unused;
+    logic        dag_m_read_valid_unused;
+    logic [13:0] dag_l_read_unused;
+    logic        dag_l_read_valid_unused;
     logic       unused_observation;
 
     function automatic logic selector_present (
@@ -172,6 +178,15 @@ module adsp2100_internal_move_slice (
         .dag_i_write_address_i(3'b000),
         .dag_i_write_data_i(14'h0000),
         .dag_i_write_result_valid_i(1'b0),
+        .dag_execution_read_i(1'b0),
+        .dag_i_l_read_address_i(3'b000),
+        .dag_m_read_address_i(3'b000),
+        .dag_i_read_data_o(dag_i_read_unused),
+        .dag_i_read_valid_o(dag_i_read_valid_unused),
+        .dag_m_read_data_o(dag_m_read_unused),
+        .dag_m_read_valid_o(dag_m_read_valid_unused),
+        .dag_l_read_data_o(dag_l_read_unused),
+        .dag_l_read_valid_o(dag_l_read_valid_unused),
         .mode_sr_i(2'b00),
         .mode_br_i(2'b00),
         .mode_ol_i(2'b00),
@@ -223,7 +238,10 @@ module adsp2100_internal_move_slice (
         alternate_bank_unused, bit_reverse_unused, overflow_latch_unused,
         saturate_ar_unused, not_counter_expired_unused,
         dreg_read_unused, dreg_read_2_unused, af_unused, mf_unused,
-        mr_unused, se_unused, sb_unused, sr_unused
+        mr_unused, se_unused, sb_unused, sr_unused,
+        dag_i_read_unused, dag_i_read_valid_unused,
+        dag_m_read_unused, dag_m_read_valid_unused,
+        dag_l_read_unused, dag_l_read_valid_unused
     };
 
 `ifndef SYNTHESIS

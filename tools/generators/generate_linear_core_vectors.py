@@ -73,6 +73,15 @@ def _type17(destination: int, source: int) -> int:
     )
 
 
+def _type21(*, dag: int, i_local: int, m_local: int) -> int:
+    return (
+        0x090000
+        | ((dag & 1) << 4)
+        | ((i_local & 3) << 2)
+        | (m_local & 3)
+    )
+
+
 def _type9(
     *,
     z: int,
@@ -170,6 +179,34 @@ def _directed_opcodes() -> tuple[int, ...]:
         for destination in sorted(writable.values())
         for source in sorted(readable.values())
     )
+    # Traverse all 32 Type 21 selectors with known I/M/L inputs. Alternate
+    # linear and circular configurations, including positive and negative M,
+    # so fetched retirement observes selection, arithmetic, and validity.
+    for dag in (0, 1):
+        group_base = 0x10 if dag == 0 else 0x20
+        for i_local in range(4):
+            for m_local in range(4):
+                circular = bool((dag + i_local + m_local) & 1)
+                if circular:
+                    old_i = 0x0101 if m_local & 1 else 0x0102
+                    modify = 0x3FFD if m_local & 1 else 0x0003
+                    length = 0x0005
+                else:
+                    old_i = 0x0200 + (i_local << 4) + m_local
+                    modify = 0x3FFF if m_local & 1 else 0x0002
+                    length = 0
+                opcodes.extend(
+                    (
+                        _type7(group_base + i_local, old_i),
+                        _type7(group_base + 4 + m_local, modify),
+                        _type7(group_base + 8 + i_local, length),
+                        _type21(
+                            dag=dag,
+                            i_local=i_local,
+                            m_local=m_local,
+                        ),
+                    )
+                )
     # Establish known feedback registers in both banks, then traverse every
     # Type 9 AMF/condition combination through the fetched retirement path.
     opcodes.extend(
@@ -331,7 +368,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(25)
+    choice = rng.randrange(26)
     if choice == 0:
         return 0
     if choice < 5:
@@ -374,10 +411,16 @@ def _legal_opcode(rng: random.Random) -> int:
             source=rng.randrange(16),
         )
     if choice == 21:
-        return 0x050000
+        return _type21(
+            dag=rng.randrange(2),
+            i_local=rng.randrange(4),
+            m_local=rng.randrange(4),
+        )
     if choice == 22:
-        return _type23(rng.randrange(8))
+        return 0x050000
     if choice == 23:
+        return _type23(rng.randrange(8))
+    if choice == 24:
         return _type24(rng.choice((1, 2)), rng.randrange(8))
     z = rng.randrange(2)
     amf = rng.randrange(1, 32)

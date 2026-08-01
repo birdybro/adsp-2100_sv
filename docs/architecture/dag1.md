@@ -71,6 +71,13 @@ rule through state-6 DMACK qualification and state-7 completion. Other direct
 DM transfers and multifunction instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
+The ordinary fetched owner now uses the same stored DAG1 state for all 16
+`G=0` Type 21 words. Its dedicated execution selector leaves the external
+probe independent, samples I/M/L before the instruction, and writes only the
+selected I at native state-7 retirement; the 442,405-clock integrated
+comparison covers positive and negative linear/circular updates without a
+memory or status action.
+
 Original Type 1 action selection now fixes its DM address to DAG1 and exposes
 all I0–I3/M0–M3 combinations independently of the simultaneous DAG2 PM read.
 The selected old I supplies the address and its corresponding L supplies

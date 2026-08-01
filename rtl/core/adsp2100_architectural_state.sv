@@ -53,6 +53,16 @@ module adsp2100_architectural_state (
     input  logic [13:0] dag_i_write_data_i,
     input  logic        dag_i_write_result_valid_i,
 
+    input  logic        dag_execution_read_i,
+    input  logic [2:0]  dag_i_l_read_address_i,
+    input  logic [2:0]  dag_m_read_address_i,
+    output logic [13:0] dag_i_read_data_o,
+    output logic        dag_i_read_valid_o,
+    output logic [13:0] dag_m_read_data_o,
+    output logic        dag_m_read_valid_o,
+    output logic [13:0] dag_l_read_data_o,
+    output logic        dag_l_read_valid_o,
+
     input  logic [1:0]  mode_sr_i,
     input  logic [1:0]  mode_br_i,
     input  logic [1:0]  mode_ol_i,
@@ -108,6 +118,8 @@ module adsp2100_architectural_state (
     logic        register_conflict;
 
     logic [2:0]  read_dag_address;
+    logic [2:0]  selected_i_l_read_address;
+    logic [2:0]  selected_m_read_address;
     logic [13:0] read_i_data;
     logic        unused_read_i_valid;
     logic [13:0] read_m_data;
@@ -218,6 +230,16 @@ module adsp2100_architectural_state (
         read_code_i[5:4] == 2'b10,
         read_code_i[1:0]
     };
+    assign selected_i_l_read_address = dag_execution_read_i
+        ? dag_i_l_read_address_i : read_dag_address;
+    assign selected_m_read_address = dag_execution_read_i
+        ? dag_m_read_address_i : read_dag_address;
+    assign dag_i_read_data_o = read_i_data;
+    assign dag_i_read_valid_o = unused_read_i_valid;
+    assign dag_m_read_data_o = read_m_data;
+    assign dag_m_read_valid_o = unused_read_m_valid;
+    assign dag_l_read_data_o = read_l_data;
+    assign dag_l_read_valid_o = unused_read_l_valid;
     assign probe_dag_address = {
         probe_code_i[5:4] == 2'b10,
         probe_code_i[1:0]
@@ -352,8 +374,8 @@ module adsp2100_architectural_state (
     adsp2100_dag_register_file dag_registers (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .i_l_read_address_i(read_dag_address),
-        .m_read_address_i(read_dag_address),
+        .i_l_read_address_i(selected_i_l_read_address),
+        .m_read_address_i(selected_m_read_address),
         .i_read_data_o(read_i_data),
         .i_read_valid_o(unused_read_i_valid),
         .m_read_data_o(read_m_data),

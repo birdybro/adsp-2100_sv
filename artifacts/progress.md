@@ -1,6 +1,6 @@
 # Project progress
 
-**Updated:** 2026-07-31
+**Updated:** 2026-08-01
 
 **Latest verified engineering commit:** `f1dc897`
 
@@ -12,10 +12,10 @@ exhaustive Type 1 dual-read action selection,
 exhaustive Type 3 direct-DM state/native execution,
 exhaustive Type 7 non-data-register immediate state execution,
 bounded steady-state NOP/Type 6/Type 7/Type 8/Type 9/Type 14/Type 15/Type 16/
-Type 17/Type 18/Type 23/Type 24/Type 25 ordinary-fetch ownership with Type 8
+Type 17/Type 18/Type 21/Type 23/Type 24/Type 25 ordinary-fetch ownership with Type 8
 ALU/MAC-plus-DREG and Type 9 ALU/MAC,
 Type 14 parallel move/shifter, Type 15/16 shifter/status, Type 23 divide-
-quotient, Type 24 divide-sign, and Type 25 conditional MR actions
+quotient, Type 24 divide-sign, Type 25 conditional MR, and Type 21 DAG actions
 attached directly to the shared architectural state,
 normal-operation BR/BG request/grant/release/restart control attached to that
 bounded linear fetch owner, ordinary-fetch HALT recognition/stop/restart
@@ -34,6 +34,24 @@ attached to native DM pin phases
 cycle-, or Hard Drivin'-complete
 
 ## Completed increments
+
+- all 32 original Type 21 MODIFY words attached to the shared architectural-
+  state owner and native ordinary-fetch phases. A dedicated execution read
+  selector supplies cycle-start I/M/L values independently of the debug probe;
+  only the selected I commits at state 7, with no M/L, status, PM-data, or DM
+  side effect. The 24-test owner suite and 442,405 deterministic model/RTL
+  clocks cover every DAG/I/M selection and positive/negative linear/circular
+  updates; the standalone 50,124-clock Type 21 comparison and all dependent
+  Type 17/3/6/7 tests remain passing. BR/BG, retained-fetch/shared-PM/BR-BG,
+  and HALT compatibility flows each pass 50,003 clocks. Strict lint is clean,
+  and all 73 formal recipes pass syntax lint; SymbiYosys/Yosys are unavailable.
+  The constrained 25 ns private-PM and private-PM/BR-BG Cyclone V fits close at
+  3,365/3,417 ALMs and +0.359/+0.477 ns worst setup respectively. The 25 ns
+  HALT fit uses 3,406 ALMs but misses setup by 0.628 ns at 39.02 MHz; the 20 ns
+  retained-fetch/shared-PM/BR-BG owner uses 3,485 ALMs and misses by 4.322 ns
+  at 41.12 MHz. All
+  four have two DSPs, no RAM, and zero unconstrained paths; timing and shared
+  Type 8/9 compute-datapath optimization remain open;
 
 - fetched all 476,672 source-closed original Type 8 ALU/MAC-plus-DREG packets
   attached to the shared architectural-state owner and native ordinary-fetch
@@ -511,7 +529,7 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 689 distinct Python unit checks plus manifest/hash verification;
+- 690 distinct Python unit checks plus manifest/hash verification;
 - 50,061 Type 13/shared-PM/BR-BG model/RTL clocks cover retained collision
   retries, PM-data and recovery completion isolation, ordinary-fetch cache
   fill, raw Type 5 isolation, PMDA-low recovery fetch, and grant masking;
@@ -651,7 +669,7 @@ outstanding.
   50,032 clocks, the native DM pin-phase boundary adds 50,039 clocks, and the
   Type 13/cache/native-PM attachment adds 50,081 clocks,
   the Type 5/cache/native-PM/HALT attachment adds 50,126 clocks,
-  the bounded Type 6/7/8/9/14/15/16/17/18/23/24/25 linear owner adds 442,392 phase clocks,
+  the bounded Type 6/7/8/9/14/15/16/17/18/21/23/24/25 linear owner adds 442,405 phase clocks,
   the linear-owner/normal-BR/BG composition adds 50,003 clocks across 86
   complete handshakes,
   the linear-owner/ordinary-fetch-HALT composition adds 50,003 clocks across

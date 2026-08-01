@@ -376,7 +376,11 @@ without an actual memory access; the later Cross-Software manual is used only
 to corroborate the explicit corresponding-L and writeback wording
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4;
 ADI-2101-CROSS-1990, printed p. 9-65]. This is instruction-boundary evidence,
-not fetch-phase or external-pin timing evidence.
+and the fetched attachment now adds explicit native phase evidence: operands
+are captured with the PC+1 request at enabled state 8-to-1 and selected-I,
+PC, and next-word state commit together at state 7-to-8. Twenty-four directed
+owner tests and 442,405 phase clocks cover all 32 selections with no PM-data
+or DM transaction. Reset-first-fetch and cross-event priority remain open.
 
 The bounded Type 26 model/RTL execution slice verifies that every selected
 status/count/loop/PC action reads cycle-start state and commits on the same

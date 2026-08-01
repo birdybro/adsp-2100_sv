@@ -152,14 +152,19 @@ selected I at cycle end. Unknown inputs or inputs outside the documented
 circular-placement and `abs(M) <= L` restrictions invalidate that destination
 instead of silently inventing a value
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
+The bounded fetched owner now uses a dedicated execution read selection on
+this same state owner. All 32 MODIFY words sample I/M/L before execution and
+commit only the selected I with PC and the fetched next word at native state
+7-to-8; the 442,405-clock integrated comparison observes no PM-data, DM, or
+status action.
 A separate exact four-by-sixteen status stack and a combined exact
 16-by-14 PC/four-by-14 count/four-by-18 loop-stack boundary implement LIFO
 storage, pointer saturation, loss of the newest overflowing push, sticky
 overflow, and all eight SSTAT sources [ADI-DATABOOK-1987, printed
 pp. 2-21–2-22; ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. The two SSTAT
 fragments are composed inside the extracted `adsp2100_architectural_state`
-owner used by bounded Type 17, while Type 26 retains a separate verification
-slice. This is not yet a whole-core fetch/execute path: computational-unit,
+owner used by bounded Type 17 and fetched Type 21, while Type 26 retains a
+separate verification slice. This is not yet a whole-core fetch/execute path: stack-control,
 memory-completion, and sequencer-event writes have not converged on the
 extracted owner.
 

@@ -31,6 +31,15 @@ def _type18(payload: int) -> int:
     return 0x0C0000 | ((payload & 0xFF) << 4)
 
 
+def _type21(*, dag: int, i_local: int, m_local: int) -> int:
+    return (
+        0x090000
+        | ((dag & 1) << 4)
+        | ((i_local & 3) << 2)
+        | (m_local & 3)
+    )
+
+
 def _type17(destination: int, source: int) -> int:
     return (
         0x0D0000
@@ -187,6 +196,10 @@ class LinearCoreTests(unittest.TestCase):
             contract["supported_current_instructions"],
         )
         self.assertIn(
+            "ALL_32_TYPE_21_MODIFY_WORDS",
+            contract["supported_current_instructions"],
+        )
+        self.assertIn(
             "ALL_14336_SUPPORTED_TYPE_15_IMMEDIATE_SHIFT_WORDS",
             contract["supported_current_instructions"],
         )
@@ -266,6 +279,38 @@ class LinearCoreTests(unittest.TestCase):
             read_dreg(moved.state.architecture.alternate, DREG.AX0),
             ExactWord(16, 0x000B),
         )
+
+    def test_type21_modify_samples_old_dag_state_and_commits_at_retirement(
+        self,
+    ) -> None:
+        state = _setup(LinearCoreState.reset(), _type7(0x10, 0x0102))
+        for opcode in (
+            _type7(0x14, 0x0003),
+            _type7(0x18, 0x0005),
+            _type21(dag=0, i_local=0, m_local=0),
+        ):
+            state = _complete(_issue(state).state, opcode).state
+
+        issued = _issue(state)
+        self.assertTrue(issued.instruction_issue)
+        self.assertEqual(
+            issued.state.architecture.dag.i[0],
+            ExactWord(14, 0x0102),
+        )
+        retired = _complete(issued.state, 0)
+        self.assertEqual(
+            retired.state.architecture.dag.i[0],
+            ExactWord(14, 0x0100),
+        )
+        self.assertEqual(
+            retired.state.architecture.dag.m[0],
+            ExactWord(14, 0x0003),
+        )
+        self.assertEqual(
+            retired.state.architecture.dag.l[0],
+            ExactWord(14, 0x0005),
+        )
+        self.assertEqual(retired.state.architecture.astat, UNKNOWN)
 
     def test_type9_alu_retires_with_next_fetch_and_false_form_preserves(self) -> None:
         state = _setup(LinearCoreState.reset(), _type7(0x30, 0))

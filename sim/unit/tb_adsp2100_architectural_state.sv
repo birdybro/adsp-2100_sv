@@ -38,6 +38,15 @@ module tb_adsp2100_architectural_state;
     logic [2:0] dag_i_write_address;
     logic [13:0] dag_i_write_data;
     logic dag_i_write_result_valid;
+    logic dag_execution_read;
+    logic [2:0] dag_i_l_read_address;
+    logic [2:0] dag_m_read_address;
+    logic [13:0] dag_i_read_data;
+    logic dag_i_read_valid;
+    logic [13:0] dag_m_read_data;
+    logic dag_m_read_valid;
+    logic [13:0] dag_l_read_data;
+    logic dag_l_read_valid;
     logic [1:0] mode_sr;
     logic [1:0] mode_br;
     logic [1:0] mode_ol;
@@ -110,6 +119,9 @@ module tb_adsp2100_architectural_state;
             dag_i_write_address = 3'b000;
             dag_i_write_data = 14'h0000;
             dag_i_write_result_valid = 1'b0;
+            dag_execution_read = 1'b0;
+            dag_i_l_read_address = 3'b000;
+            dag_m_read_address = 3'b000;
             mode_sr = 2'b00;
             mode_br = 2'b00;
             mode_ol = 2'b00;
@@ -208,6 +220,15 @@ module tb_adsp2100_architectural_state;
         .dag_i_write_address_i(dag_i_write_address),
         .dag_i_write_data_i(dag_i_write_data),
         .dag_i_write_result_valid_i(dag_i_write_result_valid),
+        .dag_execution_read_i(dag_execution_read),
+        .dag_i_l_read_address_i(dag_i_l_read_address),
+        .dag_m_read_address_i(dag_m_read_address),
+        .dag_i_read_data_o(dag_i_read_data),
+        .dag_i_read_valid_o(dag_i_read_valid),
+        .dag_m_read_data_o(dag_m_read_data),
+        .dag_m_read_valid_o(dag_m_read_valid),
+        .dag_l_read_data_o(dag_l_read_data),
+        .dag_l_read_valid_o(dag_l_read_valid),
         .mode_sr_i(mode_sr),
         .mode_br_i(mode_br),
         .mode_ol_i(mode_ol),
@@ -401,9 +422,23 @@ module tb_adsp2100_architectural_state;
 
         // DAG setup and execution updates use old-value/new-value timing.
         move_register(6'h10, 16'h0123);
+        move_register(6'h15, 16'h3ffd);
+        move_register(6'h18, 16'h0005);
         read_code = 6'h10;
         #1;
         expect16(read_data, 16'h0123, "DAG I0 setup");
+        dag_execution_read = 1'b1;
+        dag_i_l_read_address = 3'd0;
+        dag_m_read_address = 3'd1;
+        #1;
+        if (
+            !dag_i_read_valid || !dag_m_read_valid || !dag_l_read_valid
+            || dag_i_read_data !== 14'h0123
+            || dag_m_read_data !== 14'h3ffd
+            || dag_l_read_data !== 14'h0005
+        ) begin
+            $fatal(1, "dedicated DAG execution read mismatch");
+        end
         clear_actions();
         dag_i_write_enable = 1'b1;
         dag_i_write_address = 3'd0;

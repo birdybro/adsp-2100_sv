@@ -28,6 +28,9 @@ read -formal -sv rtl/core/adsp2100_divide_quotient_decode.sv
 read -formal -sv rtl/core/adsp2100_divide_quotient_action.sv
 read -formal -sv rtl/core/adsp2100_divide_sign_decode.sv
 read -formal -sv rtl/core/adsp2100_divide_sign_action.sv
+read -formal -sv rtl/core/adsp2100_modify_address_decode.sv
+read -formal -sv rtl/core/adsp2100_dag.sv
+read -formal -sv rtl/core/adsp2100_modify_address_action.sv
 read -formal -sv rtl/core/adsp2100_alu.sv
 read -formal -sv rtl/core/adsp2100_mr_saturation_decode.sv
 read -formal -sv rtl/core/adsp2100_mr_saturate.sv
@@ -74,6 +77,9 @@ rtl/core/adsp2100_divide_quotient_decode.sv
 rtl/core/adsp2100_divide_quotient_action.sv
 rtl/core/adsp2100_divide_sign_decode.sv
 rtl/core/adsp2100_divide_sign_action.sv
+rtl/core/adsp2100_modify_address_decode.sv
+rtl/core/adsp2100_dag.sv
+rtl/core/adsp2100_modify_address_action.sv
 rtl/core/adsp2100_alu.sv
 rtl/core/adsp2100_mr_saturation_decode.sv
 rtl/core/adsp2100_mr_saturate.sv

@@ -85,6 +85,15 @@ module adsp2100_linear_fetch_client (
     logic [1:0] type18_mode_as;
     logic type18_has_effect_unused;
     logic type18_has_alias_unused;
+    logic type21_action_valid;
+    logic type21_dag2_unused;
+    logic [2:0] type21_i_address;
+    logic [2:0] type21_m_address;
+    logic type21_operands_valid_unused;
+    logic type21_configuration_valid_unused;
+    logic type21_i_write;
+    logic [13:0] type21_i_write_data;
+    logic type21_i_write_result_valid;
     logic type17_class_valid;
     logic type17_action_valid;
     logic type17_invalid_subencoding;
@@ -236,6 +245,12 @@ module adsp2100_linear_fetch_client (
     logic [7:0] state_se;
     logic [4:0] state_sb;
     logic [31:0] state_sr;
+    logic [13:0] state_dag_i_read_data;
+    logic state_dag_i_read_valid;
+    logic [13:0] state_dag_m_read_data;
+    logic state_dag_m_read_valid;
+    logic [13:0] state_dag_l_read_data;
+    logic state_dag_l_read_valid;
     logic unused_observation;
 
     assign issue_boundary_o = (
@@ -261,7 +276,7 @@ module adsp2100_linear_fetch_client (
         || type17_action_valid
         || type18_valid || type9_action_valid || type15_action_valid
         || type16_action_valid || type14_action_valid || type23_action_valid
-        || type24_action_valid || type25_action_valid
+        || type21_action_valid || type24_action_valid || type25_action_valid
     );
     assign reserved_subencoding_o = (
         issue_boundary_o && instruction_valid_q
@@ -387,6 +402,25 @@ module adsp2100_linear_fetch_client (
         .destination_present_o(type17_destination_present_unused),
         .destination_writable_o(type17_destination_writable_unused),
         .source_valid_o(type17_source_valid_unused)
+    );
+
+    adsp2100_modify_address_action type21_action (
+        .opcode_i(opcode_q),
+        .i_data_i(state_dag_i_read_data),
+        .i_data_valid_i(state_dag_i_read_valid),
+        .m_data_i(state_dag_m_read_data),
+        .m_data_valid_i(state_dag_m_read_valid),
+        .l_data_i(state_dag_l_read_data),
+        .l_data_valid_i(state_dag_l_read_valid),
+        .action_valid_o(type21_action_valid),
+        .dag2_o(type21_dag2_unused),
+        .i_address_o(type21_i_address),
+        .m_address_o(type21_m_address),
+        .operands_valid_o(type21_operands_valid_unused),
+        .configuration_valid_o(type21_configuration_valid_unused),
+        .i_write_o(type21_i_write),
+        .i_write_data_o(type21_i_write_data),
+        .i_write_result_valid_o(type21_i_write_result_valid)
     );
 
     adsp2100_compute_move_action type8_action (
@@ -689,10 +723,19 @@ module adsp2100_linear_fetch_client (
         .shifter_sb_result_i(
             type14_sb_write ? type14_sb_result : type16_sb_result
         ),
-        .dag_i_write_enable_i(1'b0),
-        .dag_i_write_address_i(3'b000),
-        .dag_i_write_data_i(14'h0000),
-        .dag_i_write_result_valid_i(1'b0),
+        .dag_i_write_enable_i(retire_event_o && type21_i_write),
+        .dag_i_write_address_i(type21_i_address),
+        .dag_i_write_data_i(type21_i_write_data),
+        .dag_i_write_result_valid_i(type21_i_write_result_valid),
+        .dag_execution_read_i(type21_action_valid),
+        .dag_i_l_read_address_i(type21_i_address),
+        .dag_m_read_address_i(type21_m_address),
+        .dag_i_read_data_o(state_dag_i_read_data),
+        .dag_i_read_valid_o(state_dag_i_read_valid),
+        .dag_m_read_data_o(state_dag_m_read_data),
+        .dag_m_read_valid_o(state_dag_m_read_valid),
+        .dag_l_read_data_o(state_dag_l_read_data),
+        .dag_l_read_valid_o(state_dag_l_read_valid),
         .mode_sr_i(
             retire_event_o && type18_valid ? type18_mode_sr : 2'b00
         ),
@@ -790,6 +833,8 @@ module adsp2100_linear_fetch_client (
         type17_destination_writable_unused, type17_source_valid_unused,
         type8_unverified_amf_zero_unused, type8_destination_collision_unused,
         type8_is_mac_unused,
+        type21_dag2_unused, type21_operands_valid_unused,
+        type21_configuration_valid_unused,
         type9_class_valid, type9_nop_action, type9_condition_true,
         type9_is_mac, type9_is_alu, type9_x_source_data_unused,
         type9_y_source_data_unused, type16_condition_true,
