@@ -153,7 +153,7 @@ cycle-, or Hard Drivin'-complete
 - 48-code general-MOVE register table with reserved-code accounting;
 - independent exact-width/reset/image-loading/reserved-rejection/NOP model
   foundation;
-- partial NOP, Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15,
+- partial NOP, Type 2, Type 6, Type 8, Type 9, Type 10, Type 11, Type 14, Type 15,
   Type 16, Type 17, Type 18, Type 19, Type 20, Type 21, Type 22, Type 23,
   Type 24, and
   Type 25 assembler/disassembler round trip;
@@ -166,9 +166,11 @@ outstanding.
 ## Current evidence
 
 - 19 provenance records; 14 locally acquired and hash-verified;
-- 437 implemented Python unit checks plus manifest/hash verification;
+- 444 implemented Python unit checks plus manifest/hash verification;
 - all 16,777,216 program words pass independent class-decode comparison:
   15,473,178 shown-class and 1,304,038 reserved-unshown words;
+- all 2,097,152 Type 2 words decode to exact immediate/G/I/M fields in Python
+  and exhaustive RTL traversal; every other 24-bit word is action-free;
 - all 32 Type 26 words produce their exact SPP/CP/LP/PP actions and every
   other 24-bit word produces no stack-control action in exhaustive RTL
   simulation;
@@ -350,7 +352,7 @@ outstanding.
   Type 25 decode/execution plus Type 17 action/state execution
   formal harnesses plus Type 6, Type 8, Type 9, Type 10, Type 11, Type 14,
   Type 12, Type 13, Type 15, Type 16, Type 19, Type 20, phase-aware Type 22,
-  Type 23, Type 24, and instruction-cache invariants (40 total) pass
+  Type 2, Type 23, Type 24, and instruction-cache invariants (41 total) pass
   assertion syntax lint, but no
   formal proof ran because SymbiYosys/Yosys are unavailable;
 - no integrated architectural core, complete assembler, or whole-core
@@ -365,8 +367,10 @@ outstanding.
 3. Connect the source-bounded 16-entry instruction-cache monitor to Type 13
    and a unified fetch owner, replacing the bounded caller oracle while
    retaining OQ-008 event-interaction limits.
-4. Extend the bounded logical DM and PM paths into sourced native pin phases and
+4. Connect the class-complete Type 2 action decoder to a waited logical DM
+   transaction and completion-only DAG writeback.
+5. Extend the bounded logical DM and PM paths into sourced native pin phases and
    whole-core transaction arbitration.
-5. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
-6. Research and connect interrupt-entry sequencing to the now-composed SSTAT
+6. Trace Atari schematic nets and PAL behavior before writing the board wrapper.
+7. Research and connect interrupt-entry sequencing to the now-composed SSTAT
    and status-stack boundary without inventing arbitration priorities.

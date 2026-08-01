@@ -3,6 +3,7 @@
 **Updated:** 2026-07-31
 
 - Verilator 5.048 parses and lints the generated packages, class decoder,
+  Type 2 action decoder,
   Type 6, Type 8, Type 9, Type 10, Type 11, Type 12, Type 13, Type 14, Type 15,
   Type 16, Type 17, Type 19, Type 20, Type 22, Type 23, and Type 24
   decoders/integration slices, the standalone instruction cache, stack-control

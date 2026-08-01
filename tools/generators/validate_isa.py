@@ -96,6 +96,7 @@ def validate_database(data: dict[str, Any]) -> None:
             "ISA instruction-format database link is incomplete"
         )
     if data.get("semantic_databases") != [
+        "docs/generated/adsp2100_dm_write_immediate.yaml",
         "docs/generated/adsp2100_internal_move.yaml",
         "docs/generated/adsp2100_stack_control.yaml",
         "docs/generated/adsp2100_mr_saturation.yaml",

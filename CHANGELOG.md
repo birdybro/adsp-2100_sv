@@ -102,6 +102,10 @@ semantic versioning after its first release.
   contiguous valid region, discontinuity restart, sequential fill, and
   circular oldest-word replacement; plus deterministic differential vectors,
   invariant harness, machine-readable contract, and Quartus smoke project.
+- A primary-backed, class-complete original Type 2 immediate-DM-write action
+  database, independent decoder, three hand-derived fixtures, portable RTL
+  decoder, algebraic assembler/disassembler support, exhaustive 24-bit
+  fail-closed simulation, and formal recipe.
 - A bounded Type 8 ALU/MAC-plus-internal-DREG semantic entry covering 476,672
   source-closed noncolliding words; an independent unknown-preserving parallel
   state model, exact fail-closed decoder, portable execution RTL, canonical
@@ -303,6 +307,14 @@ semantic versioning after its first release.
 
 ### Verified
 
+- Type 2 exhaustive RTL decode traverses all 16,777,216 program words,
+  identifies exactly 2,097,152 field-defined actions, and proves all other
+  words action-free. Six model/metadata tests cover both DAGs, all I/M
+  selections, raw 16-bit immediate boundaries, hand fixtures, and failures.
+- The expanded `make test` passes 444 distinct Python checks, 14 local
+  reference hashes, all generated-data checks, strict Verilator lint,
+  twenty-two exhaustive 24-bit decode traversals, and every existing
+  model/RTL vector regression.
 - The instruction-cache regression passes ten directed tests and 50,028
   deterministic model/RTL clocks covering reset invalidation, all 16 slots,
   region fill and wrap, inside-region refresh, seventeenth-word replacement,
@@ -355,12 +367,6 @@ semantic versioning after its first release.
   routing duplicates, no RAM/DSP blocks, +8.448 ns worst setup and +0.168 ns
   worst multicorner hold slack, 86.81 MHz worst slow-corner Fmax, and zero
   unconstrained clocks, ports, or paths.
-- The expanded `make test` passes 437 distinct Python checks, 14 local
-  reference hashes, all generated-data checks, strict Verilator lint,
-  twenty-one exhaustive 24-bit decode traversals, and every existing model/RTL
-  vector regression including the Type 12 state/bus clocks, Type 13
-  state/cache/bus clocks, and all Type 23 and Type 24 division cycles.
-
 - Existing repository state and installed-tool baseline recorded on
   2026-07-30: Git/Python/Make/Verilator/Quartus available; pytest, Icarus,
   Yosys, SymbiYosys, and svlint unavailable.

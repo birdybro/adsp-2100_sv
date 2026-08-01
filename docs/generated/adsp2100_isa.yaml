@@ -11,6 +11,7 @@
   ],
   "instruction_format_database": "docs/generated/adsp2100_instruction_formats.yaml",
   "semantic_databases": [
+    "docs/generated/adsp2100_dm_write_immediate.yaml",
     "docs/generated/adsp2100_internal_move.yaml",
     "docs/generated/adsp2100_stack_control.yaml",
     "docs/generated/adsp2100_mr_saturation.yaml",
@@ -96,8 +97,8 @@
       "encoding_pattern": "101xxxxxxxxxxxxxxxxxxxxx",
       "opcode_mask": "0xe00000",
       "opcode_value": "0xa00000",
-      "status": "PRIMARY_TRANSCRIPTION_CROSSCHECKED",
-      "confidence": "CORROBORATED",
+      "status": "COMPLETE_ACTION_DECODE_EXECUTION_PENDING",
+      "confidence": "VERIFIED_PRIMARY",
       "source_citation": "ADI-UM-1989 printed p. A-1 (scan PDF p. 140)"
     },
     {

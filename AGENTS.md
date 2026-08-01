@@ -292,6 +292,10 @@ replacement. It preserves authentic invalid data state and passes 50,028
 model/RTL clocks. It is not yet wired to Type 13 or a unified fetch controller;
 the manual's hidden ahead/behind register encoding, self-modifying PM effects,
 and event arbitration remain OQ-008.
+Original Type 2 immediate DM-write action decode is class-complete: all
+2,097,152 words select the raw 16-bit data field and a same-DAG I/M/L tuple.
+Its logical DMACK transaction, completion-only I update, and whole-core
+arbitration are not yet implemented.
 The bounded Type 8 slice executes documented ALU and fractional-MAC
 computations in parallel with one internal DREG move. Both clauses sample the
 cycle-start selected bank; noncolliding DREG/AR/AF/MR/MF and ASTAT writes

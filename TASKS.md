@@ -157,6 +157,8 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `tests/test_isa_database.py`,
   `tests/test_instruction_formats.py`, `tests/test_stack_control.py`,
   `tests/test_mr_saturation.py`, `tests/test_mode_control.py`,
+  `tests/test_dm_write_immediate.py`,
+  `tests/test_assembler_disassembler.py`,
   `tests/test_modify_address.py`, `tests/test_internal_move.py`,
   `tests/test_load_dreg_immediate.py`, `tests/test_immediate_shift.py`,
   `tests/test_conditional_shift.py`, `tests/test_shift_move.py`,
@@ -167,6 +169,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_mr_saturation_decode.sv`,
   `sim/unit/tb_adsp2100_mode_control_decode.sv`,
   `sim/unit/tb_adsp2100_modify_address_decode.sv`,
+  `sim/unit/tb_adsp2100_dm_write_immediate_decode.sv`,
   `sim/unit/tb_adsp2100_internal_move_decode.sv`,
   `sim/unit/tb_adsp2100_load_dreg_immediate_decode.sv`,
   `sim/unit/tb_adsp2100_immediate_shift_decode.sv`,
@@ -178,6 +181,7 @@ advance beyond research until a page-level primary citation is added.
   `sim/unit/tb_adsp2100_direct_jump_decode.sv`,
   `formal/class_decode.sby`, `formal/stack_control_decode.sby`,
   `formal/mr_saturation_decode.sby`, `formal/mode_control_decode.sby`,
+  `formal/dm_write_immediate_decode.sby`,
   `formal/modify_address_decode.sby`, `formal/internal_move_decode.sby`,
   `formal/load_dreg_immediate.sby`, `formal/immediate_shift.sby`,
   `formal/conditional_shift.sby`,
@@ -204,7 +208,12 @@ advance beyond research until a page-level primary citation is added.
   all-zero NOP, parameterized Type 6 immediate DREG load, parameterized Type
   18 MODE CONTROL, parameterized Type 21 MODIFY, and exact Type 25
   `IF MV SAT MR;` words are hand-verified class-complete semantic instruction
-  entries. Type 16 has a bounded semantic entry for 1,792 documented words;
+  entries. Type 2 now has a primary-backed class-complete action record,
+  independent decoder, three hand fixtures, exhaustive 24-bit RTL traversal,
+  and six model/metadata tests for all 2,097,152 field-defined words. Its
+  160 boundary/selector algebraic forms round trip; its DMACK transaction and
+  completion-only DAG update remain unimplemented.
+  Type 16 has a bounded semantic entry for 1,792 documented words;
   its 256 unassigned-XOP subencodings fail closed. Type 14 has a bounded
   semantic entry for 25,648 canonical words; 39,888 unresolved or unsupported
   words fail closed. Type 15 has a bounded
@@ -1365,7 +1374,8 @@ advance beyond research until a page-level primary citation is added.
 
 The highest-priority unblocked work is connecting the standalone original
 instruction-cache monitor to Type 13 and a native PM phase boundary, replacing
-Type 13's bounded caller-provided cache result, alongside the next
+Type 13's bounded caller-provided cache result; completing Type 2's logical
+DMACK transaction and completion-only DAG update; and constructing the next
 source-closed Type 1/4/5 action graph in `ISA-002`/`ISA-001` and `REF-001`
 acquisition of the exact original Cross-Software/opcode reference. Field
 placement is closed for the printed Appendix A diagrams, but legality,

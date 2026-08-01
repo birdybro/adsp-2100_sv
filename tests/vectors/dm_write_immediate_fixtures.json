@@ -1,0 +1,8 @@
+{
+  "source": "ADI-UM-1989 printed pp. A-1 and A-6",
+  "hand_checked_cases": [
+    {"opcode": "0xa00000", "data": "0x0000", "dag": 0, "i": 0, "m": 0},
+    {"opcode": "0xafffff", "data": "0xffff", "dag": 0, "i": 3, "m": 3},
+    {"opcode": "0xbabcdb", "data": "0xabcd", "dag": 1, "i": 6, "m": 7}
+  ]
+}

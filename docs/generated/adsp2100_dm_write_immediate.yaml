@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "device": "ADSP-2100",
+  "status": "COMPLETE_FOR_ORIGINAL_TYPE_2_ACTION_DECODE",
+  "confidence": "VERIFIED_PRIMARY",
+  "instruction": {
+    "original_type": 2,
+    "name": "data-memory write, immediate data",
+    "opcode_mask": "0xe00000",
+    "opcode_value": "0xa00000",
+    "encoding_pattern": "101xxxxxxxxxxxxxxxxxxxxx",
+    "field_defined_encoding_count": 2097152,
+    "condition": "UNCONDITIONAL",
+    "base_instruction_cycles": 1,
+    "wait_state_sensitivity": "DMACK_EXTENDS_STATE_SEVEN",
+    "dm_transaction": "WRITE",
+    "pm_data_transaction": "NONE"
+  },
+  "fields": [
+    {"id": "G", "msb": 20, "lsb": 20, "role": "DAG_SELECTOR"},
+    {"id": "DATA", "msb": 19, "lsb": 4, "role": "DMD_WRITE_DATA"},
+    {"id": "I", "msb": 3, "lsb": 2, "role": "INDEX_SELECTOR_WITH_G"},
+    {"id": "M", "msb": 1, "lsb": 0, "role": "MODIFY_SELECTOR_WITH_G"}
+  ],
+  "parallel_actions": [{
+    "action": "DM_WRITE_IMMEDIATE",
+    "reads": ["CYCLE_START_SELECTED_I", "CYCLE_START_SELECTED_M", "CYCLE_START_L_CORRESPONDING_TO_I"],
+    "writes": ["DATA_MEMORY", "CYCLE_END_SELECTED_I_AFTER_COMPLETION"],
+    "write_data": "ZERO_OR_SIGN_INDEPENDENT_RAW_16_BIT_DATA_FIELD",
+    "status_effect": "NONE"
+  }],
+  "source_citations": [
+    {"reference_id": "ADI-UM-1989", "authority": "ORIGINAL_DEVICE_PRIMARY", "location": "printed pp. 6-1, 6-12, A-1 and A-6", "supports": "single-cycle base instruction, immediate DM-write syntax, Type 2 fields, and G/I/M register selection"},
+    {"reference_id": "ADI-UM-1989", "authority": "ORIGINAL_DEVICE_PRIMARY", "location": "printed pp. 3-1–3-5 and 5-9–5-12", "supports": "DAG post-modification and DMACK wait extension"}
+  ],
+  "implementation_boundary": {
+    "model": "sim/reference_models/adsp2100_model/dm_write_immediate.py",
+    "rtl": "rtl/core/adsp2100_dm_write_immediate_decode.sv",
+    "execution": "NOT_YET_IMPLEMENTED"
+  },
+  "unresolved": [
+    "NATIVE_DM_PIN_PHASES_AND_WAIT_HOLD",
+    "FETCH_INTERRUPT_HALT_AND_BUS_REQUEST_ARBITRATION"
+  ]
+}

@@ -203,6 +203,8 @@ lint:
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_modify_address_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv; \
+		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_modify_address_slice \
 			rtl/core/adsp2100_modify_address_decode.sv \
 			rtl/core/adsp2100_dag.sv \
@@ -288,6 +290,7 @@ decode-tests:
 	$(PYTHON) -m unittest -v tests.test_isa_database tests.test_register_metadata \
 		tests.test_isa_fields tests.test_instruction_formats \
 		tests.test_stack_control tests.test_mr_saturation \
+		tests.test_dm_write_immediate \
 		tests.test_internal_move tests.test_load_dreg_immediate \
 		tests.test_immediate_shift tests.test_conditional_shift \
 		tests.test_shift_move tests.test_shifter_dm tests.test_shifter_pm \
@@ -447,6 +450,13 @@ decode-tests:
 			rtl/core/adsp2100_modify_address_decode.sv \
 			sim/unit/tb_adsp2100_modify_address_decode.sv; \
 		build/obj_modify_address_decode/Vtb_adsp2100_modify_address_decode; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_dm_write_immediate_decode \
+			--top-module tb_adsp2100_dm_write_immediate_decode \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			sim/unit/tb_adsp2100_dm_write_immediate_decode.sv; \
+		build/obj_dm_write_immediate_decode/Vtb_adsp2100_dm_write_immediate_decode; \
 	else \
 		echo "SKIP exhaustive RTL decode: Verilator is not installed"; \
 	fi
@@ -1076,6 +1086,10 @@ formal:
 			rtl/core/adsp2100_modify_address_decode.sv \
 			formal/harnesses/adsp2100_modify_address_decode_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_dm_write_immediate_decode_formal \
+			rtl/core/adsp2100_dm_write_immediate_decode.sv \
+			formal/harnesses/adsp2100_dm_write_immediate_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_stack_control_slice_formal \
 			rtl/core/adsp2100_stack_control_decode.sv \
 			rtl/core/adsp2100_counter.sv \
@@ -1256,6 +1270,8 @@ formal:
 			formal/internal_move_slice.sby; \
 		sby -f -d build/formal_modify_address_decode \
 			formal/modify_address_decode.sby; \
+		sby -f -d build/formal_dm_write_immediate_decode \
+			formal/dm_write_immediate_decode.sby; \
 		sby -f -d build/formal_stack_control_slice \
 			formal/stack_control_slice.sby; \
 		sby -f -d build/formal_condition formal/condition.sby; \
@@ -1542,6 +1558,9 @@ clean:
 	@if [ -d build/obj_modify_address_decode ]; then \
 		find build/obj_modify_address_decode -depth -delete; \
 	fi
+	@if [ -d build/obj_dm_write_immediate_decode ]; then \
+		find build/obj_dm_write_immediate_decode -depth -delete; \
+	fi
 	@if [ -d build/obj_modify_address_slice ]; then \
 		find build/obj_modify_address_slice -depth -delete; \
 	fi
@@ -1668,6 +1687,7 @@ clean:
 		build/formal_divide_quotient \
 		build/formal_divide_sign \
 		build/formal_modify_address_decode \
+		build/formal_dm_write_immediate_decode \
 		build/formal_modify_address_slice \
 		build/formal_condition build/formal_alu build/formal_mac \
 		build/formal_shifter build/formal_dag build/formal_sequencer \

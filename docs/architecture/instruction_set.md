@@ -20,7 +20,8 @@ family reference [ADI-UM-FAMILY-1995, printed pp. 15-1, 15-16–15-17].
 `docs/generated/adsp2100_isa.yaml` is the source for generated class decode
 and tool tables. It contains all 30 original Appendix A class masks plus
 independently reviewed semantic entries for all-zero NOP, exact Type 25
-MR saturation, all Type 6 immediate DREG loads, the source-closed Type 15
+MR saturation, all Type 2 immediate DM writes, all Type 6 immediate DREG
+loads, the source-closed Type 15
 immediate-shift subset, 25,648 bounded Type 14 shifter-plus-DREG words, all
 1,792 source-backed Type 16 conditional shifter words, 476,672 bounded Type 8
 ALU/MAC-plus-DREG words, all 32,768 Type 9 conditional ALU/MAC words,
@@ -40,6 +41,18 @@ Automated checks compare those field positions with a separate hand-reviewed
 fixture, require them to partition each class mask exactly, and exhaustively
 compare the synthesizable class decoder over all 16,777,216 program words with
 an independent SystemVerilog transcription.
+
+Type 2 encodes `101 G DATA[19:4] I[3:2] M[1:0]`. Every one of its
+2,097,152 field combinations is defined: G selects DAG1 or DAG2, DATA is the
+raw sixteen-bit value written to DMD, and I/M select registers within that
+same DAG. The corresponding L register follows I. The source-backed action
+decoder does not assign signedness to DATA and fails closed for every other
+instruction class. Six model/metadata tests, three hand-derived fixtures, 160
+boundary/selector assembler-disassembler round trips, a formal field harness,
+and exhaustive 24-bit RTL traversal close action decode.
+The acknowledged logical DM transaction, completion-only post-modification,
+native phases, and whole-core arbitration remain implementation work
+[ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
 
 Type 6 loads one full 16-bit immediate into one of the sixteen DREG-coded
 computational registers. Its exact format is `0100 DATA[19:4] DREG[3:0]`, so
@@ -309,7 +322,7 @@ conditions. This still does not make the whole processor instruction-complete:
 empty-stack pop effects (OQ-013), arbitration with automatic
 sequencer/interrupt actions (OQ-018), PC/fetch sequencing,
 assembler/disassembler syntax, and logical bus phases remain open. NOP,
-Type 6, Type 9, Type 18, Type 21, and Type 25 are the class-complete
+Type 2 action decode, Type 6, Type 9, Type 18, Type 21, and Type 25 are the class-complete
 source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic
 entry for its 1,792 documented words while 256 unassigned-XOP subencodings fail
 closed. Type 14 has a bounded semantic entry for 25,648 canonical words while

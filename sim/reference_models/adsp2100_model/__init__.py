@@ -90,6 +90,12 @@ from .divide_quotient import (
     is_divide_quotient_class,
 )
 from .dag import DAGResult, compute_dag, original_base_mask, reverse_address
+from .dm_write_immediate import (
+    DM_WRITE_IMMEDIATE_MASK,
+    DM_WRITE_IMMEDIATE_VALUE,
+    DMWriteImmediateAction,
+    decode_dm_write_immediate,
+)
 from .instruction_cache import (
     CACHE_WORDS,
     InstructionCacheCycleResult,
@@ -543,6 +549,7 @@ __all__ = [
     "compute_alu",
     "compute_move_unsupported_reason",
     "compute_dag",
+    "decode_dm_write_immediate",
     "compute_mac",
     "compute_shifter",
     "cache_region_contains",
@@ -584,4 +591,7 @@ __all__ = [
     "InstructionCacheCycleResult",
     "InstructionCacheLookup",
     "InstructionCacheState",
+    "DM_WRITE_IMMEDIATE_MASK",
+    "DM_WRITE_IMMEDIATE_VALUE",
+    "DMWriteImmediateAction",
 ]

@@ -14,6 +14,41 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class AssemblerDisassemblerTests(unittest.TestCase):
+    def test_type_2_immediate_dm_write_forms_round_trip(self) -> None:
+        count = 0
+        for dag in range(2):
+            for data in (0, 1, 0x7FFF, 0x8000, 0xFFFF):
+                for i_local in range(4):
+                    for m_local in range(4):
+                        i_address = dag * 4 + i_local
+                        m_address = dag * 4 + m_local
+                        source = (
+                            f"DM(I{i_address}, M{m_address}) = 0x{data:04x};"
+                        )
+                        opcode = (
+                            0xA00000
+                            | (dag << 20)
+                            | (data << 4)
+                            | (i_local << 2)
+                            | m_local
+                        )
+                        assembled = assemble_statement(source)
+                        self.assertEqual(assembled.value, opcode)
+                        disassembled = disassemble_word(opcode)
+                        self.assertTrue(disassembled.implemented)
+                        self.assertEqual(
+                            disassembled.classification,
+                            "TYPE_02_ACTION_DECODE",
+                        )
+                        self.assertEqual(disassembled.text, source)
+                        self.assertEqual(
+                            assemble_statement(disassembled.text), assembled
+                        )
+                        count += 1
+        self.assertEqual(count, 160)
+        with self.assertRaises(AssemblyError):
+            assemble_statement("DM(I0, M4) = 1;")
+
     def test_independent_hand_fixture_round_trip(self) -> None:
         fixture_data = json.loads(
             (ROOT / "tests/vectors/opcode_fixtures.json").read_text(encoding="utf-8")

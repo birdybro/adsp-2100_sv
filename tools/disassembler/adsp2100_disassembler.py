@@ -30,6 +30,9 @@ from tools.generators.validate_isa_fields import (
     validate_database as validate_isa_fields_database,
 )
 from tools.assembler.adsp2100_assembler import _format_compute_operation
+from sim.reference_models.adsp2100_model.dm_write_immediate import (
+    decode_dm_write_immediate,
+)
 
 
 @dataclass(frozen=True)
@@ -83,6 +86,21 @@ def _disassemble_dreg_immediate(opcode: int) -> str:
     register = _dreg_code_to_name()[opcode & 0xF]
     data = (opcode >> 4) & 0xFFFF
     return f"{register} = 0x{data:04x};"
+
+
+def _try_disassemble_dm_write_immediate(opcode: int) -> Disassembly | None:
+    action = decode_dm_write_immediate(opcode)
+    if action is None:
+        return None
+    return Disassembly(
+        opcode=opcode,
+        text=(
+            f"DM(I{action.i_address}, M{action.m_address}) = "
+            f"0x{action.immediate:04x};"
+        ),
+        classification="TYPE_02_ACTION_DECODE",
+        implemented=True,
+    )
 
 
 _SHIFTER_XOP_NAMES = {
@@ -543,6 +561,9 @@ def _disassemble_modify_address(opcode: int) -> str:
 def disassemble_word(opcode: int) -> Disassembly:
     if not 0 <= opcode <= 0xFFFFFF:
         raise ValueError("opcode must fit 24 bits")
+    dm_write_immediate = _try_disassemble_dm_write_immediate(opcode)
+    if dm_write_immediate is not None:
+        return dm_write_immediate
     conditional_compute = _try_disassemble_conditional_compute(opcode)
     if conditional_compute is not None:
         return conditional_compute

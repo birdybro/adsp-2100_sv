@@ -109,6 +109,32 @@ def _assemble_dreg_immediate(statement: str) -> int | None:
     return 0x400000 | ((value & 0xFFFF) << 4) | registers[destination]
 
 
+def _assemble_dm_write_immediate(statement: str) -> int | None:
+    match = re.fullmatch(
+        r"DM\s*\(\s*I([0-7])\s*,\s*M([0-7])\s*\)\s*=\s*"
+        r"(?:(?:0X|H#)([0-9A-F]+)|(-?[0-9]+))",
+        statement,
+    )
+    if match is None:
+        return None
+    i_address = int(match.group(1))
+    m_address = int(match.group(2))
+    if i_address // 4 != m_address // 4:
+        raise AssemblyError("Type 2 I and M registers must use the same DAG")
+    hexadecimal, decimal = match.group(3), match.group(4)
+    value = int(hexadecimal, 16) if hexadecimal is not None else int(decimal, 10)
+    if not -0x8000 <= value <= 0xFFFF:
+        raise AssemblyError("Type 2 immediate must fit a 16-bit data word")
+    dag = i_address // 4
+    return (
+        0xA00000
+        | (dag << 20)
+        | ((value & 0xFFFF) << 4)
+        | ((i_address & 3) << 2)
+        | (m_address & 3)
+    )
+
+
 _SHIFTER_XOP_CODES = {
     "SI": 0,
     "AR": 2,
@@ -738,6 +764,9 @@ def assemble_statement(source: str) -> AssembledWord:
     raw_word = _assemble_raw_word(statement)
     if raw_word is not None:
         return AssembledWord(raw_word)
+    dm_write_immediate = _assemble_dm_write_immediate(statement)
+    if dm_write_immediate is not None:
+        return AssembledWord(dm_write_immediate)
     # Type 9 precedes the general DREG-immediate parser so its canonical
     # `AR = -0` negate-zero spelling round-trips to the source opcode.
     conditional_compute = _assemble_conditional_compute(statement)
