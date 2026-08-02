@@ -51,7 +51,7 @@ random tests and 50,112 model-versus-RTL cycles cover both signs, both banks,
 false condition, reset unknowns, invalid words, and fail-closed setup
 collisions. The shared ordinary-fetch owner additionally samples the same
 cycle-start state and conditionally commits MR with PC and the next word at
-state 7-to-8; two directed owner tests plus the 442,392-clock fetched
+state 7-to-8; two directed owner tests plus the 444,003-clock fetched
 comparison cover both signs/banks and MV false. Exact interrupt-adjacent
 ordering remains OQ-015.
 
@@ -69,7 +69,7 @@ Type 5 execution covers every MAC AMF/X/Y/Z selection and rejects
 MR0/MR1/MR2 PM-read double destinations. It captures cycle-start operands,
 MR feedback, old `{DREG,PX}`, and DAG2 state, then commits MR/MF, ASTAT.MV,
 optional DREG/PX read, and I postmodify on the fixed PM completion. Its
-cache/native attachment passes 50,083 phase clocks; Type 1 action selection
+cache/native attachment passes 50,100 phase clocks; Type 1 action selection
 and whole-core PM/event arbitration remain unimplemented
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8, 6-3–6-7, A-1, A-5–A-7].
 
@@ -96,7 +96,7 @@ move. Z=0 packets whose move also targets MR0/MR1/MR2 fail closed. All
 476,672 supported Type 8 ALU/MAC words execute in both banks in the combined
 983,386-cycle standalone comparison. The bounded fetched owner additionally
 traverses every compute-field tuple and every move source/destination pair in
-both banks within 442,392 clocks, with atomic MAC/MV/move/PC/next-word
+both banks within 444,003 clocks, with atomic MAC/MV/move/PC/next-word
 retirement. AMF zero remains unassigned under OQ-022; Type 1 state execution
 and whole-core PM/cache/event ownership remain open
 [ADI-UM-1989, printed pp. 2-13–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].

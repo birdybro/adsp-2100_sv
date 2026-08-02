@@ -12,6 +12,7 @@ module adsp2100_linear_bus_control_slice (
     input  logic [2:0]  phase_i,
     input  logic        phase_advance_i,
     input  logic        br_n_i,
+    input  logic [3:0]  irq_n_i,
 
     input  logic        instruction_setup_i,
     input  logic [13:0] instruction_setup_pc_i,
@@ -81,6 +82,9 @@ module adsp2100_linear_bus_control_slice (
     output logic [23:0] pmd_write_data_o,
     output logic        pmd_write_data_valid_o
 );
+    logic trap_event_unused;
+    logic [27:0] interrupt_unused;
+
     adsp2100_bus_control bus_control (
         .clk_i(clk_i),
         .reset_i(reset_i),
@@ -116,6 +120,7 @@ module adsp2100_linear_bus_control_slice (
         .reset_i(reset_i),
         .phase_i(phase_i),
         .phase_advance_i(phase_advance_i),
+        .interrupt_sample_advance_i(1'b0),
         .instruction_issue_inhibit_i(instruction_issue_inhibit_o),
         .bus_relinquished_i(bus_relinquished_o),
         .instruction_setup_i(instruction_setup_i),
@@ -123,11 +128,24 @@ module adsp2100_linear_bus_control_slice (
         .instruction_setup_opcode_i(instruction_setup_opcode_i),
         .pmd_read_data_i(pmd_read_data_i),
         .pmd_read_data_valid_i(pmd_read_data_valid_i),
+        .irq_n_i(irq_n_i),
         .probe_code_i(probe_code_i),
         .issue_boundary_o(issue_boundary_o),
         .instruction_setup_accepted_o(instruction_setup_accepted_o),
         .instruction_issue_o(instruction_issue_o),
         .retire_event_o(retire_event_o),
+        .trap_event_o(trap_event_unused),
+        .interrupt_recognition_event_o(interrupt_unused[0]),
+        .interrupt_entry_event_o(interrupt_unused[1]),
+        .interrupt_vector_issue_event_o(interrupt_unused[2]),
+        .interrupt_vector_fetch_event_o(interrupt_unused[3]),
+        .interrupt_level_o(interrupt_unused[5:4]),
+        .interrupt_vector_o(interrupt_unused[19:6]),
+        .interrupt_pending_o(interrupt_unused[23:20]),
+        .interrupt_vectoring_o(interrupt_unused[24]),
+        .interrupt_configuration_invalid_o(interrupt_unused[25]),
+        .interrupt_reset_baseline_provisional_o(interrupt_unused[26]),
+        .interrupt_adjacent_control_conflict_o(interrupt_unused[27]),
         .instruction_valid_o(instruction_valid_o),
         .transaction_pending_o(transaction_pending_o),
         .unsupported_instruction_o(unsupported_instruction_o),
@@ -170,6 +188,8 @@ module adsp2100_linear_bus_control_slice (
 
 `ifndef SYNTHESIS
     always_comb begin
+        assert (trap_event_unused == trap_event_unused);
+        assert (^interrupt_unused == ^interrupt_unused);
         assert (bg_n_o == !bus_relinquished_o);
         if (instruction_issue_inhibit_o) begin
             assert (!instruction_issue_o);

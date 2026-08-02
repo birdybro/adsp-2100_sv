@@ -50,7 +50,7 @@ Type 24 DIVS are attached to the bounded ordinary-fetch owner.
 The Type 5 path covers every ALU AMF/X/Y/Z selection paired with one PM
 transfer, rejects AR/PM-read double destinations, samples the selected-bank
 operands and old PM-store word at issue, and commits AR/AF plus ASTAT together
-with the fixed PM data action. Its cache/native composition passes 50,083
+with the fixed PM data action. Its cache/native composition passes 50,100
 phase clocks with state-8 issue and state-7-only ALU/status/read/I completion;
 whole-core PM ownership and event arbitration remain open
 [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-7].
@@ -106,7 +106,7 @@ examples. Appendix B documents exceptional inputs for which the primitive
 sequence can be off by one; those software correction rules are deliberately
 not folded into a single DIVQ instruction. The Type 23 transformation is
 additionally attached to the bounded native ordinary-fetch owner. Two directed
-tests and 442,392 phase clocks cover all eight divisors in both banks, both
+tests and 444,003 phase clocks cover all eight divisors in both banks, both
 old-AQ paths, and a following DIVQ that reads the just-retired AF/AY0/AQ state.
 The same owner now executes all sixteen legal DIVS operand combinations through
 distinct divisor, AY0, and upper-dividend reads; a fetched DIVS-to-DIVQ test
@@ -122,7 +122,7 @@ rejects Z=0 packets whose move also targets AR and retains AMF zero as OQ-022.
 All supported operand and move combinations execute in the exhaustive
 983,386-cycle standalone Type 8 comparison. The fetched owner additionally
 traverses every compute-field tuple and every move source/destination pair in
-both banks within its 442,392-clock comparison, committing the computation,
+both banks within its 444,003-clock comparison, committing the computation,
 status, move, PC, and next word atomically at state 7-to-8. Active control
 flow, interrupts, and unified PM/cache ownership remain open
 [ADI-UM-1989, printed pp. 6-4–6-10, A-2, A-5–A-7, A-11].

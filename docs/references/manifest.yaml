@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated": "2026-07-31",
+  "updated": "2026-08-01",
   "references": [
     {
       "id": "ADI-UM-1989",
@@ -177,6 +177,48 @@
         "max_bytes": 50000000
       },
       "notes": "This acquired contemporary data book supplies the initial original-device data-sheet target; seek a separately published revision for revision comparison."
+    },
+    {
+      "id": "ADI-DATABOOK-1989",
+      "title": "Analog Devices DSP Products Databook",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "1989",
+      "revision": "1989 databook edition; embedded data-sheet revision is unmarked",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/_dataBooks/1989_Analog_Devices_DSP_Products_Databook.pdf",
+      "retrieval_date": "2026-08-01",
+      "local_filename": "adi/1989_dsp_products_databook.pdf",
+      "sha256": "fd1178c081e9c2803d082d3c7ec79ebaacc42351ededc9690b0f4441cbc2f5ca",
+      "document_type": "data_book",
+      "exact_device_applicability": "Contains the joint original ADSP-2100/ADSP-2100A data sheet and contemporary product-selection material.",
+      "family_member_applicability": [
+        "ADSP-2100",
+        "ADSP-2100A",
+        "contemporary ADI DSP products"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; redistribution permission not established.",
+      "authority_level": "primary_original_device",
+      "relevance": [
+        "datasheet",
+        "device_identification",
+        "revision_boundary",
+        "electrical_timing"
+      ],
+      "cited_pages_or_sections": [
+        "ADSP-2100/ADSP-2100A data sheet, printed p. 2-19 (scan PDF p. 27): pin/code compatibility; identical documented architectures and instruction sets; timing/electrical distinction; speed grades."
+      ],
+      "may_commit": false,
+      "acquisition_status": "acquired",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": true,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 100000000
+      },
+      "notes": "Bitsavers scan of an original Analog Devices publication. The embedded data sheet explicitly applies its architectural text to both devices but does not identify mask-level fixes or errata; the cached PDF remains gitignored."
     },
     {
       "id": "ADI-ASM-1994",

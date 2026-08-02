@@ -4,9 +4,11 @@ module adsp2100_status_stack_formal (
     input logic        clk,
     input logic        reset,
     input logic [1:0]  operation,
-    input logic [15:0] push_data
+    input logic [15:0] push_data,
+    input logic [12:0] push_validity
 );
     logic [15:0] pop_data;
+    logic [12:0] pop_validity;
     logic        pop_valid;
     logic        empty;
     logic        overflow;
@@ -21,7 +23,9 @@ module adsp2100_status_stack_formal (
         .reset_i(reset),
         .operation_i(operation),
         .push_data_i(push_data),
+        .push_validity_i(push_validity),
         .pop_data_o(pop_data),
+        .pop_validity_o(pop_validity),
         .pop_valid_o(pop_valid),
         .empty_o(empty),
         .overflow_o(overflow),
@@ -50,6 +54,7 @@ module adsp2100_status_stack_formal (
         );
         if (empty) begin
             assert (pop_data == 16'h0000);
+            assert (pop_validity == 13'h0000);
         end
         if (past_valid) begin
             assert (depth <= 3'd4);
@@ -63,6 +68,10 @@ module adsp2100_status_stack_formal (
             assert (depth == 3'd0);
             assert (!overflow);
         end else begin
+            if ($past(push_accepted) && ($past(depth) == 3'd0)) begin
+                assert (pop_data == $past(push_data));
+                assert (pop_validity == $past(push_validity));
+            end
             unique case ($past(operation))
                 2'b10: begin
                     if ($past(depth) < 3'd4) begin

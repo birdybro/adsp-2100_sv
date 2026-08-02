@@ -163,6 +163,83 @@ class ComputePMNativeTests(unittest.TestCase):
         self.assertTrue(recovered.core.cache_fill_accepted)
         self.assertFalse(recovered.integration_conflict)
 
+    def test_edge_irq_waits_for_uncached_recovery_completion(self) -> None:
+        icntl = ExactWord(5, 0x4)
+        imask = ExactWord(4, 0x4)
+        baseline = apply_compute_pm_native_cycle(
+            _setup_state(),
+            phase=LogicalPhase.STATE_7,
+            irq_n=0xF,
+            icntl=icntl,
+            imask=imask,
+        )
+        self.assertTrue(baseline.interrupt.sample_event)
+
+        issued = apply_compute_pm_native_cycle(
+            baseline.state,
+            phase=LogicalPhase.STATE_8,
+            execute=True,
+            opcode=0x526000,
+            next_fetch_address=ExactWord(14, 0x333),
+            irq_n=0xF,
+            icntl=icntl,
+            imask=imask,
+        )
+        state = issued.state
+        for phase in range(6):
+            state = _cycle(
+                state,
+                LogicalPhase(phase),
+                irq_n=0xF,
+                icntl=icntl,
+                imask=imask,
+            )
+        blocked = apply_compute_pm_native_cycle(
+            state,
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=ExactWord(24, 0xBEEF12),
+            irq_n=0xB,
+            icntl=icntl,
+            imask=imask,
+        )
+        self.assertTrue(blocked.interrupt.sample_event)
+        self.assertTrue(blocked.interrupt_interval_block)
+        self.assertFalse(blocked.interrupt.recognition_event)
+        self.assertEqual(blocked.interrupt.state.edge_pending, 0x4)
+        self.assertTrue(blocked.core.core.data_action_complete)
+        self.assertFalse(blocked.core.core.instruction_complete)
+
+        recovery = apply_compute_pm_native_cycle(
+            blocked.state,
+            phase=LogicalPhase.STATE_8,
+            irq_n=0xB,
+            icntl=icntl,
+            imask=imask,
+        )
+        state = recovery.state
+        for phase in range(6):
+            state = _cycle(
+                state,
+                LogicalPhase(phase),
+                irq_n=0xB,
+                icntl=icntl,
+                imask=imask,
+            )
+        serviced = apply_compute_pm_native_cycle(
+            state,
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=ExactWord(24, 0x654321),
+            irq_n=0xB,
+            icntl=icntl,
+            imask=imask,
+        )
+        self.assertTrue(serviced.core.core.instruction_complete)
+        self.assertTrue(serviced.interrupt.recognition_event)
+        self.assertEqual(serviced.interrupt.recognized_level, 2)
+        self.assertEqual(serviced.interrupt.vector_address.value, 2)
+        self.assertEqual(serviced.interrupt.state.edge_pending, 0)
+        self.assertFalse(serviced.interrupt_interval_block)
+
     def test_compute_write_descriptor_uses_cycle_start_dreg_and_px(self) -> None:
         issued = apply_compute_pm_native_cycle(
             _setup_state(),

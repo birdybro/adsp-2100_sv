@@ -23,8 +23,14 @@ The bounded Type 19 slice now connects this control path to exact I4-I7
 storage. A taken JUMP/CALL exposes the selected old I value as the PMA target
 and leaves that I unchanged; a false conditional transfer neither drives the
 indirect PMA observation nor requires the selected I to be initialized. The
-50,259-cycle model/RTL comparison checks all four selections and rotating I
-probes. It does not attach PMS/PMRD, cache, fetch, or wait-state phases
+50,259-cycle standalone comparison checks all four selections and rotating I
+probes. The native ordinary-fetch owner now reads the same shared I4-I7 state:
+a true transfer selects that target for state-8 PM issue and state-7 PC
+retirement, a false transfer uses PC+1 without requiring valid I, and neither
+path writes I. Four fetched tests and the 444,003-clock comparison cover every
+selector, Type 19 CALL-to-Type 20 RTS context, and fail-closed unknown targets.
+Cache, active-loop, interrupt, reset-first-fetch, and cross-event ownership
+remain open
 [ADI-UM-1989, printed pp. 4-3, 4-20, 6-13–6-14, A-3].
 The bounded Type 21 integration slice implements standalone MODIFY
 selection and stored-I writeback. With `G=1`, it maps the two-bit I and M
@@ -41,8 +47,16 @@ Other PM/DM multifunction updates remain unimplemented
 The ordinary fetched owner now applies the same completion boundary to all 16
 `G=1` Type 21 words. A dedicated execution selector reads I4-I7, M4-M7, and
 the I-corresponding L from cycle-start shared state; only the selected I
-changes at native state 7. The 442,405-clock comparison covers every selector
+changes at native state 7. The 444,003-clock comparison covers every selector
 and both linear and circular directions without PM-data, DM, or status action.
+The combined three-client owner adds Type 21 and Type 17 DAG dependency checks
+within 51,428 clocks: a known I4/M4 Type 21 result supplies the next Type 13 PM
+address, while selecting a reset-unknown M5 invalidates I4 and the following
+Type 5 PM address. A Type 17 move from reset-unknown AX0 into I4 likewise
+invalidates I4 and the next Type 13 address. This is reset-unknown validity
+propagation, not a claim about an undocumented arithmetic or storage value
+[ADI-UM-1989, printed pp. 2-6–2-7, 3-1–3-5, 6-12, 6-14–6-15, A-3–A-4,
+A-7–A-9].
 
 Original Type 1 action selection fixes its PM address to DAG2 and exposes all
 I4–I7/M4–M7 combinations independently of the simultaneous DAG1 DM read. The

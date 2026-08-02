@@ -3,9 +3,9 @@
 
 module tb_adsp2100_linear_core_slice;
     logic clk;
-    logic [76:0] stimulus;
-    logic [101:0] expected_pre;
-    logic [117:0] expected_post;
+    logic [80:0] stimulus;
+    logic [130:0] expected_pre;
+    logic [122:0] expected_post;
 
     logic reset;
     logic [2:0] phase;
@@ -17,12 +17,25 @@ module tb_adsp2100_linear_core_slice;
     logic [23:0] setup_opcode;
     logic [23:0] pmd_read_data;
     logic pmd_read_data_valid;
+    logic [3:0] irq_n;
     logic [5:0] probe_code;
 
     logic issue_boundary;
     logic setup_accepted;
     logic instruction_issue;
     logic retire_event;
+    logic trap_event;
+    logic interrupt_recognition_event;
+    logic interrupt_entry_event;
+    logic interrupt_vector_issue_event;
+    logic interrupt_vector_fetch_event;
+    logic [1:0] interrupt_level;
+    logic [13:0] interrupt_vector;
+    logic [3:0] interrupt_pending;
+    logic interrupt_vectoring;
+    logic interrupt_configuration_invalid;
+    logic interrupt_reset_baseline_provisional;
+    logic interrupt_adjacent_control_conflict;
     logic instruction_valid;
     logic transaction_pending;
     logic unsupported_instruction;
@@ -66,6 +79,18 @@ module tb_adsp2100_linear_core_slice;
     logic exp_setup_accepted;
     logic exp_instruction_issue;
     logic exp_retire_event;
+    logic exp_trap_event;
+    logic exp_interrupt_recognition_event;
+    logic exp_interrupt_entry_event;
+    logic exp_interrupt_vector_issue_event;
+    logic exp_interrupt_vector_fetch_event;
+    logic [1:0] exp_interrupt_level;
+    logic [13:0] exp_interrupt_vector;
+    logic [3:0] exp_pre_interrupt_pending;
+    logic exp_pre_interrupt_vectoring;
+    logic exp_interrupt_configuration_invalid;
+    logic exp_interrupt_reset_baseline_provisional;
+    logic exp_interrupt_adjacent_control_conflict;
     logic exp_pre_instruction_valid;
     logic exp_pre_pending;
     logic exp_unsupported_instruction;
@@ -114,6 +139,8 @@ module tb_adsp2100_linear_core_slice;
     logic [2:0] exp_count_stack_depth;
     logic exp_count_stack_overflow;
     logic exp_post_pm_active;
+    logic exp_post_interrupt_vectoring;
+    logic [3:0] exp_post_interrupt_pending;
 
     integer vector_file;
     integer scan_count;
@@ -123,12 +150,21 @@ module tb_adsp2100_linear_core_slice;
         reset, phase, phase_advance, instruction_issue_inhibit,
         bus_relinquished,
         instruction_setup, setup_pc, setup_opcode,
-        pmd_read_data, pmd_read_data_valid, probe_code
+        pmd_read_data, pmd_read_data_valid, irq_n, probe_code
     } = stimulus;
 
     assign {
         exp_issue_boundary, exp_setup_accepted, exp_instruction_issue,
-        exp_retire_event, exp_pre_instruction_valid, exp_pre_pending,
+        exp_retire_event, exp_trap_event,
+        exp_interrupt_recognition_event, exp_interrupt_entry_event,
+        exp_interrupt_vector_issue_event,
+        exp_interrupt_vector_fetch_event,
+        exp_interrupt_level, exp_interrupt_vector,
+        exp_pre_interrupt_pending, exp_pre_interrupt_vectoring,
+        exp_interrupt_configuration_invalid,
+        exp_interrupt_reset_baseline_provisional,
+        exp_interrupt_adjacent_control_conflict,
+        exp_pre_instruction_valid, exp_pre_pending,
         exp_unsupported_instruction, exp_reserved_subencoding,
         exp_phase_conflict, exp_integration_conflict,
         exp_internal_conflict, exp_provisional_source_extension,
@@ -149,7 +185,8 @@ module tb_adsp2100_linear_core_slice;
         exp_icntl_valid, exp_icntl, exp_imask,
         exp_cntr_valid, exp_cntr, exp_px_valid, exp_px,
         exp_sstat, exp_alternate_bank, exp_count_stack_depth,
-        exp_count_stack_overflow, exp_post_pm_active
+        exp_count_stack_overflow, exp_post_pm_active,
+        exp_post_interrupt_vectoring, exp_post_interrupt_pending
     } = expected_post;
 
     adsp2100_linear_core_slice dut (
@@ -157,6 +194,7 @@ module tb_adsp2100_linear_core_slice;
         .reset_i(reset),
         .phase_i(phase),
         .phase_advance_i(phase_advance),
+        .interrupt_sample_advance_i(1'b0),
         .instruction_issue_inhibit_i(instruction_issue_inhibit),
         .bus_relinquished_i(bus_relinquished),
         .instruction_setup_i(instruction_setup),
@@ -164,11 +202,30 @@ module tb_adsp2100_linear_core_slice;
         .instruction_setup_opcode_i(setup_opcode),
         .pmd_read_data_i(pmd_read_data),
         .pmd_read_data_valid_i(pmd_read_data_valid),
+        .irq_n_i(irq_n),
         .probe_code_i(probe_code),
         .issue_boundary_o(issue_boundary),
         .instruction_setup_accepted_o(setup_accepted),
         .instruction_issue_o(instruction_issue),
         .retire_event_o(retire_event),
+        .trap_event_o(trap_event),
+        .interrupt_recognition_event_o(interrupt_recognition_event),
+        .interrupt_entry_event_o(interrupt_entry_event),
+        .interrupt_vector_issue_event_o(interrupt_vector_issue_event),
+        .interrupt_vector_fetch_event_o(interrupt_vector_fetch_event),
+        .interrupt_level_o(interrupt_level),
+        .interrupt_vector_o(interrupt_vector),
+        .interrupt_pending_o(interrupt_pending),
+        .interrupt_vectoring_o(interrupt_vectoring),
+        .interrupt_configuration_invalid_o(
+            interrupt_configuration_invalid
+        ),
+        .interrupt_reset_baseline_provisional_o(
+            interrupt_reset_baseline_provisional
+        ),
+        .interrupt_adjacent_control_conflict_o(
+            interrupt_adjacent_control_conflict
+        ),
         .instruction_valid_o(instruction_valid),
         .transaction_pending_o(transaction_pending),
         .unsupported_instruction_o(unsupported_instruction),
@@ -231,7 +288,14 @@ module tb_adsp2100_linear_core_slice;
                 #2;
                 if ({
                     issue_boundary, setup_accepted, instruction_issue,
-                    retire_event, instruction_valid, transaction_pending,
+                    retire_event, trap_event,
+                    interrupt_recognition_event, interrupt_entry_event,
+                    interrupt_vector_issue_event,
+                    interrupt_vector_fetch_event,
+                    interrupt_configuration_invalid,
+                    interrupt_reset_baseline_provisional,
+                    interrupt_adjacent_control_conflict,
+                    instruction_valid, transaction_pending,
                     unsupported_instruction, reserved_subencoding,
                     phase_conflict, integration_conflict, internal_conflict,
                     provisional_source_extension,
@@ -243,6 +307,14 @@ module tb_adsp2100_linear_core_slice;
                 } !== {
                     exp_issue_boundary, exp_setup_accepted,
                     exp_instruction_issue, exp_retire_event,
+                    exp_trap_event,
+                    exp_interrupt_recognition_event,
+                    exp_interrupt_entry_event,
+                    exp_interrupt_vector_issue_event,
+                    exp_interrupt_vector_fetch_event,
+                    exp_interrupt_configuration_invalid,
+                    exp_interrupt_reset_baseline_provisional,
+                    exp_interrupt_adjacent_control_conflict,
                     exp_pre_instruction_valid, exp_pre_pending,
                     exp_unsupported_instruction, exp_reserved_subencoding,
                     exp_phase_conflict, exp_integration_conflict,
@@ -260,7 +332,14 @@ module tb_adsp2100_linear_core_slice;
                         vector_count,
                         {
                             issue_boundary, setup_accepted,
-                            instruction_issue, retire_event,
+                            instruction_issue, retire_event, trap_event,
+                            interrupt_recognition_event,
+                            interrupt_entry_event,
+                            interrupt_vector_issue_event,
+                            interrupt_vector_fetch_event,
+                            interrupt_configuration_invalid,
+                            interrupt_reset_baseline_provisional,
+                            interrupt_adjacent_control_conflict,
                             instruction_valid, transaction_pending,
                             unsupported_instruction, reserved_subencoding,
                             phase_conflict, integration_conflict,
@@ -276,6 +355,14 @@ module tb_adsp2100_linear_core_slice;
                         {
                             exp_issue_boundary, exp_setup_accepted,
                             exp_instruction_issue, exp_retire_event,
+                            exp_trap_event,
+                            exp_interrupt_recognition_event,
+                            exp_interrupt_entry_event,
+                            exp_interrupt_vector_issue_event,
+                            exp_interrupt_vector_fetch_event,
+                            exp_interrupt_configuration_invalid,
+                            exp_interrupt_reset_baseline_provisional,
+                            exp_interrupt_adjacent_control_conflict,
                             exp_pre_instruction_valid, exp_pre_pending,
                             exp_unsupported_instruction,
                             exp_reserved_subencoding, exp_phase_conflict,
@@ -299,6 +386,20 @@ module tb_adsp2100_linear_core_slice;
                     $fatal(1, "opcode mismatch vector=%0d", vector_count);
                 if (exp_pma_valid && pma !== exp_pma)
                     $fatal(1, "PMA mismatch vector=%0d", vector_count);
+                if (interrupt_level !== exp_interrupt_level) begin
+                    $display(
+                        "IRQ level actual=%h expected=%h vector=%0d stimulus=%h",
+                        interrupt_level, exp_interrupt_level,
+                        vector_count, stimulus
+                    );
+                    $fatal(1, "IRQ level mismatch vector=%0d", vector_count);
+                end
+                if (interrupt_vector !== exp_interrupt_vector)
+                    $fatal(1, "IRQ vector mismatch vector=%0d", vector_count);
+                if (interrupt_pending !== exp_pre_interrupt_pending)
+                    $fatal(1, "IRQ pending mismatch vector=%0d", vector_count);
+                if (interrupt_vectoring !== exp_pre_interrupt_vectoring)
+                    $fatal(1, "IRQ vectoring mismatch vector=%0d", vector_count);
                 if (
                     exp_pmd_write_data_valid
                     && pmd_write_data !== exp_pmd_write_data
@@ -309,12 +410,15 @@ module tb_adsp2100_linear_core_slice;
                 if ({
                     instruction_valid, transaction_pending, pc,
                     mstat, imask, cntr_valid, sstat, alternate_bank,
-                    count_stack_depth, count_stack_overflow, pm_bus_active
+                    count_stack_depth, count_stack_overflow, pm_bus_active,
+                    interrupt_vectoring, interrupt_pending
                 } !== {
                     exp_post_instruction_valid, exp_post_pending,
                     exp_post_pc, exp_mstat, exp_imask, exp_cntr_valid,
                     exp_sstat, exp_alternate_bank, exp_count_stack_depth,
-                    exp_count_stack_overflow, exp_post_pm_active
+                    exp_count_stack_overflow, exp_post_pm_active,
+                    exp_post_interrupt_vectoring,
+                    exp_post_interrupt_pending
                 }) begin
                     $fatal(1, "linear-core post mismatch vector=%0d", vector_count);
                 end
@@ -339,7 +443,7 @@ module tb_adsp2100_linear_core_slice;
             $fatal(1, "insufficient linear-core vectors: %0d", vector_count);
         end
         $display(
-            "PASS bounded NOP/Type 6/Type 7/Type 8/Type 9/Type 10/Type 14/Type 15/Type 16/Type 17/Type 18/Type 21/Type 23/Type 24/Type 25/Type 26 linear core: %0d clocks",
+            "PASS bounded NOP/Type 6/Type 7/Type 8/Type 9/Type 10/Type 11/Type 14/Type 15/Type 16/Type 17/Type 18/Type 19/Type 20/Type 21/Type 22/Type 23/Type 24/Type 25/Type 26 plus automatic-loop linear core: %0d clocks",
             vector_count
         );
         $finish;

@@ -147,6 +147,7 @@ module adsp2100_modify_address_slice (
         .probe_l_data_o(probe_l_data_o),
         .probe_l_valid_o(probe_l_valid_o),
         .setup_write_i(setup_forward),
+        .setup_data_valid_i(1'b1),
         .setup_kind_i(setup_kind_i),
         .setup_address_i(setup_address_i),
         .setup_data_i(setup_data_i),

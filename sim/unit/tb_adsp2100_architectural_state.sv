@@ -10,12 +10,14 @@ module tb_adsp2100_architectural_state;
     logic [15:0] move_data;
     logic [5:0] read_code;
     logic [15:0] read_data;
+    logic [15:0] move_dreg_read_data;
     logic [5:0] probe_code;
     logic [15:0] probe_data;
     logic [3:0] dreg_read_address;
     logic [15:0] dreg_read_data;
     logic [3:0] dreg_read_address_2;
     logic [15:0] dreg_read_data_2;
+    logic [47:0] additional_dreg_read_unused;
     logic dreg_write_enable_1;
     logic [3:0] dreg_write_address_1;
     logic [15:0] dreg_write_data_1;
@@ -67,10 +69,15 @@ module tb_adsp2100_architectural_state;
     logic [1:0] stack_status_operation;
     logic stack_counter_ce_test;
     logic stack_count_pop;
+    logic stack_loop_push;
+    logic [17:0] stack_loop_push_data;
     logic stack_loop_pop;
     logic stack_pc_push;
     logic [13:0] stack_pc_push_data;
     logic stack_pc_pop;
+    logic interrupt_entry;
+    logic [1:0] interrupt_level;
+    logic [13:0] interrupt_pc_push_data;
     logic invalid_move_write;
     logic internal_conflict;
     logic count_stack_push;
@@ -79,9 +86,16 @@ module tb_adsp2100_architectural_state;
     logic count_stack_overflow;
     logic [13:0] pc_stack_top;
     logic pc_stack_top_valid;
+    logic [15:0] status_stack_top;
+    logic status_stack_top_valid;
+    logic status_restore_event_unused;
+    logic [12:0] status_restore_validity_unused;
+    logic [17:0] loop_stack_top;
+    logic loop_stack_top_valid;
     logic [7:0] astat;
     logic [3:0] mstat;
     logic [4:0] icntl;
+    logic icntl_valid;
     logic [3:0] imask;
     logic [13:0] cntr;
     logic cntr_valid;
@@ -151,10 +165,15 @@ module tb_adsp2100_architectural_state;
             stack_status_operation = 2'b00;
             stack_counter_ce_test = 1'b0;
             stack_count_pop = 1'b0;
+            stack_loop_push = 1'b0;
+            stack_loop_push_data = 18'h00000;
             stack_loop_pop = 1'b0;
             stack_pc_push = 1'b0;
             stack_pc_push_data = 14'h0000;
             stack_pc_pop = 1'b0;
+            interrupt_entry = 1'b0;
+            interrupt_level = 2'b00;
+            interrupt_pc_push_data = 14'h0000;
         end
     endtask
 
@@ -208,12 +227,19 @@ module tb_adsp2100_architectural_state;
         .move_data_i(move_data),
         .read_code_i(read_code),
         .read_data_o(read_data),
+        .move_dreg_read_data_o(move_dreg_read_data),
         .probe_code_i(probe_code),
         .probe_data_o(probe_data),
         .dreg_read_address_i(dreg_read_address),
         .dreg_read_data_o(dreg_read_data),
         .dreg_read_address_2_i(dreg_read_address_2),
         .dreg_read_data_2_o(dreg_read_data_2),
+        .dreg_read_address_3_i(4'h0),
+        .dreg_read_data_3_o(additional_dreg_read_unused[15:0]),
+        .dreg_read_address_4_i(4'h0),
+        .dreg_read_data_4_o(additional_dreg_read_unused[31:16]),
+        .dreg_read_address_5_i(4'h0),
+        .dreg_read_data_5_o(additional_dreg_read_unused[47:32]),
         .dreg_write_enable_1_i(dreg_write_enable_1),
         .dreg_write_address_1_i(dreg_write_address_1),
         .dreg_write_data_1_i(dreg_write_data_1),
@@ -265,10 +291,16 @@ module tb_adsp2100_architectural_state;
         .stack_status_operation_i(stack_status_operation),
         .stack_counter_ce_test_i(stack_counter_ce_test),
         .stack_count_pop_i(stack_count_pop),
+        .stack_loop_push_i(stack_loop_push),
+        .stack_loop_push_data_i(stack_loop_push_data),
         .stack_loop_pop_i(stack_loop_pop),
         .stack_pc_push_i(stack_pc_push),
         .stack_pc_push_data_i(stack_pc_push_data),
         .stack_pc_pop_i(stack_pc_pop),
+        .status_stack_push_validity_i(13'h1fff),
+        .interrupt_entry_i(interrupt_entry),
+        .interrupt_level_i(interrupt_level),
+        .interrupt_pc_push_data_i(interrupt_pc_push_data),
         .invalid_move_write_o(invalid_move_write),
         .internal_conflict_o(internal_conflict),
         .count_stack_push_o(count_stack_push),
@@ -277,9 +309,16 @@ module tb_adsp2100_architectural_state;
         .count_stack_overflow_o(count_stack_overflow),
         .pc_stack_top_o(pc_stack_top),
         .pc_stack_top_valid_o(pc_stack_top_valid),
+        .status_stack_top_o(status_stack_top),
+        .status_stack_top_valid_o(status_stack_top_valid),
+        .status_restore_event_o(status_restore_event_unused),
+        .status_restore_validity_o(status_restore_validity_unused),
+        .loop_stack_top_o(loop_stack_top),
+        .loop_stack_top_valid_o(loop_stack_top_valid),
         .astat_o(astat),
         .mstat_o(mstat),
         .icntl_o(icntl),
+        .icntl_valid_o(icntl_valid),
         .imask_o(imask),
         .cntr_o(cntr),
         .cntr_valid_o(cntr_valid),
@@ -299,9 +338,10 @@ module tb_adsp2100_architectural_state;
     );
 
     assign unused_observation = ^{
-        probe_data, invalid_move_write, count_stack_push,
+        probe_data, move_dreg_read_data, invalid_move_write, count_stack_push,
         count_stack_push_data, count_stack_depth, count_stack_overflow,
-        icntl, imask, cntr, cntr_valid, not_counter_expired, px, sstat,
+        icntl, icntl_valid, imask, cntr, cntr_valid,
+        not_counter_expired, px, sstat,
         bit_reverse,
         overflow_latch, saturate_ar, mf
     };
@@ -514,8 +554,11 @@ module tb_adsp2100_architectural_state;
         clear_actions();
         stack_status_operation = 2'b10;
         tick();
-        if (sstat[4] !== 1'b0) begin
-            $fatal(1, "status-stack push did not clear empty state");
+        if (
+            sstat[4] !== 1'b0 || !status_stack_top_valid
+            || status_stack_top !== 16'ha569
+        ) begin
+            $fatal(1, "status-stack push/top mismatch");
         end
         move_register(6'h30, 16'h0012);
         move_register(6'h31, 16'h0003);
@@ -547,16 +590,25 @@ module tb_adsp2100_architectural_state;
         clear_actions();
         stack_pc_push = 1'b1;
         stack_pc_push_data = 14'h2345;
+        stack_loop_push = 1'b1;
+        stack_loop_push_data = {4'he, 14'h3456};
         tick();
-        if (!pc_stack_top_valid || pc_stack_top !== 14'h2345 || sstat[0]) begin
-            $fatal(1, "PC-stack push/top mismatch");
+        if (
+            !pc_stack_top_valid || pc_stack_top !== 14'h2345 || sstat[0]
+            || !loop_stack_top_valid
+            || loop_stack_top !== {4'he, 14'h3456} || sstat[6]
+        ) begin
+            $fatal(1, "PC/loop-stack push/top mismatch");
         end
         clear_actions();
         stack_pc_pop = 1'b1;
         stack_loop_pop = 1'b1;
         tick();
-        if (internal_conflict || sstat[0] !== 1'b1 || sstat[6] !== 1'b1) begin
-            $fatal(1, "PC pop or empty loop pop produced invalid state");
+        if (
+            internal_conflict || sstat[0] !== 1'b1 || sstat[6] !== 1'b1
+            || pc_stack_top_valid || loop_stack_top_valid
+        ) begin
+            $fatal(1, "PC/loop stack pop produced invalid state");
         end
 
         // Reset suppresses direct computational writes while retaining the

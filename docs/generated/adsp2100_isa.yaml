@@ -598,8 +598,8 @@
       "confidence": "CORROBORATED",
       "unresolved_issues": [
         "OQ-018: precedence when a DO instruction occupies an active outer loop terminal address is unresolved and fails closed.",
-        "Loop-terminal execution is verified in the separate sequencer slice but not yet unified with the Type 11 decoder/PC boundary.",
-        "Interrupt abort, external fetch waits, and eight-state logical timing remain outside this bounded slice."
+        "The bounded ordinary-fetch owner connects Type 11 retirement to PC/loop stacks and automatic non-counter, ASTAT, and CE loopback/exit with taken explicit-flow precedence.",
+        "Interrupt abort, cache/reset-first-fetch interaction, and unresolved OQ-018 automatic/manual combinations remain outside the fetched attachment."
       ]
     },
     {

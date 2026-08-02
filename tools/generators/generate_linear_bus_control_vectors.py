@@ -22,6 +22,7 @@ from sim.reference_models.adsp2100_model import (  # noqa: E402
     UNKNOWN,
     apply_linear_bus_control_cycle,
     read_dreg,
+    register_code_by_name,
 )
 
 
@@ -177,6 +178,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
         "recognized", "grant_assert", "grant_release", "resume",
         "retire", "issue", "masked", "type9_retire",
         "type14_retire", "type15_retire", "type16_retire",
+        "irq_recognized", "irq_deferred_bg", "irq_entry_on_resume",
     )}
 
     def emit(
@@ -186,6 +188,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
         setup: tuple[int, int] | None = None,
         pmd: int = 0,
         pmd_valid: bool = True,
+        irq_n: int = 0xF,
         probe: int | None = None,
     ) -> None:
         nonlocal state, phase
@@ -202,6 +205,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             phase=phase,
             phase_advance=advance,
             br_n=br_n,
+            irq_n=irq_n,
             instruction_setup=setup_value,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
         )
@@ -239,6 +243,19 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             and not result.core.bus.control_output_enable
             and not result.core.bus.data_output_enable
         )
+        coverage["irq_recognized"] += int(
+            result.core.interrupt_recognition_event
+        )
+        coverage["irq_deferred_bg"] += int(
+            result.native_bus_relinquished
+            and state.core.interrupt_vectoring
+            and not result.core.interrupt_vector_issue_event
+        )
+        coverage["irq_entry_on_resume"] += int(
+            result.control.resume_event
+            and result.core.interrupt_entry_event
+            and result.core.interrupt_vector_issue_event
+        )
 
         stimulus = 0
         for value, width in (
@@ -246,6 +263,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
             (int(phase), 3),
             (advance, 1),
             (br_n, 1),
+            (irq_n, 4),
             (setup is not None, 1),
             (0 if setup is None else setup[0], 14),
             (0 if setup is None else setup[1], 24),
@@ -356,7 +374,7 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
         ):
             post = _append(post, value, width)
         lines.append(
-            f"{stimulus:019x} {bus_pre:05x} "
+            f"{stimulus:020x} {bus_pre:05x} "
             f"{core_pre:026x} {post:031x}"
         )
         state = post_state
@@ -365,6 +383,45 @@ def generate_lines(clock_count: int, seed: int) -> tuple[list[str], dict[str, in
 
     emit(reset=True, pmd_valid=False)
     phase = LogicalPhase.STATE_8
+    writable = register_code_by_name(writable=True)
+    emit(setup=(0x0100, _type7(writable["ICNTL"], 0x10)))
+    phase = LogicalPhase.STATE_8
+    for next_opcode in (_type7(writable["IMASK"], 0xF), 0):
+        emit()
+        for _ in range(6):
+            emit()
+        emit(pmd=next_opcode)
+
+    # BR recognition precedes the same instruction's state-7 IRQ sample.
+    # The retained interrupt may not issue during grant and enters only at
+    # the source-backed state-8 resume boundary.
+    emit()
+    emit()
+    emit()
+    br_n = False
+    emit()
+    emit()
+    emit()
+    emit()
+    emit(pmd=0, irq_n=0xB)
+    emit(irq_n=0xF)
+    emit(irq_n=0xF)
+    emit(irq_n=0xF)
+    emit(irq_n=0xF)
+    br_n = True
+    for _ in range(7):
+        emit(irq_n=0xF)
+    emit(irq_n=0xF)
+    for _ in range(7):
+        emit(irq_n=0xF)
+    emit(irq_n=0xF)
+    for _ in range(4):
+        emit(irq_n=0xF)
+    emit(irq_n=0xF)
+
+    emit(reset=True, pmd_valid=False)
+    phase = LogicalPhase.STATE_8
+    br_n = True
     emit(setup=(4, 0))
 
     for _ in range(clock_count):

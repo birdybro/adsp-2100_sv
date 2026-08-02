@@ -116,15 +116,15 @@ postmodify atomically; preserve all of that state over a held logical PM
 transaction; and use the shared 16-word monitor for an issue-time cache hit or
 one pure recovery fetch. The native attachment accepts the descriptor only at
 state 8-to-1 and exposes its sole architectural completion at state 7-to-8.
-Fourteen logical, seven cache, and five native directed tests plus 50,071 logical
-and 50,083 native model/RTL clocks cover both banks, ALU/MAC and PM-only forms,
+Fourteen logical, seven cache, and six native directed tests plus 50,071 logical
+and 50,100 native model/RTL clocks cover both banks, ALU/MAC and PM-only forms,
 old-value store overlap, read/PX split, cache hits/misses, recovery, reset,
 off-boundary rejection, late forced-fetch conversion, and bus relinquishment.
 A bounded HALT wrapper adds five directed tests and 50,126 deterministic
 model/RTL clocks. All 197 late PM-data recognitions override an issue-time hit,
 commit ALU/MAC/PM/PX/DAG2 actions once, and issue one external recovery fetch;
 387 stops/resumes complete with no replay. Ordinary fetch ownership, branches,
-loops, interrupt/BR arbitration, self-modifying PM, and physical hardware
+loops, interrupt entry/BR arbitration, self-modifying PM, and physical hardware
 confirmation remain outside this bounded client under OQ-008.
 
 ## Bounded Type 8 execution
@@ -154,7 +154,7 @@ The later ADSP-2101 Cross-Software reference explicitly corroborates the
 old-value and unsupported-collision rules, but does not override the original
 manual [ADI-2101-CROSS-1990, printed pp. 9-71–9-73]. A separate stateless
 action producer now attaches the same sourced graph to the ordinary-fetch
-owner. One directed old-value test and 442,392 model/RTL phase clocks traverse
+owner. One directed old-value test and 444,003 model/RTL phase clocks traverse
 every `(Z, AMF=1..31, YOP, XOP)` tuple and every move source/destination pair
 in both banks, with atomic state-7 compute/status/move/PC/next-word retirement.
 The standalone exhaustive run remains the evidence for every one of the
@@ -190,11 +190,12 @@ Two hand-derived fixtures, all 25,648 canonical assembler/disassembler forms,
 an exhaustive 24-bit RTL class traversal, ten model checks, and 82,597
 stateful model-versus-RTL cycles cover every supported word in both banks.
 A stateless parallel-action boundary now attaches every canonical packet to
-the shared ordinary-fetch owner. Twenty-three directed tests and 442,392 model/RTL
+the shared ordinary-fetch owner. Twenty-three directed tests and 444,003 model/RTL
 phase clocks cover native state-8 PC+1 issue, cycle-start reads, and atomic
-state-7 DREG/shifter/status/PC/next-word retirement; 50,003-clock BR/BG,
-shared-PM/BR-BG, and HALT compositions separately preserve the packet across
-their control sequences. Loop-terminal behavior, interrupt abort, unified
+state-7 DREG/shifter/status/PC/next-word retirement; 50,054-clock private and
+retained-fetch/shared-PM BR/BG plus 50,048-clock HALT compositions separately
+preserve the packet across their control sequences, including retained IRQ
+entry after resume. Loop-terminal behavior, simultaneous interrupt events, unified
 PM/cache/event ownership, and OQ-021 bit-15 behavior remain outside this
 bounded attachment.
 
@@ -275,7 +276,7 @@ and DAG2 results remain architecturally invisible until the corresponding
 state-7-to-state-8 completion. A hit word is captured at issue rather than
 re-read from a possibly changed monitor; a miss recovery becomes the next
 back-to-back PM transaction and its completion alone fills the monitor and
-exposes the next instruction. Five directed tests and 50,081 deterministic
+exposes the next instruction. Six directed tests and 50,098 deterministic
 model/RTL clocks exercise read/write drive windows, hit/miss ownership, held
 phases, off-boundary rejection, reset, and relinquishment
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8].

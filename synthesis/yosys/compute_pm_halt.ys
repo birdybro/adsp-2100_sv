@@ -14,6 +14,7 @@ read_verilog -sv rtl/core/adsp2100_compute_dm_slice.sv
 read_verilog -sv rtl/core/adsp2100_compute_pm_slice.sv
 read_verilog -sv rtl/core/adsp2100_compute_pm_cache_slice.sv
 read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_interrupt_control.sv
 read_verilog -sv rtl/core/adsp2100_compute_pm_native_slice.sv
 read_verilog -sv rtl/core/adsp2100_halt_control.sv
 read_verilog -sv rtl/core/adsp2100_compute_pm_halt_slice.sv

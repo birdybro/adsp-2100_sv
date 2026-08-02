@@ -7,6 +7,7 @@ module adsp2100_linear_halt_control_formal (
     input logic        phase_advance,
     input logic        halt_n,
     input logic        dmack,
+    input logic [3:0]  irq_n,
     input logic        instruction_setup,
     input logic [13:0] instruction_setup_pc,
     input logic [23:0] instruction_setup_opcode,
@@ -24,6 +25,13 @@ module adsp2100_linear_halt_control_formal (
     logic effective_phase_advance;
     logic halted;
     logic halt_phase_conflict;
+    logic trap;
+    logic trap_event;
+    logic trap_halt_recognized;
+    logic trap_handoff;
+    logic trap_resume_event;
+    logic trap_release_blocked;
+    logic trap_halt_conflict;
     logic issue_boundary;
     logic instruction_issue;
     logic retire_event;
@@ -50,6 +58,7 @@ module adsp2100_linear_halt_control_formal (
         .phase_advance_i(phase_advance),
         .halt_n_i(halt_n),
         .dmack_i(dmack),
+        .irq_n_i(irq_n),
         .instruction_setup_i(instruction_setup),
         .instruction_setup_pc_i(instruction_setup_pc),
         .instruction_setup_opcode_i(instruction_setup_opcode),
@@ -67,6 +76,13 @@ module adsp2100_linear_halt_control_formal (
         .effective_phase_advance_o(effective_phase_advance),
         .halted_o(halted),
         .halt_phase_conflict_o(halt_phase_conflict),
+        .trap_o(trap),
+        .trap_event_o(trap_event),
+        .trap_halt_recognized_o(trap_halt_recognized),
+        .trap_handoff_o(trap_handoff),
+        .trap_resume_event_o(trap_resume_event),
+        .trap_release_blocked_o(trap_release_blocked),
+        .trap_halt_conflict_o(trap_halt_conflict),
         .issue_boundary_o(issue_boundary),
         .instruction_setup_accepted_o(),
         .instruction_issue_o(instruction_issue),
@@ -142,11 +158,33 @@ module adsp2100_linear_halt_control_formal (
         if (halted && !halt_phase_conflict) begin
             assert (phase == 3'd7);
         end
+        if (trap_event) begin
+            assert (retire_event && pm_completion_event);
+            assert (phase == 3'd6 && phase_advance);
+        end
+        if (trap_halt_recognized) begin
+            assert (trap && phase == 3'd7 && !halt_n);
+        end
+        if (trap_resume_event) begin
+            assert (trap_handoff && phase == 3'd7 && halt_n && dmack);
+        end
+        if (trap_release_blocked) begin
+            assert (trap_handoff && phase == 3'd7 && halt_n && !dmack);
+            assert (phase_hold);
+        end
+        if (trap_halt_conflict) begin
+            assert (trap_event);
+            assert (halt_phase_conflict);
+        end
         cover (halt_recognized && transaction_pending);
         cover (halt_stop_event && retire_event);
         cover (halted && pm_bus_active && pma_valid);
         cover (release_blocked);
         cover (resume_event && instruction_issue);
+        cover (trap_event);
+        cover (trap_halt_recognized);
+        cover (trap_release_blocked);
+        cover (trap_resume_event && instruction_issue);
     end
 
     always_ff @(posedge clk) begin

@@ -14,6 +14,7 @@ module tb_adsp2100_register_writeback;
     logic [15:0]  read_data_1;
     logic [15:0]  read_data_2;
     logic [15:0]  unused_read_data_3;
+    logic [47:0]  unused_additional_read_data;
     logic         dreg_write_enable;
     logic [3:0]   dreg_write_address;
     logic [15:0]  dreg_write_data;
@@ -73,10 +74,16 @@ module tb_adsp2100_register_writeback;
         .read_address_1_i(read_address),
         .read_address_2_i(read_address),
         .read_address_3_i(read_address),
+        .read_address_4_i(read_address),
+        .read_address_5_i(read_address),
+        .read_address_6_i(read_address),
         .read_data_0_o(read_data),
         .read_data_1_o(read_data_1),
         .read_data_2_o(read_data_2),
         .read_data_3_o(unused_read_data_3),
+        .read_data_4_o(unused_additional_read_data[15:0]),
+        .read_data_5_o(unused_additional_read_data[31:16]),
+        .read_data_6_o(unused_additional_read_data[47:32]),
         .write_enable_0_i(dreg_write_enable),
         .write_address_0_i(dreg_write_address),
         .write_data_0_i(dreg_write_data),

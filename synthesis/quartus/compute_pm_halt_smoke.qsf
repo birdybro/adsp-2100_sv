@@ -18,6 +18,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_instructi
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_cache_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_interrupt_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_native_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_halt_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_halt_slice.sv

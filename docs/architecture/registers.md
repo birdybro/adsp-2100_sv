@@ -183,6 +183,30 @@ CNTR load/push and unknown-data invalidation, and adds 50,151 logical plus
 fetch/interrupt/bus sequencing
 [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
 
+The combined retained-fetch/PM-client owner now preserves the same explicit
+validity across fetched Type 17 moves. A reset-unknown DREG source invalidates
+the selected DREG, DAG, ASTAT, MSTAT, IMASK, ICNTL, CNTR, selected-bank SB, or
+PX destination rather than assigning a binary value; a following move or PM
+client observes that invalidity. Banked source/destination selection requires
+known MSTAT bit 0, and banked compute/PM work requiring other mode controls
+fails closed when the needed MSTAT bits are unknown. Four directed checks in
+the combined comparison cover the destination classes and a following
+dependent action. A fifth sequence pushes invalid ASTAT/MSTAT/IMASK validity,
+writes known replacements, and proves that POP STS restores the captured
+unknown classifications rather than the intervening known state. The status
+stack carries those 13 implementation-only validity bits beside, not within,
+the documented 16-bit word. This implements the documented reset-unknown and
+cycle-start-read/cycle-end-write rules; it does not resolve the unused upper
+bits of narrow sources tracked by OQ-016
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 2-21, 3-2–3-3, 4-4,
+4-20–4-24, 6-1–6-2, 6-12, A-3, A-9]. A sixth dependency sequence exercises a
+real IRQ2 entry and fetched RTI with invalid pre-entry ASTAT/MSTAT, then proves
+that the restored classifications govern following PM work. The combined run
+also reads composed SSTAT through fetched Type 17 at `0x55`, `0x45`, `0x65`,
+and `0x75` across status-stack empty/nonempty/overflow transitions. These are
+claims about the documented low eight bits; the provisional zero-filled upper
+byte remains OQ-016. The run now contains 40 tests and 51,428 model/RTL clocks.
+
 The Type 7 immediate-load boundary reuses the same complete destination
 storage instead of defining a second register map. It accepts all 31 writable
 non-data selectors, right-justifies the fourteen-bit immediate, narrows it to

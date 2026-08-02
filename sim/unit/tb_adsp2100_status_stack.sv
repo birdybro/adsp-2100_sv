@@ -2,12 +2,14 @@
 
 module tb_adsp2100_status_stack;
     logic        clk;
-    logic [18:0] stimulus;
-    logic [26:0] expected;
+    logic [31:0] stimulus;
+    logic [40:0] expected;
     logic        reset;
     logic [1:0]  operation;
     logic [15:0] push_data;
+    logic [12:0] push_validity;
     logic [15:0] pop_data;
+    logic [12:0] pop_validity;
     logic        pop_valid;
     logic        empty;
     logic        overflow;
@@ -22,6 +24,8 @@ module tb_adsp2100_status_stack;
     logic        expected_pop_valid;
     logic        compare_pop_data;
     logic [15:0] expected_pop_data;
+    logic        compare_pop_validity;
+    logic [12:0] expected_pop_validity;
     logic        expected_push_accepted;
     logic        expected_overflow_event;
     logic        expected_empty_pop;
@@ -32,7 +36,8 @@ module tb_adsp2100_status_stack;
     assign {
         reset,
         operation,
-        push_data
+        push_data,
+        push_validity
     } = stimulus;
     assign {
         compare_state,
@@ -42,6 +47,8 @@ module tb_adsp2100_status_stack;
         expected_pop_valid,
         compare_pop_data,
         expected_pop_data,
+        compare_pop_validity,
+        expected_pop_validity,
         expected_push_accepted,
         expected_overflow_event,
         expected_empty_pop
@@ -52,7 +59,9 @@ module tb_adsp2100_status_stack;
         .reset_i(reset),
         .operation_i(operation),
         .push_data_i(push_data),
+        .push_validity_i(push_validity),
         .pop_data_o(pop_data),
+        .pop_validity_o(pop_validity),
         .pop_valid_o(pop_valid),
         .empty_o(empty),
         .overflow_o(overflow),
@@ -64,8 +73,8 @@ module tb_adsp2100_status_stack;
 
     initial begin
         clk = 1'b0;
-        stimulus = 19'h00000;
-        expected = 27'h0000000;
+        stimulus = 32'h00000000;
+        expected = 41'h00000000000;
         vector_file = $fopen("build/status_stack_vectors.txt", "r");
         if (vector_file == 0) begin
             $fatal(1, "cannot open build/status_stack_vectors.txt");
@@ -120,6 +129,18 @@ module tb_adsp2100_status_stack;
                         vector_count,
                         expected_pop_data,
                         pop_data
+                    );
+                end
+                if (
+                    compare_pop_validity
+                    && (pop_validity !== expected_pop_validity)
+                ) begin
+                    $fatal(
+                        1,
+                        "pop validity mismatch vector=%0d expected=%04h actual=%04h",
+                        vector_count,
+                        expected_pop_validity,
+                        pop_validity
                     );
                 end
                 if (

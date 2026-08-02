@@ -92,13 +92,68 @@ processor-level decision.
 
 The ordinary-fetch owner is now also separated into a retained architectural
 client and attached in a third composition. Its current instruction owns the
-unaccepted PC+1 request, so selector collision or BR/BG inhibition cannot lose
-or duplicate architectural work; only the routed fetch completion retires the
+unaccepted selected request—PC+1, a Type 10 direct target, a Type 19 DAG2-
+indirect target, a Type 20 valid return-stack target, or automatic loopback/
+exit—so selector collision
+or BR/BG inhibition cannot lose or
+duplicate architectural work; only the routed fetch completion retires the
 instruction and installs the returned word. The prior bounded linear-core API
 is retained as a compatibility composition of this client with one private PM
-controller. Type 5 and Type 13 remain raw descriptors in the new attachment,
+controller. Type 11 setup and automatic loop state changes commit only with
+that routed fetch completion. Type 5 and Type 13 remain raw descriptors in the
+new attachment,
 so this extraction does not yet decide legal priority among all three real
 clients or system events.
+
+A superseding bounded composition attaches those three retained clients behind
+one cache/native-PM/BR-BG owner and routes the Type 5 and Type 13 state-external
+read/action bundles into the retained fetch client's single
+`adsp2100_architectural_state` instance. The shared module boundary and its
+fail-closed write-conflict detector are implementation conveniences; the
+architectural ordering remains the original cycle-start-read/cycle-end-write
+rule. Directed fetched-Type-6-to-Type-13 and Type-5-to-fetched-Type-17
+dependencies demonstrate cross-client register visibility. Sequential
+automatic mode now selects a retained Type 5/Type 13 opcode, requests PC+1,
+installs a cache-hit or external-recovery word, advances the shared PC, and
+uses whole-instruction retirement as the existing IRQ entry boundary. The
+same composition now owns HALT scheduling. Ordinary fetch stops after its
+routed completion; PM-data recognition commits the data action once, forces
+one external recovery for the captured client even on an issue-time hit, and
+stops after that recovery. A combined BR/HALT request is rejected and
+conflict-reported because the sources do not establish priority. The
+implementation fails closed whenever a loop is active because the sources do
+not establish whether its termination condition belongs at PM-data issue or
+recovery completion. Complete reset-unknown validity accounting and sourced
+simultaneous system-event priority remain open.
+
+Type 22 now uses the same retained ordinary-fetch boundary. Its condition is
+sampled before state-8 issue, both outcomes request the selected PC+1 word,
+and only routed state-7 completion may emit the taken TRAP event. A small
+synchronous hold/handoff state above the existing HALT controller retains
+state 8 and the fetched word: HALT assertion clears TRAP, while HALT release
+with DMACK high removes the hold and admits the retained instruction at the
+normal 8-to-1 issue edge. An overlap with ordinary state-3 HALT recognition is
+reported as a conflict; this decision does not assign priority among TRAP,
+ordinary HALT, BR/BG, cache, interrupts, or reset.
+
+The original state-7 interrupt recognizer is now connected above the ordinary-
+fetch HALT and normal BR/BG wrappers. A request actually sampled at state 7
+while stop or grant is pending remains in the recognizer, cannot issue a vector
+or push context while the issue boundary is disabled, and is consumed only by
+the normal vectoring-NOP request accepted at the qualified state-8-to-state-1
+resume. This composition does not add an asynchronous pulse latch or define
+simultaneous IRQ/TRAP/raw-PM priority; those require separate source evidence.
+
+A separate bounded composition now pairs an accepted ordinary fetch with a raw
+native-DM descriptor to exercise the sourced DMACK/interrupt overlap. Native
+DM state seven may repeat complete physical substate cycles while the ordinary
+fetch client's architectural phase is disabled; a second, sampling-only
+advance reaches the state-7 interrupt recognizer on each physical pass. It
+cannot issue or retire an instruction, complete PM, vector, or mutate entry
+context. Once DMACK permits the paired PM and DM state-7-to-state-8 completion,
+the normal state-8 issue boundary may consume the pending interrupt. The raw
+descriptor is deliberately structural verification scaffolding, so this
+decision does not claim fetched DM instruction ownership or priority.
 
 The native DM controller applies the same physical-substate contract with one
 additional state bit: DMACK is sampled at 6-to-7, and a low sample retains

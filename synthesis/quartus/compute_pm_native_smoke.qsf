@@ -18,6 +18,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_d
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_cache_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_interrupt_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_native_slice.sv
 set_global_assignment -name SDC_FILE compute_pm_native_smoke.sdc
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
@@ -40,6 +41,11 @@ set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_address_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_address_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_instruction_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_instruction_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to irq_n_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_write_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mstat_setup_write_i

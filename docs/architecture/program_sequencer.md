@@ -1,14 +1,26 @@
 # Program sequencer
 
-**Status: source-backed next-PC, CNTR, stack storage, and bounded Type
-10/11/19/20 and phase-aware Type 22 PC-state integration; whole-core timing
-incomplete**
+**Status: source-backed next-PC, CNTR, stack storage, bounded Type
+10/11/19/20/22 PC-state integration, and private-owner interrupt entry;
+whole-core timing incomplete**
 
 PC is a 14-bit register containing the currently executing address. Its
 incrementer normally provides the next address [ADI-UM-1989, printed p. 4-3].
 The 16-word PC stack receives PC+1 for CALL but current PC for interrupt entry
 because the fetched instruction is aborted and must be retried
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-9].
+
+The private fetched owner now realizes that distinction: state-7 recognition
+retires the executing instruction but invalidates the following fetched word;
+the next state-8 issue pushes that ignored word's PC with the post-instruction
+status context and fetches vector 0–3. Vector completion loads the ISR word,
+and fetched RTI selects the stacked PC and restores status. This is a bounded
+private-PM composition; retained state-7 requests are now composed separately
+with ordinary HALT and normal BR/BG. A separate raw-DM structural composition
+also permits physical state-7 sampling during a native DMACK extension while
+holding all architectural service until paired completion. Fetched DM semantic
+ownership and PM-data/cache integration remain outside it [ADI-UM-1989,
+printed pp. 4-8–4-10, 5-9–5-11, and Figure 5.11, printed p. 5-16].
 
 CNTR is a 14-bit unsigned down counter. The count stack is four words. Loading a
 valid new count pushes the old count, while a reset-invalid count does not waste
@@ -91,11 +103,13 @@ All 32 Type 26 words are also recognized by the bounded ordinary-fetch owner.
 Their requests are gated by native state-7 retirement into its shared status,
 CNTR, and stack state. Directed fetched sequences cover valid status push/pop,
 valid count pop, and empty PC/loop pop preservation; the superseding
-442,330-clock flow traverses every payload. Fetched Type 10 CALL now populates
-the PC stack, and a following Type 26 POP PC verifies that valid path. No
-fetched DO yet populates the loop stack, and arbitrary combined valid pops
-remain standalone-only evidence. Loop actions and interrupt actions remain
-outside this owner, so OQ-018 arbitration is not resolved by this attachment.
+444,003-clock flow traverses every payload. Fetched Type 10 CALL now populates
+the PC stack, and a following Type 26 POP PC verifies that valid path. Fetched
+Type 11 populates the PC and loop stacks, and a following Type 26 POP LOOP
+verifies that valid path. One nonterminal sequence also presents valid status,
+count, PC, and loop tops to the combined `0x04001f` pop and verifies one atomic
+retirement. Automatic/manual collisions and interrupt actions remain outside
+this owner, so unresolved OQ-018 combinations are not assigned a priority.
 
 The bounded Type 10 direct-transfer slice was the first decoder-connected PC
 register boundary. Its authentic reset path sets PC to `0x0004`, then every
@@ -110,12 +124,16 @@ stack overflow, counter restore, unknown predicates, and integration conflicts
 A-6]. The same action is now attached to the bounded native ordinary-fetch
 owner. It presents the selected direct target or wrapped PC+1 at the enabled
 state-8 issue boundary and commits PC, CALL push, and JUMP NOT CE counter
-effects only on routed state-7 completion. Twenty-eight tests and 442,330
-model/RTL phase clocks cover representative targets, every condition, and a
-fetched CALL followed by Type 26 POP PC. The standalone 554,412-cycle slice is
-the exhaustive per-word execution evidence. Active-loop precedence, cache invalidation/ownership,
-interrupt abort/vectoring, reset-first-fetch, and other transfer classes remain
-outside this attachment, so it is not a complete program sequencer.
+effects only on routed state-7 completion. The superseding 48-test,
+444,003-clock model/RTL comparison retains representative targets, every
+condition, a fetched CALL followed by Type 26 POP PC, and taken explicit-flow
+precedence over automatic loop termination. The standalone 554,412-cycle
+slice is the exhaustive per-word execution evidence. The private owner now
+implements bounded interrupt discard/vectoring/entry/RTI around this shared PC
+and stack state. Cache invalidation/ownership, interrupt priority with other
+events, reset-first-fetch, and
+other transfer classes remain outside this attachment, so it is not a
+complete program sequencer.
 
 The bounded Type 11 slice connects exact DO decode to PC, PC-stack,
 loop-stack, and CNTR-valid state. Every accepted word samples cycle-start PC,
@@ -126,8 +144,14 @@ holds DO-on-outer-terminal under OQ-018. Exhaustive RTL classification covers
 the full 24-bit opcode space, and 554,309 model/RTL cycles execute every one
 of the 262,144 Type 11 words plus directed invalid, nesting, and overflow
 boundaries [ADI-UM-1989, printed pp. 4-5–4-8, 4-16–4-19, 6-13–6-14,
-A-2, A-10]. Loop-end evaluation remains in the separate generic sequencer
-slice; fetch, interrupt, wait, and bus phases are not yet unified.
+A-2, A-10]. The same action now retires in the bounded native ordinary-fetch
+owner. That owner evaluates the live top descriptor at the terminal
+instruction, selects loopback or exit for non-counter and ASTAT predicates,
+couples CE to CNTR/count-stack post-test behavior, restores nested CE context,
+and gives taken explicit flow precedence. Six additional tests in the
+48-test, 444,003-clock comparison cover those paths and a valid Type 26 loop
+pop. Interrupt/cache/reset-first-fetch interaction and unresolved OQ-018
+automatic/manual combinations remain outside this attachment.
 
 The bounded Type 19 slice adds the original register-indirect path. Exact
 decode selects I4 through I7 and preserves Type 19 bit 5 as fixed zero. A
@@ -139,9 +163,14 @@ count-stack boundaries as Type 10. The 128-word class partitions into 124
 bounded actions and four OQ-012 CALL NOT CE words. Exhaustive 24-bit decode,
 two hand-derived fixtures, twelve directed model tests, and 50,259 model/RTL
 cycles pass [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4, 4-20, 6-13–6-14,
-A-3, A-6]. The PMA observation proves next-address intent only; fetch strobes,
-cache behavior, wait extension, active-loop arbitration, interrupts, and
-eight-state pin timing remain unconnected.
+A-3, A-6]. The same action now attaches to the bounded native ordinary-fetch
+owner. True flow issues the known cycle-start I4-I7 target; false flow issues
+PC+1 without requiring valid I; routed state-7 completion commits PC, CALL
+push, and JUMP NOT CE effects. Four additional owner tests and the 444,003-
+clock comparison cover all selectors, unknown-target rejection, Type 19 CALL
+context consumed by fetched Type 20 RTS, and taken explicit-flow precedence
+at a loop terminal. Interrupts, cache ownership, reset-first-fetch, and
+remaining cross-event priority remain open.
 
 The bounded Type 20 slice closes the original conditional-return format. It
 samples COND, the PC-stack top, and, for RTI, the status-stack top at cycle
@@ -153,9 +182,14 @@ action-free and explicitly reported; this applies the OQ-013 fail-closed
 boundary without claiming real empty-pop behavior. Exhaustive 24-bit decode,
 two hand-derived fixtures, twelve model tests, and 50,254 model/RTL cycles pass
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10, 6-14 Table 6.8,
-A-4, A-6]. Active-loop precedence is already proved in the generic sequencer
-flow block but is not yet physically unified with this decoder-connected
-slice. Interrupt entry/vectoring, fetch, waits, and bus phases remain open.
+A-4, A-6]. The same action now attaches to the bounded native ordinary-fetch
+owner. False returns issue wrapped PC+1; taken returns require and issue the
+live PC-stack top; RTS/RTI pops and RTI status restoration commit only on
+routed state-7 completion. Forty-eight tests and 444,003 phase clocks cover
+every condition through RTS, valid RTI context, Type 10/Type 19 CALL-to-RTS return,
+non-mutating NOT CE, fail-closed missing context, and taken explicit-return
+precedence at a loop terminal. Interrupt entry/vectoring, cache
+ownership, reset-first-fetch, and cross-event priority remain open.
 
 The bounded Type 22 slice closes all sixteen conditional TRAP words and, unlike
 the instruction-boundary-only slices, retains an accepted condition decision
@@ -166,7 +200,14 @@ the processor stopped, and releasing HALT produces a resume event without
 changing PC. Conditional TRAP `NOT CE` observes CNTR without decrementing it.
 Twelve model tests, exhaustive 24-bit decode, two hand-derived fixtures, and
 50,168 model/RTL clocks pass [ADI-UM-1989, printed pp. 4-3–4-4, 4-25,
-5-14–5-15, Figure 5.10, 6-14, A-4, and A-6]. General HALT recognition,
-active-loop and interrupt arbitration, BR/BG, complete fetch strobes, and bus
-ownership remain separate incomplete boundaries. SC-013 records MAME's
+5-14–5-15, Figure 5.10, 6-14, A-4, and A-6]. The ordinary fetched owner now
+also executes all sixteen forms. Its 48 tests and 444,003 phase clocks cover
+every predicate, non-mutating NOT CE, sequential PC+1 fetch, retirement-only
+TRAP event, and true/false automatic-loop precedence. The digital active-low
+HALT composition then retains the fetched PC+1 word through TRAP assertion,
+HALT acknowledgment, DMACK-blocked release, and state-8-to-state-1 restart in
+its eleven-test, 50,048-clock comparison. Simultaneous ordinary HALT
+recognition is flagged as an unresolved conflict; a separately sampled IRQ is
+retained through HALT and normal BR/BG, while simultaneous IRQ/TRAP, cache,
+reset-first-fetch, and physical synchronization priority remain incomplete. SC-013 records MAME's
 incorrect reserved classification for these original-device words.

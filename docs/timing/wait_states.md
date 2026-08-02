@@ -14,6 +14,18 @@ permits completion and read sampling on the following 7-to-8 edge. Nine
 directed tests and 50,039 model/RTL clocks cover zero, one, and repeated
 extensions, late ACK rejection, phase holds, stable output values, and reset.
 
+A bounded structural composition now pairs an ordinary PM fetch with one raw
+native-DM descriptor. During every DMACK-low extension it freezes the
+architectural fetch/execute boundary but continues physical state-7 interrupt
+sampling. A request first sampled there is retained without vector issue,
+context push, retirement, or PM completion and is serviced only after the PM
+and DM transactions complete together. Four directed/model tests and 50,000
+model/RTL clocks cover 1,356 admitted companion transactions, 446 extensions,
+446 wait-time interrupt samples, and one edge-mode IRQ2 retained through the
+wait. This establishes the cycle-control rule, not fetched DM instruction
+semantics or whole-core PM/DM arbitration [ADI-UM-1989, printed pp. 5-9–5-11
+and 5-15–5-16].
+
 The bounded Type 2, Type 3, Type 4, and Type 12 execution slices separately
 automate the architectural rule:
 each DMACK-low sample retains select, direction, valid address/write data, and

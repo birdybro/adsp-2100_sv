@@ -27,6 +27,25 @@ the exact PC, count, and loop dimensions and SSTAT bits 0–3 and 6–7. Reset
 clears all pointers and overflow bits without initializing stored data
 [ADI-UM-1989, printed pp. 4-3–4-7, 4-10, 4-22, 5-13, A-10].
 
+The implementation additionally stores a 13-bit validity sidecar with each
+accepted status entry: eight ASTAT known-state bits, four MSTAT known-state
+bits, and one whole-IMASK known-state bit. This metadata is not part of the
+documented 16-bit architectural stack word. It prevents a reset-unknown or
+otherwise invalid status value from becoming spuriously known after an
+intervening write and later POP STS or RTI. The sidecar follows the same
+accepted-push, saturating-depth, and valid-pop selection as its word. Direct
+model/RTL comparison covers independent data and sidecar patterns, overflow,
+LIFO ordering, and reset across 50,037 clocks; an end-to-end combined-owner
+sequence invalidates ASTAT/MSTAT/IMASK, pushes that context, overwrites each
+register with known data, and proves that the subsequent valid pop restores
+all three validity classifications. A second combined-owner sequence enters
+IRQ2 with invalid ASTAT/MSTAT, installs the known interrupt nesting mask, and
+proves that fetched RTI restores the pre-entry classifications before
+dependent PM work. IMASK is known in this path because interrupt recognition
+requires it. Fetched Type 17 then reads the live composed SSTAT low byte across
+status-stack empty (`0x55`), nonempty (`0x45`), overflow (`0x65`), and emptied
+with sticky overflow (`0x75`) states. Its upper-byte extension remains OQ-016.
+
 The original Type 26 action selection is now independently machine-readable
 and executable. `SPP[1:0]` preserves both no-change encodings and selects
 status push/pop; `CP`, `LP`, and `PP` independently select count-, loop-, and
@@ -50,15 +69,20 @@ A-4, A-8–A-10].
 
 The same action decoder is now attached to the shared architectural state in
 the bounded ordinary-fetch owner. Status PUSH captures live cycle-start
-ASTAT/MSTAT/IMASK, status POP restores that tuple, and a count POP restores a
-valid prior CNTR only on the fetched instruction's state-7 retirement. The
-superseding 28-test, 442,330-clock owner comparison traverses all 32 payloads.
+ASTAT/MSTAT/IMASK and their validity sidecars, status POP restores both the
+tuple and its captured validity, and a count POP restores a valid prior CNTR
+only on the fetched instruction's state-7 retirement. The
+superseding 48-test, 444,003-clock owner comparison traverses all 32 payloads.
 A fetched Type 10 CALL now creates valid PC-stack context and a following Type
-26 POP PC consumes it. The loop stack remains empty because DO execution is
-not attached; those fetched loop pops therefore verify only the explicit
-OQ-013 fail-closed preservation rule. Arbitrary combined valid actions remain
-established by the standalone 50,015-cycle slice rather than being overclaimed
-as fetched coverage.
+26 POP PC consumes it. Fetched Type 19 CALL also supplies valid PC-stack
+context consumed by Type 20 RTS. Fetched Type 20 RTS and RTI consume valid PC-stack
+context, and RTI simultaneously consumes valid status-stack context. Fetched
+Type 11 creates valid PC- and loop-stack context, automatic loop termination
+consumes both, and a directed Type 26 POP LOOP consumes a valid loop top. A
+further nonterminal fetched sequence creates valid status, count, PC, and loop
+contexts before one `POP STS, POP CNTR, POP LOOP, POP PC` word restores both
+value-bearing tops and empties all four stack depths atomically. This does not
+assign behavior to the OQ-018 automatic/manual terminal case.
 
 The sequencer storage exposes each current top with an explicit valid bit,
 accepted pushes, valid pops, overflow events, and empty-pop indications. Its
@@ -95,8 +119,8 @@ also rejects nested DO requests whose end address equals the active loop end,
 implementing the original restriction rather than allowing an unrepresentable
 comparator state.
 
-Interrupt/RTI connectivity and arbitration between Type 26 and automatic
-sequencer/interrupt actions remain outside both integration boundaries. Every
+Complete arbitration between Type 26 and automatic sequencer/interrupt
+actions remains outside these bounded integration results. Every
 empty-pop architectural side effect remains OQ-013. Conditional-CALL CE
 remains OQ-012. Competing automatic/manual actions and DO setup on an active
 outer loop's final instruction are rejected under OQ-018 instead of receiving
@@ -105,9 +129,10 @@ an invented priority.
 The bounded Type 10 direct-transfer slice and fetched owner connect CALL pushes and JUMP NOT CE
 counter restoration to the same PC/count stack rules. A stack-full CALL still
 takes its target while the newest return address is lost and overflow sticks,
-matching the sourced global stack-overflow behavior. These boundaries deliberately
-exclude an active loop descriptor: they cannot yet prove the documented
-explicit-transfer precedence on a loop-final instruction. All CALL NOT CE
+matching the sourced global stack-overflow behavior. The fetched owner also
+connects active loop descriptors and proves that a taken explicit transfer on
+the terminal instruction suppresses the automatic loop action; a false
+explicit condition leaves that automatic action eligible. All CALL NOT CE
 encodings remain action-free under OQ-012 rather than assigning an unsupported
 counter-stack interaction [ADI-UM-1989, printed pp. 4-3–4-7, 4-22].
 
@@ -118,7 +143,13 @@ overflow and discards the newest loop descriptor under the existing sourced
 stack contract. The associated PC-stack push remains an independent hardware
 action. The exact full-chip recovery behavior after deliberately overflowing
 only one of the two stacks is not claimed [ADI-UM-1989, printed pp. 4-5–4-8,
-4-22, A-2, A-10].
+4-22, A-2, A-10]. The same action now retires in the ordinary fetched owner.
+That owner evaluates the live top descriptor on its terminal instruction,
+selects loopback or exit for non-counter and ASTAT conditions, couples CE
+loopback/exit to CNTR/count-stack transitions, and restores nested CE context.
+Six directed additions to the 48-test, 444,003-clock comparison cover these
+paths, explicit-flow precedence, OQ-018 rejection, and the valid Type 26 loop
+pop described above.
 
 The bounded Type 20 slice connects RTS to the cycle-start PC-stack top and RTI
 to both PC- and status-stack tops. A false condition pops neither stack. A
@@ -128,4 +159,16 @@ required top, the slice requests no pop and reports OQ-013 context failure.
 This verifies valid-stack connectivity and prevents a sentinel value from
 becoming architectural behavior; it does not resolve what physical hardware
 does for an intentionally empty pop [ADI-UM-1989, printed pp. 4-3–4-4,
-4-9–4-10, 4-22, 6-14 Table 6.8].
+4-9–4-10, 4-22, 6-14 Table 6.8]. The same operations now retire in the
+ordinary fetched owner after it issues PC+1 or the valid PC-stack top through
+the native PM controller. Taken explicit-return precedence over an automatic
+terminal action is connected there; interrupt-entry arbitration remains
+outside that attachment.
+
+Fetched Type 22 shares the explicit-flow precedence gate without modifying
+any stack. A true predicate fetches PC+1 and suppresses the automatic terminal
+pop/loopback action before its TRAP event; a false predicate leaves automatic
+loop handling eligible. Directed true and false terminal cases pass in the
+48-test, 444,003-clock owner comparison. Simultaneous interrupt, manual-stack,
+ordinary-HALT, and cache-event priority remains outside this bounded claim
+[ADI-UM-1989, printed pp. 4-3–4-8, 4-25, 5-14–5-15].

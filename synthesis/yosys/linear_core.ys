@@ -25,6 +25,11 @@ read_verilog -sv rtl/core/adsp2100_dag.sv
 read_verilog -sv rtl/core/adsp2100_modify_address_action.sv
 read_verilog -sv rtl/core/adsp2100_stack_control_decode.sv
 read_verilog -sv rtl/core/adsp2100_direct_jump_decode.sv
+read_verilog -sv rtl/core/adsp2100_do_until_decode.sv
+read_verilog -sv rtl/core/adsp2100_indirect_jump_decode.sv
+read_verilog -sv rtl/core/adsp2100_conditional_return_decode.sv
+read_verilog -sv rtl/core/adsp2100_conditional_trap_decode.sv
+read_verilog -sv rtl/core/adsp2100_sequencer_flow.sv
 read_verilog -sv rtl/core/adsp2100_alu.sv
 read_verilog -sv rtl/core/adsp2100_mr_saturation_decode.sv
 read_verilog -sv rtl/core/adsp2100_mr_saturate.sv
@@ -39,6 +44,7 @@ read_verilog -sv rtl/core/adsp2100_immediate_shift_action.sv
 read_verilog -sv rtl/core/adsp2100_conditional_shift_action.sv
 read_verilog -sv rtl/core/adsp2100_shift_move_action.sv
 read_verilog -sv rtl/core/adsp2100_program_bus.sv
+read_verilog -sv rtl/core/adsp2100_interrupt_control.sv
 read_verilog -sv rtl/core/adsp2100_linear_fetch_client.sv
 read_verilog -sv rtl/core/adsp2100_linear_core_slice.sv
 

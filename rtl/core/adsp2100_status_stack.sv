@@ -5,8 +5,13 @@ module adsp2100_status_stack (
     input  logic        reset_i,
     input  logic [1:0]  operation_i,
     input  logic [15:0] push_data_i,
+    // Implementation-only known-state metadata for
+    // {ASTAT[7:0], MSTAT[3:0], IMASK}. It follows the accepted stack entry
+    // but is not part of the documented 16-bit architectural stack word.
+    input  logic [12:0] push_validity_i,
 
     output logic [15:0] pop_data_o,
+    output logic [12:0] pop_validity_o,
     output logic        pop_valid_o,
     output logic        empty_o,
     output logic        overflow_o,
@@ -21,6 +26,7 @@ module adsp2100_status_stack (
     localparam logic [1:0] OP_POP = 2'b11;
 
     logic [15:0] stack_q [0:3];
+    logic [12:0] validity_stack_q [0:3];
     logic [2:0]  depth_q;
     logic        overflow_q;
 
@@ -52,11 +58,26 @@ module adsp2100_status_stack (
     // sentinel only; pop_valid_o is false and consumers must not use it.
     always_comb begin
         unique case (depth_q)
-            3'd1: pop_data_o = stack_q[0];
-            3'd2: pop_data_o = stack_q[1];
-            3'd3: pop_data_o = stack_q[2];
-            3'd4: pop_data_o = stack_q[3];
-            default: pop_data_o = 16'h0000;
+            3'd1: begin
+                pop_data_o = stack_q[0];
+                pop_validity_o = validity_stack_q[0];
+            end
+            3'd2: begin
+                pop_data_o = stack_q[1];
+                pop_validity_o = validity_stack_q[1];
+            end
+            3'd3: begin
+                pop_data_o = stack_q[2];
+                pop_validity_o = validity_stack_q[2];
+            end
+            3'd4: begin
+                pop_data_o = stack_q[3];
+                pop_validity_o = validity_stack_q[3];
+            end
+            default: begin
+                pop_data_o = 16'h0000;
+                pop_validity_o = 13'h0000;
+            end
         endcase
     end
 
@@ -71,6 +92,7 @@ module adsp2100_status_stack (
                 OP_PUSH: begin
                     if (depth_q < 3'd4) begin
                         stack_q[depth_q[1:0]] <= push_data_i;
+                        validity_stack_q[depth_q[1:0]] <= push_validity_i;
                         depth_q <= depth_q + 3'd1;
                     end else begin
                         overflow_q <= 1'b1;

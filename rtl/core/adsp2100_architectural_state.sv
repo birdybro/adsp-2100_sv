@@ -4,10 +4,15 @@
 //
 // This boundary exposes the complete general-register selector used by Type
 // 17 and deterministic setup together with execution-facing DREG,
-// computational-unit, DAG-I, status, mode, and manual stack-control actions.
-// Memory transactions and automatic sequencer/interrupt actions remain
-// separate clients of this owner.
-module adsp2100_architectural_state (
+// computational-unit, DAG-I, status, mode, and sequencer stack-control
+// actions. Memory transactions and interrupt actions remain separate clients
+// of this owner.
+module adsp2100_architectural_state #(
+    // A composed owner may prove action/interrupt mutual exclusion before
+    // this boundary. The authentic reusable default retains the local
+    // fail-closed check.
+    parameter logic INTERRUPT_ACTIONS_PREVALIDATED = 1'b0
+) (
     input  logic        clk_i,
     input  logic        reset_i,
 
@@ -18,6 +23,7 @@ module adsp2100_architectural_state (
 
     input  logic [5:0]  read_code_i,
     output logic [15:0] read_data_o,
+    output logic [15:0] move_dreg_read_data_o,
     input  logic [5:0]  probe_code_i,
     output logic [15:0] probe_data_o,
 
@@ -29,6 +35,12 @@ module adsp2100_architectural_state (
     output logic [15:0] dreg_read_data_o,
     input  logic [3:0]  dreg_read_address_2_i,
     output logic [15:0] dreg_read_data_2_o,
+    input  logic [3:0]  dreg_read_address_3_i,
+    output logic [15:0] dreg_read_data_3_o,
+    input  logic [3:0]  dreg_read_address_4_i,
+    output logic [15:0] dreg_read_data_4_o,
+    input  logic [3:0]  dreg_read_address_5_i,
+    output logic [15:0] dreg_read_data_5_o,
     input  logic        dreg_write_enable_1_i,
     input  logic [3:0]  dreg_write_address_1_i,
     input  logic [15:0] dreg_write_data_1_i,
@@ -85,10 +97,17 @@ module adsp2100_architectural_state (
     input  logic [1:0]  stack_status_operation_i,
     input  logic        stack_counter_ce_test_i,
     input  logic        stack_count_pop_i,
+    input  logic        stack_loop_push_i,
+    input  logic [17:0] stack_loop_push_data_i,
     input  logic        stack_loop_pop_i,
     input  logic        stack_pc_push_i,
     input  logic [13:0] stack_pc_push_data_i,
     input  logic        stack_pc_pop_i,
+    input  logic [12:0] status_stack_push_validity_i,
+
+    input  logic        interrupt_entry_i,
+    input  logic [1:0]  interrupt_level_i,
+    input  logic [13:0] interrupt_pc_push_data_i,
 
     output logic        invalid_move_write_o,
     output logic        internal_conflict_o,
@@ -98,9 +117,16 @@ module adsp2100_architectural_state (
     output logic        count_stack_overflow_o,
     output logic [13:0] pc_stack_top_o,
     output logic        pc_stack_top_valid_o,
+    output logic [15:0] status_stack_top_o,
+    output logic        status_stack_top_valid_o,
+    output logic        status_restore_event_o,
+    output logic [12:0] status_restore_validity_o,
+    output logic [17:0] loop_stack_top_o,
+    output logic        loop_stack_top_valid_o,
     output logic [7:0]  astat_o,
     output logic [3:0]  mstat_o,
     output logic [4:0]  icntl_o,
+    output logic        icntl_valid_o,
     output logic [3:0]  imask_o,
     output logic [13:0] cntr_o,
     output logic        cntr_valid_o,
@@ -163,7 +189,8 @@ module adsp2100_architectural_state (
     logic        sequencer_stack_conflict;
     logic        status_stack_empty;
     logic        status_stack_overflow;
-    logic [15:0] unused_status_pop_data;
+    logic [15:0] status_stack_pop_data;
+    logic [12:0] status_stack_pop_validity;
     logic        unused_status_pop_valid;
     logic [2:0]  unused_status_depth;
     logic        unused_status_push_accepted;
@@ -189,8 +216,6 @@ module adsp2100_architectural_state (
     logic        unused_count_push_accepted;
     logic        unused_count_overflow_event;
     logic        unused_count_empty_pop;
-    logic [17:0] unused_loop_top;
-    logic        unused_loop_top_valid;
     logic        unused_loop_pop_valid;
     logic        unused_loop_empty;
     logic        unused_loop_overflow;
@@ -199,6 +224,9 @@ module adsp2100_architectural_state (
     logic        unused_loop_overflow_event;
     logic        unused_loop_empty_pop;
     logic [7:0]  px_q;
+    logic        icntl_valid_q;
+    logic        interrupt_action_conflict;
+    logic        interrupt_entry_accepted;
 
     function automatic logic selector_present (
         input logic [1:0] group,
@@ -324,12 +352,40 @@ module adsp2100_architectural_state (
     end
 
     assign px_o = px_q;
+    // This is the DREG view of the generic Type 17 read port before its
+    // DAG/status group mux. Compute classes always name a DREG, so exposing
+    // the raw view removes unrelated selector logic from their operand path
+    // without adding storage or changing cycle-start visibility.
+    assign move_dreg_read_data_o = read_dreg_data;
     assign count_stack_push_data_o = count_stack_push_o
         ? counter_push_data : 14'h0000;
     assign internal_conflict_o = (
         register_conflict || dag_conflict || status_conflict
         || counter_conflict || sequencer_stack_conflict
+        || interrupt_action_conflict
     );
+    assign interrupt_action_conflict = (
+        !INTERRUPT_ACTIONS_PREVALIDATED
+        && !reset_i && interrupt_entry_i
+        && (
+            move_write_i || dreg_write_enable_1_i
+            || dreg_write_enable_2_i || alu_write_enable_i
+            || mac_write_enable_i || shifter_sr_write_enable_i
+            || shifter_se_write_enable_i || shifter_sb_write_enable_i
+            || dag_i_write_enable_i || alu_status_write_enable_i
+            || divide_status_write_enable_i
+            || mac_status_write_enable_i
+            || shifter_status_write_enable_i
+            || (stack_status_operation_i[1:0] >= 2'b10)
+            || stack_counter_ce_test_i || stack_count_pop_i
+            || stack_loop_push_i || stack_loop_pop_i
+            || stack_pc_push_i || stack_pc_pop_i
+        )
+    );
+    assign interrupt_entry_accepted = (
+        !reset_i && interrupt_entry_i && !interrupt_action_conflict
+    );
+    assign icntl_valid_o = icntl_valid_q;
 
     adsp2100_register_file computational_registers (
         .clk_i(clk_i),
@@ -338,10 +394,16 @@ module adsp2100_architectural_state (
         .read_address_1_i(probe_code_i[3:0]),
         .read_address_2_i(dreg_read_address_i),
         .read_address_3_i(dreg_read_address_2_i),
+        .read_address_4_i(dreg_read_address_3_i),
+        .read_address_5_i(dreg_read_address_4_i),
+        .read_address_6_i(dreg_read_address_5_i),
         .read_data_0_o(read_dreg_data),
         .read_data_1_o(probe_dreg_data),
         .read_data_2_o(dreg_read_data_o),
         .read_data_3_o(dreg_read_data_2_o),
+        .read_data_4_o(dreg_read_data_3_o),
+        .read_data_5_o(dreg_read_data_4_o),
+        .read_data_6_o(dreg_read_data_5_o),
         .write_enable_0_i(state_write && (write_group == 2'b00)),
         .write_address_0_i(write_index),
         .write_data_0_i(move_data_i),
@@ -401,6 +463,7 @@ module adsp2100_architectural_state (
         .setup_write_i(
             state_write && ((write_group == 2'b01) || (write_group == 2'b10))
         ),
+        .setup_data_valid_i(move_data_valid_i),
         .setup_kind_i(dag_write_kind),
         .setup_address_i(dag_write_address),
         .setup_data_i(move_data_i[13:0]),
@@ -448,12 +511,12 @@ module adsp2100_architectural_state (
             !reset_i && shifter_status_write_enable_i
         ),
         .shifter_ss_i(shifter_ss_i),
-        .interrupt_entry_i(1'b0),
-        .interrupt_level_i(2'b00),
+        .interrupt_entry_i(interrupt_entry_accepted),
+        .interrupt_level_i(interrupt_level_i),
         .status_restore_i(unused_status_pop_valid),
-        .restore_astat_i(unused_status_pop_data[15:8]),
-        .restore_mstat_i(unused_status_pop_data[7:4]),
-        .restore_imask_i(unused_status_pop_data[3:0]),
+        .restore_astat_i(status_stack_pop_data[15:8]),
+        .restore_mstat_i(status_stack_pop_data[7:4]),
+        .restore_imask_i(status_stack_pop_data[3:0]),
         .astat_o(astat_o),
         .mstat_o(mstat_o),
         .icntl_o(icntl_o),
@@ -500,9 +563,14 @@ module adsp2100_architectural_state (
     adsp2100_sequencer_stacks sequencer_stacks (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .pc_push_i(!reset_i && stack_pc_push_i),
+        .pc_push_i(
+            interrupt_entry_accepted || (!reset_i && stack_pc_push_i)
+        ),
         .pc_pop_i(!reset_i && stack_pc_pop_i),
-        .pc_push_data_i(stack_pc_push_data_i),
+        .pc_push_data_i(
+            interrupt_entry_accepted
+                ? interrupt_pc_push_data_i : stack_pc_push_data_i
+        ),
         .pc_top_data_o(pc_stack_top_o),
         .pc_top_valid_o(pc_stack_top_valid_o),
         .pc_pop_valid_o(unused_pc_pop_valid),
@@ -524,11 +592,11 @@ module adsp2100_architectural_state (
         .count_push_accepted_o(unused_count_push_accepted),
         .count_overflow_event_o(unused_count_overflow_event),
         .count_empty_pop_o(unused_count_empty_pop),
-        .loop_push_i(1'b0),
+        .loop_push_i(!reset_i && stack_loop_push_i),
         .loop_pop_i(!reset_i && stack_loop_pop_i),
-        .loop_push_data_i(18'h00000),
-        .loop_top_data_o(unused_loop_top),
-        .loop_top_valid_o(unused_loop_top_valid),
+        .loop_push_data_i(stack_loop_push_data_i),
+        .loop_top_data_o(loop_stack_top_o),
+        .loop_top_valid_o(loop_stack_top_valid_o),
         .loop_pop_valid_o(unused_loop_pop_valid),
         .loop_empty_o(unused_loop_empty),
         .loop_overflow_o(unused_loop_overflow),
@@ -543,9 +611,23 @@ module adsp2100_architectural_state (
     adsp2100_status_stack status_stack (
         .clk_i(clk_i),
         .reset_i(reset_i),
-        .operation_i(reset_i ? 2'b00 : stack_status_operation_i),
-        .push_data_i({astat_o, mstat_o, imask_o}),
-        .pop_data_o(unused_status_pop_data),
+        .operation_i(
+            reset_i ? 2'b00
+                : (interrupt_entry_accepted
+                    ? 2'b10 : stack_status_operation_i)
+        ),
+        .push_data_i(
+            interrupt_entry_accepted
+                ? {
+                    unused_status_push_astat,
+                    unused_status_push_mstat,
+                    unused_status_push_imask
+                }
+                : {astat_o, mstat_o, imask_o}
+        ),
+        .push_validity_i(status_stack_push_validity_i),
+        .pop_data_o(status_stack_pop_data),
+        .pop_validity_o(status_stack_pop_validity),
         .pop_valid_o(unused_status_pop_valid),
         .empty_o(status_stack_empty),
         .overflow_o(status_stack_overflow),
@@ -555,6 +637,11 @@ module adsp2100_architectural_state (
         .empty_pop_o(unused_status_empty_pop)
     );
 
+    assign status_stack_top_o = status_stack_pop_data;
+    assign status_stack_top_valid_o = !status_stack_empty;
+    assign status_restore_event_o = unused_status_pop_valid;
+    assign status_restore_validity_o = status_stack_pop_validity;
+
     assign sstat_o = sequencer_sstat | {
         2'b00, status_stack_overflow, status_stack_empty, 4'b0000
     };
@@ -562,6 +649,11 @@ module adsp2100_architectural_state (
     // PX has no documented reset value. Only its validity-independent data
     // storage is updated by an accepted architectural move.
     always_ff @(posedge clk_i) begin
+        if (reset_i) begin
+            icntl_valid_q <= 1'b0;
+        end else if (state_write && (move_code_i == 6'h34)) begin
+            icntl_valid_q <= move_data_valid_i;
+        end
         if (state_write && (move_code_i == 6'h37)) begin
             px_q <= move_data_i[7:0];
         end

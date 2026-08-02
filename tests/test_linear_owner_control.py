@@ -14,6 +14,7 @@ from sim.reference_models.adsp2100_model import (
     ProgramBusRequest,
     apply_linear_owner_control_cycle,
     read_dreg,
+    register_code_by_name,
 )
 
 
@@ -22,6 +23,15 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _type6(destination: DREG, data: int) -> int:
     return 0x400000 | ((data & 0xFFFF) << 4) | int(destination)
+
+
+def _type7(code: int, data: int) -> int:
+    return (
+        0x300000
+        | ((code >> 4) << 18)
+        | ((data & 0x3FFF) << 4)
+        | (code & 0xF)
+    )
 
 
 def _cycle(
@@ -72,6 +82,7 @@ class LinearOwnerControlTests(unittest.TestCase):
         )
         self.assertEqual(contract["device"], "original ADSP-2100")
         self.assertIn("RETRIES", contract["collision_effect"])
+        self.assertIn("VECTOR_DESCRIPTOR", contract["interrupt_effect"])
         self.assertIn(
             "TYPE5_ARCHITECTURAL_CLIENT", contract["excluded_claims"]
         )
@@ -135,7 +146,17 @@ class LinearOwnerControlTests(unittest.TestCase):
         )
         self.assertTrue(done.interface.owner_bus.type13_completion)
         self.assertFalse(done.core.retire_event)
-        self.assertEqual(done.state.core, before)
+        self.assertEqual(done.state.core.architecture, before.architecture)
+        self.assertEqual(done.state.core.instruction, before.instruction)
+        self.assertEqual(
+            done.state.core.instruction_valid, before.instruction_valid
+        )
+        self.assertEqual(done.state.core.pending, before.pending)
+        self.assertFalse(done.state.core.interrupt_vectoring)
+        self.assertIsNone(done.state.core.interrupt_level)
+        # State 7 still samples the inactive interrupt pins so the next
+        # high-to-low transition has a defined edge-detection baseline.
+        self.assertTrue(done.state.core.interrupt.sample_history_valid)
 
     def test_both_raw_pm_data_owners_remain_available_when_fetch_idle(self) -> None:
         state = LinearOwnerControlState.reset()
@@ -202,6 +223,98 @@ class LinearOwnerControlTests(unittest.TestCase):
         self.assertFalse(masked.interface.owner_bus.bus.address_output_enable)
         self.assertFalse(masked.interface.owner_bus.bus.control_output_enable)
         self.assertFalse(masked.interface.owner_bus.bus.data_output_enable)
+
+    def test_retained_irq_vector_request_waits_for_shared_bus_resume(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            _type7(writable["ICNTL"], 0x10),
+            pc=0x0100,
+        )
+        for next_opcode in (_type7(writable["IMASK"], 0xF), 0):
+            state = apply_linear_owner_control_cycle(
+                state, phase=LogicalPhase.STATE_8
+            ).state
+            state = _advance_to_seven(state)
+            state = apply_linear_owner_control_cycle(
+                state,
+                phase=LogicalPhase.STATE_7,
+                pmd_read_data=ExactWord(24, next_opcode),
+            ).state
+
+        state = apply_linear_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        ).state
+        for phase in (LogicalPhase.STATE_1, LogicalPhase.STATE_2):
+            state = _cycle(state, phase, br_n=False)
+        state = _cycle(state, LogicalPhase.STATE_3, br_n=False)
+        for phase in (
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+        ):
+            state = _cycle(state, phase, br_n=False)
+        interrupted = apply_linear_owner_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_7,
+            br_n=False,
+            irq_n=0xB,
+            pmd_read_data=ExactWord(24, 0),
+        )
+        self.assertTrue(interrupted.core.interrupt.recognition_event)
+        self.assertTrue(interrupted.state.core.interrupt_vectoring)
+        state = interrupted.state
+
+        for phase in (
+            LogicalPhase.STATE_8,
+            LogicalPhase.STATE_1,
+            LogicalPhase.STATE_2,
+        ):
+            state = _cycle(state, phase, br_n=False)
+        state = _cycle(state, LogicalPhase.STATE_3, br_n=False)
+        self.assertEqual(
+            state.interface.control.mode,
+            BusControlMode.GRANTED,
+        )
+        for phase in (
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+            LogicalPhase.STATE_7,
+            LogicalPhase.STATE_8,
+            LogicalPhase.STATE_1,
+            LogicalPhase.STATE_2,
+        ):
+            state = _cycle(state, phase, br_n=True)
+        state = _cycle(state, LogicalPhase.STATE_3, br_n=True)
+        for phase in (
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+            LogicalPhase.STATE_7,
+            LogicalPhase.STATE_8,
+            LogicalPhase.STATE_1,
+            LogicalPhase.STATE_2,
+        ):
+            state = _cycle(state, phase, br_n=True)
+        state = _cycle(state, LogicalPhase.STATE_3, br_n=True)
+        for phase in (
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+            LogicalPhase.STATE_7,
+        ):
+            state = _cycle(state, phase, br_n=True)
+        resumed = apply_linear_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8, br_n=True
+        )
+        self.assertTrue(resumed.interface.control.resume_event)
+        self.assertTrue(resumed.core.interrupt_entry_event)
+        self.assertTrue(resumed.core.interrupt_vector_issue_event)
+        self.assertTrue(resumed.interface.owner_bus.fetch_accepted)
+        self.assertEqual(
+            resumed.state.interface.owner_bus.bus.address,
+            ExactWord(14, 2),
+        )
 
 
 if __name__ == "__main__":

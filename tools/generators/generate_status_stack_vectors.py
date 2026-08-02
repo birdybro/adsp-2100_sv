@@ -27,22 +27,27 @@ def _entry(value: int) -> StatusStackEntry:
     return StatusStackEntry.from_word(ExactWord(16, value))
 
 
-def _pack_stimulus(inputs: StatusStackCycleInputs) -> int:
+def _pack_stimulus(
+    inputs: StatusStackCycleInputs,
+    push_validity: int,
+) -> int:
     push_data = (
         inputs.push_entry.to_word().value
         if inputs.push_entry is not None
         else 0
     )
-    return (
+    packed = (
         (int(inputs.reset) << 18)
         | (int(inputs.operation) << 16)
         | push_data
     )
+    return (packed << 13) | push_validity
 
 
 def _pack_expected(
     state: StatusStackState,
     inputs: StatusStackCycleInputs,
+    validity_stack: tuple[int, ...],
     *,
     compare_state: bool,
 ) -> int:
@@ -52,6 +57,7 @@ def _pack_expected(
         and not state.empty
     )
     pop_data = state.entries[-1].to_word().value if pop_valid else 0
+    pop_validity = validity_stack[-1] if pop_valid else 0
     push_accepted = (
         not inputs.reset
         and inputs.operation is StatusStackOperation.PUSH
@@ -75,6 +81,8 @@ def _pack_expected(
         (pop_valid, 1),
         (pop_valid, 1),
         (pop_data, 16),
+        (pop_valid, 1),
+        (pop_validity, 13),
         (push_accepted, 1),
         (overflow_event, 1),
         (empty_pop, 1),
@@ -85,22 +93,34 @@ def _pack_expected(
 
 def generate_lines(random_count: int, seed: int) -> list[str]:
     state = StatusStackState()
+    validity_stack: tuple[int, ...] = ()
     lines: list[str] = []
 
     def emit(
         inputs: StatusStackCycleInputs,
         *,
+        push_validity: int = 0x1FFF,
         compare_state: bool = True,
     ) -> None:
-        nonlocal state
-        stimulus = _pack_stimulus(inputs)
+        nonlocal state, validity_stack
+        if not 0 <= push_validity < (1 << 13):
+            raise ValueError("status-stack validity must fit 13 bits")
+        stimulus = _pack_stimulus(inputs, push_validity)
         expected = _pack_expected(
             state,
             inputs,
+            validity_stack,
             compare_state=compare_state,
         )
-        lines.append(f"{stimulus:05x} {expected:07x}")
-        state = apply_status_stack_cycle(state, inputs).state
+        lines.append(f"{stimulus:08x} {expected:011x}")
+        result = apply_status_stack_cycle(state, inputs)
+        if inputs.reset:
+            validity_stack = ()
+        elif result.push_accepted:
+            validity_stack += (push_validity,)
+        elif result.pop_entry is not None:
+            validity_stack = validity_stack[:-1]
+        state = result.state
 
     emit(StatusStackCycleInputs(reset=True), compare_state=False)
     emit(StatusStackCycleInputs())
@@ -112,12 +132,14 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
         emit(StatusStackCycleInputs(operation=operation))
 
     values = (0x0000, 0x1234, 0x800F, 0xFFFF)
-    for value in values:
+    validity_values = (0x0000, 0x0001, 0x1555, 0x1FFF)
+    for value, validity in zip(values, validity_values, strict=True):
         emit(
             StatusStackCycleInputs(
                 operation=StatusStackOperation.PUSH,
                 push_entry=_entry(value),
-            )
+            ),
+            push_validity=validity,
         )
         emit(StatusStackCycleInputs())
     for _ in values:
@@ -160,7 +182,8 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
                     if operation is StatusStackOperation.PUSH
                     else None
                 ),
-            )
+            ),
+            push_validity=rng.randrange(1 << 13),
         )
 
     emit(StatusStackCycleInputs())

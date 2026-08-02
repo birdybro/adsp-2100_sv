@@ -81,6 +81,19 @@ does not yet expose ALU/MAC/shifter or memory-completion write intents, so the
 standalone compute and PM-data slices still own private state and must not be
 composed as if they formed one processor.
 
+The combined owner is the bounded composition in which those fetched and PM
+write intents do converge. It uses explicit validity sidecars so a fetched
+Type 17 move from reset-unknown state invalidates its DREG, DAG, status/control,
+SB, or PX destination and a following dependent action observes that state.
+MSTAT bit 0 must be known before any banked Type 17 access; PM clients and
+other bank/mode-dependent fetched actions similarly fail closed when required
+MSTAT bits are unknown. Four directed dependency tests within 51,428 model/RTL clocks
+cover these dependencies without assigning undocumented reset values
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 2-21, 4-20–4-24, 6-12,
+A-3, A-9]. A fifth test proves status-stack ASTAT/MSTAT/IMASK validity is
+captured and later restored across intervening known writes. OQ-016
+narrow-source extension remains open.
+
 `adsp2100_direct_dm_slice` reuses the same general-register state for every
 legal Type 3 absolute DM transfer. It captures selected-bank write sources at
 issue and changes a read destination only at acknowledged completion. Nine
@@ -131,7 +144,7 @@ old SR/SE value before shifter writeback. The decoder excludes every
 same-destination request, and the register file atomically commits the
 remaining DREG plus SR/SE/SB writeback. The inactive bank is preserved across
 all 82,597 standalone comparison cycles. The shared fetched owner independently
-retires all 25,648 canonical packets across 442,392 clocks while committing
+retires all 25,648 canonical packets across 444,003 clocks while committing
 both write families atomically with PC and the next fetched word
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 
@@ -140,12 +153,12 @@ divisor, AF, and AY0 reads. State-7 retirement atomically replaces AF and AY0
 in that bank and unbanked ASTAT.AQ; the inactive bank and non-AQ status bits
 remain unchanged. The integrated comparison covers every divisor source in
 both banks, both old-AQ paths, and a dependent following iteration across
-442,392 clocks [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4].
+444,003 clocks [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4].
 
 Fetched Type 24 DIVS independently reads the selected-bank divisor, AY0, and
 YOP-selected AY1 or AF upper word. The three AF/AY0/AQ results retire together;
 all sixteen legal source forms execute in both banks, and a dependent fetched
-DIVQ observes that retired state in the same 442,392-clock comparison
+DIVQ observes that retired state in the same 444,003-clock comparison
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-6–6-9, A-4].
 
 `adsp2100_compute_move_slice` extends that parallel boundary through all
@@ -158,7 +171,7 @@ a Z=0 MAC result. Every one of the 476,672 supported words executes in both
 banks in the 983,386-cycle comparison
 [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11]. The
 ordinary-fetch owner separately traverses every compute-field tuple and every
-move source/destination pair in both banks within 442,392 phase clocks, with
+move source/destination pair in both banks within 444,003 phase clocks, with
 atomic compute/status/move/PC/next-word retirement.
 
 `adsp2100_conditional_compute_slice` uses the identical cycle-start bank and

@@ -33,6 +33,11 @@ read -formal -sv rtl/core/adsp2100_dag.sv
 read -formal -sv rtl/core/adsp2100_modify_address_action.sv
 read -formal -sv rtl/core/adsp2100_stack_control_decode.sv
 read -formal -sv rtl/core/adsp2100_direct_jump_decode.sv
+read -formal -sv rtl/core/adsp2100_do_until_decode.sv
+read -formal -sv rtl/core/adsp2100_indirect_jump_decode.sv
+read -formal -sv rtl/core/adsp2100_conditional_return_decode.sv
+read -formal -sv rtl/core/adsp2100_conditional_trap_decode.sv
+read -formal -sv rtl/core/adsp2100_sequencer_flow.sv
 read -formal -sv rtl/core/adsp2100_alu.sv
 read -formal -sv rtl/core/adsp2100_mr_saturation_decode.sv
 read -formal -sv rtl/core/adsp2100_mr_saturate.sv
@@ -47,6 +52,7 @@ read -formal -sv rtl/core/adsp2100_immediate_shift_action.sv
 read -formal -sv rtl/core/adsp2100_conditional_shift_action.sv
 read -formal -sv rtl/core/adsp2100_shift_move_action.sv
 read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv rtl/core/adsp2100_interrupt_control.sv
 read -formal -sv rtl/core/adsp2100_linear_fetch_client.sv
 read -formal -sv rtl/core/adsp2100_linear_core_slice.sv
 read -formal -sv rtl/core/adsp2100_halt_control.sv
@@ -82,6 +88,11 @@ rtl/core/adsp2100_dag.sv
 rtl/core/adsp2100_modify_address_action.sv
 rtl/core/adsp2100_stack_control_decode.sv
 rtl/core/adsp2100_direct_jump_decode.sv
+rtl/core/adsp2100_do_until_decode.sv
+rtl/core/adsp2100_indirect_jump_decode.sv
+rtl/core/adsp2100_conditional_return_decode.sv
+rtl/core/adsp2100_conditional_trap_decode.sv
+rtl/core/adsp2100_sequencer_flow.sv
 rtl/core/adsp2100_alu.sv
 rtl/core/adsp2100_mr_saturation_decode.sv
 rtl/core/adsp2100_mr_saturate.sv
@@ -96,6 +107,7 @@ rtl/core/adsp2100_immediate_shift_action.sv
 rtl/core/adsp2100_conditional_shift_action.sv
 rtl/core/adsp2100_shift_move_action.sv
 rtl/core/adsp2100_program_bus.sv
+rtl/core/adsp2100_interrupt_control.sv
 rtl/core/adsp2100_linear_fetch_client.sv
 rtl/core/adsp2100_linear_core_slice.sv
 rtl/core/adsp2100_halt_control.sv

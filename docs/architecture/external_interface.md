@@ -30,6 +30,15 @@ and return completion only at the qualified state 7-to-8 edge
 [ADI-UM-1989, printed pp. 5-9–5-12;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43].
 
+An additional bounded structural composition couples one such raw native-DM
+descriptor to an accepted ordinary PM fetch. It holds the architectural
+fetch/execute phase through full-cycle DMACK extensions while allowing the
+interrupt recognizer to observe each physical state-7 boundary; a pending IRQ
+cannot vector or push context until aligned PM/DM completion. Four tests and
+50,000 model/RTL clocks pass. Because the DM request is a verification input
+rather than the output of fetched Type 2/3/4/12 semantics, this is cycle-
+control evidence rather than whole-core dual-bus ownership.
+
 The bounded Type 13 path exposes distinct logical active-high PM data and
 recovery-fetch cycles. Its connected 16-word cache supplies the actual next
 instruction on a pre-cycle hit and captures each recovery word on a miss; an
@@ -49,16 +58,17 @@ model/RTL clocks pass [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
 pp. 2-36–2-39, parameters 23–60, Figures 14–15; ADI-UM-1989, printed
 pp. 5-5–5-8, Figure 5.5]. Its bounded Type 13/cache client captures a data
 descriptor at state 8-to-1, commits the architectural data action at state
-7-to-8, and accepts a miss recovery back-to-back. Five directed tests and
-50,081 model/RTL clocks cover the attachment. A separate phase-aware BR/BG
+7-to-8, and accepts a miss recovery back-to-back. Six directed tests and
+50,098 model/RTL clocks cover the attachment. A separate phase-aware BR/BG
 controller now provides normal grant/release timing and a RESET-time native-pin
 wrapper provides the documented asynchronous relationship. That controller is
 now composed with the bounded ordinary NOP/Type 6/Type 7/Type 9/Type 14/Type
 15/Type 16/Type 17/Type 18 fetch
 owner: a recognized request lets the current fetch retire, inhibits the next
 issue, masks all PM output enables during grant, and restarts issue at state
-8-to-1 after release. Five directed tests and 50,003 model/RTL clocks cover 86
-complete handshakes. A separate composition described below now attaches the
+8-to-1 after release. Six directed tests and 50,054 model/RTL clocks cover 87
+complete handshakes and one state-7-sampled IRQ2 retained through grant into
+post-release vector entry. A separate composition described below now attaches the
 Type 13 client to the shared owner; Type 5, other PM instruction classes, and
 a whole-core PM arbiter remain outside the linear owner.
 
@@ -97,10 +107,11 @@ architectural client to that same boundary. The client owns its current
 instruction until its selected PC+1 or Type 10 target is accepted and the
 routed fetch completion arrives;
 a fail-closed Type 5/Type 13 collision or BR/BG issue inhibition therefore
-causes a later state-8 retry rather than a dropped instruction. Six directed
-tests and 50,003 independent-model/RTL clocks cover 4,247 accepted fetches,
-781 retries, 4,246 completions, isolated raw Type 5/Type 13 ownership, and 94
-BR recognize/release/resume handshakes. Type 5 and Type 13 are raw descriptors
+causes a later state-8 retry rather than a dropped instruction. Seven directed
+tests and 50,054 independent-model/RTL clocks cover 4,389 accepted fetches,
+743 retries, 4,387 completions, isolated raw Type 5/Type 13 ownership, 90
+BR recognize/release/resume handshakes, and one IRQ2 retained through BG into
+vector entry. Type 5 and Type 13 are raw descriptors
 in this composition, so the result proves retained ordinary-fetch attachment,
 not whole-core priority [ADI-UM-1989, printed pp. 1-5–1-7, 5-3–5-8,
 Figures 5.3 and 5.5; ADI-DATABOOK-1987, printed pp. 2-33–2-39].
@@ -133,12 +144,47 @@ generation remain outside this attachment [ADI-UM-1989, printed pp. 1-5–1-7,
 2-6–2-7, 4-26–4-30, 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
+`adsp2100_program_clients_owner_control_slice` is the first bounded
+composition containing the real retained ordinary-fetch client and both real
+PM-data clients together. It owns exactly one 16-word instruction cache, one
+native PM controller, and one normal BR/BG controller. Ordinary external
+fetches and both recovery-fetch classes populate the shared cache; Type 5 and
+Type 13 consume pre-cycle lookups from it. Client request collisions remain
+fail-closed because the sources do not establish an architectural priority.
+Type 5 and Type 13 are state-external action clients of the retained fetch
+client's sole architectural-state owner with explicit validity sidecars.
+Sequential automatic mode selects legal Type 5/Type 13 words from the retained
+opcode and requests PC+1. A cache hit retires with the lookup word; a miss
+commits its data action once and retires only when the pure recovery fetch
+returns. The common linear client then installs that word and advances the
+14-bit PC. Forty directed checks and 51,428 independent-model/RTL clocks
+cover this flow, exact PC wrap, following fetched execution, routed retry,
+cross-client state/cache visibility, and 2,217 clocks with every PM output
+enable masked during grant. A pending IRQ is also held across recovery and
+then enters the shared PC/status/vector path at whole-instruction retirement.
+HALT now shares this owner: ordinary fetch completes before stopping, while a
+Type 5/Type 13 PM-data request forces one external recovery before stop and
+never replays the action. Release is DMACK-qualified. Active-loop PM issue and
+unsourced BR/HALT overlap fail closed. Type 8/Type 9/Type 14/Type 15/Type 16/
+Type 17/Type 21/Type 23/Type 24/Type 25 validity propagates into following PM clients,
+including conditional-write preservation for Type 16 EXP LO and Type 25
+MV-false. Type 17 unknown sources propagate through DREG, DAG, status/control,
+SB, and PX, while unknown MSTAT rejects bank-dependent issue. OQ-016,
+TRAP/interrupt/HALT/BR cross-event priority, DM concurrency, and a unified CPU
+remain unproved. The same owner now preserves ASTAT/MSTAT/IMASK validity with
+each accepted status entry and restores it on a valid pop after intervening
+known writes
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-8, Figures 5.3 and 5.5;
+ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+
 A separate active-low HALT controller is now composed with the same bounded
 ordinary-fetch owner. It samples HALT at the enabled end of state 3, lets the
 current PM read complete at state 7-to-8, holds the owner and its driven PM
 outputs in state 8, and resumes at state 8-to-1 only when HALT is inactive and
-DMACK is high. Seven directed tests and 50,003 model/RTL clocks cover 790
-stops/resumes, including 161 DMACK-low blocked releases and 742 held clocks.
+DMACK is high. Eleven directed tests and 50,048 model/RTL clocks cover 789
+ordinary recognitions/stops, 790 combined resumes, 150 DMACK-low blocked
+releases, 819 held clocks, one fetched Type 22 TRAP/HALT handoff, and one IRQ2
+sampled at state 7, held without entry through stop, and serviced on resume.
 Unlike BG, HALT does not mask the PM output enables in this stopped ordinary-
 fetch case. The standalone HALT controller separately classifies a recognized
 PM-data cycle and exposes one `force_fetch_issue_o` pulse on the following
@@ -153,7 +199,7 @@ directed tests and 50,124 independent-model/RTL clocks with 210 such handoffs;
 the Type 5 attachment passes five and 50,126 with 197. Both cover stable
 driven halted outputs and DMACK-qualified resume. Their connection to the
 shared selector and cross-event priority are not yet complete. HALT during BG
-or DM waits, TRAP/interrupt priority, reset interaction, and analog input timing
+or DM waits, simultaneous TRAP/interrupt priority, reset interaction, and analog input timing
 remain uncomposed
 [ADI-UM-1989, printed pp. 5-13–5-14, 5-17–5-20].
 

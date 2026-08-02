@@ -1,0 +1,15 @@
+[options]
+mode prove
+depth 24
+
+[engines]
+smtbmc
+
+[script]
+read -formal -sv rtl/core/adsp2100_interrupt_control.sv
+read -formal -sv formal/harnesses/adsp2100_interrupt_control_formal.sv
+prep -top adsp2100_interrupt_control_formal
+
+[files]
+rtl/core/adsp2100_interrupt_control.sv
+formal/harnesses/adsp2100_interrupt_control_formal.sv

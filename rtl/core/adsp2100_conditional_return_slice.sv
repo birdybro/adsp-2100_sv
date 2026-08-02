@@ -90,6 +90,7 @@ module adsp2100_conditional_return_slice (
 
     logic [1:0]  status_stack_operation;
     logic [15:0] status_stack_pop_data;
+    logic [12:0] status_stack_pop_validity_unused;
     logic        status_stack_empty;
     logic        status_stack_push_accepted;
     logic        status_stack_overflow_event;
@@ -247,7 +248,9 @@ module adsp2100_conditional_return_slice (
         .reset_i(reset_i),
         .operation_i(status_stack_operation),
         .push_data_i(status_stack_setup_data_i),
+        .push_validity_i(13'h1fff),
         .pop_data_o(status_stack_pop_data),
+        .pop_validity_o(status_stack_pop_validity_unused),
         .pop_valid_o(status_stack_pop_valid_o),
         .empty_o(status_stack_empty),
         .overflow_o(status_stack_overflow_o),

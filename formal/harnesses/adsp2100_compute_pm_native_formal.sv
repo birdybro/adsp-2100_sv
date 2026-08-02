@@ -18,6 +18,11 @@ module adsp2100_compute_pm_native_formal (
     input logic        external_fetch_address_valid,
     input logic [23:0] external_fetch_instruction,
     input logic        external_fetch_instruction_valid,
+    input logic [3:0]  irq_n,
+    input logic [4:0]  icntl,
+    input logic        icntl_valid,
+    input logic [3:0]  imask,
+    input logic        imask_valid,
     input logic        astat_setup_write,
     input logic [7:0]  astat_setup_data,
     input logic        mstat_setup_write,
@@ -66,6 +71,14 @@ module adsp2100_compute_pm_native_formal (
     logic [13:0] cache_region_start;
     logic cache_region_start_valid;
     logic [4:0] cache_region_count;
+    logic interrupt_sample_event;
+    logic interrupt_interval_block;
+    logic [3:0] interrupt_enabled_requests;
+    logic interrupt_recognition_event;
+    logic [1:0] interrupt_recognized_level;
+    logic [13:0] interrupt_vector_address;
+    logic [3:0] interrupt_edge_pending;
+    logic interrupt_sample_history_valid;
     logic pm_request_accepted;
     logic pm_completion_event;
     logic pm_read_sample_event;
@@ -124,6 +137,9 @@ module adsp2100_compute_pm_native_formal (
         probe_l_data, probe_l_valid, px, px_valid, af, af_valid,
         mf, mf_valid, mr, mr_valid, astat, astat_valid_mask, mstat,
         alternate_bank
+        , interrupt_enabled_requests, interrupt_recognized_level,
+        interrupt_vector_address, interrupt_edge_pending,
+        interrupt_sample_history_valid
     };
 
     adsp2100_compute_pm_native_slice dut (
@@ -146,6 +162,11 @@ module adsp2100_compute_pm_native_formal (
         .external_fetch_instruction_valid_i(
             external_fetch_instruction_valid
         ),
+        .irq_n_i(irq_n),
+        .icntl_i(icntl),
+        .icntl_valid_i(icntl_valid),
+        .imask_i(imask),
+        .imask_valid_i(imask_valid),
         .astat_setup_write_i(astat_setup_write),
         .astat_setup_data_i(astat_setup_data),
         .mstat_setup_write_i(mstat_setup_write),
@@ -191,6 +212,16 @@ module adsp2100_compute_pm_native_formal (
         .cache_region_start_o(cache_region_start),
         .cache_region_start_valid_o(cache_region_start_valid),
         .cache_region_count_o(cache_region_count),
+        .interrupt_sample_event_o(interrupt_sample_event),
+        .interrupt_interval_block_o(interrupt_interval_block),
+        .interrupt_enabled_requests_o(interrupt_enabled_requests),
+        .interrupt_recognition_event_o(interrupt_recognition_event),
+        .interrupt_recognized_level_o(interrupt_recognized_level),
+        .interrupt_vector_address_o(interrupt_vector_address),
+        .interrupt_edge_pending_o(interrupt_edge_pending),
+        .interrupt_sample_history_valid_o(
+            interrupt_sample_history_valid
+        ),
         .pm_request_accepted_o(pm_request_accepted),
         .pm_completion_event_o(pm_completion_event),
         .pm_read_sample_event_o(pm_read_sample_event),
@@ -262,6 +293,14 @@ module adsp2100_compute_pm_native_formal (
         if (bus_relinquished || reset) begin
             assert (!pm_address_oe && !pm_control_oe && !pm_data_oe);
         end
+        if (interrupt_interval_block) begin
+            assert (interrupt_sample_event);
+            assert (data_action_complete && !instruction_complete);
+            assert (!interrupt_recognition_event);
+        end
+        if (interrupt_recognition_event) begin
+            assert (interrupt_sample_event && instruction_complete);
+        end
     end
 
     always_ff @(posedge clk) begin
@@ -269,6 +308,8 @@ module adsp2100_compute_pm_native_formal (
         cover (data_action_complete && pm_read_sample_event);
         cover (recovery_fetch && pm_request_accepted);
         cover (recovery_fetch && instruction_complete);
+        cover (interrupt_interval_block);
+        cover (interrupt_recognition_event && recovery_fetch);
     end
 endmodule
 

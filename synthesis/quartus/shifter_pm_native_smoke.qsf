@@ -14,6 +14,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_instructi
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_cache_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_interrupt_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_pm_native_slice.sv
 set_global_assignment -name SDC_FILE shifter_pm_native_smoke.sdc
 set_global_assignment -name NUM_PARALLEL_PROCESSORS 4
@@ -37,6 +38,11 @@ set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_address_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_address_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_instruction_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to external_fetch_instruction_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to irq_n_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to icntl_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to imask_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_write_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mstat_setup_write_i
@@ -80,6 +86,14 @@ set_instance_assignment -name VIRTUAL_PIN ON -to cache_fill_accepted_o
 set_instance_assignment -name VIRTUAL_PIN ON -to cache_region_start_o[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to cache_region_start_valid_o
 set_instance_assignment -name VIRTUAL_PIN ON -to cache_region_count_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_sample_event_o
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_interval_block_o
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_enabled_requests_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_recognition_event_o
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_recognized_level_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_vector_address_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_edge_pending_o[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_sample_history_valid_o
 set_instance_assignment -name VIRTUAL_PIN ON -to pm_request_accepted_o
 set_instance_assignment -name VIRTUAL_PIN ON -to pm_completion_event_o
 set_instance_assignment -name VIRTUAL_PIN ON -to pm_read_sample_event_o

@@ -11,6 +11,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .interrupt import (
+    InterruptCycleResult,
+    InterruptState,
+    apply_interrupt_cycle,
+)
 from .model import ExactWord, UNKNOWN
 from .modify_address import DAGRegisterSetup
 from .phase import LogicalPhase
@@ -32,6 +37,7 @@ from .shifter_pm_cache import (
 class ShifterPMNativeState:
     core: ShifterPMCacheState = field(default_factory=ShifterPMCacheState.reset)
     bus: ProgramBusState = field(default_factory=ProgramBusState.reset)
+    interrupt: InterruptState = field(default_factory=InterruptState.reset)
 
     @classmethod
     def reset(cls) -> "ShifterPMNativeState":
@@ -43,7 +49,9 @@ class ShifterPMNativeCycleResult:
     state: ShifterPMNativeState
     core: ShifterPMCacheCycleResult
     bus: ProgramBusCycleResult
+    interrupt: InterruptCycleResult
     issue_boundary: bool = False
+    interrupt_interval_block: bool = False
     phase_conflict: bool = False
     attachment_conflict: bool = False
     integration_conflict: bool = False
@@ -64,6 +72,9 @@ def apply_shifter_pm_native_cycle(
     external_fetch_fill: bool = False,
     external_fetch_address: ExactWord | object = UNKNOWN,
     external_fetch_instruction: ExactWord | object = UNKNOWN,
+    irq_n: int = 0xF,
+    icntl: ExactWord | object = UNKNOWN,
+    imask: ExactWord | object = UNKNOWN,
     setup_astat: ExactWord | None = None,
     setup_mstat: ExactWord | None = None,
     setup_dreg: DREGWrite | None = None,
@@ -144,6 +155,21 @@ def apply_shifter_pm_native_cycle(
         pmd_read_data=pmd_read_data,
         bus_relinquished=bus_relinquished,
     )
+    interrupt_result = apply_interrupt_cycle(
+        state.interrupt,
+        reset=reset,
+        phase=phase,
+        phase_advance=phase_advance,
+        irq_n=irq_n,
+        icntl=icntl,
+        imask=imask,
+        service_allowed=core_result.core.instruction_complete,
+    )
+    interrupt_interval_block = bool(
+        interrupt_result.sample_event
+        and core_result.core.data_action_complete
+        and not core_result.core.instruction_complete
+    )
     attachment_conflict = bool(
         bus_result.request_accepted
         != (issue_boundary and core_result.core.pm_select)
@@ -159,10 +185,16 @@ def apply_shifter_pm_native_cycle(
         )
     )
     return ShifterPMNativeCycleResult(
-        state=ShifterPMNativeState(core_result.state, bus_result.state),
+        state=ShifterPMNativeState(
+            core_result.state,
+            bus_result.state,
+            interrupt_result.state,
+        ),
         core=core_result,
         bus=bus_result,
+        interrupt=interrupt_result,
         issue_boundary=issue_boundary,
+        interrupt_interval_block=interrupt_interval_block,
         phase_conflict=phase_conflict,
         attachment_conflict=attachment_conflict,
         integration_conflict=(

@@ -127,13 +127,43 @@ the data descriptor and all architectural old values are captured on that
 8-to-1 edge, remain stable through the phase sequence, and commit only on the
 7-to-8 completion edge. A cache hit releases its issue-time captured word at
 that edge; a miss schedules a pure recovery fetch that is accepted on the
-following 8-to-1 edge without deasserting PMS. Five directed tests and 50,081
+following 8-to-1 edge without deasserting PMS. Six directed tests and 50,098
 model/RTL clocks cover read, write, hit, miss, phase hold, off-boundary
 rejection, and externally directed relinquishment. This closes only the Type
 13 attachment, not ordinary fetch, other PM-transfer classes, or whole-core
 control arbitration [ADI-DATABOOK-1987, ADSP-2100 data sheet, printed
 pp. 2-36–2-39, Figures 14–15; ADI-UM-1989, printed pp. 5-5–5-8,
 Figure 5.5].
+
+The bounded three-client composition reuses exactly one instance of that
+monitor across retained ordinary fetch, Type 5, and Type 13. Any routed
+external instruction completion—ordinary fetch or a Type 5/Type 13
+recovery—fills it, and either PM-data client can consume a pre-cycle lookup.
+State-external Type 5 and Type 13 clients also commit into the retained fetch
+client's sole architectural-state owner. Forty directed checks plus 51,428
+independent-model/RTL clocks cover both
+ordinary-fill cross-client hits, a Type 13 miss/recovery/fill sequence, retained
+descriptor retry, fail-closed request collisions, 150 accepted cache fills,
+completion isolation, both directions of Type 5/Type 13 `{DREG,PX}`
+visibility, fetched-Type-6-to-Type-13 visibility, and Type-5-to-fetched-Type-17
+visibility. Known and unknown fetched Type 21 postmodify results, Type 23/Type
+24 division results, and Type 25 true/false/unknown-MV results are also
+observed by a following PM client through the same validity paths. Type 17
+unknown DREG/DAG/status/control/SB/PX destinations and unknown-MSTAT rejection
+are now covered through the same owner. Sequential automatic mode now
+issues the retained Type 5/Type 13
+opcode, installs the same-cycle hit or one-cycle recovery word, advances and
+wraps PC, and connects recovery retirement to shared interrupt entry. The
+attached HALT path overrides an issue-time hit, leaves the PM-data action one-
+shot, fills through exactly one external recovery, then stops. Active loops
+and unsourced BR/HALT overlap fail closed under OQ-008. Hidden monitor
+encoding, self-modifying PM, OQ-016 narrow-source extension, TRAP/interrupt/
+HALT/BR cross-event priority, DM concurrency, and whole-core ownership remain
+open. The shared-state evidence additionally preserves captured ASTAT/MSTAT/
+IMASK validity across an accepted status push, intervening known writes, and
+valid pop
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-8;
+ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
 The bounded Type 13/HALT composition adds the exceptional late owner handoff
 specified for a state-3 stop request during PM data. It records recovery in
@@ -144,6 +174,7 @@ enters stopped state 8. Five tests and 50,124 model/RTL clocks verify this
 sequence, including stable halted outputs and DMACK-qualified release. Type 5
 has an independent equivalent attachment: five tests and 50,126 clocks verify
 197 hit overrides/forced fetches, one-time ALU/MAC/PM/PX/DAG2 completion, and
-387 stop/resume handshakes. Shared PM-event arbitration remains outside both
-boundaries
+387 stop/resume handshakes. The superseding three-client owner now contains
+both behaviors behind the one shared cache/native-PM boundary; broader
+simultaneous-event arbitration remains outside the bounded result
 [ADI-UM-1989, printed pp. 4-26–4-30 and 5-13–5-14].

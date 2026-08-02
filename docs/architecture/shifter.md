@@ -101,7 +101,7 @@ model/RTL comparison over 58,709 cycles, including the manual's logical and
 arithmetic negative-five examples, PASS/OR feedback, every exponent, reset
 unknowns and warm-reset bank retention, invalid words, and collision
 suppression. A stateless action boundary is additionally attached to the
-ordinary linear owner: all 14,336 supported words retire within a 442,392-
+ordinary linear owner: all 14,336 supported words retire within a 444,003-
 clock independent-model/RTL run while PC+1 is fetched through the native PM
 phases. Unsupported SF/XOP words still fail closed. Multifunction attachment,
 loop-terminal behavior, interrupt timing, and unified event priority remain
@@ -127,7 +127,7 @@ words round trip through the assembler/disassembler, and 54,403 deterministic
 model/RTL cycles execute every supported word in both banks under true/false
 status patterns plus randomized reset/conflict cases. A stateless action
 boundary is additionally attached to the ordinary linear owner: all 1,792
-supported words retire within a 442,392-clock independent-model/RTL run while
+supported words retire within a 444,003-clock independent-model/RTL run while
 PC+1 is fetched through the native PM phases. Loop-terminal behavior,
 interrupt abort, and unified event priority remain outside the attachment
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
@@ -142,12 +142,27 @@ bit-15-one, unavailable-XOP, and same-destination words. Its exhaustive decode
 and 82,597 stateful comparison cycles cover every supported word in both banks
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7]. A stateless
 parallel-action boundary is additionally attached to the ordinary linear
-owner: all 25,648 canonical packets retire within a 442,392-clock independent-
+owner: all 25,648 canonical packets retire within a 444,003-clock independent-
 model/RTL run while PC+1 is fetched through the native PM phases. OQ-021
 bit-15-one words, unavailable XOP `001`, and same-destination packets remain
 fail-closed; loop-terminal behavior, interrupt abort, and unified event
 priority remain outside the attachment
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
+
+The combined ordinary-fetch/Type 5/Type 13 PM owner additionally retains
+reset-unknown validity for fetched Type 14, Type 15, and Type 16 actions from
+the existing state-8 issue boundary through state-7 retirement. The sidecars
+use the same canonical decoders and function-specific cycle-start dependencies:
+source plus SE/SR/SB or AC/AV/SS only where the selected function reads them.
+Type 14 tracks its parallel DREG move independently. A known-false Type 16
+preserves every destination; an unknown predicate invalidates each possible
+write, except EXP LO preserves SE when known old SE is not `0xf1` and therefore
+precludes the write. Five directed dependency checks within the 38-test,
+51,428-clock combined-owner comparison feed the resulting state into following
+Type 5/Type 13 PM stores. This is implementation validity accounting for the
+documented cycle-start reads and conditional writes, not a new pipeline claim
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18–2-35, 4-25, 6-1–6-11, A-3, and
+A-6–A-7].
 
 The separate `adsp2100_shifter_dm_slice` implements the original Type 12
 shifter-plus-DM form for all 108,640 source-closed, noncolliding words. It

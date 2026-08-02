@@ -132,6 +132,26 @@ module adsp2100_shifter_pm_halt_slice (
     logic class_valid_unused;
     logic action_valid_unused;
     logic unsupported_subencoding_unused;
+    logic interrupt_sample_event_unused;
+    logic interrupt_interval_block_unused;
+    logic [3:0] interrupt_enabled_requests_unused;
+    logic interrupt_recognition_event_unused;
+    logic [1:0] interrupt_recognized_level_unused;
+    logic [13:0] interrupt_vector_address_unused;
+    logic [3:0] interrupt_edge_pending_unused;
+    logic interrupt_sample_history_valid_unused;
+    logic unused_observation;
+
+    assign unused_observation = ^{
+        interrupt_sample_event_unused,
+        interrupt_interval_block_unused,
+        interrupt_enabled_requests_unused,
+        interrupt_recognition_event_unused,
+        interrupt_recognized_level_unused,
+        interrupt_vector_address_unused,
+        interrupt_edge_pending_unused,
+        interrupt_sample_history_valid_unused
+    };
 
     assign pm_data_cycle_o = transaction_active_o && !recovery_fetch_o;
     assign late_force_request_o = (
@@ -210,6 +230,11 @@ module adsp2100_shifter_pm_halt_slice (
         .external_fetch_instruction_valid_i(
             external_fetch_instruction_valid_i
         ),
+        .irq_n_i(4'hf),
+        .icntl_i(5'h00),
+        .icntl_valid_i(1'b0),
+        .imask_i(4'h0),
+        .imask_valid_i(1'b0),
         .astat_setup_write_i(astat_setup_write_i),
         .astat_setup_data_i(astat_setup_data_i),
         .mstat_setup_write_i(mstat_setup_write_i),
@@ -253,6 +278,20 @@ module adsp2100_shifter_pm_halt_slice (
         .cache_region_start_o(cache_region_start_o),
         .cache_region_start_valid_o(cache_region_start_valid_o),
         .cache_region_count_o(cache_region_count_o),
+        .interrupt_sample_event_o(interrupt_sample_event_unused),
+        .interrupt_interval_block_o(interrupt_interval_block_unused),
+        .interrupt_enabled_requests_o(interrupt_enabled_requests_unused),
+        .interrupt_recognition_event_o(
+            interrupt_recognition_event_unused
+        ),
+        .interrupt_recognized_level_o(
+            interrupt_recognized_level_unused
+        ),
+        .interrupt_vector_address_o(interrupt_vector_address_unused),
+        .interrupt_edge_pending_o(interrupt_edge_pending_unused),
+        .interrupt_sample_history_valid_o(
+            interrupt_sample_history_valid_unused
+        ),
         .pm_request_accepted_o(pm_request_accepted_o),
         .pm_completion_event_o(pm_completion_event_o),
         .pm_read_sample_event_o(pm_read_sample_event_o),
@@ -293,6 +332,7 @@ module adsp2100_shifter_pm_halt_slice (
 
 `ifndef SYNTHESIS
     always_comb begin
+        assert (unused_observation == unused_observation);
         if (native_phase_conflict || native_attachment_conflict) begin
             assert (native_integration_conflict);
         end

@@ -12,6 +12,7 @@ module adsp2100_linear_owner_control_slice (
     input  logic [2:0]  phase_i,
     input  logic        phase_advance_i,
     input  logic        br_n_i,
+    input  logic [3:0]  irq_n_i,
 
     input  logic        instruction_setup_i,
     input  logic [13:0] instruction_setup_pc_i,
@@ -112,6 +113,8 @@ module adsp2100_linear_owner_control_slice (
     logic response_write_unused;
     logic [23:0] response_read_data_unused;
     logic response_read_data_valid_unused;
+    logic trap_event_unused;
+    logic [27:0] interrupt_unused;
     logic unused_observation;
 
     assign fetch_request_accepted_o = request_accepted_o[0];
@@ -127,11 +130,13 @@ module adsp2100_linear_owner_control_slice (
         || request_conflict_o || request_out_of_phase_o
     );
 
+    /* verilator lint_off PINCONNECTEMPTY */
     adsp2100_linear_fetch_client client (
         .clk_i(clk_i),
         .reset_i(reset_i),
         .phase_i(phase_i),
         .phase_advance_i(phase_advance_i),
+        .interrupt_sample_advance_i(1'b0),
         .instruction_issue_inhibit_i(issue_inhibit_o),
         .bus_relinquished_i(bus_relinquished_o),
         .instruction_setup_i(instruction_setup_i),
@@ -141,13 +146,79 @@ module adsp2100_linear_owner_control_slice (
         .pm_completion_event_i(completion_event_o[0]),
         .pmd_read_data_i(pmd_read_data_i),
         .pmd_read_data_valid_i(pmd_read_data_valid_i),
+        .irq_n_i(irq_n_i),
         .probe_code_i(probe_code_i),
+        .type17_source_data_valid_i(1'b1),
+        .state_astat_valid_mask_i(8'hff),
+        .state_mstat_valid_mask_i(4'hf),
+        .state_imask_valid_i(1'b1),
+        .pm_instruction_active_i(1'b0),
+        .pm_instruction_complete_i(1'b0),
+        .pm_instruction_next_opcode_i(24'h000000),
+        .pm_instruction_next_opcode_valid_i(1'b0),
+        .pm_state_operand_read_i(1'b0),
+        .pm_state_memory_read_address_i(4'h0),
+        .pm_state_dreg_read_address_1_i(4'h0),
+        .pm_state_dreg_read_address_2_i(4'h0),
+        .pm_state_dag_i_address_i(3'h0),
+        .pm_state_dag_m_address_i(3'h0),
+        .pm_state_move_write_i(1'b0),
+        .pm_state_move_code_i(6'h00),
+        .pm_state_move_data_i(16'h0000),
+        .pm_state_dreg_write_i(1'b0),
+        .pm_state_dreg_write_address_i(4'h0),
+        .pm_state_dreg_write_data_i(16'h0000),
+        .pm_state_alu_write_i(1'b0),
+        .pm_state_alu_destination_feedback_i(1'b0),
+        .pm_state_alu_result_i(16'h0000),
+        .pm_state_mac_write_i(1'b0),
+        .pm_state_mac_destination_feedback_i(1'b0),
+        .pm_state_mac_result_i(40'h0000000000),
+        .pm_state_sr_write_i(1'b0),
+        .pm_state_sr_result_i(32'h00000000),
+        .pm_state_se_write_i(1'b0),
+        .pm_state_se_result_i(8'h00),
+        .pm_state_sb_write_i(1'b0),
+        .pm_state_sb_result_i(5'h00),
+        .pm_state_dag_i_write_i(1'b0),
+        .pm_state_dag_i_write_address_i(3'h0),
+        .pm_state_dag_i_write_data_i(14'h0000),
+        .pm_state_dag_i_write_valid_i(1'b0),
+        .pm_state_alu_status_write_i(1'b0),
+        .pm_state_alu_az_i(1'b0),
+        .pm_state_alu_an_i(1'b0),
+        .pm_state_alu_av_i(1'b0),
+        .pm_state_alu_ac_i(1'b0),
+        .pm_state_alu_as_write_i(1'b0),
+        .pm_state_alu_as_i(1'b0),
+        .pm_state_mac_status_write_i(1'b0),
+        .pm_state_mac_mv_i(1'b0),
+        .pm_state_shifter_status_write_i(1'b0),
+        .pm_state_shifter_ss_i(1'b0),
+        .status_restore_event_o(),
+        .status_restore_astat_valid_mask_o(),
+        .status_restore_mstat_valid_mask_o(),
+        .status_restore_imask_valid_o(),
         .issue_boundary_o(issue_boundary_o),
         .instruction_setup_accepted_o(instruction_setup_accepted_o),
         .fetch_request_presented_o(fetch_request_presented_o),
         .fetch_address_o(fetch_address),
         .instruction_issue_o(instruction_issue_o),
         .retire_event_o(retire_event_o),
+        .pm_instruction_sequential_allowed_o(),
+        .pm_instruction_flow_blocked_o(),
+        .trap_event_o(trap_event_unused),
+        .interrupt_recognition_event_o(interrupt_unused[0]),
+        .interrupt_entry_event_o(interrupt_unused[1]),
+        .interrupt_vector_issue_event_o(interrupt_unused[2]),
+        .interrupt_vector_fetch_event_o(interrupt_unused[3]),
+        .interrupt_level_o(interrupt_unused[5:4]),
+        .interrupt_vector_o(interrupt_unused[19:6]),
+        .interrupt_pending_o(interrupt_unused[23:20]),
+        .interrupt_vectoring_o(interrupt_unused[24]),
+        .interrupt_configuration_invalid_o(interrupt_unused[25]),
+        .interrupt_reset_baseline_provisional_o(interrupt_unused[26]),
+        .interrupt_adjacent_control_conflict_o(interrupt_unused[27]),
         .instruction_valid_o(instruction_valid_o),
         .transaction_pending_o(transaction_pending_o),
         .unsupported_instruction_o(unsupported_instruction_o),
@@ -171,8 +242,18 @@ module adsp2100_linear_owner_control_slice (
         .sstat_o(sstat_o),
         .alternate_bank_o(alternate_bank_o),
         .count_stack_depth_o(count_stack_depth_o),
-        .count_stack_overflow_o(count_stack_overflow_o)
+        .count_stack_overflow_o(count_stack_overflow_o),
+        .pm_state_memory_read_data_o(),
+        .pm_state_dreg_read_data_1_o(),
+        .pm_state_dreg_read_data_2_o(),
+        .pm_state_dag_i_data_o(), .pm_state_dag_i_valid_o(),
+        .pm_state_dag_m_data_o(), .pm_state_dag_m_valid_o(),
+        .pm_state_dag_l_data_o(), .pm_state_dag_l_valid_o(),
+        .pm_state_af_o(), .pm_state_mf_o(), .pm_state_mr_o(),
+        .pm_state_se_o(), .pm_state_sb_o(), .pm_state_sr_o(),
+        .pm_state_action_conflict_o()
     );
+    /* verilator lint_on PINCONNECTEMPTY */
 
     adsp2100_program_owner_bus_control owner_control (
         .clk_i(clk_i), .reset_i(reset_i), .phase_i(phase_i),
@@ -240,7 +321,7 @@ module adsp2100_linear_owner_control_slice (
         normal_bg_n_unused, reset_br_request_unused, request_ready_unused,
         read_sample_event_unused, response_valid_unused,
         response_write_unused, response_read_data_unused,
-        response_read_data_valid_unused
+        response_read_data_valid_unused, trap_event_unused, interrupt_unused
     };
 
 `ifndef SYNTHESIS

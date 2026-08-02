@@ -74,7 +74,7 @@ DM transfers and multifunction instructions remain unattached
 The ordinary fetched owner now uses the same stored DAG1 state for all 16
 `G=0` Type 21 words. Its dedicated execution selector leaves the external
 probe independent, samples I/M/L before the instruction, and writes only the
-selected I at native state-7 retirement; the 442,405-clock integrated
+selected I at native state-7 retirement; the 444,003-clock integrated
 comparison covers positive and negative linear/circular updates without a
 memory or status action.
 

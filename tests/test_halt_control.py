@@ -12,10 +12,24 @@ from sim.reference_models.adsp2100_model import (
     LogicalPhase,
     apply_halt_control_cycle,
     apply_linear_halt_control_cycle,
+    register_code_by_name,
 )
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _type22(condition: int) -> int:
+    return 0x080000 | (condition & 0xF)
+
+
+def _type7(code: int, data: int) -> int:
+    return (
+        0x300000
+        | ((code >> 4) << 18)
+        | ((data & 0x3FFF) << 4)
+        | (code & 0xF)
+    )
 
 
 def _setup(opcode: int = 0, pc: int = 4) -> LinearHaltControlState:
@@ -53,6 +67,22 @@ class HaltControlTests(unittest.TestCase):
         self.assertIn(
             "TYPE_13_SHIFTER_PM_NATIVE_OWNER",
             contract["implemented_attachments"],
+        )
+        self.assertIn(
+            "FETCHED_TYPE_22_TRAP_HANDOFF_ON_THE_ORDINARY_LINEAR_OWNER",
+            contract["implemented_attachments"],
+        )
+        self.assertIn(
+            "RETAINED_STATE_7_IRQ_SERVICE_DEFERRAL_AND_VECTOR_ENTRY_ON_ORDINARY_HALT_RESUME",
+            contract["implemented_attachments"],
+        )
+        self.assertNotIn(
+            "TRAP_TO_HALT_HANDOFF",
+            contract["excluded_claims"],
+        )
+        self.assertIn(
+            "IRQ_PULSE_CAPTURE_WITHOUT_A_STATE_7_SAMPLE",
+            contract["excluded_claims"],
         )
 
     def test_pm_data_halt_forces_one_external_fetch_before_stop(self) -> None:
@@ -220,6 +250,204 @@ class HaltControlTests(unittest.TestCase):
         self.assertTrue(resumed.control.effective_phase_advance)
         self.assertTrue(resumed.core.instruction_issue)
         self.assertEqual(resumed.state.control.mode, HaltControlMode.RUNNING)
+
+    def test_taken_fetched_trap_holds_acknowledges_and_resumes_pc_plus_one(self) -> None:
+        state = _setup(_type22(0xF), pc=0x0200)
+        issued = apply_linear_halt_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_8,
+        )
+        self.assertTrue(issued.core.instruction_issue)
+        state = issued.state
+        for phase in (
+            LogicalPhase.STATE_1,
+            LogicalPhase.STATE_2,
+            LogicalPhase.STATE_3,
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+        ):
+            state = apply_linear_halt_control_cycle(
+                state,
+                phase=phase,
+            ).state
+        retired = apply_linear_halt_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=ExactWord(24, 0),
+        )
+        self.assertTrue(retired.core.retire_event)
+        self.assertTrue(retired.trap_event)
+        self.assertEqual(retired.state.core.architecture.pc, ExactWord(14, 0x0201))
+        self.assertTrue(retired.state.trap_asserted)
+
+        held = apply_linear_halt_control_cycle(
+            retired.state,
+            phase=LogicalPhase.STATE_8,
+        )
+        self.assertTrue(held.trap_asserted)
+        self.assertTrue(held.control.phase_hold)
+        self.assertTrue(held.control.halted)
+        self.assertFalse(held.core.instruction_issue)
+
+        acknowledged = apply_linear_halt_control_cycle(
+            held.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=False,
+        )
+        self.assertTrue(acknowledged.trap_halt_recognized)
+        self.assertFalse(acknowledged.state.trap_asserted)
+        self.assertTrue(acknowledged.state.trap_handoff)
+
+        handoff = apply_linear_halt_control_cycle(
+            acknowledged.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=False,
+        )
+        self.assertTrue(handoff.trap_handoff)
+        self.assertTrue(handoff.control.phase_hold)
+
+        blocked = apply_linear_halt_control_cycle(
+            handoff.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=True,
+            dmack=False,
+        )
+        self.assertTrue(blocked.trap_release_blocked)
+        self.assertTrue(blocked.control.release_blocked)
+        self.assertTrue(blocked.control.phase_hold)
+
+        resumed = apply_linear_halt_control_cycle(
+            blocked.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=True,
+            dmack=True,
+        )
+        self.assertTrue(resumed.trap_resume_event)
+        self.assertTrue(resumed.control.resume_event)
+        self.assertFalse(resumed.control.phase_hold)
+        self.assertTrue(resumed.core.instruction_issue)
+        self.assertFalse(resumed.state.trap_handoff)
+
+    def test_fetched_trap_and_ordinary_halt_overlap_is_flagged(self) -> None:
+        state = _setup(_type22(0xF), pc=0x0300)
+        state = apply_linear_halt_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_8,
+        ).state
+        state = apply_linear_halt_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_3,
+            halt_n=False,
+        ).state
+        for phase in (
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+        ):
+            state = apply_linear_halt_control_cycle(
+                state,
+                phase=phase,
+                halt_n=False,
+            ).state
+        retired = apply_linear_halt_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_7,
+            halt_n=False,
+            pmd_read_data=ExactWord(24, 0),
+        )
+        self.assertTrue(retired.trap_event)
+        self.assertTrue(retired.trap_halt_conflict)
+        self.assertTrue(retired.control.phase_conflict)
+
+    def test_recognized_irq_is_deferred_until_halt_resume(self) -> None:
+        writable = register_code_by_name(writable=True)
+        state = _setup(
+            _type7(writable["ICNTL"], 0x10),
+            pc=0x0100,
+        )
+        for next_opcode in (_type7(writable["IMASK"], 0xF), 0):
+            state = apply_linear_halt_control_cycle(
+                state, phase=LogicalPhase.STATE_8
+            ).state
+            for phase in range(6):
+                state = apply_linear_halt_control_cycle(
+                    state, phase=LogicalPhase(phase)
+                ).state
+            state = apply_linear_halt_control_cycle(
+                state,
+                phase=LogicalPhase.STATE_7,
+                pmd_read_data=ExactWord(24, next_opcode),
+            ).state
+
+        state = apply_linear_halt_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        ).state
+        for phase in (LogicalPhase.STATE_1, LogicalPhase.STATE_2):
+            state = apply_linear_halt_control_cycle(
+                state, phase=phase, halt_n=False
+            ).state
+        recognized_halt = apply_linear_halt_control_cycle(
+            state, phase=LogicalPhase.STATE_3, halt_n=False
+        )
+        self.assertTrue(recognized_halt.control.halt_recognized)
+        state = recognized_halt.state
+        for phase in (
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+            LogicalPhase.STATE_6,
+        ):
+            state = apply_linear_halt_control_cycle(
+                state, phase=phase, halt_n=False
+            ).state
+        interrupted = apply_linear_halt_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_7,
+            halt_n=False,
+            irq_n=0xB,
+            pmd_read_data=ExactWord(24, 0),
+        )
+        self.assertTrue(interrupted.control.halt_stop_event)
+        self.assertTrue(interrupted.core.interrupt_recognition_event)
+        self.assertTrue(interrupted.state.core.interrupt_vectoring)
+        self.assertFalse(interrupted.state.core.instruction_valid)
+
+        held = apply_linear_halt_control_cycle(
+            interrupted.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=False,
+        )
+        self.assertTrue(held.control.phase_hold)
+        self.assertFalse(held.core.interrupt_entry_event)
+        self.assertFalse(held.core.interrupt_vector_issue_event)
+        self.assertTrue(held.state.core.interrupt_vectoring)
+
+        blocked = apply_linear_halt_control_cycle(
+            held.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=True,
+            dmack=False,
+        )
+        self.assertTrue(blocked.control.release_blocked)
+        self.assertFalse(blocked.core.interrupt_entry_event)
+
+        resumed = apply_linear_halt_control_cycle(
+            blocked.state,
+            phase=LogicalPhase.STATE_8,
+            halt_n=True,
+            dmack=True,
+        )
+        self.assertTrue(resumed.control.resume_event)
+        self.assertTrue(resumed.core.interrupt_entry_event)
+        self.assertTrue(resumed.core.interrupt_vector_issue_event)
+        self.assertEqual(
+            resumed.state.core.bus.address,
+            ExactWord(14, 2),
+        )
+        self.assertEqual(
+            resumed.state.core.architecture.pc_stack[-1],
+            ExactWord(14, 0x0103),
+        )
 
     def test_recognized_short_pulse_is_latched_until_stop(self) -> None:
         recognized = apply_halt_control_cycle(

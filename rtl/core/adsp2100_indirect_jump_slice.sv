@@ -306,6 +306,7 @@ module adsp2100_indirect_jump_slice (
         .probe_l_data_o(unused_probe_l_data),
         .probe_l_valid_o(unused_probe_l_valid),
         .setup_write_i(i_setup_enable),
+        .setup_data_valid_i(1'b1),
         .setup_kind_i(2'b00),
         .setup_address_i({1'b1, i_setup_local_i}),
         .setup_data_i(i_setup_data_i),

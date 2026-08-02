@@ -6,8 +6,10 @@ Type 8 ALU/MAC-plus-move packets, Type 14 shifter-plus-move packets, Type 15
 immediate shifts, Type 16 conditional shifts, original Type 18 mode control,
 all 32 Type 21 MODIFY selections, all 32 Type 26 manual stack controls, Type
 23 DIVQ, the source-closed Type 24 DIVS forms, exact Type 25 MR saturation,
-all 507,904 source-closed Type 10 direct transfers, and legal Type 17 internal
-moves from known sources.
+all 507,904 source-closed Type 10 direct transfers, every Type 11 DO UNTIL
+setup and bounded automatic loop-terminal flow, all 124 source-closed Type 19
+indirect transfers, all 32 Type 20 conditional returns with valid taken
+context, and legal Type 17 internal moves with explicit unknown propagation.
 Unsupported behavior fails closed instead of becoming an accidental no-op.
 """
 
@@ -20,6 +22,8 @@ import random
 from typing import Final
 
 from tools.generators.validate_isa import classify_opcode, load_database
+
+from .sequencer import ExplicitFlow, SequencerFlowResult, select_sequencer_flow
 
 
 PROGRAM_WORD_WIDTH: Final = 24
@@ -168,14 +172,15 @@ class ArchitecturalState:
     astat: KnownOrUnknown = UNKNOWN
     sstat: ExactWord = field(default_factory=lambda: ExactWord(8, 0x55))
     mstat: ExactWord = field(default_factory=lambda: ExactWord(4, 0))
-    imask: ExactWord = field(default_factory=lambda: ExactWord(4, 0))
+    mstat_valid_mask: int = 0xF
+    imask: KnownOrUnknown = field(default_factory=lambda: ExactWord(4, 0))
     icntl: KnownOrUnknown = UNKNOWN
     cntr: KnownOrUnknown = UNKNOWN
     pc_stack: tuple[ExactWord, ...] = ()
     loop_stack: tuple[tuple[ExactWord, ExactWord], ...] = ()
     count_stack: tuple[ExactWord, ...] = ()
     status_stack: tuple[
-        tuple[KnownOrUnknown, ExactWord, ExactWord], ...
+        tuple[KnownOrUnknown, ExactWord, int, KnownOrUnknown], ...
     ] = ()
     total_instruction_cycles: int = 0
 
@@ -307,10 +312,9 @@ class ADSP2100Model:
         """Retire one verified instruction.
 
         The original program-memory interface has no acknowledge input: in the
-        verified linear baseline, the current instruction executes while the
-        next instruction word is fetched in the same processor cycle.  Loop
-        terminal handling remains fail-closed until integrated sequencing owns
-        it.
+        verified bounded baseline, the current instruction executes while the
+        selected sequential, explicit-transfer, or automatic-loop target is
+        fetched in the same processor cycle.
         """
 
         instruction = ExactWord(PROGRAM_WORD_WIDTH, opcode)
@@ -320,8 +324,7 @@ class ADSP2100Model:
             raise UnsupportedFeature(
                 "the original ADSP-2100 PM fetch has no wait-state extension"
             )
-        if self.state.loop_stack:
-            raise UnsupportedFeature("loop-terminal handling is not implemented")
+        flow = _select_integrated_sequencer_flow(self.state, instruction.value)
 
         next_state = self.state
         pc_after = self.state.pc.incremented()
@@ -337,12 +340,36 @@ class ADSP2100Model:
                 self.state,
                 instruction.value,
             )
+        elif instruction.value & 0xFC0000 == 0x140000:
+            next_state = _apply_type11_do_until(
+                self.state,
+                instruction.value,
+            )
+        elif instruction.value & 0xFFFF20 == 0x0B0000:
+            next_state, pc_after = _apply_type19_indirect_jump(
+                self.state,
+                instruction.value,
+            )
+        elif instruction.value & 0xFFFFE0 == 0x0A0000:
+            next_state, pc_after = _apply_type20_conditional_return(
+                self.state,
+                instruction.value,
+            )
+        elif instruction.value & 0xFFFFF0 == 0x080000:
+            # Type 22 has no architectural register action beyond the
+            # integrated next-PC decision.  The phase owner exposes the TRAP
+            # retirement event separately from this architectural state.
+            pass
         elif instruction.value & 0xF00000 == 0x400000:
             from .load_dreg_immediate import decode_load_dreg_immediate
             from .registers import DREGWrite, apply_dreg_cycle
 
             action = decode_load_dreg_immediate(instruction.value)
             assert action is not None
+            if not self.state.mstat_valid_mask & 1:
+                raise UnsupportedFeature(
+                    "Type 6 bank selection is unknown after an invalid MSTAT write"
+                )
             registers = apply_dreg_cycle(
                 self.state.primary,
                 self.state.alternate,
@@ -371,9 +398,14 @@ class ADSP2100Model:
 
             action = decode_mode_control(instruction.value)
             assert action is not None
+            valid_mask = self.state.mstat_valid_mask
+            for bit, control in enumerate(action.controls):
+                if int(control) & 0x2:
+                    valid_mask |= 1 << bit
             next_state = replace(
                 self.state,
                 mstat=apply_mode_control(self.state.mstat, action),
+                mstat_valid_mask=valid_mask,
             )
         elif instruction.value & 0xFFFFE0 == 0x090000:
             next_state = _apply_type21_modify(self.state, instruction.value)
@@ -390,12 +422,6 @@ class ADSP2100Model:
             assert action.source_register is not None
             assert action.destination_register is not None
             source = _read_type17_source(self.state, action.source_register)
-            if source is UNKNOWN:
-                raise UnsupportedFeature(
-                    "integrated Type 17 execution requires a known source; "
-                    "the bounded state model retains unknown propagation"
-                )
-            assert isinstance(source, ExactWord)
             next_state = _apply_type17_destination(
                 self.state,
                 action.destination_register,
@@ -757,6 +783,14 @@ class ADSP2100Model:
                 f"type {classes[0]['original_type']} but not semantically implemented"
             )
 
+        next_state = _apply_automatic_loop_actions(
+            self.state,
+            next_state,
+            instruction.value,
+            flow,
+        )
+        pc_after = ExactWord(ADDRESS_WIDTH, flow.next_pc)
+
         pc_before = self.state.pc
         instruction_cycles = 1
         transaction = MemoryTransaction(
@@ -791,6 +825,309 @@ def _replace_word(
     updated = list(values)
     updated[index] = value
     return tuple(updated)
+
+
+def _recompose_sstat(state: ArchitecturalState) -> ArchitecturalState:
+    """Refresh empty flags while retaining the four sticky overflow bits."""
+
+    sstat = state.sstat.value & 0xAA
+    if not state.pc_stack:
+        sstat |= 1 << 0
+    if not state.count_stack:
+        sstat |= 1 << 2
+    if not state.status_stack:
+        sstat |= 1 << 4
+    if not state.loop_stack:
+        sstat |= 1 << 6
+    return replace(state, sstat=ExactWord(8, sstat))
+
+
+def _select_integrated_sequencer_flow(
+    state: ArchitecturalState,
+    opcode: int,
+) -> SequencerFlowResult:
+    """Select one bounded next-PC path from cycle-start sequencer state."""
+
+    from .conditional_return import decode_conditional_return
+    from .conditional_trap import decode_conditional_trap
+    from .counter import CounterState
+    from .direct_jump import decode_direct_jump
+    from .do_until import decode_do_until
+    from .flow_condition import evaluate_flow_condition
+    from .indirect_jump import decode_indirect_jump
+    from .internal_move import decode_internal_move
+    from .load_non_dreg_immediate import decode_load_non_dreg_immediate
+    from .stack_control import decode_stack_control
+    from .status import ASTATState
+
+    astat = (
+        ASTATState()
+        if state.astat is UNKNOWN
+        else ASTATState.from_word(state.astat)
+    )
+    counter = CounterState(None if state.cntr is UNKNOWN else state.cntr.value)
+    explicit_flow = ExplicitFlow.NONE
+    explicit_taken = False
+    explicit_target = 0
+
+    direct = decode_direct_jump(opcode)
+    indirect = decode_indirect_jump(opcode)
+    conditional_return = decode_conditional_return(opcode)
+    conditional_trap = decode_conditional_trap(opcode)
+    if direct is not None:
+        if not direct.supported:
+            raise UnsupportedFeature(
+                "Type 10 CALL NOT CE remains unresolved under OQ-012"
+            )
+        condition = evaluate_flow_condition(direct.condition, astat, counter)
+        if condition is UNKNOWN:
+            raise UnsupportedFeature(
+                "Type 10 execution requires known condition inputs"
+            )
+        explicit_flow = ExplicitFlow.CALL if direct.call else ExplicitFlow.JUMP
+        explicit_taken = bool(condition)
+        explicit_target = direct.address
+    elif indirect is not None:
+        if not indirect.supported:
+            raise UnsupportedFeature(
+                "Type 19 CALL NOT CE remains unresolved under OQ-012"
+            )
+        condition = evaluate_flow_condition(indirect.condition, astat, counter)
+        if condition is UNKNOWN:
+            raise UnsupportedFeature(
+                "Type 19 execution requires known condition inputs"
+            )
+        explicit_flow = (
+            ExplicitFlow.CALL if indirect.call else ExplicitFlow.JUMP
+        )
+        explicit_taken = bool(condition)
+        target = state.dag.i[indirect.i_address]
+        if explicit_taken and not isinstance(target, ExactWord):
+            raise UnsupportedFeature(
+                "taken Type 19 transfer requires a known DAG2 I target"
+            )
+        if isinstance(target, ExactWord):
+            explicit_target = target.value
+    elif conditional_return is not None:
+        condition = evaluate_flow_condition(
+            conditional_return.condition,
+            astat,
+            counter,
+        )
+        if condition is UNKNOWN:
+            raise UnsupportedFeature(
+                "Type 20 execution requires known condition inputs"
+            )
+        explicit_flow = ExplicitFlow.RETURN
+        explicit_taken = bool(condition)
+        if explicit_taken and not state.pc_stack:
+            raise UnsupportedFeature(
+                "taken Type 20 return requires valid PC-stack context under OQ-013"
+            )
+        if (
+            explicit_taken
+            and conditional_return.interrupt_return
+            and not state.status_stack
+        ):
+            raise UnsupportedFeature(
+                "taken Type 20 RTI requires valid status-stack context under OQ-013"
+            )
+        if state.pc_stack:
+            explicit_target = state.pc_stack[-1].value
+    elif conditional_trap is not None:
+        condition = evaluate_flow_condition(
+            conditional_trap.condition,
+            astat,
+            counter,
+        )
+        if condition is UNKNOWN:
+            raise UnsupportedFeature(
+                "Type 22 execution requires known condition inputs"
+            )
+        # A taken TRAP suppresses implicit loop action but still fetches the
+        # sequential PC+1 word before holding state 8.
+        explicit_flow = ExplicitFlow.JUMP
+        explicit_taken = bool(condition)
+        explicit_target = (state.pc.value + 1) & 0x3FFF
+
+    loop_active = bool(state.loop_stack)
+    loop_end = 0
+    loop_termination = 0
+    loop_termination_true = False
+    if loop_active:
+        if not state.pc_stack:
+            raise UnsupportedFeature(
+                "active loop requires valid PC-stack context"
+            )
+        loop_end_word, loop_termination_word = state.loop_stack[-1]
+        loop_end = loop_end_word.value
+        loop_termination = loop_termination_word.value
+        if loop_termination == 0xE and state.cntr is UNKNOWN:
+            raise UnsupportedFeature(
+                "active CE loop requires valid CNTR context"
+            )
+        at_loop_end = state.pc.value == loop_end
+        do_until = decode_do_until(opcode)
+        if do_until is not None and at_loop_end:
+            raise UnsupportedFeature(
+                "DO UNTIL on an active terminal remains OQ-018"
+            )
+        if do_until is not None and do_until.end_address == loop_end:
+            raise UnsupportedFeature(
+                "nested DO UNTIL cannot reuse the active terminal"
+            )
+        if at_loop_end:
+            loop_if = evaluate_flow_condition(
+                loop_termination,
+                astat,
+                counter,
+            )
+            if loop_if is UNKNOWN:
+                raise UnsupportedFeature(
+                    "loop-terminal execution requires known condition inputs"
+                )
+            loop_termination_true = not bool(loop_if)
+
+    flow = select_sequencer_flow(
+        pc=state.pc.value,
+        explicit_flow=explicit_flow,
+        explicit_taken=explicit_taken,
+        explicit_target=explicit_target,
+        loop_active=loop_active,
+        loop_end=loop_end,
+        loop_start=state.pc_stack[-1].value if state.pc_stack else 0,
+        loop_termination_true=loop_termination_true,
+        loop_uses_counter=loop_termination == 0xE,
+    )
+
+    automatic_loop_flow = bool(
+        loop_active
+        and state.pc.value == loop_end
+        and not (explicit_taken and explicit_flow is not ExplicitFlow.NONE)
+    )
+    manual = decode_stack_control(opcode)
+    type7 = decode_load_non_dreg_immediate(opcode)
+    type17 = decode_internal_move(opcode)
+    writes_cntr = bool(
+        (type7 is not None and type7.legal and type7.register == "CNTR")
+        or (
+            type17 is not None
+            and type17.legal
+            and type17.destination_register == "CNTR"
+        )
+    )
+    if automatic_loop_flow and (
+        (manual is not None and manual.pc_pop and flow.pc_stack_pop)
+        or (manual is not None and manual.loop_pop and flow.loop_stack_pop)
+        or (
+            flow.loop_counter_test
+            and (
+                (manual is not None and manual.count_pop)
+                or writes_cntr
+            )
+        )
+    ):
+        raise UnsupportedFeature(
+            "competing automatic/manual sequencer actions remain OQ-018"
+        )
+    return flow
+
+
+def _apply_type11_do_until(
+    state: ArchitecturalState,
+    opcode: int,
+) -> ArchitecturalState:
+    """Push one sourced Type 11 loop start and descriptor atomically."""
+
+    from .do_until import decode_do_until
+
+    action = decode_do_until(opcode)
+    assert action is not None
+    sequential_pc = state.pc.incremented()
+    pc_stack = state.pc_stack
+    loop_stack = state.loop_stack
+    sstat = state.sstat.value & 0xAA
+    if len(pc_stack) < 16:
+        pc_stack += (sequential_pc,)
+    else:
+        sstat |= 1 << 1
+    if len(loop_stack) < 4:
+        loop_stack += (
+            (
+                ExactWord(14, action.end_address),
+                ExactWord(4, action.termination),
+            ),
+        )
+    else:
+        sstat |= 1 << 7
+    return _recompose_sstat(
+        replace(
+            state,
+            pc_stack=pc_stack,
+            loop_stack=loop_stack,
+            sstat=ExactWord(8, sstat),
+        )
+    )
+
+
+def _apply_automatic_loop_actions(
+    cycle_start: ArchitecturalState,
+    after_instruction: ArchitecturalState,
+    opcode: int,
+    flow: SequencerFlowResult,
+) -> ArchitecturalState:
+    """Commit automatic loop stack/CNTR effects from cycle-start decisions."""
+
+    if not flow.loop_back and not flow.loop_exit:
+        return after_instruction
+
+    next_state = after_instruction
+    if flow.loop_exit:
+        assert cycle_start.pc_stack and cycle_start.loop_stack
+        next_state = replace(
+            next_state,
+            pc_stack=next_state.pc_stack[:-1],
+            loop_stack=next_state.loop_stack[:-1],
+        )
+
+    if flow.loop_counter_test:
+        from .direct_jump import decode_direct_jump
+        from .indirect_jump import decode_indirect_jump
+
+        direct = decode_direct_jump(opcode)
+        indirect = decode_indirect_jump(opcode)
+        jump_already_tested = bool(
+            (
+                direct is not None
+                and not direct.call
+                and direct.condition == 0xE
+            )
+            or (
+                indirect is not None
+                and not indirect.call
+                and indirect.condition == 0xE
+            )
+        )
+        if not jump_already_tested:
+            assert isinstance(cycle_start.cntr, ExactWord)
+            if cycle_start.cntr.value == 1:
+                if cycle_start.count_stack:
+                    next_state = replace(
+                        next_state,
+                        cntr=cycle_start.count_stack[-1],
+                        count_stack=cycle_start.count_stack[:-1],
+                    )
+                else:
+                    next_state = replace(next_state, cntr=UNKNOWN)
+            else:
+                next_state = replace(
+                    next_state,
+                    cntr=ExactWord(
+                        14,
+                        (cycle_start.cntr.value - 1) & 0x3FFF,
+                    ),
+                )
+    return _recompose_sstat(next_state)
 
 
 def _apply_type10_direct_jump(
@@ -831,6 +1168,174 @@ def _apply_type10_direct_jump(
     taken = bool(condition)
     sequential_pc = state.pc.incremented()
     pc_after = ExactWord(14, action.address) if taken else sequential_pc
+    pc_stack = state.pc_stack
+    count_stack = state.count_stack
+    cntr = state.cntr
+    sstat = state.sstat.value & 0xAA
+
+    if taken and action.call:
+        if len(pc_stack) < 16:
+            pc_stack += (sequential_pc,)
+        else:
+            sstat |= 1 << 1
+
+    if not action.call and action.condition == 0xE:
+        assert isinstance(state.cntr, ExactWord)
+        if state.cntr.value == 1:
+            if count_stack:
+                cntr = count_stack[-1]
+                count_stack = count_stack[:-1]
+            else:
+                cntr = UNKNOWN
+        else:
+            cntr = ExactWord(14, (state.cntr.value - 1) & 0x3FFF)
+
+    if not pc_stack:
+        sstat |= 1 << 0
+    if not count_stack:
+        sstat |= 1 << 2
+    if not state.status_stack:
+        sstat |= 1 << 4
+    if not state.loop_stack:
+        sstat |= 1 << 6
+
+    return (
+        replace(
+            state,
+            pc=pc_after,
+            cntr=cntr,
+            pc_stack=pc_stack,
+            count_stack=count_stack,
+            sstat=ExactWord(8, sstat),
+        ),
+        pc_after,
+    )
+
+
+def _apply_type20_conditional_return(
+    state: ArchitecturalState,
+    opcode: int,
+) -> tuple[ArchitecturalState, ExactWord]:
+    """Apply one conditional RTS/RTI and select its fetch address."""
+
+    from .conditional_return import decode_conditional_return
+    from .counter import CounterState
+    from .flow_condition import evaluate_flow_condition
+    from .status import ASTATState
+
+    action = decode_conditional_return(opcode)
+    assert action is not None
+    astat = (
+        ASTATState()
+        if state.astat is UNKNOWN
+        else ASTATState.from_word(state.astat)
+    )
+    condition = evaluate_flow_condition(
+        action.condition,
+        astat,
+        CounterState(
+            None if state.cntr is UNKNOWN else state.cntr.value
+        ),
+    )
+    if condition is UNKNOWN:
+        raise UnsupportedFeature(
+            "Type 20 execution requires known condition inputs"
+        )
+
+    sequential_pc = state.pc.incremented()
+    if not bool(condition):
+        return (state, sequential_pc)
+    if not state.pc_stack:
+        raise UnsupportedFeature(
+            "taken Type 20 return requires valid PC-stack context under OQ-013"
+        )
+    if action.interrupt_return and not state.status_stack:
+        raise UnsupportedFeature(
+            "taken Type 20 RTI requires valid status-stack context under OQ-013"
+        )
+
+    pc_after = state.pc_stack[-1]
+    pc_stack = state.pc_stack[:-1]
+    status_stack = state.status_stack
+    astat_value = state.astat
+    mstat = state.mstat
+    mstat_valid_mask = state.mstat_valid_mask
+    imask = state.imask
+    if action.interrupt_return:
+        astat_value, mstat, mstat_valid_mask, imask = status_stack[-1]
+        status_stack = status_stack[:-1]
+
+    sstat = state.sstat.value & 0xAA
+    if not pc_stack:
+        sstat |= 1 << 0
+    if not state.count_stack:
+        sstat |= 1 << 2
+    if not status_stack:
+        sstat |= 1 << 4
+    if not state.loop_stack:
+        sstat |= 1 << 6
+
+    return (
+        replace(
+            state,
+            pc=pc_after,
+            astat=astat_value,
+            mstat=mstat,
+            mstat_valid_mask=mstat_valid_mask,
+            imask=imask,
+            pc_stack=pc_stack,
+            status_stack=status_stack,
+            sstat=ExactWord(8, sstat),
+        ),
+        pc_after,
+    )
+
+
+def _apply_type19_indirect_jump(
+    state: ArchitecturalState,
+    opcode: int,
+) -> tuple[ArchitecturalState, ExactWord]:
+    """Apply one source-closed DAG2-indirect transfer and select its fetch."""
+
+    from .counter import CounterState
+    from .flow_condition import evaluate_flow_condition
+    from .indirect_jump import decode_indirect_jump
+    from .status import ASTATState
+
+    action = decode_indirect_jump(opcode)
+    assert action is not None
+    if not action.supported:
+        raise UnsupportedFeature(
+            "Type 19 CALL NOT CE remains unresolved under OQ-012"
+        )
+
+    astat = (
+        ASTATState()
+        if state.astat is UNKNOWN
+        else ASTATState.from_word(state.astat)
+    )
+    condition = evaluate_flow_condition(
+        action.condition,
+        astat,
+        CounterState(
+            None if state.cntr is UNKNOWN else state.cntr.value
+        ),
+    )
+    if condition is UNKNOWN:
+        raise UnsupportedFeature(
+            "Type 19 execution requires known condition inputs"
+        )
+
+    taken = bool(condition)
+    sequential_pc = state.pc.incremented()
+    target = state.dag.i[action.i_address]
+    if taken and not isinstance(target, ExactWord):
+        raise UnsupportedFeature(
+            "taken Type 19 transfer requires a known DAG2 I target"
+        )
+    pc_after = target if taken else sequential_pc
+    assert isinstance(pc_after, ExactWord)
+
     pc_stack = state.pc_stack
     count_stack = state.count_stack
     cntr = state.cntr
@@ -940,18 +1445,24 @@ def _apply_type26_stack_control(
     status_stack = state.status_stack
     astat = state.astat
     mstat = state.mstat
+    mstat_valid_mask = state.mstat_valid_mask
     imask = state.imask
     cntr = state.cntr
     sstat = state.sstat.value & 0xAA
 
     if action.status_operation is StackControlStatusOperation.PUSH:
         if len(status_stack) < 4:
-            status_stack += ((state.astat, state.mstat, state.imask),)
+            status_stack += ((
+                state.astat,
+                state.mstat,
+                state.mstat_valid_mask,
+                state.imask,
+            ),)
         else:
             sstat |= 1 << 5
     elif action.status_operation is StackControlStatusOperation.POP:
         if status_stack:
-            astat, mstat, imask = status_stack[-1]
+            astat, mstat, mstat_valid_mask, imask = status_stack[-1]
             status_stack = status_stack[:-1]
 
     if action.count_pop and count_stack:
@@ -975,6 +1486,7 @@ def _apply_type26_stack_control(
         state,
         astat=astat,
         mstat=mstat,
+        mstat_valid_mask=mstat_valid_mask,
         imask=imask,
         cntr=cntr,
         pc_stack=pc_stack,
@@ -1014,7 +1526,11 @@ def _apply_type7_immediate(
     if register == "ASTAT":
         return replace(state, astat=ExactWord(8, data.value & 0xFF))
     if register == "MSTAT":
-        return replace(state, mstat=ExactWord(4, data.value & 0xF))
+        return replace(
+            state,
+            mstat=ExactWord(4, data.value & 0xF),
+            mstat_valid_mask=0xF,
+        )
     if register == "IMASK":
         return replace(state, imask=ExactWord(4, data.value & 0xF))
     if register == "ICNTL":
@@ -1035,6 +1551,10 @@ def _apply_type7_immediate(
             sstat=ExactWord(8, sstat),
         )
     if register == "SB":
+        if not state.mstat_valid_mask & 1:
+            raise UnsupportedFeature(
+                "Type 7 SB destination bank is unknown after an invalid MSTAT write"
+            )
         bank = state.alternate if state.mstat.value & 1 else state.primary
         bank = replace(bank, sb=ExactWord(5, data.value & 0x1F))
         return replace(
@@ -1056,6 +1576,8 @@ def _read_type17_source(
     from .registers import DREG, read_dreg
 
     if register in DREG.__members__:
+        if not state.mstat_valid_mask & 1:
+            return UNKNOWN
         bank = state.alternate if state.mstat.value & 1 else state.primary
         return read_dreg(bank, DREG[register])
     if len(register) == 2 and register[0] in "IML" and register[1].isdigit():
@@ -1070,16 +1592,24 @@ def _read_type17_source(
     if register == "ASTAT":
         return UNKNOWN if state.astat is UNKNOWN else ExactWord(16, state.astat.value)
     if register == "MSTAT":
-        return ExactWord(16, state.mstat.value)
+        return (
+            ExactWord(16, state.mstat.value)
+            if state.mstat_valid_mask == 0xF else UNKNOWN
+        )
     if register == "SSTAT":
         return ExactWord(16, state.sstat.value)
     if register == "IMASK":
-        return ExactWord(16, state.imask.value)
+        return (
+            ExactWord(16, state.imask.value)
+            if isinstance(state.imask, ExactWord) else UNKNOWN
+        )
     if register == "ICNTL":
         return UNKNOWN if state.icntl is UNKNOWN else ExactWord(16, state.icntl.value)
     if register == "CNTR":
         return UNKNOWN if state.cntr is UNKNOWN else ExactWord(16, state.cntr.value)
     if register == "SB":
+        if not state.mstat_valid_mask & 1:
+            return UNKNOWN
         bank = state.alternate if state.mstat.value & 1 else state.primary
         if bank.sb is UNKNOWN:
             return UNKNOWN
@@ -1094,15 +1624,66 @@ def _read_type17_source(
 def _apply_type17_destination(
     state: ArchitecturalState,
     register: str,
-    data: ExactWord,
+    data: KnownOrUnknown,
 ) -> ArchitecturalState:
-    """Commit one known Type 17 value through independent shared state."""
+    """Commit one Type 17 value, preserving unknown-source validity."""
 
     from .registers import DREG, DREGWrite, apply_dreg_cycle
 
-    if data.width != 16:
+    if isinstance(data, ExactWord) and data.width != 16:
         raise ValueError("Type 17 internal move data must be exactly 16 bits")
     if register in DREG.__members__:
+        if not state.mstat_valid_mask & 1:
+            raise UnsupportedFeature(
+                "Type 17 DREG destination bank is unknown after an invalid MSTAT write"
+            )
+        if data is UNKNOWN:
+            bank = state.alternate if state.mstat.value & 1 else state.primary
+            destination = DREG[register]
+            if destination in (DREG.AX0, DREG.AX1):
+                bank = replace(
+                    bank,
+                    ax=_replace_word(bank.ax, int(destination) - int(DREG.AX0), UNKNOWN),
+                )
+            elif destination in (DREG.MX0, DREG.MX1):
+                bank = replace(
+                    bank,
+                    mx=_replace_word(bank.mx, int(destination) - int(DREG.MX0), UNKNOWN),
+                )
+            elif destination in (DREG.AY0, DREG.AY1):
+                bank = replace(
+                    bank,
+                    ay=_replace_word(bank.ay, int(destination) - int(DREG.AY0), UNKNOWN),
+                )
+            elif destination in (DREG.MY0, DREG.MY1):
+                bank = replace(
+                    bank,
+                    my=_replace_word(bank.my, int(destination) - int(DREG.MY0), UNKNOWN),
+                )
+            elif destination == DREG.SI:
+                bank = replace(bank, si=UNKNOWN)
+            elif destination == DREG.SE:
+                bank = replace(bank, se=UNKNOWN)
+            elif destination == DREG.AR:
+                bank = replace(bank, ar=UNKNOWN)
+            elif destination == DREG.MR0:
+                bank = replace(bank, mr=(UNKNOWN, bank.mr[1], bank.mr[2]))
+            elif destination == DREG.MR1:
+                bank = replace(bank, mr=(bank.mr[0], UNKNOWN, UNKNOWN))
+            elif destination == DREG.MR2:
+                bank = replace(bank, mr=(bank.mr[0], bank.mr[1], UNKNOWN))
+            elif destination == DREG.SR0:
+                bank = replace(bank, sr=(UNKNOWN, bank.sr[1]))
+            elif destination == DREG.SR1:
+                bank = replace(bank, sr=(bank.sr[0], UNKNOWN))
+            else:
+                raise AssertionError("exhaustive Type 17 DREG destination")
+            return replace(
+                state,
+                alternate=bank if state.mstat.value & 1 else state.alternate,
+                primary=state.primary if state.mstat.value & 1 else bank,
+            )
+        assert isinstance(data, ExactWord)
         registers = apply_dreg_cycle(
             state.primary,
             state.alternate,
@@ -1114,8 +1695,72 @@ def _apply_type17_destination(
             primary=registers.primary,
             alternate=registers.alternate,
         )
-    return _apply_type7_immediate(
-        state,
-        register,
-        ExactWord(14, data.value & 0x3FFF),
-    )
+    if len(register) == 2 and register[0] in "IML" and register[1].isdigit():
+        index = int(register[1])
+        value = UNKNOWN if data is UNKNOWN else ExactWord(14, data.value & 0x3FFF)
+        dag = replace(
+            state.dag,
+            **{register[0].lower(): _replace_word(
+                getattr(state.dag, register[0].lower()), index, value
+            )},
+        )
+        return replace(state, dag=dag)
+    if register == "ASTAT":
+        return replace(
+            state,
+            astat=UNKNOWN if data is UNKNOWN else ExactWord(8, data.value & 0xFF),
+        )
+    if register == "MSTAT":
+        if data is UNKNOWN:
+            return replace(state, mstat_valid_mask=0)
+        return replace(
+            state,
+            mstat=ExactWord(4, data.value & 0xF),
+            mstat_valid_mask=0xF,
+        )
+    if register == "IMASK":
+        return replace(
+            state,
+            imask=UNKNOWN if data is UNKNOWN else ExactWord(4, data.value & 0xF),
+        )
+    if register == "ICNTL":
+        return replace(
+            state,
+            icntl=UNKNOWN if data is UNKNOWN else ExactWord(5, data.value & 0x1F),
+        )
+    if register == "CNTR":
+        count_stack = state.count_stack
+        sstat = state.sstat.value
+        if isinstance(state.cntr, ExactWord):
+            if len(count_stack) < 4:
+                count_stack += (state.cntr,)
+                sstat &= ~(1 << 2)
+            else:
+                sstat |= 1 << 3
+        return replace(
+            state,
+            cntr=UNKNOWN if data is UNKNOWN else ExactWord(14, data.value & 0x3FFF),
+            count_stack=count_stack,
+            sstat=ExactWord(8, sstat),
+        )
+    if register == "SB":
+        if not state.mstat_valid_mask & 1:
+            raise UnsupportedFeature(
+                "Type 17 SB destination bank is unknown after an invalid MSTAT write"
+            )
+        bank = state.alternate if state.mstat.value & 1 else state.primary
+        bank = replace(
+            bank,
+            sb=UNKNOWN if data is UNKNOWN else ExactWord(5, data.value & 0x1F),
+        )
+        return replace(
+            state,
+            alternate=bank if state.mstat.value & 1 else state.alternate,
+            primary=state.primary if state.mstat.value & 1 else bank,
+        )
+    if register == "PX":
+        return replace(
+            state,
+            px=UNKNOWN if data is UNKNOWN else ExactWord(8, data.value & 0xFF),
+        )
+    raise AssertionError(f"validated Type 17 destination {register} was not handled")

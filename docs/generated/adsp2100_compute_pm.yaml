@@ -57,11 +57,16 @@
     "commit_edge": "ENABLED_STATE_7_TO_STATE_8",
     "recovery_issue_edge": "FOLLOWING_ENABLED_STATE_8_TO_STATE_1",
     "read_sample_edge": "ENABLED_STATE_7_TO_STATE_8",
+    "interrupt_sampling": "EVERY_ENABLED_PHYSICAL_STATE_7_BOUNDARY",
+    "interrupt_service_gate": "INSTRUCTION_COMPLETE_ONLY",
+    "uncached_interrupt_deferral": "REQUEST_SAMPLED_AT_PM_DATA_COMPLETION_MAY_LATCH_BUT_CANNOT_BE_RECOGNIZED_UNTIL_RECOVERY_FETCH_COMPLETION",
+    "interrupt_entry_handoff": "RECOGNITION_VECTOR_ONLY_PC_STATUS_CONTEXT_AND_VECTOR_FETCH_REMAIN_OUTSIDE_THIS_OWNER",
     "bus_relinquishment": "MASK_OUTPUT_ENABLES_AND_PRESERVE_IN_FLIGHT_STATE"
   },
   "source_citations": [
     "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
     "ADI-UM-1989 printed pp. 3-6–3-7",
+    "ADI-UM-1989 printed pp. 5-13–5-16",
     "ADI-UM-1989 printed pp. 6-1 and 6-3–6-7, Tables 6.1–6.2",
     "ADI-UM-1989 printed pp. 6-12–6-13, Table 6.7",
     "ADI-UM-1989 printed pp. A-1 and A-5–A-11"
@@ -77,6 +82,8 @@
     "python_native": "tests/test_compute_pm_native.py",
     "rtl_execution": "sim/unit/tb_adsp2100_compute_pm_slice.sv",
     "rtl_native": "sim/unit/tb_adsp2100_compute_pm_native_slice.sv",
+    "native_attachment_clocks": 50100,
+    "native_interrupt_directed_case": "EDGE_IRQ2_RETAINED_AT_UNCACHED_DATA_COMPLETION_AND_RECOGNIZED_AT_RECOVERY_COMPLETION",
     "formal_decode": "formal/compute_pm_decode.sby",
     "formal_execution": "formal/compute_pm.sby",
     "formal_cache": "formal/compute_pm_cache.sby",

@@ -33,6 +33,7 @@ module adsp2100_register_file_formal (
     logic [15:0] se_data;
     logic [15:0] ar_data;
     logic [15:0] ar_data_2;
+    logic [47:0] unused_additional_read_data;
     logic [15:0] af_state;
     logic [15:0] mf_state;
     logic [39:0] mr_state;
@@ -77,10 +78,16 @@ module adsp2100_register_file_formal (
         .read_address_1_i(DREG_SE),
         .read_address_2_i(DREG_AR),
         .read_address_3_i(DREG_AR),
+        .read_address_4_i(DREG_AR),
+        .read_address_5_i(DREG_AR),
+        .read_address_6_i(DREG_AR),
         .read_data_0_o(mr2_data),
         .read_data_1_o(se_data),
         .read_data_2_o(ar_data),
         .read_data_3_o(ar_data_2),
+        .read_data_4_o(unused_additional_read_data[15:0]),
+        .read_data_5_o(unused_additional_read_data[31:16]),
+        .read_data_6_o(unused_additional_read_data[47:32]),
         .write_enable_0_i(write_enable_0),
         .write_address_0_i(write_address_0),
         .write_data_0_i(write_data_0),

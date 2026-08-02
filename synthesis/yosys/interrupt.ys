@@ -1,0 +1,7 @@
+read_verilog -sv rtl/core/adsp2100_interrupt_control.sv
+
+hierarchy -check -top adsp2100_interrupt_control
+synth -top adsp2100_interrupt_control
+check
+stat
+write_json build/yosys_interrupt.json

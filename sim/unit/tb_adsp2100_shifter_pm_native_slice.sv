@@ -3,11 +3,11 @@
 
 module tb_adsp2100_shifter_pm_native_slice;
     logic         clk;
-    logic [189:0] stimulus;
-    logic [117:0] expected_events;
-    logic [159:0] expected_post;
-    logic [117:0] actual_events;
-    logic [159:0] actual_post;
+    logic [204:0] stimulus;
+    logic [140:0] expected_events;
+    logic [164:0] expected_post;
+    logic [140:0] actual_events;
+    logic [164:0] actual_post;
 
     logic reset;
     logic [2:0] phase;
@@ -25,6 +25,11 @@ module tb_adsp2100_shifter_pm_native_slice;
     logic external_fetch_address_valid;
     logic [23:0] external_fetch_instruction;
     logic external_fetch_instruction_valid;
+    logic [3:0] irq_n;
+    logic [4:0] icntl;
+    logic icntl_valid;
+    logic [3:0] imask;
+    logic imask_valid;
     logic astat_setup;
     logic [7:0] astat_setup_data;
     logic mstat_setup;
@@ -69,6 +74,14 @@ module tb_adsp2100_shifter_pm_native_slice;
     logic [13:0] cache_region_start;
     logic cache_region_start_valid;
     logic [4:0] cache_region_count;
+    logic interrupt_sample_event;
+    logic interrupt_interval_block;
+    logic [3:0] interrupt_enabled_requests;
+    logic interrupt_recognition_event;
+    logic [1:0] interrupt_recognized_level;
+    logic [13:0] interrupt_vector_address;
+    logic [3:0] interrupt_edge_pending;
+    logic interrupt_sample_history_valid;
     logic pm_request_accepted;
     logic pm_completion_event;
     logic pm_read_sample_event;
@@ -115,7 +128,8 @@ module tb_adsp2100_shifter_pm_native_slice;
         next_fetch_address_valid, force_instruction_fetch,
         external_fetch_fill, external_fetch_address,
         external_fetch_address_valid, external_fetch_instruction,
-        external_fetch_instruction_valid, astat_setup, astat_setup_data,
+        external_fetch_instruction_valid, irq_n, icntl, icntl_valid,
+        imask, imask_valid, astat_setup, astat_setup_data,
         mstat_setup, mstat_setup_data, dreg_setup, dreg_setup_code,
         dreg_setup_data, sb_setup, sb_setup_data, dag_setup,
         dag_setup_kind, dag_setup_address, dag_setup_data, px_setup,
@@ -133,6 +147,9 @@ module tb_adsp2100_shifter_pm_native_slice;
         instruction_from_cache, instruction_from_external,
         cache_fill, cache_fill_from_recovery, cache_fill_accepted,
         cache_region_start_valid, cache_region_start, cache_region_count,
+        interrupt_sample_event, interrupt_interval_block,
+        interrupt_enabled_requests, interrupt_recognition_event,
+        interrupt_recognized_level, interrupt_vector_address,
         pm_request_accepted, pm_completion_event, pm_read_sample_event,
         pm_bus_active, pm_address_oe, pm_control_oe, pm_data_oe,
         pma_valid, pma_valid ? pma : 14'h0000,
@@ -153,7 +170,8 @@ module tb_adsp2100_shifter_pm_native_slice;
         sb_valid, sb_valid ? sb : 5'h00,
         astat_valid_mask, astat & astat_valid_mask,
         mstat, alternate_bank,
-        cache_region_start_valid, cache_region_start, cache_region_count
+        cache_region_start_valid, cache_region_start, cache_region_count,
+        interrupt_edge_pending, interrupt_sample_history_valid
     };
 
     adsp2100_shifter_pm_native_slice dut (
@@ -176,6 +194,11 @@ module tb_adsp2100_shifter_pm_native_slice;
         .external_fetch_instruction_valid_i(
             external_fetch_instruction_valid
         ),
+        .irq_n_i(irq_n),
+        .icntl_i(icntl),
+        .icntl_valid_i(icntl_valid),
+        .imask_i(imask),
+        .imask_valid_i(imask_valid),
         .astat_setup_write_i(astat_setup),
         .astat_setup_data_i(astat_setup_data),
         .mstat_setup_write_i(mstat_setup),
@@ -219,6 +242,16 @@ module tb_adsp2100_shifter_pm_native_slice;
         .cache_region_start_o(cache_region_start),
         .cache_region_start_valid_o(cache_region_start_valid),
         .cache_region_count_o(cache_region_count),
+        .interrupt_sample_event_o(interrupt_sample_event),
+        .interrupt_interval_block_o(interrupt_interval_block),
+        .interrupt_enabled_requests_o(interrupt_enabled_requests),
+        .interrupt_recognition_event_o(interrupt_recognition_event),
+        .interrupt_recognized_level_o(interrupt_recognized_level),
+        .interrupt_vector_address_o(interrupt_vector_address),
+        .interrupt_edge_pending_o(interrupt_edge_pending),
+        .interrupt_sample_history_valid_o(
+            interrupt_sample_history_valid
+        ),
         .pm_request_accepted_o(pm_request_accepted),
         .pm_completion_event_o(pm_completion_event),
         .pm_read_sample_event_o(pm_read_sample_event),

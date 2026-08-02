@@ -84,6 +84,11 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
         external_address_valid: bool = True,
         external_instruction: int = 0,
         external_instruction_valid: bool = True,
+        irq_n: int = 0xF,
+        icntl: int = 0,
+        icntl_valid: bool = False,
+        imask: int = 0,
+        imask_valid: bool = False,
         astat: ExactWord | None = None,
         mstat: ExactWord | None = None,
         dreg: DREGWrite | None = None,
@@ -122,6 +127,9 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
                 ExactWord(24, external_instruction)
                 if external_instruction_valid else UNKNOWN
             ),
+            irq_n=irq_n,
+            icntl=ExactWord(5, icntl) if icntl_valid else UNKNOWN,
+            imask=ExactWord(4, imask) if imask_valid else UNKNOWN,
             setup_astat=astat,
             setup_mstat=mstat,
             setup_dreg=dreg,
@@ -149,6 +157,11 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             (external_address_valid, 1),
             (external_instruction, 24),
             (external_instruction_valid, 1),
+            (irq_n, 4),
+            (icntl, 5),
+            (icntl_valid, 1),
+            (imask, 4),
+            (imask_valid, 1),
             (astat is not None, 1),
             (astat.value if astat else 0, 8),
             (mstat is not None, 1),
@@ -200,6 +213,12 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             (pre_cache.region_count != 0 and not reset, 1),
             (pre_cache.region_start, 14),
             (pre_cache.region_count if not reset else 0, 5),
+            (result.interrupt.sample_event, 1),
+            (result.interrupt_interval_block, 1),
+            (result.interrupt.enabled_requests, 4),
+            (result.interrupt.recognition_event, 1),
+            (result.interrupt.recognized_level, 2),
+            (result.interrupt.vector_address.value, 14),
             (result.bus.request_accepted, 1),
             (result.bus.completion_event, 1),
             (result.bus.read_sample_event, 1),
@@ -263,9 +282,11 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             (cache.region_count != 0, 1),
             (cache.region_start, 14),
             (cache.region_count, 5),
+            (result.state.interrupt.edge_pending, 4),
+            (result.state.interrupt.sample_history_valid, 1),
         ):
             post = _append(post, value, width)
-        lines.append(f"{stimulus:055x} {events:030x} {post:047x}")
+        lines.append(f"{stimulus:059x} {events:036x} {post:048x}")
         state = result.state
         if phase_override is None and advance and not relinquished:
             phase = LogicalPhase((int(phase) + 1) & 7)
@@ -302,6 +323,49 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             external_address=0x200 + offset,
             external_instruction=0x800000 + offset,
         )
+
+    # Directed original-device IRQ edge across the two-cycle uncached
+    # PM-data interval: sample at data completion, service at recovery.
+    irq_controls = dict(icntl=0x4, icntl_valid=True, imask=0x4,
+                        imask_valid=True)
+    emit(phase_override=LogicalPhase.STATE_7, irq_n=0xF, **irq_controls)
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        execute=True,
+        opcode=0x526000,
+        next_address=0x333,
+        irq_n=0xF,
+        **irq_controls,
+    )
+    for directed_phase in range(6):
+        emit(
+            phase_override=LogicalPhase(directed_phase),
+            irq_n=0xF,
+            **irq_controls,
+        )
+    emit(
+        phase_override=LogicalPhase.STATE_7,
+        pmd=0xBEEF12,
+        irq_n=0xB,
+        **irq_controls,
+    )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        irq_n=0xB,
+        **irq_controls,
+    )
+    for directed_phase in range(6):
+        emit(
+            phase_override=LogicalPhase(directed_phase),
+            irq_n=0xB,
+            **irq_controls,
+        )
+    emit(
+        phase_override=LogicalPhase.STATE_7,
+        pmd=0x654321,
+        irq_n=0xB,
+        **irq_controls,
+    )
 
     phase = LogicalPhase.STATE_8
     sequential_fill = 0x500
@@ -363,6 +427,11 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             relinquished=relinquished,
             pmd=rng.randrange(1 << 24),
             pmd_valid=rng.randrange(11) != 0,
+            irq_n=rng.randrange(16),
+            icntl=0xF,
+            icntl_valid=True,
+            imask=0xF,
+            imask_valid=True,
             **controls,
         )
 

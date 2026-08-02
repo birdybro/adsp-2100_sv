@@ -45,6 +45,7 @@ module adsp2100_mr_saturation_slice (
     logic [15:0] unused_read_data_1;
     logic [15:0] unused_read_data_2;
     logic [15:0] unused_read_data_3;
+    logic [47:0] unused_additional_read_data;
     logic [15:0] unused_af;
     logic [15:0] unused_mf;
     logic [7:0] unused_se;
@@ -163,10 +164,16 @@ module adsp2100_mr_saturation_slice (
         .read_address_1_i(4'h0),
         .read_address_2_i(4'h0),
         .read_address_3_i(4'h0),
+        .read_address_4_i(4'h0),
+        .read_address_5_i(4'h0),
+        .read_address_6_i(4'h0),
         .read_data_0_o(unused_read_data_0),
         .read_data_1_o(unused_read_data_1),
         .read_data_2_o(unused_read_data_2),
         .read_data_3_o(unused_read_data_3),
+        .read_data_4_o(unused_additional_read_data[15:0]),
+        .read_data_5_o(unused_additional_read_data[31:16]),
+        .read_data_6_o(unused_additional_read_data[47:32]),
         .write_enable_0_i(1'b0),
         .write_address_0_i(4'h0),
         .write_data_0_i(16'h0000),

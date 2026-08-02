@@ -3,7 +3,7 @@
 
 module tb_adsp2100_linear_bus_control_slice;
     logic clk;
-    logic [75:0] stimulus;
+    logic [79:0] stimulus;
     logic [16:0] expected_bus_pre;
     logic [101:0] expected_core_pre;
     logic [120:0] expected_post;
@@ -12,6 +12,7 @@ module tb_adsp2100_linear_bus_control_slice;
     logic [2:0] phase;
     logic phase_advance;
     logic br_n;
+    logic [3:0] irq_n;
     logic instruction_setup;
     logic [13:0] setup_pc;
     logic [23:0] setup_opcode;
@@ -137,7 +138,7 @@ module tb_adsp2100_linear_bus_control_slice;
     integer vector_count;
 
     assign {
-        reset, phase, phase_advance, br_n,
+        reset, phase, phase_advance, br_n, irq_n,
         instruction_setup, setup_pc, setup_opcode,
         pmd_read_data, pmd_read_data_valid, probe_code
     } = stimulus;
@@ -175,6 +176,7 @@ module tb_adsp2100_linear_bus_control_slice;
         .phase_i(phase),
         .phase_advance_i(phase_advance),
         .br_n_i(br_n),
+        .irq_n_i(irq_n),
         .instruction_setup_i(instruction_setup),
         .instruction_setup_pc_i(setup_pc),
         .instruction_setup_opcode_i(setup_opcode),

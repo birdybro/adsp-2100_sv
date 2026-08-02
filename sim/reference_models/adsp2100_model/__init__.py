@@ -23,6 +23,11 @@ from .linear_halt_control import (
     LinearHaltControlState,
     apply_linear_halt_control_cycle,
 )
+from .linear_dm_wait_control import (
+    LinearDMWaitControlCycleResult,
+    LinearDMWaitControlState,
+    apply_linear_dm_wait_control_cycle,
+)
 from .conditions import (
     ConditionInputs,
     DO_TERMINATION_MNEMONICS,
@@ -318,6 +323,11 @@ from .compute_pm_owner_control import (
     ComputePMOwnerControlState,
     apply_compute_pm_owner_control_cycle,
 )
+from .program_clients_owner_control import (
+    ProgramClientsOwnerControlCycleResult,
+    ProgramClientsOwnerControlState,
+    apply_program_clients_owner_control_cycle,
+)
 from .data_bus import (
     DATA_ADDRESS_WIDTH,
     DATA_WORD_WIDTH,
@@ -513,6 +523,11 @@ from .linear_core import (
     apply_linear_fetch_client_cycle,
     apply_linear_core_cycle,
 )
+from .interrupt import (
+    InterruptCycleResult,
+    InterruptState,
+    apply_interrupt_cycle,
+)
 from .linear_owner_control import (
     LinearOwnerControlCycleResult,
     LinearOwnerControlState,
@@ -623,10 +638,14 @@ __all__ = [
     "InternalMoveSelection",
     "InternalMoveSetup",
     "InternalMoveSliceState",
+    "InterruptCycleResult",
+    "InterruptState",
     "LogicalPhase",
     "LinearFetchClientCycleResult",
     "LinearCoreCycleResult",
     "LinearCoreState",
+    "LinearDMWaitControlCycleResult",
+    "LinearDMWaitControlState",
     "LinearOwnerControlCycleResult",
     "LinearOwnerControlState",
     "ImmediateShiftAction",
@@ -686,6 +705,8 @@ __all__ = [
     "ProgramOwnerBusState",
     "ProgramOwnerBusControlCycleResult",
     "ProgramOwnerBusControlState",
+    "ProgramClientsOwnerControlCycleResult",
+    "ProgramClientsOwnerControlState",
     "ShifterPMOwnerControlCycleResult",
     "ShifterPMOwnerControlState",
     "ComputePMOwnerControlCycleResult",
@@ -764,12 +785,14 @@ __all__ = [
     "apply_computational_cycle",
     "apply_dreg_cycle",
     "apply_instruction_cache_cycle",
+    "apply_interrupt_cycle",
     "apply_data_bus_cycle",
     "apply_dm_write_immediate_native_cycle",
     "apply_shifter_dm_native_cycle",
     "apply_program_bus_cycle",
     "apply_program_owner_bus_cycle",
     "apply_program_owner_bus_control_cycle",
+    "apply_program_clients_owner_control_cycle",
     "apply_shifter_pm_owner_control_cycle",
     "apply_compute_pm_owner_control_cycle",
     "apply_divide_quotient_cycle",
@@ -843,6 +866,7 @@ __all__ = [
     "mask_to_width",
     "apply_linear_fetch_client_cycle",
     "apply_linear_core_cycle",
+    "apply_linear_dm_wait_control_cycle",
     "apply_linear_owner_control_cycle",
     "original_base_mask",
     "reverse_address",

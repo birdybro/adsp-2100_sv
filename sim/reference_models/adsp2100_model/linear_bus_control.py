@@ -44,6 +44,7 @@ def apply_linear_bus_control_cycle(
     phase: LogicalPhase | int = LogicalPhase.STATE_1,
     phase_advance: bool = True,
     br_n: bool = True,
+    irq_n: int = 0xF,
     instruction_setup: tuple[ExactWord, ExactWord] | None = None,
     pmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
 ) -> LinearBusControlCycleResult:
@@ -67,6 +68,7 @@ def apply_linear_bus_control_cycle(
         phase_advance=phase_advance,
         instruction_issue_inhibit=control.instruction_issue_inhibit,
         bus_relinquished=native_bus_relinquished,
+        irq_n=irq_n,
         instruction_setup=instruction_setup,
         pmd_read_data=pmd_read_data,
     )

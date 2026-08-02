@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "scope": "FOUR_EXTERNAL_INTERRUPT_RECOGNITION_AND_PRIORITY",
+  "pins": ["IRQ0_n", "IRQ1_n", "IRQ2_n", "IRQ3_n"],
+  "active_level": "LOW",
+  "sample_boundary": "ENABLED_STATE_7_TO_STATE_8",
+  "sensitivity_control": "ICNTL_BITS_3_THROUGH_0_ZERO_LEVEL_ONE_EDGE",
+  "mask_control": "IMASK_BITS_3_THROUGH_0_ZERO_DISABLED_ONE_ENABLED",
+  "edge_detection": "HIGH_TO_LOW_BETWEEN_SUCCESSIVE_STATE_7_SAMPLES_AND_LATCH_UNTIL_SERVICE",
+  "level_behavior": "MUST_REMAIN_LOW_UNTIL_SERVICE",
+  "priority_high_to_low": [3, 2, 1, 0],
+  "vectors": [0, 1, 2, 3],
+  "blocked_service": [
+    "HALT",
+    "TRAP",
+    "BUS_GRANT",
+    "DMACK_WAIT",
+    "BETWEEN_UNCACHED_PM_DATA_CYCLES"
+  ],
+  "sources": [
+    "ADI-UM-1989 printed pp. 4-8 through 4-10",
+    "ADI-UM-1989 printed pp. 4-23 through 4-24",
+    "ADI-UM-1989 printed pp. 5-15 through 5-16 and Figure 5.11"
+  ],
+  "provisional_boundaries": [
+    "OQ-025_FIRST_POST_RESET_EDGE_COMPARISON_SAMPLE_USES_A_FAIL_CLOSED_BASELINE"
+  ],
+  "excluded_claims": [
+    "INPUT_SYNCHRONIZER_METASTABILITY_OR_ANALOG_SETUP_HOLD",
+    "UNIFIED_HALT_TRAP_BG_DMACK_PM_DATA_PRIORITY",
+    "RESET_RELEASE_SAMPLE_HISTORY",
+    "LATER_DEVICE_INTERNAL_OR_TIMER_INTERRUPTS"
+  ],
+  "confidence": "VERIFIED_PRIMARY_EXCEPT_EXPLICIT_OQ_025_RESET_BASELINE"
+}

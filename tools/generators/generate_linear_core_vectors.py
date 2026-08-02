@@ -95,6 +95,31 @@ def _type10(*, call: bool, address: int, condition: int) -> int:
     )
 
 
+def _type11(*, end_address: int, termination: int) -> int:
+    return (
+        0x140000
+        | ((end_address & 0x3FFF) << 4)
+        | (termination & 0xF)
+    )
+
+
+def _type20(*, interrupt_return: bool, condition: int) -> int:
+    return 0x0A0000 | (int(interrupt_return) << 4) | (condition & 0xF)
+
+
+def _type22(condition: int) -> int:
+    return 0x080000 | (condition & 0xF)
+
+
+def _type19(*, call: bool, i_local: int, condition: int) -> int:
+    return (
+        0x0B0000
+        | ((i_local & 3) << 6)
+        | (int(call) << 4)
+        | (condition & 0xF)
+    )
+
+
 def _type9(
     *,
     z: int,
@@ -173,7 +198,26 @@ def _type16(*, sf: int, xop: int, condition: int) -> int:
 def _directed_opcodes() -> tuple[int, ...]:
     readable = register_code_by_name(writable=False)
     writable = register_code_by_name(writable=True)
-    opcodes = [MODE_CONTROL_VALUE | (payload << 4) for payload in range(256)]
+    # Start at PC 4 and exercise fetched DO setup plus automatic loop flow.
+    # The first loop exits immediately, the second proves the terminal
+    # instruction's ASTAT write is not visible until the following terminal
+    # decision, and the CE loop decrements 2 -> 1 before its final exit.
+    opcodes = [
+        _type7(writable["ASTAT"], 1),
+        _type11(end_address=6, termination=1),
+        0,
+        _type7(writable["ASTAT"], 0),
+        _type11(end_address=9, termination=1),
+        _type7(writable["ASTAT"], 1),
+        0,
+        _type7(writable["CNTR"], 2),
+        _type11(end_address=12, termination=0xE),
+        0,
+        0,
+    ]
+    opcodes.extend(
+        MODE_CONTROL_VALUE | (payload << 4) for payload in range(256)
+    )
 
     opcodes.append(_type7(writable["MSTAT"], 0))
     opcodes.extend(_type6(destination, 0x1100 + destination) for destination in range(16))
@@ -220,10 +264,10 @@ def _directed_opcodes() -> tuple[int, ...]:
                         ),
                     )
                 )
-    # Establish valid status and count-stack contents, then traverse every
-    # Type 26 field combination through fetched retirement. PC/loop pops are
-    # empty-pop preservation cases here; valid PC/loop state remains covered
-    # by the independent standalone Type 26 slice.
+    # Establish valid status, count, PC, and loop contexts, then atomically pop
+    # all four with one nonterminal Type 26 word. The following all-payload
+    # traversal retains the complete fetched-decode attachment coverage while
+    # empty contexts remain governed by OQ-013 rather than invented effects.
     opcodes.extend(
         (
             _type7(0x30, 0x00A5),
@@ -233,12 +277,23 @@ def _directed_opcodes() -> tuple[int, ...]:
             _type7(0x30, 0x0012),
             _type7(0x31, 0x0003),
             _type7(0x33, 0x0004),
-            _type26(0x03),
             _type7(0x35, 0x0123),
             _type7(0x35, 0x0234),
-            _type26(0x04),
+            _type11(end_address=0x0030, termination=0xF),
+            _type26(0x1F),
         )
     )
+    # Exercise every fetched Type 22 predicate with both low and high ASTAT
+    # inputs. The two CNTR contexts also cover both NOT CE outcomes; Type 22
+    # observes but never post-decrements the live counter.
+    for astat, cntr in ((0x00, 7), (0xFF, 1)):
+        opcodes.extend(
+            (
+                _type7(writable["ASTAT"], astat),
+                _type7(writable["CNTR"], cntr),
+            )
+        )
+        opcodes.extend(_type22(condition) for condition in range(16))
     opcodes.extend(_type26(payload) for payload in range(32))
     # Direct transfers select the same-cycle instruction-fetch address. Cover
     # true/false JUMP/CALL, wrapped return stacking, all predicates, and the
@@ -272,6 +327,61 @@ def _directed_opcodes() -> tuple[int, ...]:
                     _type10(
                         call=True,
                         address=(0x1800 + (astat << 2) + condition) & 0x3FFF,
+                        condition=condition,
+                    )
+                )
+    # Conditional returns consume the live PC-stack top as the same-cycle
+    # fetch address. Pair every predicate with a sourced CALL context, then
+    # exercise RTI's simultaneous status restore through the shared owner.
+    opcodes.append(_type7(writable["ASTAT"], 0x0000))
+    opcodes.append(_type7(writable["CNTR"], 0x0007))
+    for condition in range(16):
+        opcodes.extend(
+            (
+                _type10(
+                    call=True,
+                    address=(0x2800 + condition) & 0x3FFF,
+                    condition=0xF,
+                ),
+                _type20(interrupt_return=False, condition=condition),
+            )
+        )
+    opcodes.extend(
+        (
+            _type7(writable["ASTAT"], 0x00A5),
+            _type7(writable["MSTAT"], 0x000B),
+            _type7(writable["IMASK"], 0x000C),
+            _type26(0x02),
+            _type7(writable["ASTAT"], 0x0000),
+            _type7(writable["MSTAT"], 0x0000),
+            _type7(writable["IMASK"], 0x0000),
+            _type10(call=True, address=0x3000, condition=0xF),
+            _type20(interrupt_return=True, condition=0xF),
+        )
+    )
+    # DAG2-indirect transfers use the cycle-start I4-I7 value as the selected
+    # same-cycle fetch address without modifying it. Prove each target through
+    # CALL/RTS context, then traverse every IF predicate through JUMP while
+    # refreshing NOT CE's live counter context.
+    opcodes.append(_type7(writable["ASTAT"], 0x0000))
+    for i_local in range(4):
+        opcodes.extend(
+            (
+                _type7(writable[f"I{4 + i_local}"], 0x3200 + i_local),
+                _type19(call=True, i_local=i_local, condition=0xF),
+                _type20(interrupt_return=False, condition=0xF),
+            )
+        )
+    for astat in (0x00, 0xFF):
+        opcodes.append(_type7(writable["ASTAT"], astat))
+        for i_local in range(4):
+            for condition in range(16):
+                if condition == 0xE:
+                    opcodes.append(_type7(writable["CNTR"], 0x0007))
+                opcodes.append(
+                    _type19(
+                        call=False,
+                        i_local=i_local,
                         condition=condition,
                     )
                 )
@@ -436,7 +546,7 @@ def _directed_opcodes() -> tuple[int, ...]:
 
 
 def _legal_opcode(rng: random.Random) -> int:
-    choice = rng.randrange(28)
+    choice = rng.randrange(31)
     if choice == 0:
         return 0
     if choice < 5:
@@ -502,6 +612,23 @@ def _legal_opcode(rng: random.Random) -> int:
             address=rng.randrange(1 << 14),
             condition=condition,
         )
+    if choice == 27:
+        call = bool(rng.randrange(2))
+        condition = rng.randrange(16)
+        if call and condition == 0xE:
+            condition = 0xF
+        return _type19(
+            call=call,
+            i_local=rng.randrange(4),
+            condition=condition,
+        )
+    if choice == 28:
+        return _type20(
+            interrupt_return=bool(rng.randrange(2)),
+            condition=rng.randrange(16),
+        )
+    if choice == 29:
+        return _type22(rng.randrange(16))
     z = rng.randrange(2)
     amf = rng.randrange(1, 32)
     destination = rng.randrange(16)
@@ -589,6 +716,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
         setup: tuple[int, int] | None = None,
         pmd: int = 0,
         pmd_valid: bool = True,
+        irq_n: int = 0xF,
         probe: int | None = None,
     ) -> None:
         nonlocal state
@@ -608,6 +736,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             bus_relinquished=relinquished,
             instruction_setup=setup_value,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
+            irq_n=irq_n,
         )
 
         stimulus = 0
@@ -622,6 +751,7 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (0 if setup is None else setup[1], 24),
             (pmd, 24),
             (pmd_valid, 1),
+            (irq_n, 4),
             (probe, 6),
         ):
             stimulus = _append(stimulus, value, width)
@@ -633,6 +763,18 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (result.instruction_setup_accepted, 1),
             (result.instruction_issue, 1),
             (result.retire_event, 1),
+            (result.trap_event, 1),
+            (result.interrupt_recognition_event, 1),
+            (result.interrupt_entry_event, 1),
+            (result.interrupt_vector_issue_event, 1),
+            (result.interrupt_vector_fetch_event, 1),
+            (result.interrupt_level, 2),
+            (result.interrupt_vector.value, 14),
+            (state.interrupt.edge_pending, 4),
+            (state.interrupt_vectoring, 1),
+            (result.interrupt_configuration_invalid, 1),
+            (result.interrupt_reset_baseline_provisional, 1),
+            (result.interrupt_adjacent_control_conflict, 1),
             (state.instruction_valid, 1),
             (state.pending, 1),
             (result.unsupported_instruction, 1),
@@ -701,12 +843,75 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
             (len(post_state.architecture.count_stack), 3),
             (bool(post_state.architecture.sstat.value & 0x08), 1),
             (post_state.bus.active, 1),
+            (post_state.interrupt_vectoring, 1),
+            (post_state.interrupt.edge_pending, 4),
         ):
             post = _append(post, value, width)
-        lines.append(f"{stimulus:020x} {pre:026x} {post:030x}")
+        lines.append(f"{stimulus:021x} {pre:033x} {post:031x}")
         state = post_state
 
     emit(LogicalPhase.STATE_8, reset=True, pmd_valid=False)
+
+    # Retire a normal NOP while level-sensitive IRQ2 is recognized, discard
+    # its overlapped fetch, fetch vector 2 during the inserted NOP cycle, then
+    # execute a vector-resident RTI and refetch the discarded word.
+    writable = register_code_by_name(writable=True)
+    emit(
+        LogicalPhase.STATE_8,
+        setup=(0x0100, _type7(writable["ICNTL"], 0x10)),
+    )
+    for next_opcode, completion_irq in (
+        (_type7(writable["IMASK"], 0xF), 0xF),
+        (0, 0xF),
+        (_type6(int(DREG.AX0), 0xDEAD), 0xB),
+    ):
+        emit(LogicalPhase.STATE_8)
+        for phase in range(6):
+            emit(LogicalPhase(phase), irq_n=completion_irq)
+        emit(
+            LogicalPhase.STATE_7,
+            pmd=next_opcode,
+            irq_n=completion_irq,
+        )
+    emit(LogicalPhase.STATE_8)
+    for phase in range(6):
+        emit(LogicalPhase(phase))
+    emit(
+        LogicalPhase.STATE_7,
+        pmd=_type20(interrupt_return=True, condition=0xF),
+    )
+    emit(LogicalPhase.STATE_8)
+    for phase in range(6):
+        emit(LogicalPhase(phase))
+    emit(
+        LogicalPhase.STATE_7,
+        pmd=_type6(int(DREG.AX0), 0xDEAD),
+    )
+
+    # OQ-015 is not assigned an ordering. A serviceable request adjacent to
+    # active MODE CONTROL is retained, entry is deferred, and the conflict is
+    # observable before a following ordinary instruction admits it.
+    emit(LogicalPhase.STATE_5, reset=True, pmd_valid=False)
+    emit(
+        LogicalPhase.STATE_8,
+        setup=(0x0200, _type7(writable["ICNTL"], 0)),
+    )
+    for next_opcode, completion_irq in (
+        (_type7(writable["IMASK"], 1), 0xF),
+        (MODE_CONTROL_VALUE | (0x03 << 4), 0xF),
+        (0, 0xE),
+        (0, 0xE),
+    ):
+        emit(LogicalPhase.STATE_8)
+        for phase in range(6):
+            emit(LogicalPhase(phase), irq_n=completion_irq)
+        emit(
+            LogicalPhase.STATE_7,
+            pmd=next_opcode,
+            irq_n=completion_irq,
+        )
+
+    emit(LogicalPhase.STATE_5, reset=True, pmd_valid=False)
     current_opcode = directed_opcodes[0]
     emit(LogicalPhase.STATE_8, setup=(4, current_opcode))
 
@@ -782,7 +987,12 @@ def generate_lines(instruction_count: int, seed: int) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--instructions", type=int, default=50_000)
+    # The class-complete Type 14/15/16 attachment traversals and directed
+    # source-closed control transfers require 50,184 instructions. Phase
+    # holds, relinquishment, fetch validity, and probes remain deterministically
+    # randomized across that complete corpus; do not append unconstrained
+    # context-dependent return instructions after the final directed word.
+    parser.add_argument("--instructions", type=int, default=50_184)
     parser.add_argument("--seed", type=lambda value: int(value, 0), default=0x210067)
     args = parser.parse_args()
     lines = generate_lines(args.instructions, args.seed)

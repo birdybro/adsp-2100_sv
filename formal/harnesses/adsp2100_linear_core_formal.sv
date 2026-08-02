@@ -12,12 +12,20 @@ module adsp2100_linear_core_formal (
     input logic [23:0] instruction_setup_opcode,
     input logic [23:0] pmd_read_data,
     input logic        pmd_read_data_valid,
+    input logic [3:0]  irq_n,
     input logic [5:0]  probe_code
 );
     logic issue_boundary;
     logic instruction_setup_accepted;
     logic instruction_issue;
     logic retire_event;
+    logic trap_event;
+    logic interrupt_recognition_event;
+    logic interrupt_entry_event;
+    logic interrupt_vector_issue_event;
+    logic interrupt_vector_fetch_event;
+    logic [1:0] interrupt_level;
+    logic interrupt_vectoring;
     logic instruction_valid;
     logic transaction_pending;
     logic unsupported_instruction;
@@ -47,12 +55,14 @@ module adsp2100_linear_core_formal (
     logic pmwr_n;
     logic pmd_write_data_valid;
     logic past_valid;
+    logic [13:0] expected_retire_pc_q;
 
     adsp2100_linear_core_slice dut (
         .clk_i(clk),
         .reset_i(reset),
         .phase_i(phase),
         .phase_advance_i(phase_advance),
+        .interrupt_sample_advance_i(1'b0),
         .instruction_issue_inhibit_i(instruction_issue_inhibit),
         .bus_relinquished_i(bus_relinquished),
         .instruction_setup_i(instruction_setup),
@@ -60,11 +70,24 @@ module adsp2100_linear_core_formal (
         .instruction_setup_opcode_i(instruction_setup_opcode),
         .pmd_read_data_i(pmd_read_data),
         .pmd_read_data_valid_i(pmd_read_data_valid),
+        .irq_n_i(irq_n),
         .probe_code_i(probe_code),
         .issue_boundary_o(issue_boundary),
         .instruction_setup_accepted_o(instruction_setup_accepted),
         .instruction_issue_o(instruction_issue),
         .retire_event_o(retire_event),
+        .trap_event_o(trap_event),
+        .interrupt_recognition_event_o(interrupt_recognition_event),
+        .interrupt_entry_event_o(interrupt_entry_event),
+        .interrupt_vector_issue_event_o(interrupt_vector_issue_event),
+        .interrupt_vector_fetch_event_o(interrupt_vector_fetch_event),
+        .interrupt_level_o(interrupt_level),
+        .interrupt_vector_o(),
+        .interrupt_pending_o(),
+        .interrupt_vectoring_o(interrupt_vectoring),
+        .interrupt_configuration_invalid_o(),
+        .interrupt_reset_baseline_provisional_o(),
+        .interrupt_adjacent_control_conflict_o(),
         .instruction_valid_o(instruction_valid),
         .transaction_pending_o(transaction_pending),
         .unsupported_instruction_o(unsupported_instruction),
@@ -109,7 +132,6 @@ module adsp2100_linear_core_formal (
 
     always_comb begin
         assert (instruction_issue == pm_request_accepted);
-        assert (!internal_conflict);
         assert (!pm_data_output_enable);
         assert (!pmd_write_data_valid);
         assert (!(~pmrd_n && ~pmwr_n));
@@ -118,20 +140,42 @@ module adsp2100_linear_core_formal (
         assert (!pmda || !pmda_valid);
         if (instruction_issue) begin
             assert (issue_boundary);
-            assert (instruction_valid);
+            assert (instruction_valid || interrupt_vector_issue_event);
             assert (!transaction_pending);
             assert (!unsupported_instruction && !reserved_subencoding);
+            assert (pma_valid);
+        end
+        if (internal_conflict) begin
+            assert (!instruction_issue);
         end
         if (retire_event) begin
             assert (phase == 3'd6 && phase_advance);
             assert (transaction_pending);
             assert (pm_completion_event && pm_read_sample_event);
         end
+        if (trap_event) begin
+            assert (retire_event);
+            assert (opcode[23:16] == 8'h08);
+        end
+        if (interrupt_recognition_event) begin
+            assert (retire_event);
+            assert (!trap_event);
+        end
+        if (interrupt_entry_event || interrupt_vector_issue_event) begin
+            assert (interrupt_entry_event && interrupt_vector_issue_event);
+            assert (instruction_issue && interrupt_vectoring);
+            assert (pma == {12'h000, interrupt_level});
+        end
+        if (interrupt_vector_fetch_event) begin
+            assert (transaction_pending && interrupt_vectoring);
+            assert (pm_completion_event && pm_read_sample_event);
+            assert (!retire_event);
+        end
         if (provisional_source_extension) begin
             assert (retire_event);
         end
         if (pma_valid && transaction_pending) begin
-            assert (pma == pc + 14'h0001);
+            assert (pma == expected_retire_pc_q);
         end
         if (unsupported_instruction || reserved_subencoding) begin
             assert (!instruction_issue);
@@ -161,6 +205,10 @@ module adsp2100_linear_core_formal (
             retire_event && ((opcode & 24'hff0000) == 24'h100000)
         );
         cover (retire_event && (opcode == 24'h050000));
+        cover (trap_event);
+        cover (interrupt_recognition_event);
+        cover (interrupt_entry_event);
+        cover (interrupt_vector_fetch_event);
         cover (
             retire_event && ((opcode & 24'hfff8ff) == 24'h071000)
         );
@@ -183,44 +231,74 @@ module adsp2100_linear_core_formal (
         cover (
             retire_event && ((opcode & 24'hf80000) == 24'h180000)
         );
+        cover (
+            retire_event && ((opcode & 24'hfc0000) == 24'h140000)
+        );
+        cover (
+            retire_event && ((opcode & 24'hffff20) == 24'h0b0000)
+        );
+        cover (
+            retire_event && ((opcode & 24'hffffe0) == 24'h0a0000)
+        );
     end
 
     always_ff @(posedge clk) begin
         if (!past_valid) begin
             assume (reset);
-        end else if ($past(reset)) begin
-            assert (pc == 14'h0004);
-            assert (!instruction_valid);
-            assert (!transaction_pending);
-            assert (mstat == 4'h0);
-            assert (imask == 4'h0);
-            assert (sstat == 8'h55);
-            assert (!pm_bus_active);
-        end else if (!reset) begin
-            if ($past(instruction_setup_accepted)) begin
-                assert (pc == $past(instruction_setup_pc));
-                assert (opcode == $past(instruction_setup_opcode));
-                assert (instruction_valid);
+            expected_retire_pc_q <= 14'h0000;
+        end else begin
+            if ($past(reset)) begin
+                assert (pc == 14'h0004);
+                assert (!instruction_valid);
                 assert (!transaction_pending);
-            end
-            if ($past(instruction_issue)) begin
-                assert (transaction_pending);
-            end
-            if ($past(retire_event)) begin
-                assert (pc == $past(pc) + 14'h0001);
-                assert (!transaction_pending);
-                assert (instruction_valid == $past(pmd_read_data_valid));
-                if ($past(pmd_read_data_valid)) begin
-                    assert (opcode == $past(pmd_read_data));
+                assert (mstat == 4'h0);
+                assert (imask == 4'h0);
+                assert (sstat == 8'h55);
+                assert (!pm_bus_active);
+            end else if (!reset) begin
+                if ($past(instruction_setup_accepted)) begin
+                    assert (pc == $past(instruction_setup_pc));
+                    assert (opcode == $past(instruction_setup_opcode));
+                    assert (instruction_valid);
+                    assert (!transaction_pending);
                 end
-            end else if (
-                $past(transaction_pending)
-                && !$past(instruction_setup_accepted)
-            ) begin
-                assert (pc == $past(pc));
-                assert (opcode == $past(opcode));
-                assert (instruction_valid == $past(instruction_valid));
-                assert (transaction_pending);
+                if ($past(instruction_issue)) begin
+                    assert (transaction_pending);
+                end
+                if ($past(retire_event)) begin
+                    assert (pc == $past(expected_retire_pc_q));
+                    assert (!transaction_pending);
+                    if ($past(interrupt_recognition_event)) begin
+                        assert (!instruction_valid);
+                        assert (interrupt_vectoring);
+                    end else begin
+                        assert (
+                            instruction_valid == $past(pmd_read_data_valid)
+                        );
+                        if ($past(pmd_read_data_valid)) begin
+                            assert (opcode == $past(pmd_read_data));
+                        end
+                    end
+                end else if ($past(interrupt_vector_fetch_event)) begin
+                    assert (pc == {12'h000, $past(interrupt_level)});
+                    assert (!transaction_pending);
+                    assert (!interrupt_vectoring);
+                    assert (instruction_valid == $past(pmd_read_data_valid));
+                    if ($past(pmd_read_data_valid)) begin
+                        assert (opcode == $past(pmd_read_data));
+                    end
+                end else if (
+                    $past(transaction_pending)
+                    && !$past(instruction_setup_accepted)
+                ) begin
+                    assert (pc == $past(pc));
+                    assert (opcode == $past(opcode));
+                    assert (instruction_valid == $past(instruction_valid));
+                    assert (transaction_pending);
+                end
+            end
+            if (instruction_issue) begin
+                expected_retire_pc_q <= pma;
             end
         end
         past_valid <= 1'b1;

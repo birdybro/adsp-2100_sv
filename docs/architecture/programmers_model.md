@@ -32,10 +32,25 @@ The exact Type 17 selector audit confirms 48 readable REG-coded registers and
 AF, MF, and PC have no general-MOVE code, while blank REG-table cells remain
 reserved. This closes register direction and action decode. A bounded execution
 slice now composes write effects across computational, DAG, status, PX, CNTR,
-and count-stack state. It deliberately does not close the data value for
-OQ-016 narrow status reads: those five sources use an observable provisional
-zero-extension hypothesis
+and count-stack state. The combined fetched owner separately proves SSTAT's
+live low byte through `0x55`, `0x45`, `0x65`, and `0x75` empty, nonempty,
+overflowed, and popped states. OQ-016 remains open for the upper extension of
+SSTAT and the other four narrow status sources, which use an observable
+provisional zero-extension hypothesis
 [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
+
+The retained fetched owner additionally tracks whether each Type 17 source is
+known. Invalid source state propagates through DREG, DAG, ASTAT, MSTAT, IMASK,
+ICNTL, CNTR, selected-bank SB, and PX destinations and into a following
+dependent fetched or PM-data action. Unknown MSTAT blocks bank-dependent issue
+until a known Type 7, Type 18, or Type 17 write restores the required bits.
+This is an implementation representation of documented reset-unknown state,
+not an architectural claim about the hidden binary contents
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 2-21, 3-2–3-3, 4-4,
+4-20–4-24, 6-1–6-2, 6-12, A-3, A-9]. The implementation stores the 13
+ASTAT/MSTAT/IMASK known-state bits beside each accepted 16-bit status-stack
+word and restores them with a valid pop; this sidecar is not architectural
+state. OQ-016 remains open.
 
 On documented reset, PC-visible PMA is 0x0004 if the bus is not granted, stack
 pointers reset, IMASK and MSTAT clear, and ICNTL is undefined. ASTAT is not
@@ -50,15 +65,28 @@ wrapped PC+1 for the sequential or CALL-return value, and commit the next PC at
 cycle end. The bounded native ordinary-fetch owner now connects that selected
 next address to PM fetch issue and uses the same shared PC-stack/CNTR storage
 at state-7 retirement. A fetched CALL/Type 26 POP PC sequence verifies the
-return context end to end. The attachment still does not connect the cache,
-active loop, interrupt, reset-first-fetch, or other transfer machinery
+return context end to end. Fetched Type 11 and automatic loop execution now
+connect the active descriptor and prove taken explicit-flow precedence. The
+attachment still does not connect the cache, interrupt, reset-first-fetch, or
+other transfer machinery
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-12–4-13, 5-13].
+
+Fetched Type 22 uses that same PC and stack-visible flow boundary: true and
+false forms both select PC+1, while a true condition is marked as explicit for
+automatic-loop precedence and produces a routed retirement event. The
+ordinary HALT composition retains the fetched PC+1 opcode while TRAP is
+asserted and during the HALT handoff; no PC or stack state is replayed on the
+DMACK-qualified restart [ADI-UM-1989, printed pp. 4-3–4-4, 4-25,
+5-14–5-15, Figure 5.10].
 
 The bounded Type 11 slice uses the same exact-width PC and sequencer-stack
 storage. DO captures cycle-start PC+1 as the 14-bit loop start, stores the
 14-bit terminal address and four-bit termination code as one 18-bit loop-stack
-entry, and advances PC on the same edge. Reset clears stack pointers and
-restores PC without assigning stored stack-array data a fabricated reset value
+entry, and advances PC on the same edge. The bounded fetched owner retires that
+setup through native PM phases, evaluates the top descriptor at its terminal
+instruction, performs non-counter/ASTAT/CE loopback or exit, restores nested
+CE context, and supplies valid loop state to Type 26. Reset clears stack
+pointers and restores PC without assigning stored stack-array data a fabricated reset value
 [ADI-UM-1989, printed pp. 4-5–4-8, 5-13, A-2, A-10].
 
 The independent model and RTL retain MR0/MR1/MR2 and SR0/SR1 as separate
@@ -122,7 +150,7 @@ from that same cycle-start bank. A move may replace a computational source or
 read an old shifter result, and the noncolliding DREG plus SR/SE/SB/SS results
 become visible together at cycle end. Same-destination requests never execute
 in the bounded slice. The shared fetched owner now retires every canonical
-packet through native PC+1 overlap in its 442,392-clock comparison
+packet through native PC+1 overlap in its 444,003-clock comparison
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 The bounded Type 8 path applies the same bank and timing rule to ALU/MAC X/Y,
 optional MR feedback, and the DREG move source. Noncolliding AR/AF or MR/MF,
@@ -131,7 +159,7 @@ is preserved. AMF zero and same-destination requests remain action-free under
 OQ-022/OQ-014 rather than receiving invented priority
 [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11]. The
 fetched owner now applies that rule while overlapping PC+1 fetch and atomically
-retiring computation, status, move, PC, and next-word state. Its 442,392-clock
+retiring computation, status, move, PC, and next-word state. Its 444,003-clock
 comparison covers every compute-field tuple and every move-source/destination
 pair in both banks; exhaustive per-word execution remains the independent
 983,386-cycle standalone evidence.
@@ -157,7 +185,7 @@ instead of silently inventing a value
 The bounded fetched owner now uses a dedicated execution read selection on
 this same state owner. All 32 MODIFY words sample I/M/L before execution and
 commit only the selected I with PC and the fetched next word at native state
-7-to-8; the superseded 442,405-clock integrated comparison observes no PM-data, DM, or
+7-to-8; the superseding 444,003-clock integrated comparison observes no PM-data, DM, or
 status action.
 A separate exact four-by-sixteen status stack and a combined exact
 16-by-14 PC/four-by-14 count/four-by-18 loop-stack boundary implement LIFO
@@ -167,8 +195,9 @@ pp. 2-21–2-22; ADI-UM-1989, printed pp. 4-3–4-7, 4-22]. The two SSTAT
 fragments are composed inside the extracted `adsp2100_architectural_state`
 owner used by bounded Type 17 and fetched Types 21 and 26. Type 26 retirement
 now drives manual status/count/PC/loop actions into that owner; fetched valid
-status/count restoration and empty PC/loop preservation pass, while the
-separate slice remains the evidence for valid PC/loop pops. This is not yet a
+individual paths and one combined nonterminal status/count/PC/loop pop pass.
+The separate slice remains broader evidence for all valid action combinations.
+This is not yet a
 whole-core fetch/execute path: memory-completion, automatic sequencer-event,
 and interrupt writes have not converged on the extracted owner.
 
@@ -181,9 +210,10 @@ implement this boundary. A bounded sequencer slice physically connects CNTR
 to count-stack storage and IF/DO flow for sourced cases, but instruction
 decode and a stateful PC remain absent.
 
-Direction-specific restrictions outside the now-bounded Type 17 path, exact
-interrupt recognition and priority logic, empty-pop architectural effects,
-narrow status-register DMD extension, full
+Direction-specific restrictions outside the now-bounded Type 17 path,
+fetched-DM interrupt ownership, PM-data interrupt-entry handoff,
+simultaneous-event priority, empty-pop architectural effects, narrow
+status-register DMD extension, full
 multifunction legality, and every
 instruction field using these paths still require machine-readable extraction
 and tests.

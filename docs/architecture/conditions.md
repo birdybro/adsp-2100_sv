@@ -1,8 +1,8 @@
 # Conditions and visibility
 
 **Status: original encodings and predicates verified; bounded CNTR/sequencer,
-Type 9 ALU/MAC, Type 10 direct-flow, Type 11 loop setup, Type 16 shifter, and
-Type 19 indirect-flow, Type 20 return, and Type 22 phase-aware TRAP
+Type 9 ALU/MAC, Type 10 direct-flow, Type 11 setup/automatic-loop, Type 16
+shifter, Type 19 indirect-flow, Type 20 return, and Type 22 phase-aware TRAP
 integrations pass**
 
 The original 4-bit condition selection derives EQ/NE, LT/GE, LE/GT, AC/NOT AC,
@@ -87,7 +87,10 @@ JUMP/CALL. When the predicate is false, sequential PC+1 is valid even if the
 selected I4-I7 value is reset-unknown. A true predicate requires a known
 selected I value and otherwise fails closed. JUMP NOT CE post-updates CNTR;
 the four CALL NOT CE forms remain OQ-012. This distinction is covered in both
-directed tests and the 50,259-cycle model/RTL comparison
+the 50,259-cycle standalone comparison and the 48-test, 444,003-clock native
+fetched owner. The latter selects the I4-I7 target at state-8 issue, rejects
+unknown taken targets before a PM request, and commits PC/CNTR/PC-stack effects
+only at routed state-7 completion
 [ADI-UM-1989, printed pp. 4-3–4-5, 4-20, 4-25, 6-13–6-14, A-3, A-6].
 
 The Type 20 conditional-return slice samples the same IF predicates at cycle
@@ -96,7 +99,13 @@ predicate requires a valid PC-stack top and RTI additionally requires a valid
 status-stack top; missing context fails closed under OQ-013. Return `NOT CE`
 samples a valid CNTR value but, unlike JUMP, never post-decrements CNTR or
 touches the count stack. All sixteen conditions and both return kinds are
-covered across the 50,254-cycle model/RTL comparison
+covered across the 50,254-cycle standalone comparison. The native fetched
+owner additionally evaluates every condition through RTS, redirects a taken
+return to the live PC-stack top at state-8 issue, and commits RTS/RTI stack and
+status effects only at routed state-7 completion. At a loop terminal a taken
+return suppresses automatic flow, while a false return leaves it eligible,
+within the 48-test,
+444,003-clock comparison
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-9–4-10, 4-25, 6-14 Table 6.8,
 A-4, A-6].
 
@@ -104,5 +113,20 @@ The Type 11 decoder accepts every inverse-sense DO termination field. Setup
 stores TERM without evaluating ASTAT or CNTR; `CE` therefore needs a valid
 counter only when that descriptor later becomes the active outer loop context,
 not when the first DO is issued. Every one of the 262,144 address/termination
-forms round-trips through the tools and executes in the bounded differential
-regression [ADI-UM-1989, printed pp. 4-5–4-8, A-2, A-10].
+forms round-trips through the tools and executes in the bounded standalone
+differential regression. The native fetched owner additionally evaluates the
+live descriptor at its terminal instruction, including CE test/decrement/
+restore, non-counter and ASTAT outcomes, FOREVER, loopback/exit, and taken
+explicit-flow precedence in its 48-test, 444,003-clock comparison
+[ADI-UM-1989, printed pp. 4-5–4-8, A-2, A-10].
+
+The fetched Type 22 path uses the same IF predicate and validity rules. Every
+condition is evaluated from cycle-start ASTAT/CNTR; `NOT CE` observes but does
+not post-decrement CNTR. A true predicate selects sequential PC+1 as an
+explicit action so it suppresses an automatic terminal action before emitting
+TRAP at routed retirement. A false predicate emits no TRAP and leaves the
+automatic-loop decision eligible. Three directed owner tests plus the
+48-test, 444,003-clock comparison cover every condition, both NOT CE outcomes,
+unknown-CNTR rejection, and both terminal outcomes
+[ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, 6-14 Table 6.8,
+A-4, A-6].

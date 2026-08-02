@@ -22,6 +22,7 @@ module adsp2100_dag_register_file (
     output logic        probe_l_valid_o,
 
     input  logic        setup_write_i,
+    input  logic        setup_data_valid_i,
     input  logic [1:0]  setup_kind_i,
     input  logic [2:0]  setup_address_i,
     input  logic [13:0] setup_data_i,
@@ -75,8 +76,10 @@ module adsp2100_dag_register_file (
     end
 
     // Original I/M/L contents are not documented after reset. Validity is
-    // cleared without assigning invented data values. A valid Type 21 result
-    // writes only its selected I register at the cycle-ending edge.
+    // cleared without assigning invented data values. Setup/internal-move
+    // writes carry explicit validity so an unknown source invalidates the
+    // selected destination without assigning invented data. A valid Type 21
+    // result writes only its selected I register at the cycle-ending edge.
     always_ff @(posedge clk_i) begin
         if (reset_i) begin
             i_valid_q <= 8'h00;
@@ -86,16 +89,22 @@ module adsp2100_dag_register_file (
             if (setup_write_i && !invalid_setup_kind_o) begin
                 case (setup_kind_i)
                     KIND_I: begin
-                        i_q[setup_address_i] <= setup_data_i;
-                        i_valid_q[setup_address_i] <= 1'b1;
+                        if (setup_data_valid_i) begin
+                            i_q[setup_address_i] <= setup_data_i;
+                        end
+                        i_valid_q[setup_address_i] <= setup_data_valid_i;
                     end
                     KIND_M: begin
-                        m_q[setup_address_i] <= setup_data_i;
-                        m_valid_q[setup_address_i] <= 1'b1;
+                        if (setup_data_valid_i) begin
+                            m_q[setup_address_i] <= setup_data_i;
+                        end
+                        m_valid_q[setup_address_i] <= setup_data_valid_i;
                     end
                     KIND_L: begin
-                        l_q[setup_address_i] <= setup_data_i;
-                        l_valid_q[setup_address_i] <= 1'b1;
+                        if (setup_data_valid_i) begin
+                            l_q[setup_address_i] <= setup_data_i;
+                        end
+                        l_valid_q[setup_address_i] <= setup_data_valid_i;
                     end
                     default: begin
                     end

@@ -19,6 +19,12 @@ module adsp2100_shifter_pm_native_slice (
     input  logic [23:0] external_fetch_instruction_i,
     input  logic        external_fetch_instruction_valid_i,
 
+    input  logic [3:0]  irq_n_i,
+    input  logic [4:0]  icntl_i,
+    input  logic        icntl_valid_i,
+    input  logic [3:0]  imask_i,
+    input  logic        imask_valid_i,
+
     input  logic        astat_setup_write_i,
     input  logic [7:0]  astat_setup_data_i,
     input  logic        mstat_setup_write_i,
@@ -63,6 +69,15 @@ module adsp2100_shifter_pm_native_slice (
     output logic [13:0] cache_region_start_o,
     output logic        cache_region_start_valid_o,
     output logic [4:0]  cache_region_count_o,
+
+    output logic        interrupt_sample_event_o,
+    output logic        interrupt_interval_block_o,
+    output logic [3:0]  interrupt_enabled_requests_o,
+    output logic        interrupt_recognition_event_o,
+    output logic [1:0]  interrupt_recognized_level_o,
+    output logic [13:0] interrupt_vector_address_o,
+    output logic [3:0]  interrupt_edge_pending_o,
+    output logic        interrupt_sample_history_valid_o,
 
     output logic        pm_request_accepted_o,
     output logic        pm_completion_event_o,
@@ -137,6 +152,9 @@ module adsp2100_shifter_pm_native_slice (
     logic cache_region_restarted_unused;
     logic cache_oldest_replaced_unused;
     logic external_fill_conflict_unused;
+    logic [3:0] interrupt_sampled_requests_unused;
+    logic interrupt_configuration_invalid_unused;
+    logic interrupt_reset_baseline_provisional_unused;
     logic unused_observation;
 
     assign controls_present = (
@@ -178,8 +196,46 @@ module adsp2100_shifter_pm_native_slice (
         cache_region_restarted_unused,
         cache_oldest_replaced_unused, external_fill_conflict_unused,
         cache_region_start_o, cache_region_start_valid_o,
-        cache_region_count_o
+        cache_region_count_o, interrupt_sampled_requests_unused,
+        interrupt_configuration_invalid_unused,
+        interrupt_reset_baseline_provisional_unused
     };
+
+    // ADI-UM-1989, p. 5-16: requests may latch but are not serviced
+    // between the PM-data cycle and the recovery fetch of an uncached
+    // instruction. The cache composition's instruction-complete boundary
+    // is therefore the service gate; physical state-7 sampling continues.
+    assign interrupt_interval_block_o = (
+        interrupt_sample_event_o && data_action_complete_o
+        && !instruction_complete_o
+    );
+
+    adsp2100_interrupt_control interrupt_control (
+        .clk_i(clk_i),
+        .reset_i(reset_i),
+        .phase_i(phase_i),
+        .phase_advance_i(phase_advance_i),
+        .irq_n_i(irq_n_i),
+        .icntl_i(icntl_i),
+        .icntl_valid_i(icntl_valid_i),
+        .imask_i(imask_i),
+        .imask_valid_i(imask_valid_i),
+        .service_allowed_i(instruction_complete_o),
+        .sample_event_o(interrupt_sample_event_o),
+        .sampled_requests_o(interrupt_sampled_requests_unused),
+        .enabled_requests_o(interrupt_enabled_requests_o),
+        .recognition_event_o(interrupt_recognition_event_o),
+        .recognized_level_o(interrupt_recognized_level_o),
+        .vector_address_o(interrupt_vector_address_o),
+        .edge_pending_o(interrupt_edge_pending_o),
+        .sample_history_valid_o(interrupt_sample_history_valid_o),
+        .configuration_invalid_o(
+            interrupt_configuration_invalid_unused
+        ),
+        .reset_baseline_provisional_o(
+            interrupt_reset_baseline_provisional_unused
+        )
+    );
 
     adsp2100_shifter_pm_cache_slice core (
         .clk_i(clk_i),
@@ -345,6 +401,12 @@ module adsp2100_shifter_pm_native_slice (
             assert (!pm_address_output_enable_o);
             assert (!pm_control_output_enable_o);
             assert (!pm_data_output_enable_o);
+        end
+        if (interrupt_interval_block_o) begin
+            assert (!interrupt_recognition_event_o);
+        end
+        if (interrupt_recognition_event_o) begin
+            assert (instruction_complete_o);
         end
     end
 `endif

@@ -8,19 +8,23 @@
   "completion_routing": "ONLY_FETCH_OWNER_COMPLETION_RETIRES_THE_LINEAR_CLIENT",
   "bus_request_effect": "ACTIVE_FETCH_COMPLETES_THEN_FUTURE_REQUESTS_ARE_INHIBITED",
   "grant_effect": "ALL_NATIVE_PM_OUTPUT_ENABLES_ARE_MASKED",
+  "interrupt_effect": "A_REQUEST_RECOGNIZED_AT_THE_CURRENT_FETCH_STATE_7_BOUNDARY_RETAINS_ITS_VECTOR_DESCRIPTOR_THROUGH_BG_AND_THE_FETCH_CLIENT_PRESENTS_IT_ON_RESUME",
   "sources": [
     "ADI-UM-1989 printed pp. 1-5 through 1-7",
     "ADI-UM-1989 printed pp. 2-6 through 2-7 and 4-20 through 4-30",
     "ADI-UM-1989 printed pp. 2-18 and 6-4 through 6-7",
     "ADI-UM-1989 printed pp. 2-20 through 2-35 and 6-11",
     "ADI-UM-1989 printed pp. 5-3 through 5-8, Figures 5.3 and 5.5",
+    "ADI-UM-1989 printed pp. 5-15 through 5-16",
     "ADI-DATABOOK-1987 printed pp. 2-33 through 2-39"
   ],
   "excluded_claims": [
     "TYPE5_ARCHITECTURAL_CLIENT",
     "TYPE13_ARCHITECTURAL_CLIENT",
     "LEGAL_COLLISION_PRIORITY",
-    "HALT_TRAP_INTERRUPT_OR_LOOP_PRIORITY",
+    "HALT_TRAP_OR_LOOP_PRIORITY",
+    "IRQ_PULSE_CAPTURE_WITHOUT_A_STATE_7_SAMPLE",
+    "SIMULTANEOUS_IRQ_WITH_RAW_TYPE5_OR_TYPE13_REQUESTS",
     "DM_BUS_COMPOSITION",
     "WHOLE_CORE_EXECUTION"
   ],

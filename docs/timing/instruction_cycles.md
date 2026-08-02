@@ -48,10 +48,11 @@ Known cases:
 | Type 26 combined stack control | one processor cycle for any field-defined action combination |
 | PM data access, next instruction valid in cache | no fetch overhead |
 | PM data access, invalid cache | one additional instruction-fetch cycle |
+| interrupt sampled at uncached PM-data completion | retained without service until the additional instruction-fetch cycle completes; bounded Type 5 and Type 13 native/cache owners verify recognition, and the combined automatic owner connects one Type 5 miss to shared PC/status entry and vector fetch |
 | interrupt vectoring | two cycles described, including vector jump |
 | DMACK low | extend state 7 by whole processor cycles until high |
 | HALT during ordinary instruction fetch | asserted active-low input is recognized at state 3; the current cycle completes at state 7-to-8, stopped outputs hold state 8, and a DMACK-high release resumes at state 8-to-1 |
-| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified, and the retained ordinary-fetch plus both PM-data clients are each separately attached to shared PM plus normal BR/BG, while unified three-client and combined shared-PM/HALT priority remain open |
+| HALT during PM data | current PM-data cycle completes; exactly one forced external instruction-fetch cycle issues at the following state-8-to-state-1 edge and the processor stops after its state-7-to-state-8 completion; scheduling and bounded Type 5/Type 13 native-PM attachments are verified both separately and in the retained ordinary-fetch plus both-PM-data-client automatic sequential cache/native-PM/BR-BG/HALT owner; unsourced simultaneous-event priority remains open |
 
 Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 5-13–5-16, 6-14–6-15, 6-21, A-4, A-8–A-10]. The Type 26
@@ -76,7 +77,7 @@ It applies the old-AQ-selected 16-bit add/subtract and commits AF/AY0/AQ as a
 single action while preserving all non-AQ ASTAT bits and emitting no PM-data
 or DM access. One DIVS plus fifteen DIVQ model steps are additionally checked
 as a signed division sequence. The ordinary-fetch owner adds two directed
-tests and a 442,392-clock comparison covering every divisor in both banks,
+tests and a 444,003-clock comparison covering every divisor in both banks,
 both old-AQ paths, and consecutive DIVQ dependency through native state-8
 issue/state-7 retirement. The owner also executes every legal DIVS operand
 combination and a dependent DIVS-to-DIVQ sequence; loops, interrupts, and
@@ -136,10 +137,12 @@ The bounded Type 5 model/RTL slice verifies 50,071 logical clocks. A cache hit
 commits ALU/MAC status/result, optional PM-read DREG/PX, and DAG2 postmodify in
 the fixed data cycle and selects the issue-time cached next instruction. A
 miss or forced fetch commits those data actions once, then schedules exactly
-one pure instruction-recovery cycle. Its native attachment adds 50,083 phase
+one pure instruction-recovery cycle. Its native attachment adds 50,100 phase
 clocks: the descriptor is captured at state 8-to-1, architectural effects
 commit only at state 7-to-8, and recovery is accepted on the following
-state 8-to-1. A bounded HALT attachment adds five directed tests and 50,126
+state 8-to-1. An edge request sampled at an uncached PM-data completion is
+retained without recognition until that recovery completes. A bounded HALT
+attachment adds five directed tests and 50,126
 phase clocks: 197 late issue-time hits become one external fetch, all data and
 compute actions commit once, and 387 stop/resume handshakes complete. Ordinary
 fetch, branch/loop/interrupt/BR ownership remains
@@ -161,16 +164,18 @@ source-closed actions, 8,192 unavailable-XOP words, and 3,024 read collisions
 [ADI-UM-1989, printed pp. 3-6–3-7, 4-26–4-30, 5-5–5-8,
 5-13–5-16, 6-3–6-7, A-3]. Hidden monitor/event behavior and attachment to the
 whole-core fetch/control owner remain outside this bounded evidence under
-OQ-008. The native attachment adds 50,081 phase clocks: data issue is captured
+OQ-008. The native attachment adds 50,098 phase clocks: data issue is captured
 at state 8-to-1 and commits at state 7-to-8; a miss recovery is accepted on the
 following state 8-to-1 and completes at its state 7-to-8 edge. Hit data is
 captured at issue so a later monitor update cannot change the in-flight next
-instruction. A bounded HALT attachment can invalidate that captured hit after
+instruction. An edge request sampled at uncached data completion is retained
+without recognition until that recovery-completion boundary. A bounded HALT
+attachment can invalidate that captured hit after
 state-3 recognition: it commits the data action once, issues one external
 fetch at the next state-8 edge, and stops after the fetch's state-7
 completion. Five directed tests and 50,124 clocks cover 210 late hit overrides
 and forced fetches without architectural replay. Ordinary fetch, branches,
-loops, interrupts, and BR/BG are not integrated into this owner.
+loops, interrupt entry, and BR/BG are not integrated into this owner.
 
 The bounded Type 6 model/RTL slice verifies one cycle-start bank selection and
 one cycle-end DREG write across all immediate values and destinations, with no
@@ -200,8 +205,8 @@ separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
 changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
 stack saturation/SSTAT, fail-closed reserved Type 7 destinations, legal Type
 17 execution, and unknown-source/reserved-selector rejection. A separate
-phase-level composition and bounded RTL owner add twenty-three directed tests
-and 442,392 differential clocks: every Type 8 compute-field tuple and every
+phase-level composition and bounded RTL owner add a superseding forty-two-
+test, 444,003-clock comparison: every Type 8 compute-field tuple and every
 move source/destination pair in both banks, every Type 9 AMF/condition combination, every
 canonical Type 14 packet, every supported Type 15 and Type 16 word, and all
 2,256 legal Type 17 source/
@@ -215,16 +220,18 @@ controller, and the current action plus PC/next-word state retire only at
 state 7-to-8. Type 17 ASTAT/MSTAT/SSTAT/IMASK/ICNTL source use raises a
 dedicated OQ-016 provisional-behavior pulse at retirement. Phase holds preserve
 the transaction, and a distinct new-issue inhibit does not mask the active
-fetch. The bounded BR/BG composition adds five directed tests and 50,003
-clocks with 86 complete handshakes: the recognized request permits current
+fetch. The bounded BR/BG composition adds six directed tests and 50,054
+clocks with 87 complete handshakes: the recognized request permits current
 retirement, blocks the next issue, masks PM output enables only during grant,
-and restarts at state 8-to-1 after release. This still is not a multi-owner
+retains a state-7-sampled IRQ2 without entry, and restarts into its vectoring-
+NOP request at state 8-to-1 after release. This still is not a multi-owner
 core; reset first-fetch, loop/transfer/event selection, PM-data/cache,
-DM ownership, and interrupt arbitration remain open. The bounded ordinary-
-fetch HALT attachment adds seven directed tests and 50,003 clocks with 788
-recognized stops and restarts: active-low HALT is sampled at state 3, the
+DM ownership, and simultaneous-event arbitration remain open. The bounded ordinary-
+fetch HALT/TRAP attachment adds eleven directed tests and 50,048 clocks with
+789 recognized stops and restarts: active-low HALT is sampled at state 3, the
 current fetch retires at state 7-to-8, state 8 and its PM levels hold static,
-and release advances only when DMACK is high. The standalone HALT controller
+release advances only when DMACK is high, and a state-7-sampled IRQ2 is retained
+until that resume. The standalone HALT controller
 adds eight directed tests and 50,033 clocks across both cycle classes. Its 335
 PM-data recognitions each schedule one state-8 forced-fetch issue before the
 later state-7 stop. A bounded Type 13 composition adds five directed tests and
@@ -246,7 +253,7 @@ operand read, optional old-SR read for OR forms, and one cycle-end SR write.
 Its signed immediate does not access SE and it emits no PM-data or DM request.
 The 58,709-cycle standalone comparison covers all 14,336 supported words in
 both banks. The integrated linear owner additionally retires every supported
-word within its 442,392-clock native-fetch comparison. Loop-terminal handling,
+word within its 444,003-clock native-fetch comparison. Loop-terminal handling,
 interrupts, and cross-event priority remain outside that attachment
 [ADI-UM-1989, printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7].
 
@@ -256,9 +263,9 @@ SR/SE/SB/SS writes. A false predicate preserves all of those destinations
 without changing the one-cycle boundary. Its exhaustive decoder partitions
 all 2,048 class words, and 54,403 model/RTL cycles cover every one of the 1,792
 supported words in both banks. The integrated linear owner additionally
-retires every supported word within its 442,392-clock native-fetch comparison,
-including true and false forms at the sourced one-cycle boundary. Loop
-termination, interrupt recognition/abort, and cross-event priority remain open
+retires every supported word within its 444,003-clock native-fetch comparison,
+including true and false forms at the sourced one-cycle boundary and automatic
+loop selection. Interrupt recognition/abort and unresolved cross-event priority remain open
 [ADI-UM-1989, printed pp. 2-20–2-35, 4-21, 4-25, 6-1–6-2, 6-11, A-3, A-6–A-7].
 
 The bounded Type 14 model/RTL slice verifies simultaneous cycle-start shifter
@@ -266,10 +273,10 @@ and move reads followed by noncolliding cycle-end DREG, SR/SE/SB, and SS
 writes. Its exhaustive decoder partitions all 65,536 class words, and 82,597
 model/RTL cycles cover every one of the 25,648 supported canonical words in
 both banks. The fetched owner additionally retires every canonical word within
-its 442,392-clock native-fetch comparison while committing the noncolliding
-DREG and shifter/status results atomically with PC and the next word. OQ-021
-bit-15-one behavior, loop-terminal handling, interrupts, and cross-event
-priority remain open
+its 444,003-clock native-fetch comparison while committing the noncolliding
+DREG and shifter/status results atomically with PC and the next word, including
+automatic loop selection. OQ-021 bit-15-one behavior, interrupts, and
+unresolved cross-event priority remain open
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 6-4–6-7, A-3, and A-7].
 
 The bounded Type 8 model/RTL slice verifies simultaneous cycle-start ALU/MAC
@@ -278,9 +285,9 @@ move writes. Exhaustive decode partitions all 524,288 class words and 983,386
 model/RTL cycles execute every one of the 476,672 supported words in both
 banks. The bounded fetched owner separately traverses every compute-field
 tuple and every move source/destination pair in both banks across its
-442,392-clock phase comparison, committing the computation, status, move, PC,
-and next word together at state 7-to-8. Reset-first-fetch, loop-terminal
-handling, interrupts, and unified PM/cache/event ownership remain open
+444,003-clock phase comparison, committing the computation, status, move, PC,
+and next word together at state 7-to-8 with automatic loop selection. Reset-
+first-fetch, interrupts, and unified PM/cache/event ownership remain open
 [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
 
 The bounded Type 9 model/RTL slice verifies cycle-start condition, bank,
@@ -290,7 +297,7 @@ the one-cycle boundary. Exhaustive decode covers all 32,768 class words, and
 283,996 model/RTL cycles execute every word in both banks and both available
 condition outcomes. The integrated ordinary-fetch owner now accepts every
 Type 9 word and uses the shared validity-aware CNTR predicate; the 23 directed
-owner tests and 442,392 model/RTL phase clocks exercise every AMF/condition
+owner tests and 444,003 model/RTL phase clocks exercise every AMF/condition
 combination with native state-8 fetch issue and atomic state-7 computation,
 status, PC, and next-word retirement. Active-loop termination, interrupts,
 PM-data ownership, and cross-event priority remain open
@@ -302,22 +309,29 @@ Exhaustive decode covers all 524,288 class words: 507,904 source-closed words
 execute, while 16,384 CALL NOT CE words fail closed under OQ-012. The 554,412
 stateful comparison cycles cover true/false predicates, sequential 14-bit
 wrap, direct target selection, CALL return pushes, and JUMP NOT CE counter
-transitions. The native ordinary-fetch attachment adds 28 directed tests and
-442,330 phase clocks. A taken target or false PC+1 request issues at state 8;
+transitions. The native ordinary-fetch attachment now participates in the
+superseding 48-test, 444,003-clock owner comparison. A taken target or false
+PC+1 request issues at state 8;
 routed state-7 completion commits the identical PC, CALL return push, and JUMP
 NOT CE decrement/restore. Invalid CE context starts no request, and a fetched
-CALL return is consumed by a following Type 26 POP PC. Cache invalidation,
-loop-terminal arbitration, interrupt recognition, reset-first-fetch, and
-non-Type-10 transfer priority remain open
+CALL return is consumed by a following Type 26 POP PC. Taken explicit flow at
+a loop terminal suppresses automatic flow. Cache invalidation, interrupt
+recognition, reset-first-fetch, and other transfer priority remain open
 [ADI-UM-1989, printed pp. 4-3–4-5, 4-12–4-13, 6-13–6-14, A-2, A-6].
 
 The bounded Type 11 model/RTL slice verifies cycle-start PC and active-loop
 context followed by simultaneous cycle-end PC, PC-stack, and loop-stack
 updates. Exhaustive decode covers all 262,144 class words and 554,309
 stateful cycles execute every word while also exercising nesting restrictions,
-CE-context validity, overflow, reset, and conflicts. This establishes the
-one-cycle setup boundary, not subsequent loop-terminal, interrupt, wait, or
-external logical bus timing [ADI-UM-1989, printed pp. 4-5–4-8,
+CE-context validity, overflow, reset, and conflicts. The native ordinary-fetch
+owner now admits the post-DO PC+1 request at state 8 and commits PC plus both
+stack pushes at state 7. On a later terminal instruction it selects loopback
+or exit from the cycle-start descriptor/condition/CNTR state, performs CE
+post-test transitions and nested restoration, and commits terminal pops only
+at routed state 7. Six additions to the 48-test, 444,003-clock comparison
+cover non-counter/ASTAT/CE flow, explicit-flow precedence, and valid Type 26
+loop consumption. Interrupt/cache/reset-first-fetch interaction and unresolved
+OQ-018 combinations remain open [ADI-UM-1989, printed pp. 4-5–4-8,
 4-16–4-19, 6-1, 6-13–6-14, A-2, A-10].
 
 The bounded Type 19 model/RTL slice verifies cycle-start condition, PC, CNTR,
@@ -325,10 +339,14 @@ stack tops, and selected DAG2 I sampling followed by one cycle-end PC/counter/
 stack commit. All 128 class words are exhaustively classified; 124 execute and
 four CALL NOT CE words fail closed. The 50,259 stateful cycles verify false
 flow without a valid I, true flow from each I4-I7 value, no I modification,
-PMA indirect-drive intent, CALL pushes, and JUMP NOT CE transitions. This is
-instruction-boundary evidence: the subsequent instruction fetch, cache,
-active-loop arbitration, interrupt recognition, wait extension, and logical
-PMA/PMS phases remain open [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4,
+PMA indirect-drive intent, CALL pushes, and JUMP NOT CE transitions. The
+native fetched owner adds four directed tests to its 48-test, 444,003-clock
+comparison: true flow issues the known I4-I7 target at state 8, false flow
+issues PC+1 without a valid target, unknown taken targets issue no request,
+and routed state-7 completion commits PC/CNTR/PC-stack effects. Taken explicit
+flow suppresses automatic flow at a loop terminal. Interrupt recognition,
+cache ownership, reset-first-fetch, and remaining cross-event priority remain
+open [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4,
 4-20, 6-13–6-14, A-3, A-6].
 
 The bounded Type 20 model/RTL slice verifies cycle-start condition, PC, CNTR,
@@ -336,9 +354,22 @@ PC-stack, and status-stack sampling followed by one cycle-end state commit.
 All 32 words decode, and 50,254 stateful cycles verify false PC+1 flow, taken
 RTS PC pop, taken RTI simultaneous PC/status pops and status restore, and
 non-mutating return `NOT CE`. Missing taken-return context fails closed under
-OQ-013. This establishes one instruction boundary, not active-loop
-arbitration, interrupt entry/vector timing, redirected fetch, waits, or
-logical bus phases [ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10,
+OQ-013. The native fetched owner now admits PC+1 or the valid PC-stack top at
+state 8 and commits the corresponding PC/stack/status effects at state 7.
+Forty-eight directed tests and 444,003 phase clocks cover every RTS condition,
+valid RTI restoration, Type 10/Type 19 CALL context, both missing-context
+cases, taken explicit-return precedence at a loop terminal, and a bounded IRQ2
+entry/vector/RTI refetch sequence. Recognition retires the executing
+instruction at state 7 while invalidating the concurrent next-word fetch; the
+following state-8 issue pushes PC/status and fetches the vector, whose state-7
+completion loads but does not retire the vector instruction. This still does
+not establish fetched-DM ownership, recognition during PM data, cache
+ownership, reset-first-fetch, or simultaneous cross-event priority; separate
+compositions now establish deferral for a state-7-sampled request through
+ordinary HALT and normal BG. A structural raw-DM companion additionally
+establishes physical state-7 sampling and architectural hold through native
+DMACK extensions, without claiming fetched DM semantics [ADI-UM-1989, printed
+pp. 4-3–4-4, 4-7, 4-9–4-10,
 6-14 Table 6.8, A-4, A-6].
 
 The Type 22 model/RTL slice exposes the manual's logical phases directly. An
@@ -348,8 +379,14 @@ when true, asserts TRAP and holds state 8. An externally recognized HALT clears
 TRAP while retaining the hold, and HALT release resumes at the already
 committed PC+1. The 50,168-clock comparison covers both outcomes for every
 condition plus reset, unknown status, invalid phase/opcode, and handshake
-cases. It does not supply the general HALT synchronizer, phase generator,
-PMS/PMRD fetch control, BR/BG, or interrupt arbitration
+cases. The ordinary fetched owner additionally traverses all sixteen forms in
+its 48-test, 444,003-clock comparison, issues PC+1 through the native PM
+controller, and emits taken TRAP only with routed state-7 retirement. The
+attached active-low HALT owner covers one complete assertion/acknowledgment/
+DMACK-blocked-release/restart trace among eleven tests and 50,048 clocks, plus
+one independently sampled IRQ retained through the stopped interval. It does
+not establish simultaneous ordinary-HALT/TRAP/IRQ priority, cache,
+reset-first-fetch, or physical synchronization behavior
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, Figure 5.10, 6-14,
 A-4, A-6].
 
@@ -382,18 +419,18 @@ to corroborate the explicit corresponding-L and writeback wording
 ADI-2101-CROSS-1990, printed p. 9-65]. This is instruction-boundary evidence,
 and the fetched attachment now adds explicit native phase evidence: operands
 are captured with the PC+1 request at enabled state 8-to-1 and selected-I,
-PC, and next-word state commit together at state 7-to-8. The superseded
-twenty-four-test, 442,405-clock run covers all 32 selections with no PM-data
+PC, and next-word state commit together at state 7-to-8. The superseding
+forty-eight-test, 444,003-clock run covers all 32 selections with no PM-data
 or DM transaction. Reset-first-fetch and cross-event priority remain open.
 
 The bounded Type 26 model/RTL execution slice verifies that every selected
 status/count/loop/PC action reads cycle-start state and commits on the same
 cycle-end edge across 50,015 stateful cycles. The bounded fetched owner adds
 native state-8 issue and state-7 retirement evidence for all 32 payloads across
-28 directed tests and 442,330 phase clocks. Its valid status/count actions
-commit atomically with PC and the fetched next word; Type 10 CALL supplies one
-verified valid PC-pop path, while valid loop pops remain standalone-only
-evidence. No Type 26 form
+the superseding 48-test, 444,003-clock comparison. Its valid status/count actions
+commit atomically with PC and the fetched next word; Type 10 CALL and Type 11
+DO supply valid PC/loop context, and one nonterminal combined word atomically
+pops valid status, count, PC, and loop tops. No Type 26 form
 starts a PM-data or DM transaction. Automatic flow/interrupt arbitration and
 the OQ-013 physical empty-pop result remain open.
 

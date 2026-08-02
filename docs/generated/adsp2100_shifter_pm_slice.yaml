@@ -59,6 +59,10 @@
     "native_attachment": "TYPE_13_DATA_DESCRIPTOR_CAPTURED_ON_ENABLED_STATE_8_TO_1_AND_ARCHITECTURAL_ACTION_COMMITTED_ON_STATE_7_TO_8",
     "cache_hit_capture": "ISSUE_TIME_CACHE_WORD_RETAINED_UNTIL_DATA_TRANSACTION_COMPLETION",
     "cache_miss_recovery": "RECOVERY_DESCRIPTOR_ACCEPTED_BACK_TO_BACK_ON_THE_FOLLOWING_STATE_8_TO_1_AND_COMPLETED_ON_ITS_STATE_7_TO_8",
+    "interrupt_sampling": "EVERY_ENABLED_PHYSICAL_STATE_7_BOUNDARY",
+    "interrupt_service_gate": "INSTRUCTION_COMPLETE_ONLY",
+    "uncached_interrupt_deferral": "REQUEST_SAMPLED_AT_PM_DATA_COMPLETION_MAY_LATCH_BUT_CANNOT_BE_RECOGNIZED_UNTIL_RECOVERY_FETCH_COMPLETION",
+    "interrupt_entry_handoff": "RECOGNITION_VECTOR_ONLY_PC_STATUS_CONTEXT_AND_VECTOR_FETCH_REMAIN_OUTSIDE_THIS_OWNER",
     "phase_hold": "CAPTURED_DESCRIPTOR_AND_ARCHITECTURAL_STATE_REMAIN_STABLE_UNTIL_NATIVE_COMPLETION",
     "electrical_pin_substates": "LOGICAL_STATES_1_THROUGH_8_ATTACHED; ANALOG_DELAYS_REMAIN_OUTSIDE_THE_ARCHITECTURAL_CORE"
   },
@@ -88,7 +92,8 @@
     "cache_integration_formal": "formal/shifter_pm_cache.sby",
     "native_attachment_python": "tests/test_shifter_pm_native.py",
     "native_attachment_rtl": "sim/unit/tb_adsp2100_shifter_pm_native_slice.sv",
-    "native_attachment_clocks": 50081,
+    "native_attachment_clocks": 50098,
+    "native_interrupt_directed_case": "EDGE_IRQ2_RETAINED_AT_UNCACHED_DATA_COMPLETION_AND_RECOGNIZED_AT_RECOVERY_COMPLETION",
     "native_attachment_formal": "formal/shifter_pm_native.sby",
     "formal": "formal/shifter_pm.sby"
   },

@@ -140,7 +140,7 @@ atomically commit computation/status, optional PM read/PX, and selected-I
 postmodify at data completion; select an issue-time cache hit or one pure
 recovery fetch; and attach issue/commit to native PM state 8-to-1 and
 state 7-to-8. Fourteen logical, six cache, and five native directed tests,
-plus 50,071 logical and 50,083 native model/RTL clocks pass. Whole-core fetch,
+plus 50,071 logical and 50,100 native model/RTL clocks pass. Whole-core fetch,
 shared-PM ownership, control-event arbitration, and hidden cache cases remain
 open
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-6–3-7, 6-3–6-7,
@@ -193,8 +193,13 @@ outer terminal remains OQ-018. Two hand-derived fixtures, every numeric-target
 assembler/disassembler form, exhaustive 24-bit RTL decode, twelve directed
 model tests, and 554,309 model-versus-RTL cycles cover the bounded setup state
 [ADI-UM-1989, printed pp. 4-5–4-8, 4-16–4-19, 6-1, 6-13–6-14, A-2,
-A-10]. Loop-terminal execution is verified separately; fetch overlap,
-interrupts, waits, and external bus phases remain outside this slice.
+A-10]. The bounded ordinary-fetch owner additionally retires Type 11 through
+native PM phases, evaluates non-counter/ASTAT/CE terminal conditions, selects
+loopback or exit, restores nested CE context, and gives taken explicit flow
+precedence. Six owner tests in the 48-test, 444,003-clock comparison also
+cover a valid Type 26 loop pop. Interrupt/cache/reset-first-fetch interaction
+and unresolved OQ-018 automatic/manual combinations remain outside that
+attachment.
 
 Type 8 encodes Z `[18]`, AMF `[17:13]`, YOP `[12:11]`, XOP `[10:8]`, and
 two four-bit DREG move selectors. The model and RTL execute all 476,672
@@ -207,7 +212,7 @@ exhaustive Python/RTL partitioning, canonical algebraic assembly plus raw
 alias preservation, and 983,386 model-versus-RTL cycles provide bounded
 evidence [ADI-UM-1989, printed pp. 2-6–2-20, 6-4–6-10, A-2, A-5–A-7,
 A-11]. The bounded fetched owner additionally exercises every compute-field
-tuple and every move-source/destination pair in both banks across 442,392
+tuple and every move-source/destination pair in both banks across 444,003
 phase clocks, including atomic state-7 action/PC/next-word retirement. Active
 control flow, reset-first-fetch, interrupt, and unified PM/cache ownership
 remain outside that attachment.
@@ -246,10 +251,10 @@ cover the bounded execution state [ADI-UM-1989, printed pp. 4-3–4-5,
 also executes all 507,904 source-closed words. It issues the taken target or
 false-path PC+1 at state 8, commits the same address and any CALL/CNTR action
 at state 7, and fails closed before issue when NOT CE lacks valid CNTR context.
-Twenty-eight owner tests and 442,330 model/RTL phase clocks pass, including a
-fetched CALL return consumed by Type 26 POP PC. Active-loop terminal
-arbitration, cache invalidation/ownership, interrupts, reset-first-fetch, and
-non-Type-10 control transfers remain outside this attachment.
+The superseding 48-test, 444,003-clock owner comparison passes, including a
+fetched CALL return consumed by Type 26 POP PC and taken explicit-flow
+precedence at a loop terminal. Cache invalidation/ownership, interrupts,
+reset-first-fetch, and other control transfers remain outside this attachment.
 
 Type 19 encodes fixed prefix `0000101100000000`, I `[7:6]`, fixed-zero bit
 `[5]`, S `[4]`, and COND `[3:0]`. I selects I4 through I7, S selects JUMP or
@@ -265,8 +270,14 @@ exhaustive 24-bit RTL decode, twelve directed tests, and 50,259 model/RTL
 cycles cover selected-I validity, all targets, conditions, PMA drive intent,
 CALL stacking, CNTR transitions, overflow, reset, and conflicts
 [ADI-UM-1989, printed pp. 3-1–3-2, 4-3–4-4, 4-20, 6-13–6-14, A-3,
-A-6]. Active-loop arbitration, the following instruction fetch, interrupts,
-waits, and PMA pin phases remain outside the bounded slice.
+A-6]. The ordinary fetched owner now executes every source-closed word. True
+flow issues the known cycle-start I4-I7 target at state 8; false flow issues
+wrapped PC+1 without requiring a known I. Routed state-7 completion commits
+PC, any CALL push, and any JUMP NOT CE counter transition. Its 48 tests and
+444,003 clocks cover all four targets, unknown-target rejection, Type 19 CALL
+context consumed by Type 20 RTS, and taken explicit-flow precedence at a loop
+terminal. Interrupts, cache ownership, reset-first-fetch, and remaining
+cross-event priority remain outside the attachment.
 
 Type 20 encodes fixed prefix `0000101000000000000`, T `[4]`, and COND
 `[3:0]`; T selects RTS when zero and RTI when one. All 32 field combinations
@@ -282,9 +293,18 @@ disassembler forms, exhaustive 24-bit RTL decode, twelve directed tests, and
 50,254 model/RTL cycles cover false/taken flow, RTS/RTI stack differences,
 atomic status restoration, NOT CE preservation, reset, and conflicts
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-7, 4-9–4-10, 6-14 Table 6.8,
-A-4, A-6]. Active-loop arbitration, interrupt recognition/vectoring, the
-following instruction fetch, waits, and external bus phases remain outside
-the bounded slice.
+A-4, A-6]. The ordinary fetched owner now also executes all 32 words. At
+state-8 issue it selects wrapped PC+1 or a valid live PC-stack top; routed
+state-7 completion commits PC, the PC pop, and for RTI the simultaneous status
+pop/restore. Its 47 directed tests and 444,003 phase clocks cover every RTS
+condition, valid RTI, Type 10/Type 19 CALL-to-RTS context, fail-closed missing
+context, taken explicit-return precedence at a loop terminal, and a private-
+owner interrupt entry whose fetched RTI restores status and refetches the
+discarded word. Separately composed state-7-sampled requests are retained
+through ordinary HALT and normal BG; a raw-DM structural composition also
+samples and retains an IRQ through native DMACK extensions. Fetched-DM
+ownership, cache ownership, reset-first-fetch, recognition during PM-data, and
+simultaneous-event priority remain outside this attachment.
 
 Type 22 encodes `00001000000000000000 COND[3:0]`. All sixteen condition
 forms are source-backed. The phase-aware boundary samples the condition at
@@ -296,8 +316,16 @@ and releasing HALT resumes at PC+1. `NOT CE` does not mutate CNTR. Two
 hand-derived fixtures, every assembler/disassembler form, exhaustive 24-bit
 RTL decode, twelve directed model tests, and 50,168 model/RTL clocks pass
 [ADI-UM-1989, printed pp. 4-3–4-4, 4-25, 5-14–5-15, Figure 5.10, 6-14,
-A-4, A-6]. General HALT synchronization, BR/BG, interrupt arbitration, and
-attachment to the separate PM bus controller remains open. SC-013 records
+A-4, A-6]. The ordinary native fetched owner now evaluates all sixteen words,
+fetches PC+1, emits a taken retirement event, and gives a taken Type 22
+explicit-flow precedence over automatic loop actions; 48 tests and 444,003
+model/RTL clocks cover every condition and both loop outcomes. Its active-low
+HALT composition holds the fetched PC+1 word, clears TRAP on HALT assertion,
+and resumes only after HALT release with DMACK high; eleven tests and 50,048
+clocks cover the attached handshake plus one separately sampled IRQ retained
+through the stopped interval. Simultaneous ordinary HALT recognition is
+conflict-reported, while simultaneous IRQ/TRAP, cache ownership, reset-first-
+fetch, and physical synchronization remain open. SC-013 records
 MAME's lower-authority
 reserved classification.
 
@@ -312,12 +340,13 @@ algebraic forms, exhaustive 24-bit RTL decode, ten directed model tests, and
 executes one DIVS plus fifteen DIVQ operations for positive and negative signed
 cases. The ordinary-fetch owner now also retires every divisor form from both
 banks and both old-AQ paths; a consecutive pair proves that the second DIVQ
-reads the first iteration's retired AF/AY0/AQ state within the 442,392-clock
+reads the first iteration's retired AF/AY0/AQ state within the 444,003-clock
 native-fetch comparison
 [ADI-UM-1989, printed pp. 2-9–2-13, 4-21, 6-9, A-4, B-1–B-8]. Appendix B's
 documented quotient-correction exceptions remain software responsibilities;
-A fetched DIVS-to-DIVQ dependency is also covered; active loops, interrupts,
-and unified PM/cache/event ownership remain outside this attachment.
+A fetched DIVS-to-DIVQ dependency and automatic loop selection are also
+covered; interrupts and unified PM/cache/event ownership remain outside this
+attachment.
 
 Type 24 encodes fixed `DIVS` with YOP `[12:11]` and XOP `[10:8]`. Original
 prose permits AY1 or AF as the upper dividend and all eight ALU-X sources as
@@ -329,11 +358,11 @@ codes fail closed. Two hand-derived fixtures, every legal algebraic form,
 exhaustive 24-bit RTL decode, eleven directed model tests, and 50,109 stateful
 model/RTL cycles provide bounded standalone evidence. The ordinary-fetch owner
 also retires every legal divisor/upper-source combination in both banks and a
-dependent DIVS-to-DIVQ sequence within its 442,392-clock comparison
+dependent DIVS-to-DIVQ sequence within its 444,003-clock comparison
 [ADI-UM-1989, printed pp. 2-9–2-13,
 4-21, 6-6–6-9, A-4, B-1–B-8; ADI-2101-CROSS-1990, printed pp. 9-17–9-18,
-later-device operand corroboration only]. Reset-first-fetch, active-loop,
-interrupt, PM-data/cache, and unified event priority remain outside this
+later-device operand corroboration only]. Reset-first-fetch, interrupt,
+PM-data/cache, and unresolved unified event priority remain outside this
 attachment.
 
 Type 15 encodes `SF[14:11]`, `XOP[10:8]`, and a signed eight-bit immediate
@@ -359,12 +388,12 @@ selected-bank state and commit together at cycle end. This defines 25,648
 executable words; 32,768 unresolved bit-15-one words, 4,096 XOP `001` words,
 and 3,024 same-destination words fail closed. Two hand fixtures, all supported
 syntax forms, exhaustive Python/RTL partitioning, and 82,597 stateful cycles
-provide bounded evidence. A separate 442,392-clock fetched comparison retires
+provide bounded evidence. A separate 444,003-clock fetched comparison retires
 every canonical packet with PC+1 native PM overlap and atomic DREG/shifter/
 status/PC/next-word commit
 [ADI-UM-1989, printed pp. 1-5, 2-6–2-7, 2-18, 5-5–5-8, 6-4–6-7, A-3,
-and A-7]. Loop-terminal and interrupt-abort priority remain outside the
-attachment; bit 15 remains OQ-021.
+and A-7]. Automatic loop selection is attached; interrupt-abort and unresolved
+event priority remain outside the attachment, and bit 15 remains OQ-021.
 
 Type 16 encodes SF `[14:11]`, XOP `[10:8]`, fixed-zero bits `[7:4]`, and COND
 `[3:0]`. All sixteen SF functions are legal: LSHIFT, ASHIFT, and NORM
@@ -400,7 +429,11 @@ corroborated but not established by pinned MAME
 [MAME-ADSP2100-CORE, commit
 030fefcbd14e47c01ec9d67655be90f64a1dc8ab, lines 1375–1394;
 MAME-ADSP2100-OPS, same commit, lines 440–450 and 532–543]. Fetch, PC,
-interrupt adjacency, and bus phases remain outside this slice.
+interrupt adjacency, and bus phases remain outside this standalone slice. The
+combined fetched owner separately proves that Type 17 observes the live SSTAT
+low byte as `0x55`, `0x45`, `0x65`, and `0x75` across empty, nonempty,
+overflowed, and popped stack states. This closes the bounded low-byte data
+path without promoting the provisional OQ-016 upper-byte extension.
 
 Type 26 stack control is a bounded semantic class beyond NOP.
 `docs/generated/adsp2100_stack_control.yaml` records the 32 field-defined
@@ -423,7 +456,7 @@ pp. 3-47 and A-4]. The hand fixture also drives the database-based
 assembler/disassembler round trip. The shared ordinary-fetch owner now also
 retires this exact word at its native state-7 completion; directed sequences
 cover positive and negative saturation in both banks plus the MV-false path
-within the 442,392-clock fetched comparison.
+within the 444,003-clock fetched comparison.
 
 A primary-backed Type 18 record closes all 256 field-defined mode-control
 words. The four independent two-bit fields are AS `[11:10]`, OL `[9:8]`,
@@ -450,7 +483,7 @@ The bounded ordinary-fetch owner now connects the same action to the single
 shared architectural-state owner. An enabled state-8-to-1 edge captures the
 cycle-start I/M/L operands with the PC+1 fetch request; only the state-7-to-8
 retirement edge writes the selected I together with PC and the fetched next
-word. All 32 words execute in the 442,405-clock comparison, and directed
+word. All 32 words execute in the 444,003-clock comparison, and directed
 checks prove preservation of M/L, ASTAT, and the PM-data/DM interfaces.
 
 A bounded stateful execution slice connects Type 26 to all four stack
@@ -465,9 +498,11 @@ assembler/disassembler syntax, and whole-core logical bus ownership remain
 open. The bounded ordinary-fetch owner now also accepts all 32 words. Fetched
 status push/pop and count pop use valid live stack context. A fetched Type 10
 CALL now populates the PC stack, and a following Type 26 POP PC verifies that
-valid path; loop pops still exercise only fail-closed empty preservation. All
-payloads retire atomically with PC and the fetched next word at native state 7
-across the superseding 442,330-clock comparison. NOP,
+valid path. Type 11 supplies valid PC/loop context, and one nonterminal
+`0x04001f` sequence combines those tops with valid status/count entries before
+atomically popping all four stack classes. All payloads retire with PC and the
+fetched next word at native state 7
+across the superseding 444,003-clock comparison. NOP,
 Type 2 bounded logical execution, Type 6, Type 7, Type 9, Type 18, Type 21,
 and Type 25 are the class-complete
 source-backed semantic entries in the main instruction table. Type 16 has a bounded semantic

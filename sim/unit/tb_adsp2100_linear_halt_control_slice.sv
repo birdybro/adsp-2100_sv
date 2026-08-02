@@ -3,16 +3,17 @@
 
 module tb_adsp2100_linear_halt_control_slice;
     logic clk;
-    logic [76:0] stimulus;
-    logic [11:0] expected_control_pre;
-    logic [101:0] expected_core_pre;
-    logic [119:0] expected_post;
+    logic [80:0] stimulus;
+    logic [18:0] expected_control_pre;
+    logic [102:0] expected_core_pre;
+    logic [121:0] expected_post;
 
     logic reset;
     logic [2:0] phase;
     logic phase_advance;
     logic halt_n;
     logic dmack;
+    logic [3:0] irq_n;
     logic instruction_setup;
     logic [13:0] setup_pc;
     logic [23:0] setup_opcode;
@@ -31,6 +32,13 @@ module tb_adsp2100_linear_halt_control_slice;
     logic effective_phase_advance;
     logic halted;
     logic halt_phase_conflict;
+    logic trap;
+    logic trap_event;
+    logic trap_halt_recognized;
+    logic trap_handoff;
+    logic trap_resume_event;
+    logic trap_release_blocked;
+    logic trap_halt_conflict;
 
     logic issue_boundary;
     logic setup_accepted;
@@ -79,6 +87,7 @@ module tb_adsp2100_linear_halt_control_slice;
     logic exp_setup_accepted;
     logic exp_instruction_issue;
     logic exp_retire_event;
+    logic exp_trap_event;
     logic exp_pre_instruction_valid;
     logic exp_pre_pending;
     logic exp_unsupported_instruction;
@@ -107,6 +116,8 @@ module tb_adsp2100_linear_halt_control_slice;
     logic [23:0] exp_pmd_write_data;
 
     logic [1:0] exp_post_halt_mode;
+    logic exp_post_trap;
+    logic exp_post_trap_handoff;
     logic exp_post_instruction_valid;
     logic exp_post_pending;
     logic [13:0] exp_post_pc;
@@ -134,14 +145,15 @@ module tb_adsp2100_linear_halt_control_slice;
     integer vector_count;
 
     assign {
-        reset, phase, phase_advance, halt_n, dmack,
+        reset, phase, phase_advance, halt_n, dmack, irq_n,
         instruction_setup, setup_pc, setup_opcode,
         pmd_read_data, pmd_read_data_valid, probe_code
     } = stimulus;
 
     assign {
         exp_issue_boundary, exp_setup_accepted, exp_instruction_issue,
-        exp_retire_event, exp_pre_instruction_valid, exp_pre_pending,
+        exp_retire_event, exp_trap_event,
+        exp_pre_instruction_valid, exp_pre_pending,
         exp_unsupported_instruction, exp_reserved_subencoding,
         exp_phase_conflict, exp_integration_conflict,
         exp_internal_conflict, exp_provisional_source_extension,
@@ -156,6 +168,7 @@ module tb_adsp2100_linear_halt_control_slice;
 
     assign {
         exp_post_halt_mode,
+        exp_post_trap, exp_post_trap_handoff,
         exp_post_instruction_valid, exp_post_pending,
         exp_post_pc, exp_post_opcode,
         exp_probe_valid, exp_probe_data,
@@ -173,6 +186,7 @@ module tb_adsp2100_linear_halt_control_slice;
         .phase_advance_i(phase_advance),
         .halt_n_i(halt_n),
         .dmack_i(dmack),
+        .irq_n_i(irq_n),
         .instruction_setup_i(instruction_setup),
         .instruction_setup_pc_i(setup_pc),
         .instruction_setup_opcode_i(setup_opcode),
@@ -190,6 +204,13 @@ module tb_adsp2100_linear_halt_control_slice;
         .effective_phase_advance_o(effective_phase_advance),
         .halted_o(halted),
         .halt_phase_conflict_o(halt_phase_conflict),
+        .trap_o(trap),
+        .trap_event_o(trap_event),
+        .trap_halt_recognized_o(trap_halt_recognized),
+        .trap_handoff_o(trap_handoff),
+        .trap_resume_event_o(trap_resume_event),
+        .trap_release_blocked_o(trap_release_blocked),
+        .trap_halt_conflict_o(trap_halt_conflict),
         .issue_boundary_o(issue_boundary),
         .instruction_setup_accepted_o(setup_accepted),
         .instruction_issue_o(instruction_issue),
@@ -263,7 +284,10 @@ module tb_adsp2100_linear_halt_control_slice;
                     halt_mode, state_three_boundary, halt_recognized,
                     halt_stop_event, resume_event, release_blocked,
                     instruction_issue_inhibit, phase_hold,
-                    effective_phase_advance, halted, halt_phase_conflict
+                    effective_phase_advance, halted, halt_phase_conflict,
+                    trap, trap_event, trap_halt_recognized,
+                    trap_handoff, trap_resume_event,
+                    trap_release_blocked, trap_halt_conflict
                 } !== expected_control_pre) begin
                     $fatal(
                         1,
@@ -275,14 +299,18 @@ module tb_adsp2100_linear_halt_control_slice;
                             resume_event, release_blocked,
                             instruction_issue_inhibit, phase_hold,
                             effective_phase_advance, halted,
-                            halt_phase_conflict
+                            halt_phase_conflict, trap, trap_event,
+                            trap_halt_recognized, trap_handoff,
+                            trap_resume_event, trap_release_blocked,
+                            trap_halt_conflict
                         },
                         expected_control_pre
                     );
                 end
                 if ({
                     issue_boundary, setup_accepted, instruction_issue,
-                    retire_event, instruction_valid, transaction_pending,
+                    retire_event, trap_event,
+                    instruction_valid, transaction_pending,
                     unsupported_instruction, reserved_subencoding,
                     phase_conflict, integration_conflict, internal_conflict,
                     provisional_source_extension,
@@ -294,6 +322,7 @@ module tb_adsp2100_linear_halt_control_slice;
                 } !== {
                     exp_issue_boundary, exp_setup_accepted,
                     exp_instruction_issue, exp_retire_event,
+                    exp_trap_event,
                     exp_pre_instruction_valid, exp_pre_pending,
                     exp_unsupported_instruction, exp_reserved_subencoding,
                     exp_phase_conflict, exp_integration_conflict,
@@ -322,11 +351,13 @@ module tb_adsp2100_linear_halt_control_slice;
                 #2 clk = 1'b1;
                 #1;
                 if ({
-                    halt_mode, instruction_valid, transaction_pending, pc,
+                    halt_mode, trap, trap_handoff,
+                    instruction_valid, transaction_pending, pc,
                     mstat, imask, cntr_valid, sstat, alternate_bank,
                     count_stack_depth, count_stack_overflow, pm_bus_active
                 } !== {
-                    exp_post_halt_mode, exp_post_instruction_valid,
+                    exp_post_halt_mode, exp_post_trap,
+                    exp_post_trap_handoff, exp_post_instruction_valid,
                     exp_post_pending, exp_post_pc, exp_mstat, exp_imask,
                     exp_cntr_valid, exp_sstat, exp_alternate_bank,
                     exp_count_stack_depth, exp_count_stack_overflow,

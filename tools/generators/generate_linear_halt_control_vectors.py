@@ -22,6 +22,7 @@ from sim.reference_models.adsp2100_model import (  # noqa: E402
     UNKNOWN,
     apply_linear_halt_control_cycle,
     read_dreg,
+    register_code_by_name,
 )
 
 
@@ -187,6 +188,14 @@ def generate_lines(
         "type14_retire": 0,
         "type15_retire": 0,
         "type16_retire": 0,
+        "trap_event": 0,
+        "trap_acknowledged": 0,
+        "trap_handoff": 0,
+        "trap_resumed": 0,
+        "trap_dmack_blocked": 0,
+        "irq_recognized": 0,
+        "irq_deferred_halt": 0,
+        "irq_entry_on_resume": 0,
     }
 
     def emit(
@@ -196,6 +205,7 @@ def generate_lines(
         setup: tuple[int, int] | None = None,
         pmd: int = 0,
         pmd_valid: bool = True,
+        irq_n: int = 0xF,
         probe: int | None = None,
     ) -> None:
         nonlocal state, phase
@@ -213,6 +223,7 @@ def generate_lines(
             phase_advance=advance,
             halt_n=halt_n,
             dmack=dmack,
+            irq_n=irq_n,
             instruction_setup=setup_value,
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
         )
@@ -236,6 +247,28 @@ def generate_lines(
             and isinstance(state.core.instruction, ExactWord)
             and state.core.instruction.value & 0xFF80F0 == 0x0E0000
         )
+        coverage["trap_event"] += int(result.trap_event)
+        coverage["trap_acknowledged"] += int(
+            result.trap_halt_recognized
+        )
+        coverage["trap_handoff"] += int(result.trap_handoff)
+        coverage["trap_resumed"] += int(result.trap_resume_event)
+        coverage["trap_dmack_blocked"] += int(
+            result.trap_release_blocked
+        )
+        coverage["irq_recognized"] += int(
+            result.core.interrupt_recognition_event
+        )
+        coverage["irq_deferred_halt"] += int(
+            result.control.phase_hold
+            and state.core.interrupt_vectoring
+            and not result.core.interrupt_vector_issue_event
+        )
+        coverage["irq_entry_on_resume"] += int(
+            result.control.resume_event
+            and result.core.interrupt_entry_event
+            and result.core.interrupt_vector_issue_event
+        )
 
         stimulus = 0
         for value, width in (
@@ -244,6 +277,7 @@ def generate_lines(
             (advance, 1),
             (halt_n, 1),
             (dmack, 1),
+            (irq_n, 4),
             (setup is not None, 1),
             (0 if setup is None else setup[0], 14),
             (0 if setup is None else setup[1], 24),
@@ -272,6 +306,13 @@ def generate_lines(
             (control.effective_phase_advance, 1),
             (control.halted, 1),
             (control.phase_conflict, 1),
+            (result.trap_asserted, 1),
+            (result.trap_event, 1),
+            (result.trap_halt_recognized, 1),
+            (result.trap_handoff, 1),
+            (result.trap_resume_event, 1),
+            (result.trap_release_blocked, 1),
+            (result.trap_halt_conflict, 1),
         ):
             control_pre = _append(control_pre, value, width)
 
@@ -283,13 +324,14 @@ def generate_lines(
             (core.instruction_setup_accepted, 1),
             (core.instruction_issue, 1),
             (core.retire_event, 1),
+            (core.trap_event, 1),
             (state.core.instruction_valid, 1),
             (state.core.pending, 1),
             (core.unsupported_instruction, 1),
             (core.reserved_subencoding, 1),
             (core.phase_conflict, 1),
             (core.integration_conflict, 1),
-            (False, 1),
+            (core.internal_conflict, 1),
             (core.provisional_source_extension, 1),
             (state.core.architecture.pc.value, 14),
             (
@@ -326,6 +368,8 @@ def generate_lines(
         post = 0
         for value, width in (
             (int(post_state.control.mode), 2),
+            (post_state.trap_asserted, 1),
+            (post_state.trap_handoff, 1),
             (post_state.core.instruction_valid, 1),
             (post_state.core.pending, 1),
             (post_state.core.architecture.pc.value, 14),
@@ -355,12 +399,59 @@ def generate_lines(
         ):
             post = _append(post, value, width)
         lines.append(
-            f"{stimulus:020x} {control_pre:03x} "
-            f"{core_pre:026x} {post:030x}"
+            f"{stimulus:021x} {control_pre:05x} "
+            f"{core_pre:026x} {post:031x}"
         )
         state = post_state
         if control.effective_phase_advance:
             phase = LogicalPhase((int(phase) + 1) & 7)
+
+    emit(reset=True, pmd_valid=False)
+    phase = LogicalPhase.STATE_8
+    emit(setup=(4, 0x08000F))
+    phase = LogicalPhase.STATE_8
+    emit()
+    for _ in range(6):
+        emit()
+    emit(pmd=0)
+    emit()
+    halt_n = False
+    emit()
+    emit()
+    halt_n = True
+    dmack = False
+    emit()
+    dmack = True
+    emit()
+
+    # A level IRQ sampled at the state-7 stop boundary is retained while the
+    # HALT composition owns state 8, then enters only on qualified resume.
+    writable = register_code_by_name(writable=True)
+    emit(reset=True, pmd_valid=False)
+    phase = LogicalPhase.STATE_8
+    emit(setup=(0x0100, _type7(writable["ICNTL"], 0x10)))
+    phase = LogicalPhase.STATE_8
+    for next_opcode in (_type7(writable["IMASK"], 0xF), 0):
+        emit()
+        for _ in range(6):
+            emit()
+        emit(pmd=next_opcode)
+    emit()
+    emit()
+    emit()
+    halt_n = False
+    emit()
+    emit()
+    emit()
+    emit()
+    emit(pmd=0, irq_n=0xB)
+    emit(irq_n=0xF)
+    emit(irq_n=0xF)
+    halt_n = True
+    dmack = False
+    emit(irq_n=0xF)
+    dmack = True
+    emit(irq_n=0xF)
 
     emit(reset=True, pmd_valid=False)
     phase = LogicalPhase.STATE_8

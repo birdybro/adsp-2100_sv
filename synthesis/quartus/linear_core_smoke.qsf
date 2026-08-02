@@ -29,6 +29,11 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dag.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_modify_address_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_stack_control_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_direct_jump_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_do_until_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_indirect_jump_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_return_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_trap_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_sequencer_flow.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_alu.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturation_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_mr_saturate.sv
@@ -43,6 +48,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_immediate
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_shift_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shift_move_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_interrupt_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_fetch_client.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_core_slice.sv
 set_global_assignment -name SDC_FILE linear_core_smoke.sdc
@@ -55,6 +61,7 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to clk_i
 set_instance_assignment -name VIRTUAL_PIN ON -to reset_i
 set_instance_assignment -name VIRTUAL_PIN ON -to phase_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to phase_advance_i
+set_instance_assignment -name VIRTUAL_PIN ON -to interrupt_sample_advance_i
 set_instance_assignment -name VIRTUAL_PIN ON -to instruction_issue_inhibit_i
 set_instance_assignment -name VIRTUAL_PIN ON -to bus_relinquished_i
 set_instance_assignment -name VIRTUAL_PIN ON -to instruction_setup_i
@@ -62,6 +69,7 @@ set_instance_assignment -name VIRTUAL_PIN ON -to instruction_setup_pc_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to instruction_setup_opcode_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to irq_n_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to probe_code_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to "*_o"
 

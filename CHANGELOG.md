@@ -8,6 +8,315 @@ semantic versioning after its first release.
 
 ### Added
 
+- Bounded fetched execution of one fully valid combined Type 26 stack-control
+  context. A directed ordinary-fetch sequence creates status and count-stack
+  entries, uses Type 11 DO UNTIL to create simultaneous PC/loop context away
+  from the terminal address, and retires `POP STS, POP CNTR, POP LOOP, POP PC`
+  as one `0x04001f` instruction. ASTAT/MSTAT/IMASK and CNTR restore from their
+  cycle-start tops while all four stack depths become empty on the same native
+  state-7 edge. The 48 directed owner tests and unchanged 444,003-clock
+  differential pass. OQ-018 still governs a manual action at an automatic loop
+  terminal, and OQ-013 still governs physical empty-pop effects.
+
+- Primary-source review of the reset-first-fetch boundary. The original 1989
+  manual fixes PMA `0x0004`, state-4 RESET hold, and state-5 release, while the
+  original 1987 data sheet provides a RESET/CLKIN-only Figure 9 and separate
+  ordinary PM-read figures. Neither source shows PMS/PMRD across the partial
+  release sequence, so OQ-024 remains open and no reset-specific strobe
+  waveform is inferred.
+
+- One bounded program-memory/cache owner containing all three real clients:
+  retained ordinary fetch, Type 5 ALU/MAC-plus-PM, and Type 13 shifter-plus-PM.
+  Exactly one 16-word cache receives ordinary and both recovery-fetch fills;
+  both PM-data clients consume the same pre-cycle lookup state; rejected
+  descriptors retry; routed completion advances only its captured owner; and
+  normal BR/BG masks the common native PM outputs. State-external Type 5 and
+  Type 13 action clients now commit into the retained fetch client's sole
+  architectural-state owner with explicit reset-unknown validity sidecars.
+  Sequential automatic issue now derives legal Type 5/Type 13 selection from
+  the retained opcode and PC+1. A cache hit retires and installs its next word
+  in the same logical instruction cycle; a miss commits the data action once,
+  performs one pure recovery fetch, and retires with that returned word. The
+  14-bit PC wraps exactly, and a pending IRQ is deferred through recovery,
+  recognized at whole-instruction retirement, and enters the shared PC/status
+  context before the ordinary client fetches its vector. Active-loop PM issue
+  fails closed pending OQ-008 rather than resampling an uncertain loop
+  predicate. The original HALT state machine is now attached at this same
+  combined boundary: ordinary fetch completes and stops in state 8, while a
+  state-3 request during Type 5/Type 13 PM data invalidates an issue-time hit,
+  commits the action once, performs exactly one external recovery for the
+  captured client, and stops only after that recovery. Release requires HALT
+  high and DMACK high. Unsourced BR/HALT overlaps reject the new request and
+  report a conflict without claiming device priority. Forty directed
+  checks and 51,428 independent-model/RTL clocks cover 88 ordinary, 126 Type
+  5, and 85 Type 13 accepts; 170 fills; 54 Type 5 and 39 Type 13 completions;
+  49/34
+  external recoveries; three automatic Type 5 issues and two Type 13 issues;
+  one hit and four recovery retirements; twenty-seven following fetches; one loop
+  rejection; one deferred and recognized IRQ plus a second entry/fetched-RTI
+  round trip that restores reset-unknown ASTAT/MSTAT validity; three HALT
+  recognitions/stops/resumes, two forced recoveries, one blocked release, four
+  held clocks, one
+  fail-closed BR/HALT overlap, zero HALT attachment conflicts, five client
+  conflicts, 2,217 masked grant clocks, and 63 BR/BG resumes. Strict
+  RTL/formal-harness lint passes; SymbiYosys/Yosys are unavailable. The
+  implementation now captures Type 8/Type 9 and Type 5 compute actions at the
+  existing state-8 issue boundary, gives PM-data operands dedicated selected-
+  bank DREG read ports, and removes a redundant integration-local interrupt/
+  ordinary-action conflict path after asserting their structural mutual
+  exclusion. These are implementation conveniences; state-8 issue, state-7
+  completion, old-value sampling, and architectural instruction latency are
+  unchanged. Fetched Type 8, Type 9, Type 14, Type 15, Type 16, Type 17, Type 21,
+  Type 23,
+  Type 24, and Type 25 retirement now updates the same reset-unknown validity
+  sidecars consumed by Type 5/Type 13. Directed dependencies cover
+  unconditional Type 8, condition-true Type 9, parallel Type 14 shifter/move
+  results, Type 15 immediate shifts, condition-true Type 16 shifts, known
+  DIVQ/DIVS results, both known MV paths for MR saturation, unknown Type 9/
+  Type 16 predicates, valid and unknown Type 21 postmodify dependencies,
+  unknown DIVQ/DIVS operands, unknown MV, and the Type 16 EXP LO no-write
+  exception when old SE is known not to equal `0xf1`.
+  Unknown possible writes invalidate their destinations rather than exposing
+  a two-state value. Type 17 now carries cycle-start source validity through
+  DREG, DAG, ASTAT, MSTAT, IMASK, ICNTL, CNTR, SB, and PX destinations. The
+  directed chains prove that unknown DAG/PX values invalidate a following PM
+  address/data word, that unknown status/control/SB values remain unknown
+  through a second internal move into a PM store, and that unknown MSTAT
+  rejects bank-dependent fetched and PM-client actions until the required
+  bits are restored by a known write. This is validity accounting for
+  documented reset-unknown state, not an invented binary value. The status
+  stack now stores eight ASTAT, four MSTAT, and one IMASK validity bits beside
+  each accepted 16-bit entry, using the exact same LIFO/saturation selection.
+  Direct differential vectors vary data and validity independently across
+  50,037 clocks. An end-to-end combined-owner sequence invalidates all three
+  status groups, pushes the context, overwrites them with known values, and
+  proves that POP STS restores the captured invalid classifications. The
+  sidecar is implementation-only metadata, not an architectural stack-field
+  claim. A further fetched Type 17 sequence reads the live composed SSTAT low
+  byte at reset-empty (`0x55`), status-nonempty (`0x45`), status-full with
+  sticky overflow (`0x65`), and empty with overflow retained (`0x75`). This
+  closes the bounded architectural SSTAT source path; the observed upper-byte
+  zero extension remains explicitly PROVISIONAL under OQ-016. A fully
+  constrained 20 ns Cyclone V fit now closes with
+  8,156 ALMs, 3,036 registers, three DSPs, no RAM, zero unconstrained paths,
+  +1.340 ns worst multicorner setup, +0.165 ns worst hold,
+  +9.045 ns worst minimum-pulse-width slack, and 53.59 MHz worst slow-corner
+  Fmax. The verification-only aggregate `integration_conflict_o` observation
+  is explicitly constrained for second-edge sampling; every architectural,
+  PM, BR/BG, HALT, and client-event output retains the one-cycle 50 MHz
+  requirement. The narrower 25 ns
+  linear-owner fit also closes after the interface change with 3,735 ALMs,
+  1,895 registers, two DSPs, no RAM, +5.337 ns worst setup, +0.160 ns worst
+  hold, 50.86 MHz worst slow-corner Fmax, and zero unconstrained paths.
+  Type 5 and Type 13 completion outputs now select their captured pending
+  descriptors directly. This implementation-only refactoring removed an
+  impossible live issue/decode-to-completion bypass exposed by the first
+  post-extension fit without changing state-8 issue, state-7 completion, or
+  architectural state. OQ-016 narrow-source upper-bit behavior,
+  TRAP/interrupt/HALT/BR cross-event priority, active-loop/DM composition, and
+  whole-core execution are not claimed. The
+  complete `make test` regression passes with this attachment.
+
+- Bounded uncached-PM-data interrupt deferral in the real Type 5 and Type 13
+  native/cache owners. The original four-pin recognizer continues sampling at
+  each enabled physical state-7 boundary, while owner instruction completion
+  gates service. A directed edge-sensitive IRQ2 therefore latches without
+  recognition at a cache-miss data completion and recognizes only when the
+  immediately following external recovery fetch completes. Six model tests
+  and 50,100 independent-model/RTL clocks pass for Type 5; six tests and
+  50,098 clocks pass for Type 13. Both expose recognition/vector handoff but
+  do not claim shared PC/status entry or simultaneous-event priority. The full
+  `make test`, strict `make lint`, and all 76 formal assertion-syntax recipes
+  pass; SymbiYosys/Yosys remain unavailable. Fully constrained Cyclone V fits
+  pass for the updated native and IRQ-inactive HALT tops. Type 5 native/HALT
+  use 1,935/1,946 ALMs, 1,757/1,768 registers, one DSP/no RAM, and close at
+  25 ns with +3.967/+3.651 ns worst setup and 47.54/46.84 MHz worst slow-
+  corner Fmax. Type 13 native/HALT use 2,102/2,094 ALMs, 1,658/1,655
+  registers, no DSP/RAM, and close at 20/25 ns with +3.666/+7.946 ns setup
+  and 61.22/58.64 MHz worst slow-corner Fmax. All four report zero
+  unconstrained clocks, ports, or paths.
+
+- Bounded original IRQ/DMACK-wait composition. A raw DM descriptor is admitted
+  only beside an accepted ordinary PM fetch, DMACK-low freezes that
+  architectural owner in state 7 while the native DM pins traverse the full
+  repeated eight-state sequence, and each physical wait-state state 7 still
+  samples IRQ without permitting service. A directed edge-sensitive IRQ2 is
+  retained from the first wait boundary through the repeated cycle and is
+  recognized only when PM and DM complete together after DMACK is sampled
+  high. Four model/contract tests and 50,000 independent-model/RTL clocks pass,
+  covering 1,356 paired accepts, 446 full-cycle waits, 446 wait-state IRQ
+  samples, 1,355 aligned completions, and both DM directions. An unpaired raw
+  descriptor fails closed. This does not attach a fetched DM instruction;
+  uncached PM-data deferral, simultaneous-event priority, and pulses without a
+  physical state-7 sample remain open. The complete regression passes 731
+  Python checks and every generated RTL differential; strict lint and all 75
+  formal recipes pass assertion syntax, while SymbiYosys/Yosys are unavailable.
+  A fully constrained Cyclone V fit closes at 25 ns with 3,937 ALMs, 1,711
+  registers, two DSPs, no RAM, +1.850 ns worst setup slack, +0.164 ns worst
+  hold slack, 43.2 MHz worst slow-corner Fmax, and zero unconstrained paths.
+
+- Retained state-7 interrupt recognition through the documented HALT and bus-
+  grant no-service intervals. The active-low IRQ inputs are now connected to
+  the ordinary-fetch HALT, private BR/BG, and retained-fetch/shared-PM BR/BG
+  compositions. A directed IRQ2 is sampled while stop/grant is pending, no
+  vector request or context push occurs while state 8 is held or BG is active,
+  and the retained request enters through the existing vectoring-NOP path on
+  the qualified state-8-to-state-1 resume edge. Three new directed tests bring
+  those compositions to 11 tests/50,048 clocks, 6 tests/50,054 clocks, and 7
+  tests/50,054 clocks respectively. The complete regression passes 727 Python
+  checks and every generated RTL differential; strict lint and all 74 formal
+  recipes pass assertion syntax, while SymbiYosys/Yosys are unavailable. The
+  fully constrained Cyclone V HALT and private-BR/BG fits close their 25 ns
+  constraints with 3,867/3,838 ALMs, 1,657/1,671 registers,
+  +1.199/+1.379 ns setup, +0.166/+0.156 ns hold, and 42.02/42.34 MHz worst
+  slow-corner Fmax. After the issue-boundary compute-action and selected-bank
+  read-path changes, the retained shared-PM owner uses 3,862 ALMs and 1,953
+  registers and closes at 20 ns with +1.822 ns worst setup, +0.165 ns worst
+  hold, +9.049 ns worst minimum-pulse-width slack, and 55.01 MHz worst slow-
+  corner Fmax. All use two DSPs/no RAM and report zero unconstrained paths. An
+  IRQ pulse wholly contained in an interval with no state-7 sample, new
+  recognition during a DMACK wait or uncached PM-data pair, and simultaneous
+  IRQ/TRAP/raw-PM priority remain explicitly unimplemented.
+
+- Original four-pin interrupt recognition plus bounded ordinary-fetch entry,
+  vectoring, and return. A new independent model and portable RTL block sample
+  active-low IRQ0–IRQ3 only at enabled state 7, implement ICNTL edge/level
+  selection, retain edge requests, apply IMASK, choose fixed IRQ3-to-IRQ0
+  priority, and emit vectors 0–3. Nine directed/model checks and 50,027
+  model/RTL clocks pass. The private fetched owner now retires the executing
+  instruction on recognition, discards the concurrently fetched following
+  word, performs the documented vectoring-NOP cycle, pushes post-instruction
+  PC and ASTAT/MSTAT/IMASK, applies the nesting mask, fetches the vector, and
+  uses the existing fetched RTI path to restore status and refetch the ignored
+  word. Effective MODE CONTROL and MSTAT/ICNTL/IMASK write adjacency retains
+  and defers the request under OQ-015. The first post-reset edge comparison is
+  an observable fail-closed baseline under new OQ-025. Two owner tests bring
+  the superseding comparison to 47 tests and 444,003 clocks. The complete
+  regression passes 724 Python checks and every generated RTL differential;
+  strict lint and all 74 formal recipes pass assertion syntax, while
+  SymbiYosys/Yosys are unavailable. Four fully constrained
+  Cyclone V fits report zero unconstrained paths and use two DSPs/no RAM. At
+  25 ns the IRQ-enabled private owner, IRQ-inactive BR/BG composition, and
+  IRQ-inactive HALT/TRAP composition use 3,870/3,739/3,749 ALMs and
+  1,674/1,644/1,649 registers, close setup by +0.355/+0.593/+1.130 ns, and
+  reach 40.58/40.97/41.89 MHz worst slow-corner Fmax. The IRQ-inactive 20 ns
+  retained shared-PM owner remains 3,860 ALMs/1,694 registers, misses setup by
+  4.171 ns, and reaches 41.37 MHz. Active IRQ integration with HALT, BG,
+  DMACK waits, and PM-data/cache ownership remains open.
+
+- Fetched execution and HALT handoff for all sixteen original Type 22
+  conditional TRAP words. The native ordinary-fetch owner samples the
+  cycle-start condition, selects PC+1 for a taken TRAP, emits one event only
+  at routed state-7 retirement, suppresses automatic terminal flow when taken,
+  and leaves it eligible when false. Unknown CE remains fail-closed. Its HALT
+  composition asserts TRAP at retirement, retains the already fetched PC+1
+  word during the state-8 hold, changes a low HALT acknowledgment into a
+  handoff, qualifies release with DMACK, and resumes by issuing the retained
+  word at state 8-to-1. Simultaneous ordinary HALT recognition and TRAP
+  retirement is reported as an unresolved conflict rather than assigned an
+  invented priority. Three fetched-owner additions bring that comparison to
+  47 tests and 444,003 deterministic clocks across every condition, both NOT
+  CE outcomes, event timing, and true/false automatic-loop precedence. Two
+  HALT additions bring that composition to 10 tests and 50,018 clocks,
+  including one complete assertion/clear/handoff/blocked-release/restart
+  sequence. The standalone 50,168-clock Type 22 comparison remains exhaustive
+  phase evidence. The generated contracts, architecture/timing documents,
+  formal harnesses, and all Verilator/Yosys/Quartus source manifests now carry
+  the connected decoder and event boundary. The complete `make test` regression
+  passes 713 Python checks and every generated RTL differential; strict lint and
+  all 73 formal recipes pass syntax, while SymbiYosys/Yosys remain unavailable.
+  Four fully constrained Cyclone V fits use two DSPs/no RAM and report zero
+  unconstrained paths. The 25 ns private, BR/BG, and HALT/TRAP owners use
+  3,711/3,734/3,751 ALMs and 1,686/1,694/1,645 registers, close setup by
+  +1.349/+1.633/+1.344 ns, and reach 42.28/42.80/42.27 MHz worst slow-corner
+  Fmax. The stricter 20 ns retained shared-PM owner uses 3,860 ALMs and 1,694
+  registers, misses setup by 4.171 ns, and reaches 41.37 MHz.
+
+- Fetched execution of all 262,144 original Type 11 DO UNTIL words plus the
+  source-backed automatic loop-terminal path in the bounded native ordinary-
+  fetch owner. DO retirement atomically installs cycle-start PC+1 on the PC
+  stack and `{TERM,ADDR}` on the loop stack while loading the first body word.
+  A live terminal evaluates cycle-start IF/CE state, selects the live PC-stack
+  top for loopback, applies CE post-decrement, or selects PC+1 and atomically
+  pops PC/loop plus the CE count context on exit. A taken Type 10/19/20 flow
+  suppresses automatic loop actions; a false explicit condition leaves them
+  eligible. DO on an active terminal, same-end nesting, and automatic/manual
+  collisions fail closed under the documented restriction or OQ-018. Six new
+  directed owner tests cover non-counter and CE loops, status-before-writeback
+  ordering, explicit-flow precedence, valid Type 11-created Type 26 loop/PC
+  pops, and conflict rejection. The superseding 42-test comparison passes
+  443,606 deterministic native-PM clocks; the standalone 554,309-cycle Type 11
+  comparison remains exhaustive per-word evidence, and `make test` passes 708
+  Python checks plus every generated RTL differential target. Strict lint and
+  all 73 formal recipes pass assertion syntax; SymbiYosys and Yosys remain
+  unavailable. TimeQuest exposed an avoidable generic-register DAG/status mux
+  in the compute operand path, so the shared state now exposes its raw cycle-
+  start DREG view for compute clients without new storage or changed behavior.
+  Four fully constrained Cyclone V fits use two DSPs, no RAM, and have zero
+  unconstrained paths. The 25 ns private, BR/BG, and HALT owners use
+  3,715/3,731/3,720 ALMs and 1,654/1,644/1,682 registers, closing setup by
+  +0.550/+0.329/+1.319 ns with 40.90/40.53/42.23 MHz worst slow-corner Fmax.
+  The stricter 20 ns retained/shared-PM owner uses 3,863 ALMs and 1,676
+  registers, misses setup by 4.335 ns, and reaches 41.09 MHz. Interrupt,
+  reset-first-fetch, unified cache/PM ownership, TRAP/HALT attachment, and
+  complete cross-event priority remain open.
+
+- Fetched execution of all 124 source-closed original Type 19 DAG2-indirect
+  JUMP/CALL words in the bounded native ordinary-fetch owner. A true
+  predicate selects the cycle-start I4-I7 value for the same state-8 PM fetch
+  and eventual PC retirement without modifying that DAG register; a false
+  predicate selects wrapped PC+1 without requiring a known I target. Taken
+  CALL pushes cycle-start PC+1 only at routed state-7 completion, and a
+  following fetched Type 20 RTS consumes that context. JUMP NOT CE applies
+  the existing live-CNTR decrement/outer-count transition at retirement.
+  Unknown predicates, unknown taken targets, the four OQ-012 CALL NOT CE
+  forms, and SC-007 bit-5-one words fail closed before any PM request.
+  Thirty-six directed owner tests and 443,512 deterministic model/RTL phase
+  clocks pass, and the complete `make test` regression passes all 702 Python
+  checks. The 50,259-cycle standalone Type 19 comparison remains the
+  exhaustive per-word evidence, and the unchanged BR/BG, HALT, and retained-
+  fetch/shared-PM/BR-BG compositions pass 50,003 clocks each. Strict lint and
+  all 73 formal assertion recipes parse cleanly; SymbiYosys and Yosys are
+  unavailable. Four fully constrained Cyclone V fits use two DSPs/no RAM and
+  have zero unconstrained paths. The 25 ns private, BR/BG, and HALT owners use
+  3,645/3,652/3,689 ALMs and 1,586/1,576/1,606 registers, with worst setup
+  slacks of -0.514/-0.264/-0.321 ns and worst slow-corner Fmax values of
+  39.19/39.58/39.49 MHz. The stricter 20 ns retained/shared-PM owner uses
+  3,753 ALMs and 1,651 registers, misses setup by 5.787 ns, and reaches
+  38.78 MHz. Timing inspection keeps the existing monolithic Type 8/9 MAC
+  paths, not Type 19 DAG target selection, as the critical paths. Reset-first-
+  fetch, active-loop precedence, interrupts, cache ownership, and complete
+  cross-event priority remain open.
+
+- Fetched execution of all 32 original Type 20 conditional RTS/RTI words in
+  the bounded native ordinary-fetch owner, subject to valid cycle-start stack
+  context for a taken return. A taken RTS requests the live PC-stack top and
+  pops it only at routed state-7 completion. A taken RTI performs the same PC
+  transfer while atomically popping the four-entry status stack and restoring
+  ASTAT/MSTAT/IMASK. False forms fetch wrapped PC+1 without requiring stack
+  context; return NOT CE samples CNTR without decrement, restore, or count
+  pop. Unknown predicates and OQ-013 missing taken context fail closed before
+  any PM request. Thirty-two directed owner tests and 442,324 deterministic
+  model/RTL phase clocks pass, including every condition through RTS, valid
+  RTI restoration, both missing-context cases, and unchanged counter state.
+  The standalone 50,254-cycle Type 20 comparison remains the exhaustive
+  per-word evidence. Active-loop terminal precedence, interrupt entry and
+  vectoring, cache invalidation/ownership, reset-first-fetch, and Type 19
+  fetched integration remain open.
+  Focused BR/BG, HALT, and retained-fetch/shared-PM/BR-BG compatibility
+  regressions remain passing at 50,003 clocks each. Strict lint and all 73
+  formal assertion recipes parse cleanly; SymbiYosys and Yosys are
+  unavailable. Four fully constrained Cyclone V fits have zero unconstrained
+  paths and use two DSPs/no RAM: the 25 ns private owner uses 3,595 ALMs and
+  1,569 fitted registers and closes with +0.079 ns worst setup; the 25 ns HALT
+  composition uses 3,620/1,599 and closes with +0.288 ns; the 25 ns BR/BG
+  composition uses 3,621/1,584 and misses by 1.050 ns at 38.39 MHz; and the
+  stricter 20 ns retained/shared-PM owner uses 3,722/1,621 and misses by
+  5.587 ns at 39.08 MHz. Timing inspection identifies the existing monolithic
+  Type 8 MAC path, not Type 20 return selection, as the worst setup path.
+  The full `make test` regression passes all 698 Python checks and every
+  generated/exhaustive RTL differential target.
+
 - Fetched execution of all 507,904 source-closed original Type 10 direct
   JUMP/CALL words in the bounded native ordinary-fetch owner. The current
   instruction now selects either wrapped PC+1 or the taken 14-bit target for

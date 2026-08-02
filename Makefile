@@ -1,6 +1,7 @@
 PYTHON ?= python3
 VERILATOR ?= verilator
-LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
+LINEAR_EXECUTION_RTL = rtl/core/adsp2100_interrupt_control.sv \
+	rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_compute_move_decode.sv \
 	rtl/core/adsp2100_compute_move_action.sv \
 	rtl/core/adsp2100_conditional_compute_decode.sv \
@@ -13,6 +14,11 @@ LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_modify_address_action.sv \
 	rtl/core/adsp2100_stack_control_decode.sv \
 	rtl/core/adsp2100_direct_jump_decode.sv \
+	rtl/core/adsp2100_do_until_decode.sv \
+	rtl/core/adsp2100_indirect_jump_decode.sv \
+	rtl/core/adsp2100_conditional_return_decode.sv \
+	rtl/core/adsp2100_conditional_trap_decode.sv \
+	rtl/core/adsp2100_sequencer_flow.sv \
 	rtl/core/adsp2100_alu.sv rtl/core/adsp2100_mr_saturation_decode.sv \
 	rtl/core/adsp2100_mr_saturate.sv \
 	rtl/core/adsp2100_mr_saturation_action.sv \
@@ -26,16 +32,48 @@ LINEAR_EXECUTION_RTL = rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_conditional_shift_action.sv \
 	rtl/core/adsp2100_shift_move_action.sv
 
+PROGRAM_CLIENTS_RTL = rtl/packages/adsp2100_pkg.sv \
+	rtl/packages/adsp2100_register_pkg.sv \
+	rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+	rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+	rtl/core/adsp2100_mode_control_decode.sv \
+	rtl/core/adsp2100_internal_move_decode.sv \
+	rtl/core/adsp2100_register_file.sv \
+	rtl/core/adsp2100_dag_register_file.sv \
+	rtl/core/adsp2100_status_registers.sv \
+	rtl/core/adsp2100_counter.sv \
+	rtl/core/adsp2100_sequencer_stacks.sv \
+	rtl/core/adsp2100_status_stack.sv \
+	rtl/core/adsp2100_architectural_state.sv \
+	$(LINEAR_EXECUTION_RTL) \
+	rtl/core/adsp2100_linear_fetch_client.sv \
+	rtl/core/adsp2100_compute_pm_decode.sv \
+	rtl/core/adsp2100_compute_dm_decode.sv \
+	rtl/core/adsp2100_compute_dm_slice.sv \
+	rtl/core/adsp2100_compute_pm_slice.sv \
+	rtl/core/adsp2100_compute_pm_shared_state_client.sv \
+	rtl/core/adsp2100_shifter_pm_decode.sv \
+	rtl/core/adsp2100_shifter_pm_slice.sv \
+	rtl/core/adsp2100_shifter_pm_shared_state_client.sv \
+	rtl/core/adsp2100_instruction_cache.sv \
+	rtl/core/adsp2100_program_bus.sv \
+	rtl/core/adsp2100_program_owner_bus.sv \
+	rtl/core/adsp2100_bus_control.sv \
+	rtl/core/adsp2100_halt_control.sv \
+	rtl/wrappers/adsp2100_reset_bus_grant.sv \
+	rtl/core/adsp2100_program_owner_bus_control.sv \
+	rtl/core/adsp2100_program_clients_owner_control_slice.sv
+
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests shifter-pm-owner-tests compute-pm-owner-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests linear-dm-wait-tests shifter-pm-owner-tests compute-pm-owner-tests program-clients-owner-control-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
 
 test: lint reference-check repository-check decode-tests assembler-tests model-tests \
 	cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests compute-tests dag-tests sequencer-tests register-tests status-tests mode-tests \
-	bus-tests
+	interrupt-tests bus-tests
 	@echo "PASS implemented foundation regression"
 
 lint:
@@ -130,6 +168,10 @@ lint:
 			rtl/core/adsp2100_program_owner_bus_control.sv \
 			rtl/core/adsp2100_compute_pm_owner_control_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--top-module adsp2100_program_clients_owner_control_slice \
+			$(PROGRAM_CLIENTS_RTL); \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_reset_phase \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_reset_phase.sv; \
@@ -212,6 +254,7 @@ lint:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_shifter_pm_halt_slice \
@@ -227,6 +270,7 @@ lint:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv \
 			rtl/core/adsp2100_halt_control.sv \
 			rtl/core/adsp2100_shifter_pm_halt_slice.sv; \
@@ -278,6 +322,28 @@ lint:
 			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_linear_dm_wait_control_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			$(LINEAR_EXECUTION_RTL) \
+			rtl/core/adsp2100_linear_fetch_client.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			rtl/core/adsp2100_linear_dm_wait_control_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_linear_bus_control_slice \
 			rtl/packages/adsp2100_pkg.sv \
@@ -460,6 +526,7 @@ lint:
 			rtl/core/adsp2100_compute_pm_slice.sv \
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_pm_halt_slice \
@@ -479,6 +546,7 @@ lint:
 			rtl/core/adsp2100_compute_pm_slice.sv \
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv \
 			rtl/core/adsp2100_halt_control.sv \
 			rtl/core/adsp2100_compute_pm_halt_slice.sv; \
@@ -860,6 +928,24 @@ compute-pm-owner-tests:
 		echo "SKIP Type 5/shared-PM/BR-BG RTL test: Verilator is not installed"; \
 	fi
 
+program-clients-owner-control-tests:
+	$(PYTHON) -m unittest -v tests.test_program_clients_owner_control
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) \
+			tools/generators/generate_program_clients_owner_control_vectors.py \
+			--output build/program_clients_owner_control_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_program_clients_owner_control \
+			--top-module tb_adsp2100_program_clients_owner_control_slice \
+			$(PROGRAM_CLIENTS_RTL) \
+			sim/unit/tb_adsp2100_program_clients_owner_control_slice.sv; \
+		build/obj_program_clients_owner_control/Vtb_adsp2100_program_clients_owner_control_slice; \
+	else \
+		echo "SKIP three-client/shared-cache/BR-BG RTL test: Verilator unavailable"; \
+	fi
+
 reset-tests:
 	$(PYTHON) -m unittest -v tests.test_reset_phase
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
@@ -1047,6 +1133,7 @@ pm-native-tests:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv \
 			sim/unit/tb_adsp2100_shifter_pm_native_slice.sv; \
 		build/obj_shifter_pm_native_slice/Vtb_adsp2100_shifter_pm_native_slice; \
@@ -1086,6 +1173,44 @@ linear-core-tests:
 		build/obj_linear_core_slice/Vtb_adsp2100_linear_core_slice; \
 	else \
 		echo "SKIP bounded linear-core RTL test: Verilator is not installed"; \
+	fi
+
+linear-dm-wait-tests:
+	$(PYTHON) -m unittest -v tests.test_linear_dm_wait_control
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) \
+			tools/generators/generate_linear_dm_wait_control_vectors.py \
+			--output build/linear_dm_wait_control_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			-Wno-PINCONNECTEMPTY \
+			--Mdir build/obj_linear_dm_wait_control \
+			--top-module tb_adsp2100_linear_dm_wait_control_slice \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			$(LINEAR_EXECUTION_RTL) \
+			rtl/core/adsp2100_linear_fetch_client.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			rtl/core/adsp2100_linear_dm_wait_control_slice.sv \
+			sim/unit/tb_adsp2100_linear_dm_wait_control_slice.sv; \
+		build/obj_linear_dm_wait_control/Vtb_adsp2100_linear_dm_wait_control_slice; \
+	else \
+		echo "SKIP linear/native-DM-wait RTL test: Verilator unavailable"; \
 	fi
 
 linear-bus-control-tests:
@@ -1186,6 +1311,7 @@ halt-tests:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv \
 			rtl/core/adsp2100_halt_control.sv \
 			rtl/core/adsp2100_shifter_pm_halt_slice.sv \
@@ -1213,6 +1339,7 @@ halt-tests:
 			rtl/core/adsp2100_compute_pm_slice.sv \
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv \
 			rtl/core/adsp2100_halt_control.sv \
 			rtl/core/adsp2100_compute_pm_halt_slice.sv \
@@ -1694,6 +1821,7 @@ compute-tests:
 			rtl/core/adsp2100_instruction_cache.sv \
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv \
 			sim/unit/tb_adsp2100_compute_pm_native_slice.sv; \
 		build/obj_compute_pm_native_slice/Vtb_adsp2100_compute_pm_native_slice; \
@@ -2057,7 +2185,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests shifter-pm-owner-tests compute-pm-owner-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
+bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests linear-dm-wait-tests shifter-pm-owner-tests compute-pm-owner-tests program-clients-owner-control-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -2079,9 +2207,23 @@ bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control
 	@echo "PASS bounded cache, Type 2/3/4/12 DM, and Type 5/13 PM transaction regressions"
 
 interrupt-tests:
-	@echo "SKIP interrupt tests: interrupt RTL does not exist"
+	$(PYTHON) -m unittest -v tests.test_interrupt
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_interrupt_vectors.py \
+			--output build/interrupt_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_interrupt_control \
+			--top-module tb_adsp2100_interrupt_control \
+			rtl/core/adsp2100_interrupt_control.sv \
+			sim/unit/tb_adsp2100_interrupt_control.sv; \
+		build/obj_interrupt_control/Vtb_adsp2100_interrupt_control; \
+	else \
+		echo "SKIP interrupt RTL test: Verilator is not installed"; \
+	fi
 
-differential: bus-tests dag-tests sequencer-tests register-tests status-tests mode-tests
+differential: bus-tests dag-tests sequencer-tests register-tests status-tests mode-tests interrupt-tests
 	@echo "PASS available bounded model/RTL differential regressions"
 
 fuzz:
@@ -2090,6 +2232,10 @@ fuzz:
 formal:
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_interrupt_control_formal \
+			rtl/core/adsp2100_interrupt_control.sv \
+			formal/harnesses/adsp2100_interrupt_control_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_instruction_cache_formal \
 			rtl/core/adsp2100_instruction_cache.sv \
@@ -2184,6 +2330,11 @@ formal:
 			rtl/core/adsp2100_compute_pm_owner_control_slice.sv \
 			formal/harnesses/adsp2100_compute_pm_owner_control_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--top-module adsp2100_program_clients_owner_control_formal \
+			$(PROGRAM_CLIENTS_RTL) \
+			formal/harnesses/adsp2100_program_clients_owner_control_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_reset_phase_formal \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_reset_phase.sv \
@@ -2221,6 +2372,30 @@ formal:
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
 			formal/harnesses/adsp2100_linear_core_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			-Wno-PINCONNECTEMPTY \
+			--top-module adsp2100_linear_dm_wait_control_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_load_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_load_non_dreg_immediate_decode.sv \
+			rtl/core/adsp2100_mode_control_decode.sv \
+			rtl/core/adsp2100_internal_move_decode.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_counter.sv \
+			rtl/core/adsp2100_sequencer_stacks.sv \
+			rtl/core/adsp2100_status_stack.sv \
+			rtl/core/adsp2100_architectural_state.sv \
+			rtl/core/adsp2100_internal_move_slice.sv \
+			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			$(LINEAR_EXECUTION_RTL) \
+			rtl/core/adsp2100_linear_fetch_client.sv \
+			rtl/core/adsp2100_linear_core_slice.sv \
+			rtl/core/adsp2100_linear_dm_wait_control_slice.sv \
+			formal/harnesses/adsp2100_linear_dm_wait_control_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			-Wno-PINCONNECTEMPTY \
 			--top-module adsp2100_linear_bus_control_formal \
@@ -2329,6 +2504,7 @@ formal:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv \
 			formal/harnesses/adsp2100_shifter_pm_native_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
@@ -2345,6 +2521,7 @@ formal:
 			rtl/core/adsp2100_shifter_pm_slice.sv \
 			rtl/core/adsp2100_shifter_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_shifter_pm_native_slice.sv \
 			rtl/core/adsp2100_halt_control.sv \
 			rtl/core/adsp2100_shifter_pm_halt_slice.sv \
@@ -2532,6 +2709,7 @@ formal:
 			rtl/core/adsp2100_compute_pm_slice.sv \
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv \
 			formal/harnesses/adsp2100_compute_pm_native_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
@@ -2552,6 +2730,7 @@ formal:
 			rtl/core/adsp2100_compute_pm_slice.sv \
 			rtl/core/adsp2100_compute_pm_cache_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
+			rtl/core/adsp2100_interrupt_control.sv \
 			rtl/core/adsp2100_compute_pm_native_slice.sv \
 			rtl/core/adsp2100_halt_control.sv \
 			rtl/core/adsp2100_compute_pm_halt_slice.sv \
@@ -2826,10 +3005,15 @@ formal:
 			formal/shifter_pm_owner_control.sby; \
 		sby -f -d build/formal_compute_pm_owner_control \
 			formal/compute_pm_owner_control.sby; \
+		sby -f -d build/formal_program_clients_owner_control \
+			formal/program_clients_owner_control.sby; \
 		sby -f -d build/formal_reset_phase formal/reset_phase.sby; \
 		sby -f -d build/formal_bus_control formal/bus_control.sby; \
 		sby -f -d build/formal_halt_control formal/halt_control.sby; \
+		sby -f -d build/formal_interrupt formal/interrupt.sby; \
 		sby -f -d build/formal_linear_core formal/linear_core.sby; \
+		sby -f -d build/formal_linear_dm_wait_control \
+			formal/linear_dm_wait_control.sby; \
 		sby -f -d build/formal_linear_bus_control \
 			formal/linear_bus_control.sby; \
 		sby -f -d build/formal_linear_halt_control \
@@ -2927,8 +3111,12 @@ synth-yosys:
 			synthesis/yosys/bus_control.ys; \
 		yosys -q -l build/yosys_halt_control.log \
 			synthesis/yosys/halt_control.ys; \
+		yosys -q -l build/yosys_interrupt.log \
+			synthesis/yosys/interrupt.ys; \
 		yosys -q -l build/yosys_linear_core.log \
 			synthesis/yosys/linear_core.ys; \
+		yosys -q -l build/yosys_linear_dm_wait_control.log \
+			synthesis/yosys/linear_dm_wait_control.ys; \
 		yosys -q -l build/yosys_linear_bus_control.log \
 			synthesis/yosys/linear_bus_control.ys; \
 		yosys -q -l build/yosys_linear_halt_control.log \
@@ -2947,6 +3135,8 @@ synth-yosys:
 			synthesis/yosys/shifter_pm_owner_control.ys; \
 		yosys -q -l build/yosys_compute_pm_owner_control.log \
 			synthesis/yosys/compute_pm_owner_control.ys; \
+		yosys -q -l build/yosys_program_clients_owner_control.log \
+			synthesis/yosys/program_clients_owner_control.ys; \
 		echo "PASS bounded reset/phase, BR/BG, HALT, linear, PM-data/HALT, shared-PM-owner, and attached client Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
@@ -2965,6 +3155,8 @@ synth-quartus:
 			synthesis/quartus/load_non_dreg_immediate_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/linear_core_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/linear_dm_wait_control_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/linear_bus_control_smoke; \
 		quartus_sh --flow compile \
@@ -3023,6 +3215,8 @@ synth-quartus:
 			synthesis/quartus/compute_pm_native_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_pm_owner_control_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/program_clients_owner_control_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_pm_halt_smoke; \
 		quartus_sh --flow compile \
@@ -3103,6 +3297,9 @@ clean:
 	@find build -maxdepth 1 -type f -name compute_pm_owner_control_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name yosys_compute_pm_owner_control.log -delete
 	@find build -maxdepth 1 -type f -name yosys_compute_pm_owner_control.json -delete
+	@find build -maxdepth 1 -type f -name program_clients_owner_control_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name yosys_program_clients_owner_control.log -delete
+	@find build -maxdepth 1 -type f -name yosys_program_clients_owner_control.json -delete
 	@find build -maxdepth 1 -type f -name data_bus_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_dm_native_vectors.txt -delete
@@ -3113,6 +3310,12 @@ clean:
 	@find build -maxdepth 1 -type f -name linear_core_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name yosys_linear_core.log -delete
 	@find build -maxdepth 1 -type f -name yosys_linear_core.json -delete
+	@find build -maxdepth 1 -type f -name interrupt_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name yosys_interrupt.log -delete
+	@find build -maxdepth 1 -type f -name yosys_interrupt.json -delete
+	@find build -maxdepth 1 -type f -name linear_dm_wait_control_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name yosys_linear_dm_wait_control.log -delete
+	@find build -maxdepth 1 -type f -name yosys_linear_dm_wait_control.json -delete
 	@find build -maxdepth 1 -type f -name yosys_shifter_pm_halt.log -delete
 	@find build -maxdepth 1 -type f -name yosys_shifter_pm_halt.json -delete
 	@find build -maxdepth 1 -type f -name yosys_compute_pm_halt.log -delete
@@ -3285,6 +3488,12 @@ clean:
 	@if [ -d build/obj_linear_core_slice ]; then \
 		find build/obj_linear_core_slice -depth -delete; \
 	fi
+	@if [ -d build/obj_interrupt_control ]; then \
+		find build/obj_interrupt_control -depth -delete; \
+	fi
+	@if [ -d build/obj_linear_dm_wait_control ]; then \
+		find build/obj_linear_dm_wait_control -depth -delete; \
+	fi
 	@if [ -d build/obj_linear_bus_control ]; then \
 		find build/obj_linear_bus_control -depth -delete; \
 	fi
@@ -3299,6 +3508,9 @@ clean:
 	fi
 	@if [ -d build/obj_compute_pm_owner_control_slice ]; then \
 		find build/obj_compute_pm_owner_control_slice -depth -delete; \
+	fi
+	@if [ -d build/obj_program_clients_owner_control ]; then \
+		find build/obj_program_clients_owner_control -depth -delete; \
 	fi
 	@if [ -d build/obj_halt_control ]; then \
 		find build/obj_halt_control -depth -delete; \
@@ -3440,6 +3652,9 @@ clean:
 	@if [ -d build/quartus_linear_core ]; then \
 		find build/quartus_linear_core -depth -delete; \
 	fi
+	@if [ -d build/quartus_linear_dm_wait_control ]; then \
+		find build/quartus_linear_dm_wait_control -depth -delete; \
+	fi
 	@if [ -d build/quartus_linear_bus_control ]; then \
 		find build/quartus_linear_bus_control -depth -delete; \
 	fi
@@ -3533,6 +3748,9 @@ clean:
 	@if [ -d build/quartus_compute_pm_owner_control ]; then \
 		find build/quartus_compute_pm_owner_control -depth -delete; \
 	fi
+	@if [ -d build/quartus_program_clients_owner_control ]; then \
+		find build/quartus_program_clients_owner_control -depth -delete; \
+	fi
 	@if [ -d build/quartus_compute_pm_halt ]; then \
 		find build/quartus_compute_pm_halt -depth -delete; \
 	fi
@@ -3586,6 +3804,7 @@ clean:
 		build/formal_linear_owner_control \
 		build/formal_shifter_pm_owner_control \
 		build/formal_compute_pm_owner_control \
+		build/formal_program_clients_owner_control \
 		build/formal_stack_control_decode \
 		build/formal_stack_control_slice \
 		build/formal_mr_saturation_decode \

@@ -167,6 +167,7 @@ module adsp2100_compute_dm_slice (
     logic [15:0] y_source_data;
     logic [15:0] read_data_2;
     logic [15:0] unused_read_3;
+    logic [47:0] unused_additional_read_data;
     logic [15:0] memory_source_data;
     logic [3:0] read_address_2;
     logic [15:0] dreg_valid_q [0:1];
@@ -565,6 +566,7 @@ module adsp2100_compute_dm_slice (
         .probe_l_data_o(probe_l_data_o),
         .probe_l_valid_o(probe_l_valid_o),
         .setup_write_i(dag_setup_enable),
+        .setup_data_valid_i(1'b1),
         .setup_kind_i(dag_setup_kind_i),
         .setup_address_i(dag_setup_address_i),
         .setup_data_i(dag_setup_data_i),
@@ -583,10 +585,16 @@ module adsp2100_compute_dm_slice (
         .read_address_1_i(y_source_dreg_o),
         .read_address_2_i(read_address_2),
         .read_address_3_i(4'h0),
+        .read_address_4_i(4'h0),
+        .read_address_5_i(4'h0),
+        .read_address_6_i(4'h0),
         .read_data_0_o(x_source_data),
         .read_data_1_o(y_dreg_data),
         .read_data_2_o(read_data_2),
         .read_data_3_o(unused_read_3),
+        .read_data_4_o(unused_additional_read_data[15:0]),
+        .read_data_5_o(unused_additional_read_data[31:16]),
+        .read_data_6_o(unused_additional_read_data[47:32]),
         .write_enable_0_i(register_write_enable),
         .write_address_0_i(register_write_address),
         .write_data_0_i(register_write_data),

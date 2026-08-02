@@ -187,15 +187,39 @@ class ArchitecturalFoundationTests(unittest.TestCase):
             ExactWord(16, 0xA55A),
         )
 
-    def test_type17_unknown_source_and_reserved_destination_fail_closed(self) -> None:
+    def test_type17_unknown_source_propagates_and_reserved_destination_fails(self) -> None:
+        model = ADSP2100Model()
+        model.step(_type17(int(DREG.AR), int(DREG.AX0)))
+        self.assertIs(read_dreg(model.state.primary, DREG.AR), UNKNOWN)
+        self.assertEqual(model.state.pc, ExactWord(14, 5))
+
         model = ADSP2100Model()
         before = model.state
-        with self.assertRaises(UnsupportedFeature):
-            model.step(_type17(int(DREG.AR), int(DREG.AX0)))
-        self.assertEqual(model.state, before)
         with self.assertRaises(ReservedOpcode):
             model.step(_type17(0x32, int(DREG.AX0)))
         self.assertEqual(model.state, before)
+
+    def test_type17_unknown_source_invalidates_dag_and_status_destinations(self) -> None:
+        destinations = {
+            0x14: lambda state: state.dag.m[0],
+            0x30: lambda state: state.astat,
+            0x33: lambda state: state.imask,
+            0x34: lambda state: state.icntl,
+            0x35: lambda state: state.cntr,
+            0x36: lambda state: state.primary.sb,
+            0x37: lambda state: state.px,
+        }
+        for destination, observe in destinations.items():
+            with self.subTest(destination=destination):
+                model = ADSP2100Model()
+                model.step(_type17(destination, int(DREG.AX0)))
+                self.assertIs(observe(model.state), UNKNOWN)
+
+        model = ADSP2100Model()
+        model.step(_type17(0x31, int(DREG.AX0)))
+        self.assertEqual(model.state.mstat_valid_mask, 0)
+        with self.assertRaises(UnsupportedFeature):
+            model.step(_type6(DREG.AX0, 1))
 
     def test_reserved_type7_destination_fails_without_state_change(self) -> None:
         for code in (0x00, 0x32, 0x38):

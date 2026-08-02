@@ -66,8 +66,10 @@ module adsp2100_internal_move_slice (
     logic       overflow_latch_unused;
     logic       saturate_ar_unused;
     logic       not_counter_expired_unused;
+    logic [15:0] move_dreg_read_unused;
     logic [15:0] dreg_read_unused;
     logic [15:0] dreg_read_2_unused;
+    logic [47:0] additional_dreg_read_unused;
     logic [15:0] af_unused;
     logic [15:0] mf_unused;
     logic [39:0] mr_unused;
@@ -82,6 +84,13 @@ module adsp2100_internal_move_slice (
     logic        dag_l_read_valid_unused;
     logic [13:0] pc_stack_top_unused;
     logic        pc_stack_top_valid_unused;
+    logic [15:0] status_stack_top_unused;
+    logic        status_stack_top_valid_unused;
+    logic        status_restore_event_unused;
+    logic [12:0] status_restore_validity_unused;
+    logic [17:0] loop_stack_top_unused;
+    logic        loop_stack_top_valid_unused;
+    logic        icntl_valid_unused;
     logic       unused_observation;
 
     function automatic logic selector_present (
@@ -152,12 +161,19 @@ module adsp2100_internal_move_slice (
         .move_data_i(state_write_data),
         .read_code_i(source_code_o),
         .read_data_o(source_data_o),
+        .move_dreg_read_data_o(move_dreg_read_unused),
         .probe_code_i(probe_code_i),
         .probe_data_o(probe_data_o),
         .dreg_read_address_i(4'h0),
         .dreg_read_data_o(dreg_read_unused),
         .dreg_read_address_2_i(4'h0),
         .dreg_read_data_2_o(dreg_read_2_unused),
+        .dreg_read_address_3_i(4'h0),
+        .dreg_read_data_3_o(additional_dreg_read_unused[15:0]),
+        .dreg_read_address_4_i(4'h0),
+        .dreg_read_data_4_o(additional_dreg_read_unused[31:16]),
+        .dreg_read_address_5_i(4'h0),
+        .dreg_read_data_5_o(additional_dreg_read_unused[47:32]),
         .dreg_write_enable_1_i(1'b0),
         .dreg_write_address_1_i(4'h0),
         .dreg_write_data_1_i(16'h0000),
@@ -209,10 +225,16 @@ module adsp2100_internal_move_slice (
         .stack_status_operation_i(2'b00),
         .stack_counter_ce_test_i(1'b0),
         .stack_count_pop_i(1'b0),
+        .stack_loop_push_i(1'b0),
+        .stack_loop_push_data_i(18'h00000),
         .stack_loop_pop_i(1'b0),
         .stack_pc_push_i(1'b0),
         .stack_pc_push_data_i(14'h0000),
         .stack_pc_pop_i(1'b0),
+        .status_stack_push_validity_i(13'h1fff),
+        .interrupt_entry_i(1'b0),
+        .interrupt_level_i(2'b00),
+        .interrupt_pc_push_data_i(14'h0000),
         .invalid_move_write_o(state_invalid_move_write),
         .internal_conflict_o(internal_conflict_o),
         .count_stack_push_o(count_stack_push_o),
@@ -221,9 +243,16 @@ module adsp2100_internal_move_slice (
         .count_stack_overflow_o(count_stack_overflow_o),
         .pc_stack_top_o(pc_stack_top_unused),
         .pc_stack_top_valid_o(pc_stack_top_valid_unused),
+        .status_stack_top_o(status_stack_top_unused),
+        .status_stack_top_valid_o(status_stack_top_valid_unused),
+        .status_restore_event_o(status_restore_event_unused),
+        .status_restore_validity_o(status_restore_validity_unused),
+        .loop_stack_top_o(loop_stack_top_unused),
+        .loop_stack_top_valid_o(loop_stack_top_valid_unused),
         .astat_o(astat_o),
         .mstat_o(mstat_o),
         .icntl_o(icntl_o),
+        .icntl_valid_o(icntl_valid_unused),
         .imask_o(imask_o),
         .cntr_o(cntr_o),
         .cntr_valid_o(cntr_valid_o),
@@ -246,14 +275,18 @@ module adsp2100_internal_move_slice (
         unused_destination_group, unused_destination_index,
         unused_destination_present, unused_destination_writable,
         unused_source_selector_valid, state_invalid_move_write,
+        icntl_valid_unused,
         alternate_bank_unused, bit_reverse_unused, overflow_latch_unused,
         saturate_ar_unused, not_counter_expired_unused,
-        dreg_read_unused, dreg_read_2_unused, af_unused, mf_unused,
+        move_dreg_read_unused, dreg_read_unused, dreg_read_2_unused,
+        af_unused, mf_unused,
         mr_unused, se_unused, sb_unused, sr_unused,
         dag_i_read_unused, dag_i_read_valid_unused,
         dag_m_read_unused, dag_m_read_valid_unused,
         dag_l_read_unused, dag_l_read_valid_unused,
-        pc_stack_top_unused, pc_stack_top_valid_unused
+        pc_stack_top_unused, pc_stack_top_valid_unused,
+        status_stack_top_unused, status_stack_top_valid_unused,
+        loop_stack_top_unused, loop_stack_top_valid_unused
     };
 
 `ifndef SYNTHESIS

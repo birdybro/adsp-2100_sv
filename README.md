@@ -55,18 +55,67 @@ plus-DREG packets, all eight Type 23 DIVQ words, all sixteen source-closed
 Type 24 DIVS words, the exact Type 25 conditional
 MR-saturation word, all 32 Type 21 address-modify words, all 32 Type 26
 manual stack-control words, all 507,904 source-closed Type 10 direct JUMP/CALL
-words, all
+words, all 262,144 Type 11 DO UNTIL words, all 124 source-closed Type 19
+indirect JUMP/CALL words, all 32 Type 20 conditional RTS/RTI words, all 16
+Type 22 conditional TRAP words, all
 14,336 supported Type 15 immediate
 shift words, all 1,792 supported Type 16 conditional shift words, and all Type
 18 MODE CONTROL words
-execute at the current PC while the selected sequential or Type 10 target word
-is fetched across the sourced state-8 issue/state-7 retire phases, with
-442,330 model/RTL phase clocks and an explicit OQ-016
-provisional-source retirement pulse; a bounded normal-BR/BG attachment adds
-50,003 clocks and 86 complete current-fetch/inhibit/grant/restart handshakes,
-and a separate bounded active-low HALT attachment adds 50,003 clocks and 788
-ordinary-fetch stop/restart sequences with state-8 PM stability and DMACK-
-qualified release, while the standalone HALT sequencer adds 50,033 clocks
+execute at the current PC while the selected sequential, direct, indirect,
+return, or automatic-loop target word is fetched across the sourced state-8
+issue/state-7 retire phases, with 444,003 model/RTL phase clocks and an
+explicit OQ-016
+provisional-source retirement pulse. The private owner also samples the four
+original active-low IRQ pins at state 7, retains edge requests, applies
+ICNTL/IMASK and fixed priority, discards the concurrent following fetch on
+recognition, performs a vectoring NOP with PC/status entry pushes, fetches
+vectors 0–3, and returns through fetched RTI; the standalone recognizer passes
+50,027 clocks, while OQ-025 keeps its first post-reset edge baseline
+provisional. A bounded normal-BR/BG attachment adds
+50,054 clocks and 87 complete current-fetch/inhibit/grant/restart handshakes,
+and a separate bounded active-low HALT attachment adds 50,048 clocks, 789
+ordinary-fetch stop/restart sequences, and one complete fetched Type 22 TRAP
+assertion/HALT-clear/handoff/restart sequence with state-8 PM stability and
+DMACK-qualified release. Both now retain a state-7-sampled IRQ through the
+no-service interval and enter on the qualified resume edge; the retained-fetch/
+shared-PM BR/BG composition covers the same rule across 50,054 clocks. The
+structural ordinary-fetch/raw-DM composition adds 50,000 clocks: each physical
+state-7 pass through a full-cycle DMACK extension can sample IRQ, while the
+architectural owner, PM completion, retirement, vector issue, and context push
+remain held until aligned PM/DM completion. Its raw descriptor is not fetched
+DM instruction ownership. The real Type 5 and Type 13 native/cache owners now
+also sample an edge at uncached PM-data completion without servicing it, then
+release recognition only when the immediately following recovery fetch
+completes; their independent comparisons pass 50,100 and 50,098 clocks. A
+bounded composition places the real retained ordinary-fetch, Type 5, and
+Type 13 clients behind one 16-word cache, one native PM controller, and normal
+BR/BG. Both PM-data clients are state-external action clients of the retained
+fetch client's sole architectural-state owner. Forty directed checks and
+51,428 independent-model/RTL clocks retain the cross-client state/cache/BR-BG
+coverage and now drive a current fetched Type 5 or Type 13 directly from the
+retained opcode and PC. A cache hit installs PC+1 in the same logical
+instruction cycle; a miss commits the PM-data action once, performs one pure
+external recovery fetch, then installs the returned word and advances the
+14-bit PC, including `0x3fff` wrap. A directed edge-sensitive IRQ2 remains
+pending through that miss interval, recognizes only at whole-instruction
+retirement, discards the returned sequential word, pushes PC/status context,
+and fetches vector 2 through the ordinary client. A second IRQ2 sequence enters
+after reset-unknown AX1 has
+invalidated ASTAT/MSTAT, fetches RTI from vector 2, and restores those pre-entry
+validity classifications before dependent PM work. Fetched Type 17 also reads
+the live SSTAT low byte through status-stack empty, nonempty, overflow, and
+empty-with-sticky-overflow transitions; upper extension remains OQ-016. HALT
+is also attached at the
+combined owner: ordinary fetch completes before stopping; a Type 5/Type 13
+PM-data recognition invalidates a cache hit, commits once, performs one forced
+external recovery, and then stops. Release is DMACK-qualified. Simultaneous
+BR/HALT requests fail closed because the sources do not establish priority.
+Active-loop PM issue likewise fails closed. Validity sidecars now cover the
+combined fetched classes and status-stack entry/return paths exercised here.
+Remaining fetched classes, TRAP/interrupt/HALT/BR cross-event priority, DM
+composition, and whole-core
+event ownership remain open. The
+standalone HALT sequencer adds 50,033 clocks
 covering both cycle
 classes, including 335 PM-data recognitions that each emit exactly one forced
 external-fetch issue before stop; a Type 13 attachment adds 50,124 clocks in
@@ -113,8 +162,11 @@ owner, all 32,768 Type 9 conditional ALU/MAC words including documented
 AMF-zero no-operation aliases, 507,904 source-closed Type 10 direct JUMP/CALL
 words with a decoder-connected PC register, native target fetch, shared CALL
 return stacking, JUMP NOT CE counter transitions, and a fetched Type 26 POP PC
-consumer, all 262,144 Type 11 DO UNTIL setup words with
-simultaneous PC/loop-stack state, 124 source-closed Type 19 DAG2-indirect
+consumer, all 262,144 Type 11 DO UNTIL setup words with simultaneous
+PC/loop-stack state plus fetched non-counter/ASTAT/CE automatic loopback/exit
+and explicit-flow precedence, including one nonterminal fetched Type 26 word
+that atomically pops valid status, count, PC, and loop contexts, 124
+source-closed Type 19 DAG2-indirect
 JUMP/CALL words with PMA target observation, all 32 Type 20 conditional RTS/RTI
 words with valid-stack PC/status restoration, all 16 Type 22 conditional TRAP
 words with phase-aware state-7/state-8 assertion and HALT restart, all eight
@@ -132,15 +184,17 @@ Type 16 subencodings remain explicitly unresolved or unsupported. Type 12's
 closed. The 16,384
 Type 10 and four Type 19 CALL NOT CE words remain fail-closed under OQ-012.
 General HALT owner composition beyond the ordinary-fetch and bounded Type 5
-and Type 13 attachments, BR/BG,
-interrupt arbitration, and complete PM strobes remain outside the bounded
-Type 22 controller. Pinned MAME's
+and Type 13 attachments, simultaneous ordinary-HALT/TRAP priority,
+active-interrupt arbitration with those events, reset-first-fetch, and unified
+PM-client PC/opcode flow
+remain outside the fetched Type 22 attachment. Pinned MAME's
 conflicting reserved classification is recorded as SC-013.
 The Type 24 AY0/zero YOP field words remain fail-closed, and the later-device
 division-flag conflict is recorded as SC-014. Both division primitives now
-execute in the bounded ordinary-fetch owner, but active loops, non-Type-10
-control flow, interrupts, reset-first-fetch, and unified PM/cache ownership
-remain open.
+execute in the bounded ordinary-fetch owner alongside Types 10/11/19/20,
+automatic loop flow, and bounded private-owner interrupt entry, but other
+control transfers and active-IRQ composition with PM-data,
+reset-first-fetch, and unified register/event ownership remain open.
 Type 2, Type 3, Type 4, and Type 12 supply logical DM transaction boundaries, and a separate
 native controller reproduces the original active-low DM phases and full-cycle
 DMACK extension. All four clients attach at state 8-to-1 and defer every
@@ -148,11 +202,13 @@ architectural destination, including read data and selected-I postmodify, to
 the qualified state 7-to-8 completion. Types 5 and 13 supply cache-integrated
 logical PM data/recovery
 boundary attached to the original active-low logical pin phases. These remain
-bounded clients, not an integrated fetch/decode/execute bus owner; ordinary
-fetch arbitration and other PM instruction classes remain unimplemented;
-BR/BG attaches only to the bounded ordinary-fetch owner. HALT additionally
-attaches to the Type 5 and Type 13 native-PM owners, while shared-owner
-arbitration remains open.
+bounded clients, not a unified fetch/decode/execute core. The three real
+clients now share one bounded cache/native-PM/BR-BG composition, and Type 5
+and Type 13 use the retained fetch client's sole architectural-state owner.
+Sequential Type 5/Type 13 issue, cache-hit or recovery next-instruction
+installation, retirement-aligned IRQ entry, and the documented ordinary/PM-
+data HALT schedules now use that retained PC/opcode flow. Active loops and
+unsourced simultaneous-event priorities fail closed.
 Type 1 remains an action boundary rather than executable dual-bus state:
 OQ-023 records the unresolved native PM behavior when DMACK extends the
 simultaneous DM cycle.

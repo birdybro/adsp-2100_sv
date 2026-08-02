@@ -18,6 +18,7 @@ read -formal -sv rtl/core/adsp2100_instruction_cache.sv
 read -formal -sv rtl/core/adsp2100_shifter_pm_slice.sv
 read -formal -sv rtl/core/adsp2100_shifter_pm_cache_slice.sv
 read -formal -sv rtl/core/adsp2100_program_bus.sv
+read -formal -sv rtl/core/adsp2100_interrupt_control.sv
 read -formal -sv rtl/core/adsp2100_shifter_pm_native_slice.sv
 read -formal -sv formal/harnesses/adsp2100_shifter_pm_native_formal.sv
 prep -top adsp2100_shifter_pm_native_formal
@@ -35,5 +36,6 @@ rtl/core/adsp2100_instruction_cache.sv
 rtl/core/adsp2100_shifter_pm_slice.sv
 rtl/core/adsp2100_shifter_pm_cache_slice.sv
 rtl/core/adsp2100_program_bus.sv
+rtl/core/adsp2100_interrupt_control.sv
 rtl/core/adsp2100_shifter_pm_native_slice.sv
 formal/harnesses/adsp2100_shifter_pm_native_formal.sv
