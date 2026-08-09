@@ -1,8 +1,8 @@
 # Project progress
 
-**Updated:** 2026-08-01
+**Updated:** 2026-08-09
 
-**Latest verified engineering commit:** `04084b3`
+**Latest verified engineering commit:** `2970496`
 
 **Current milestone:** architecture extraction, executable model, and
 source-backed compute/address-generation/register/status-storage blocks plus

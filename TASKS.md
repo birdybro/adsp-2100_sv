@@ -11,6 +11,14 @@ P2 (qualification), and P3 (release/integration follow-on). Reference IDs refer
 to `docs/references/manifest.yaml`; `TBD-PRIMARY` means that a task cannot
 advance beyond research until a page-level primary citation is added.
 
+## Resume checkpoint
+
+The durable next-session context, verified baseline, preserved evidence gates,
+and recommended first implementation increment are recorded in
+[`artifacts/next_session_handoff.md`](artifacts/next_session_handoff.md).
+Read that file before selecting another open task or changing architectural
+behavior.
+
 ## M1 — Repository and automation foundation
 
 ### FND-001 — Repository and automation foundation

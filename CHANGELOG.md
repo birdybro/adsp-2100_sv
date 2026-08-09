@@ -8,6 +8,14 @@ semantic versioning after its first release.
 
 ### Added
 
+- Added a durable next-session handoff under
+  `artifacts/next_session_handoff.md`. It records the pushed branch and verified
+  engineering commit, the exact validation checkpoint, the recommended bounded
+  RTL-program trace increment for `VERIF-DIFF-001`, the files that form that
+  seam, and the OQ-016/OQ-023/OQ-024 and unpinned-MAME constraints that must not
+  be crossed without new evidence. `TASKS.md` links the handoff before the
+  milestone backlog so a fresh session encounters it during required reading.
+
 - Added the first common differential-program infrastructure for
   `VERIF-DIFF-001`. A versioned implementation-neutral NDJSON trace schema now
   records exact-width values with bitwise known masks, producer provenance,
