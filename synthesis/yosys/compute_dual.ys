@@ -1,0 +1,17 @@
+read_verilog -sv rtl/packages/adsp2100_register_pkg.sv
+read_verilog -sv rtl/core/adsp2100_compute_dual_decode.sv
+read_verilog -sv rtl/core/adsp2100_mr_saturate.sv
+read_verilog -sv rtl/core/adsp2100_alu.sv
+read_verilog -sv rtl/core/adsp2100_mac.sv
+read_verilog -sv rtl/core/adsp2100_dag.sv
+read_verilog -sv rtl/core/adsp2100_dag_register_file.sv
+read_verilog -sv rtl/core/adsp2100_register_file.sv
+read_verilog -sv rtl/core/adsp2100_status_registers.sv
+read_verilog -sv rtl/core/adsp2100_compute_dual_action.sv
+read_verilog -sv rtl/core/adsp2100_compute_dual_slice.sv
+
+hierarchy -check -top adsp2100_compute_dual_slice
+synth -top adsp2100_compute_dual_slice
+check
+stat
+write_json build/yosys_compute_dual.json

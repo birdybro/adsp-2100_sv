@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "status": "SOURCE_BOUNDED_SHARED_DM_REQUEST_SELECTOR",
+  "requesters": ["FETCHED_DM_DESCRIPTOR", "STRUCTURAL_COMPANION_DESCRIPTOR"],
+  "capture_boundary": "ENABLED_STATE_8_TO_STATE_1_EDGE",
+  "selection_policy": "ACCEPT_EXACTLY_ONE_REQUEST",
+  "collision_policy": "FAIL_CLOSED_NO_PRIORITY_CLAIM",
+  "owner_retention": "ACCEPTANCE_THROUGH_ALL_DMACK_WAIT_EXTENSIONS_AND_STATE_7_COMPLETION",
+  "acknowledgement_routing": "SAMPLE_ACCEPT_WAIT_AND_COMPLETION_EVENTS_ROUTE_ONLY_TO_RETAINED_OWNER",
+  "relinquish_behavior": "MASK_BUS_AND_RETAIN_OWNER_AND_DESCRIPTOR",
+  "out_of_phase_behavior": "REJECT_AND_REPORT",
+  "excluded_claims": [
+    "ARCHITECTURAL_REQUEST_PRIORITY",
+    "FETCHED_CLIENT_ATTACHMENT",
+    "ATOMIC_PM_DM_ADMISSION",
+    "INTERRUPT_HALT_RESET_ARBITRATION",
+    "FULL_CORE_ATTACHMENT",
+    "UNDOCUMENTED_INTERNAL_LATCH_TIMING"
+  ],
+  "sources": [
+    {
+      "id": "ADI-UM-1989",
+      "pages": "1-5--1-7, 3-6--3-7, 5-5--5-8",
+      "supports": "single DM interface, concurrent PM/DM operation, DMACK wait-state extension, logical cycle phases"
+    },
+    {
+      "id": "ADI-DATABOOK-1987",
+      "pages": "2-36--2-39",
+      "supports": "original ADSP-2100 DM pins and timing interface"
+    }
+  ],
+  "confidence": "CORROBORATED",
+  "notes": "Mutual exclusion is an implementation invariant. Collision rejection avoids inventing priority. Fetched execution remains on its retained bounded composition until PM and DM requests can be admitted atomically."
+}

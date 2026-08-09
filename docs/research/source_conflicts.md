@@ -176,3 +176,23 @@ later behavior. The default core follows the explicit exact-device table and
 preserves every non-AQ ASTAT bit. Directed model/RTL tests assert that
 preservation. Later-family parameterization, if ever added, must resolve its
 own flag contract independently.
+
+## SC-015 — Later-family external-memory timing does not describe ADSP-2100 pins
+
+The original ADSP-2100 exposes independent external PMA/PMD and DMA/DMD buses
+with separate select and read/write controls. Its DMACK-low timing extends
+processor state seven by a complete processor cycle while retaining the DM
+address/select transaction [ADI-UM-1989, printed pp. 5-5–5-12, especially
+Figure 5.7; ADI-DATABOOK-1987, printed pp. 2-24–2-25 and 2-40–2-41,
+especially Figure 16]. Neither exact-device figure includes the simultaneous
+Type 1 PM pins during that extension.
+
+The 1995 family manual's device table covers ADSP-2101 and later on-chip-memory
+members, not the original external-memory ADSP-2100. Its memory interface
+multiplexes the internal PM and DM buses onto one external address/data bus,
+and its extra-cycle rule serializes an external PM access before an external
+DM access [ADI-UM-FAMILY-1995, printed pp. 1-1–1-3, 10-1–10-4, and 15-18].
+That topology is later-family-only comparative evidence. It cannot decide
+whether original-device PM pins hold, complete once, or repeat while DMACK
+extends a simultaneous Type 1 read. OQ-023 therefore remains open and native
+Type 1 phase attachment remains withheld.

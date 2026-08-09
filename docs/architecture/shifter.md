@@ -157,12 +157,19 @@ source plus SE/SR/SB or AC/AV/SS only where the selected function reads them.
 Type 14 tracks its parallel DREG move independently. A known-false Type 16
 preserves every destination; an unknown predicate invalidates each possible
 write, except EXP LO preserves SE when known old SE is not `0xf1` and therefore
-precludes the write. Five directed dependency checks within the 38-test,
-51,428-clock combined-owner comparison feed the resulting state into following
+precludes the write. Five directed dependency checks within the 45-test,
+51,587-clock combined-owner comparison feed the resulting state into following
 Type 5/Type 13 PM stores. This is implementation validity accounting for the
 documented cycle-start reads and conditional writes, not a new pipeline claim
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18–2-35, 4-25, 6-1–6-11, A-3, and
 A-6–A-7].
+
+The same combined-owner comparison separately tracks Type 12 shifter-result
+validity and its parallel DM-read DREG validity. A known shift with unknown
+returned DMD preserves the known shifter result while invalidating only the
+read destination; an unknown shifter operand with known DMD does the converse.
+The EXP/EXP LO dependency uses the documented SS flag, ASTAT bit 7, rather than
+AQ [ADI-UM-1989, printed pp. 4-20–4-21, 6-11, A-6–A-7].
 
 The separate `adsp2100_shifter_dm_slice` implements the original Type 12
 shifter-plus-DM form for all 108,640 source-closed, noncolliding words. It
@@ -172,3 +179,13 @@ commits shifter/status, optional read DREG, and I post-modification together
 at acknowledgment. The complete Type 12 class is exhaustively partitioned and
 50,069 deterministic state/bus clocks agree with the independent model
 [ADI-UM-1989, printed pp. 5-9–5-12, 6-3–6-7, A-2].
+A native attachment adds six directed tests and 50,064 clocks of state-8 issue,
+full-cycle DMACK extension, and atomic state-7 shifter/read/I completion. The
+ordinary-fetch/native-DM owner now adds three directed checks and 50,000 clocks
+of mixed Type 2/3/4/12 execution. Its 119 Type 12 transactions cover 52 reads,
+67 writes, all 112 sourced `(SF, XOP)` pairs, all 32 DAG/I/M selections, all
+16 DREGs, both directions, old-value store overlap/readback, alternate-bank
+execution, DAG1 bit reversal, circular wrap, one complete wait, and fail-closed
+collision/unavailable-XOP words. Fetched operands and DMD are initialized;
+standalone evidence remains authoritative for unknown validity. Shared-DM and
+cross-event ownership remain open.

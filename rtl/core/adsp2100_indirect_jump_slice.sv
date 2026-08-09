@@ -298,6 +298,16 @@ module adsp2100_indirect_jump_slice (
         .m_read_valid_o(unused_m_read_valid),
         .l_read_data_o(unused_l_read_data),
         .l_read_valid_o(unused_l_read_valid),
+        .i_l_read_address_2_i(3'b000),
+        .m_read_address_2_i(3'b000),
+        /* verilator lint_off PINCONNECTEMPTY */
+        .i_read_data_2_o(),
+        .i_read_valid_2_o(),
+        .m_read_data_2_o(),
+        .m_read_valid_2_o(),
+        .l_read_data_2_o(),
+        .l_read_valid_2_o(),
+        /* verilator lint_on PINCONNECTEMPTY */
         .probe_address_i({1'b1, i_probe_local_i}),
         .probe_i_data_o(i_probe_data_o),
         .probe_i_valid_o(i_probe_valid_o),
@@ -314,6 +324,10 @@ module adsp2100_indirect_jump_slice (
         .i_write_address_i(3'b000),
         .i_write_data_i(14'h0000),
         .i_write_result_valid_i(1'b0),
+        .i_write_enable_2_i(1'b0),
+        .i_write_address_2_i(3'b000),
+        .i_write_data_2_i(14'h0000),
+        .i_write_result_valid_2_i(1'b0),
         .invalid_setup_kind_o(dag_invalid_setup_kind),
         .write_conflict_o(dag_write_conflict)
     );

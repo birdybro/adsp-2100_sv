@@ -100,6 +100,7 @@ class RepositoryTests(unittest.TestCase):
             "docs/architecture/reset_halt_bus_request.md",
             "docs/architecture/external_interface.md",
             "docs/architecture/pipeline.md",
+            "docs/architecture/differential_trace.md",
             "docs/timing/instruction_cycles.md",
             "docs/timing/program_memory_cycles.md",
             "docs/timing/data_memory_cycles.md",

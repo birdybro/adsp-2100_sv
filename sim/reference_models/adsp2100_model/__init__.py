@@ -28,6 +28,12 @@ from .linear_dm_wait_control import (
     LinearDMWaitControlState,
     apply_linear_dm_wait_control_cycle,
 )
+from .data_owner_bus import (
+    DataBusOwner,
+    DataOwnerBusCycleResult,
+    DataOwnerBusState,
+    apply_data_owner_bus_cycle,
+)
 from .conditions import (
     ConditionInputs,
     DO_TERMINATION_MNEMONICS,
@@ -77,6 +83,10 @@ from .compute_dual import (
     COMPUTE_DUAL_CLASS_MASK,
     COMPUTE_DUAL_CLASS_VALUE,
     ComputeDualAction,
+    ComputeDualCycleResult,
+    ComputeDualPending,
+    ComputeDualState,
+    apply_compute_dual_cycle,
     decode_compute_dual,
     is_compute_dual_class,
 )
@@ -571,6 +581,9 @@ __all__ = [
     "COMPUTE_DUAL_CLASS_MASK",
     "COMPUTE_DUAL_CLASS_VALUE",
     "ComputeDualAction",
+    "ComputeDualCycleResult",
+    "ComputeDualPending",
+    "ComputeDualState",
     "COMPUTE_PM_CLASS_MASK",
     "COMPUTE_PM_CLASS_VALUE",
     "ComputePMAction",
@@ -792,6 +805,10 @@ __all__ = [
     "apply_program_bus_cycle",
     "apply_program_owner_bus_cycle",
     "apply_program_owner_bus_control_cycle",
+    "DataBusOwner",
+    "DataOwnerBusCycleResult",
+    "DataOwnerBusState",
+    "apply_data_owner_bus_cycle",
     "apply_program_clients_owner_control_cycle",
     "apply_shifter_pm_owner_control_cycle",
     "apply_compute_pm_owner_control_cycle",
@@ -831,6 +848,7 @@ __all__ = [
     "apply_load_non_dreg_immediate_cycle",
     "apply_compute_dm_cycle",
     "apply_compute_dm_native_cycle",
+    "apply_compute_dual_cycle",
     "is_conditional_shift_class",
     "is_conditional_compute_class",
     "is_compute_dm_class",

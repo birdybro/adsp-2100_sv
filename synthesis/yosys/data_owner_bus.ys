@@ -1,0 +1,9 @@
+read_verilog -sv rtl/packages/adsp2100_pkg.sv
+read_verilog -sv rtl/core/adsp2100_data_bus.sv
+read_verilog -sv rtl/core/adsp2100_data_owner_bus.sv
+
+hierarchy -check -top adsp2100_data_owner_bus
+synth -top adsp2100_data_owner_bus
+check
+stat
+write_json build/yosys_data_owner_bus.json

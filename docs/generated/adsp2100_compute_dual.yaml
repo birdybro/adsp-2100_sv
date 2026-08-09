@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "device": "ADSP-2100",
-  "scope": "SOURCE_CLOSED_TYPE_1_ALU_MAC_PLUS_DM_AND_PM_READ_ACTIONS",
+  "scope": "SOURCE_CLOSED_TYPE_1_ALU_MAC_PLUS_DM_AND_PM_READ_BOUNDED_LOGICAL_EXECUTION",
   "decode": {
     "original_type": 1,
     "opcode_mask": "0xc00000",
@@ -43,6 +43,13 @@
     "conditional": false,
     "memory_directions": "DM_READ_AND_PM_READ_ONLY"
   },
+  "logical_execution": {
+    "issue": "CAPTURE_SELECTED_BANK_COMPUTE_AND_BOTH_DAG_DESCRIPTORS",
+    "hold": "PRESERVE_BOTH_READ_DESCRIPTORS_AND_ALL_ARCHITECTURAL_DESTINATIONS_UNTIL_TRANSACTION_COMPLETE",
+    "completion": "ATOMICALLY_COMMIT_COMPUTE_STATUS_DM_DREG_PM_DREG_PX_AND_BOTH_DAG_I_WRITES",
+    "completion_input": "IMPLEMENTATION_AND_TEST_BOUNDARY_NOT_A_NATIVE_DMACK_OR_PM_PIN_TIMING_CLAIM",
+    "native_attachment": "WITHHELD_UNDER_OQ_023"
+  },
   "source_citations": [
     "ADI-UM-1989 printed pp. 2-6–2-7 and 2-18",
     "ADI-UM-1989 printed pp. 3-1–3-7",
@@ -55,13 +62,16 @@
     "hand_fixtures": "tests/vectors/compute_dual_fixtures.json",
     "tool_round_trip": "tests/test_assembler_disassembler.py",
     "rtl_decode": "sim/unit/tb_adsp2100_compute_dual_decode.sv",
+    "rtl_state": "sim/unit/tb_adsp2100_compute_dual_slice.sv",
     "formal_decode": "formal/compute_dual_decode.sby",
-    "quartus_decode": "synthesis/quartus/compute_dual_decode_smoke.qpf"
+    "formal_state": "formal/compute_dual.sby",
+    "quartus_decode": "synthesis/quartus/compute_dual_decode_smoke.qpf",
+    "quartus_state": "synthesis/quartus/compute_dual_smoke.qpf"
   },
   "unresolved": [
     "OQ_023_NATIVE_PM_BEHAVIOR_DURING_DMACK_EXTENSION",
+    "NATIVE_DUAL_BUS_PHASE_ATTACHMENT",
     "CACHE_RECOVERY_AND_WHOLE_CORE_FETCH_EVENT_ARBITRATION",
-    "ATOMIC_DUAL_BUS_EXECUTION_STATE_AND_NATIVE_ATTACHMENT",
     "PHYSICAL_HARDWARE_DIFFERENTIAL_CONFIRMATION"
   ]
 }

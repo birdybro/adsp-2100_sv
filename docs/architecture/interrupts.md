@@ -76,18 +76,24 @@ and enter through the vectoring-NOP path on the qualified state-8-to-state-1
 resume edge. Those comparisons pass 11 tests/50,048 clocks, 6 tests/50,054
 clocks, and 7 tests/50,054 clocks respectively.
 
-A separate structural composition couples each accepted ordinary fetch to one
-raw native-DM descriptor. A low DMACK sample repeats the complete physical
-state-seven interval while the architectural fetch/execute boundary remains
-held. The interrupt recognizer still receives each physical state-7 sample, so
-an IRQ2 edge first observed during the wait becomes pending, but vector issue,
-context push, instruction retirement, and PM completion remain suppressed
-until the paired PM/DM completion. Four directed/model tests and 50,000
-model/RTL clocks cover 446 wait extensions, 446 interrupt samples during a
-wait, one retained edge-mode request, and service only after the aligned
-completion [ADI-UM-1989, printed pp. 5-9–5-11 and 5-15–5-16]. This raw
-descriptor is verification scaffolding; it does not yet identify or execute a
-fetched DM instruction class.
+A bounded native-DM composition couples each accepted ordinary fetch to a real
+fetched Type 2, legal Type 3, source-closed Type 4, or source-closed Type 12
+descriptor; a raw descriptor remains separate structural scaffolding. A low
+DMACK sample repeats the complete physical state-seven interval while the
+architectural fetch/execute boundary remains held. The interrupt recognizer
+still receives each physical state-7 sample, so an IRQ2 edge first observed
+during the wait becomes pending, but vector issue, context push, instruction
+retirement, and PM completion remain suppressed until paired PM/DM completion.
+The same owner recognizes BR at physical state 3 during a wait while deferring
+grant service until completion. It also recognizes ordinary HALT during a
+real Type 2 wait and defers stop until that same completion/retirement.
+Twenty-two directed/model tests and 50,000 model/RTL clocks cover 111 wait
+extensions/IRQ samples, one retained edge-mode
+request, 12 BR recognitions, three completions before pending grant, and service
+only after the aligned completion. BR overlap with interrupt/TRAP service and
+simultaneous BR/HALT are
+conflict-reported rather than assigned an unsourced priority
+[ADI-UM-1989, printed pp. 5-3–5-16].
 
 The real Type 5 ALU/MAC-plus-PM and Type 13 shifter-plus-PM native/cache
 owners now compose the same recognizer with the documented two-cycle uncached
@@ -101,7 +107,7 @@ completes the instruction and releases recognition. Directed IRQ2 cases plus
 program-client owner now consumes that handoff at whole-instruction recovery
 retirement: a directed Type 5 miss discards the returned sequential opcode,
 pushes PC/status, applies the nesting mask, and issues vector 2 through the
-ordinary client across the 51,428-clock comparison. A second directed sequence
+ordinary client across the 51,587-clock comparison. A second directed sequence
 invalidates ASTAT/MSTAT from reset-unknown AX1 before recognizing IRQ2, accepts
 the shared vector request, executes a fetched RTI at vector 2, and proves that
 the pre-entry invalid classifications are restored before dependent PM work.
@@ -111,10 +117,19 @@ a priority claim for an unresolved simultaneous event.
 
 This is evidence for a request actually sampled at state 7; it is not a claim
 that a shorter asynchronous pulse wholly contained in a stopped/granted
-interval is captured. The structural raw-DM composition establishes state-7
-sampling during a native DMACK extension, and the real Type 5/Type 13 owners
-establish recognition deferral across an uncached PM-data pair. The automatic
-combined owner establishes PC/status entry for one sequential PM miss. Fetched
-DM semantic ownership and simultaneous IRQ with Type 22 TRAP, HALT, BR/BG, an
-active loop, or shared-PM contention remain
-uncomposed rather than assigned an invented priority.
+interval is captured. The native-DM composition establishes state-7 sampling
+during full-cycle DMACK extensions and now derives held descriptors from real
+fetched Type 2, legal Type 3, source-closed Type 4, or source-closed Type 12
+words. Their memory, compute/shifter/status, DAG, PC, and returned-word effects remain paired until aligned
+completion, and only then may the retained request enter. Type 3 covers every
+legal register selector; Type 4 covers all 2,048 compute tuples, all DAG/I/M and
+DREG selectors, and both directions. Fetched vectors use initialized store/
+compute operands and valid DMD; broader unknown propagation remains standalone
+evidence. Its raw descriptor port remains separate structural scaffolding. The
+real Type 5/Type
+13 owners establish
+recognition deferral across an uncached PM-data pair, and the automatic
+combined owner establishes PC/status entry for one sequential PM miss.
+Simultaneous IRQ with Type 22 TRAP, HALT, BR/BG, an active loop, or shared-PM
+contention still lacks sourced priority. The fetched-DM owner reports the
+BR/IRQ/TRAP subset as an integration conflict; it does not choose a winner.

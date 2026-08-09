@@ -102,6 +102,62 @@ def _type26(payload: int) -> int:
     return 0x040000 | (payload & 0x1F)
 
 
+def _type2(*, immediate: int) -> int:
+    return 0xB00000 | ((immediate & 0xFFFF) << 4)
+
+
+def _type3(
+    *, write: bool, address: int = 0x0123, register_code: int = 0
+) -> int:
+    return (
+        0x800000
+        | (int(write) << 20)
+        | ((register_code >> 4) << 18)
+        | ((address & 0x3FFF) << 4)
+        | (register_code & 0xF)
+    )
+
+
+def _type4(
+    *,
+    write: bool,
+    dag: int = 1,
+    destination_feedback: bool = False,
+    amf: int = 0,
+    yop: int = 0,
+    xop: int = 0,
+    dreg: DREG = DREG.AX0,
+) -> int:
+    return (
+        0x600000
+        | ((dag & 1) << 20)
+        | (int(write) << 19)
+        | (int(destination_feedback) << 18)
+        | ((amf & 0x1F) << 13)
+        | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | (int(dreg) << 4)
+    )
+
+
+def _type12(
+    *,
+    write: bool,
+    dag: int = 1,
+    sf: int = 0,
+    xop: int = 2,
+    dreg: DREG = DREG.AX0,
+) -> int:
+    return (
+        0x120000
+        | ((dag & 1) << 16)
+        | (int(write) << 15)
+        | ((sf & 0xF) << 11)
+        | ((xop & 0x7) << 8)
+        | (int(dreg) << 4)
+    )
+
+
 def _type20(*, interrupt_return: bool, condition: int = 0xF) -> int:
     return (
         0x0A0000
@@ -154,6 +210,14 @@ def generate_lines(
         "halt_release_blocked", "halt_hold", "halt_br_conflict",
         "halt_attachment_conflict", "halt_type5_force",
         "halt_type13_force", "halt_ordinary_stop",
+        "dm_type2_accept", "dm_type3_accept", "dm_type4_accept",
+        "dm_type12_accept", "dm_wait", "dm_completion",
+        "paired_pm_dm_completion",
+        "fetched_type3_invalid_dmd",
+        "fetched_type4_compute_valid_dmd_invalid",
+        "fetched_type4_compute_invalid_dmd_valid",
+        "fetched_type12_shift_valid_dmd_invalid",
+        "fetched_type12_shift_invalid_dmd_valid",
     )}
 
     def emit(
@@ -176,6 +240,8 @@ def generate_lines(
         type13_next_valid: bool = True,
         pmd: int = 0,
         pmd_valid: bool = True,
+        dmd: int = 0,
+        dmd_valid: bool = True,
         astat: ExactWord | None = None,
         mstat: ExactWord | None = None,
         dreg: DREGWrite | None = None,
@@ -229,6 +295,7 @@ def generate_lines(
                 ExactWord(14, type13_next) if type13_next_valid else UNKNOWN
             ),
             pmd_read_data=ExactWord(24, pmd) if pmd_valid else UNKNOWN,
+            dmd_read_data=ExactWord(16, dmd) if dmd_valid else UNKNOWN,
             setup_astat=astat,
             setup_mstat=mstat,
             setup_dreg=dreg,
@@ -263,6 +330,7 @@ def generate_lines(
             (dag.address if dag else 0, 3), (dag.value if dag else 0, 14),
             (px is not None, 1), (px.value if px else 0, 8),
             (linear_probe, 6), (pm_probe_dreg, 4), (pm_probe_dag, 3),
+            (dmd, 16), (dmd_valid, 1),
         ):
             stimulus = _append(stimulus, value, width)
 
@@ -328,6 +396,28 @@ def generate_lines(
             (bus.pms_n, 1), (bus.pmrd_n, 1), (bus.pmwr_n, 1),
             (bus.write_data_known, 1),
             (bus.write_data if bus.write_data_known else 0, 24),
+        ):
+            events = _append(events, value, width)
+
+        dm_bus = result.dm.bus
+        for value, width in (
+            (result.architectural_phase_advance, 1),
+            (result.interrupt_wait_sample, 1),
+            (result.dm.fetched_accepted, 1),
+            (result.dm.fetched_dmack_sample, 1),
+            (result.dm.fetched_dmack_accepted, 1),
+            (result.dm.fetched_wait_extension, 1),
+            (result.dm.fetched_completion, 1),
+            (result.dm.fetched_read_sample, 1),
+            (dm_bus.transaction_active, 1), (dm_bus.waiting, 1),
+            (dm_bus.address_output_enable, 1),
+            (dm_bus.control_output_enable, 1),
+            (dm_bus.data_output_enable, 1),
+            (dm_bus.address_known, 1),
+            (dm_bus.address if dm_bus.address_known else 0, 14),
+            (dm_bus.dms_n, 1), (dm_bus.dmrd_n, 1), (dm_bus.dmwr_n, 1),
+            (dm_bus.write_data_known, 1),
+            (dm_bus.write_data if dm_bus.write_data_known else 0, 16),
         ):
             events = _append(events, value, width)
 
@@ -437,10 +527,30 @@ def generate_lines(
              result.halt.halt_stop_event
              and state.halt.mode is HaltControlMode.STOP_PENDING
              and state.interface.owner_bus.owner is ProgramBusOwner.FETCH),
+            ("dm_type2_accept", result.dm.fetched_accepted
+             and state.linear.instruction_valid
+             and isinstance(state.linear.instruction, ExactWord)
+             and (state.linear.instruction.value & 0xE00000) == 0xA00000),
+            ("dm_type3_accept", result.dm.fetched_accepted
+             and state.linear.instruction_valid
+             and isinstance(state.linear.instruction, ExactWord)
+             and (state.linear.instruction.value & 0xE00000) == 0x800000),
+            ("dm_type4_accept", result.dm.fetched_accepted
+             and state.linear.instruction_valid
+             and isinstance(state.linear.instruction, ExactWord)
+             and (state.linear.instruction.value & 0xE00000) == 0x600000),
+            ("dm_type12_accept", result.dm.fetched_accepted
+             and state.linear.instruction_valid
+             and isinstance(state.linear.instruction, ExactWord)
+             and (state.linear.instruction.value & 0xFE0000) == 0x120000),
+            ("dm_wait", result.dm.fetched_wait_extension),
+            ("dm_completion", result.dm.fetched_completion),
+            ("paired_pm_dm_completion", result.dm.fetched_completion
+             and owner.fetch_completion),
         ):
             coverage[key] += int(hit)
 
-        lines.append(f"{stimulus:069x} {events:040x} {post:032x}")
+        lines.append(f"{stimulus:073x} {events:050x} {post:032x}")
         state = result.state
         if phase_override is None and advance:
             phase = LogicalPhase((int(phase) + 1) & 7)
@@ -484,6 +594,182 @@ def generate_lines(
             )
         emit(phase_override=LogicalPhase.STATE_8, px=ExactWord(8, 0x5A))
 
+    # Exercise the four fetched DM classes through the same retained
+    # architectural owner as the three PM clients. Type 2 repeats one full
+    # physical cycle before its paired PM/DM completion.
+    for index, opcode in enumerate((
+        _type2(immediate=0xBEEF),
+        _type3(write=True),
+        _type4(write=True),
+        _type12(write=True),
+    )):
+        reset_pm_operands()
+        emit(
+            phase_override=LogicalPhase.STATE_8,
+            instruction_setup=(0x1200 + index, opcode),
+        )
+        emit(phase_override=LogicalPhase.STATE_8)
+        if index == 0:
+            for use_phase in (
+                LogicalPhase.STATE_1, LogicalPhase.STATE_2,
+                LogicalPhase.STATE_3, LogicalPhase.STATE_4,
+                LogicalPhase.STATE_5,
+            ):
+                emit(phase_override=use_phase)
+            emit(phase_override=LogicalPhase.STATE_6, dmack=False)
+            for use_phase in (
+                LogicalPhase.STATE_7, LogicalPhase.STATE_8,
+                LogicalPhase.STATE_1, LogicalPhase.STATE_2,
+                LogicalPhase.STATE_3, LogicalPhase.STATE_4,
+                LogicalPhase.STATE_5,
+            ):
+                emit(phase_override=use_phase)
+            emit(phase_override=LogicalPhase.STATE_6, dmack=True)
+            emit(
+                phase_override=LogicalPhase.STATE_7,
+                pmd=0, dmd=0xCAFE,
+            )
+        else:
+            bus_cycle(pmd=0, dmd=0xCAFE)
+
+    # The combined owner carries exact validity beside the two-state fetched
+    # Type 3/4/12 data path.  Each case observes the completed memory
+    # destination through the shared DREG probe and the independent compute or
+    # shifter destination through a following Type 5 PM store.
+    reset_pm_operands()
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        instruction_setup=(
+            0x1240,
+            _type3(
+                write=False,
+                address=0x0123,
+                register_code=int(DREG.AX1),
+            ),
+        ),
+    )
+    emit(phase_override=LogicalPhase.STATE_8)
+    bus_cycle(
+        pmd=0,
+        pmd_valid=False,
+        dmd=0,
+        dmd_valid=False,
+        type5_opcode=0x500000 | (int(DREG.AX1) << 4),
+    )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        type5_execute=True,
+        type5_opcode=0x580000 | (int(DREG.AX1) << 4),
+        type5_next=0x1241,
+    )
+    coverage["fetched_type3_invalid_dmd"] += 1
+
+    reset_pm_operands()
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        instruction_setup=(
+            0x1250,
+            _type4(write=False, amf=0x13, dreg=DREG.AX1),
+        ),
+    )
+    emit(phase_override=LogicalPhase.STATE_8)
+    bus_cycle(
+        pmd=0,
+        pmd_valid=False,
+        dmd=0,
+        dmd_valid=False,
+        type5_opcode=0x500000 | (int(DREG.AX1) << 4),
+    )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        type5_execute=True,
+        type5_opcode=0x580000 | (int(DREG.AR) << 4),
+        type5_next=0x1251,
+    )
+    coverage["fetched_type4_compute_valid_dmd_invalid"] += 1
+
+    reset_pm_operands()
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        instruction_setup=(
+            0x1260,
+            _type4(
+                write=False,
+                amf=0x13,
+                xop=2,
+                dreg=DREG.AX1,
+            ),
+        ),
+    )
+    emit(phase_override=LogicalPhase.STATE_8)
+    bus_cycle(
+        pmd=0,
+        pmd_valid=False,
+        dmd=0xBEEF,
+        dmd_valid=True,
+        type5_opcode=0x500000 | (int(DREG.AX1) << 4),
+    )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        type5_execute=True,
+        type5_opcode=0x580000 | (int(DREG.AR) << 4),
+        type5_next=0x1261,
+    )
+    coverage["fetched_type4_compute_invalid_dmd_valid"] += 1
+
+    reset_pm_operands()
+    for register, value in ((DREG.AR, 0x1234), (DREG.SE, 0)):
+        emit(
+            phase_override=LogicalPhase.STATE_8,
+            dreg=DREGWrite(register, ExactWord(16, value)),
+        )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        instruction_setup=(
+            0x1270,
+            _type12(write=False, dreg=DREG.AX1),
+        ),
+    )
+    emit(phase_override=LogicalPhase.STATE_8)
+    bus_cycle(
+        pmd=0,
+        pmd_valid=False,
+        dmd=0,
+        dmd_valid=False,
+        type5_opcode=0x500000 | (int(DREG.AX1) << 4),
+    )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        type5_execute=True,
+        type5_opcode=0x580000 | (int(DREG.SR1) << 4),
+        type5_next=0x1271,
+    )
+    coverage["fetched_type12_shift_valid_dmd_invalid"] += 1
+
+    reset_pm_operands()
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        instruction_setup=(
+            0x1280,
+            _type12(write=False, dreg=DREG.AX1),
+        ),
+    )
+    emit(phase_override=LogicalPhase.STATE_8)
+    bus_cycle(
+        pmd=0,
+        pmd_valid=False,
+        dmd=0xCAFE,
+        dmd_valid=True,
+        type5_opcode=0x500000 | (int(DREG.AX1) << 4),
+    )
+    emit(
+        phase_override=LogicalPhase.STATE_8,
+        type5_execute=True,
+        type5_opcode=0x580000 | (int(DREG.SR1) << 4),
+        type5_next=0x1281,
+    )
+    coverage["fetched_type12_shift_invalid_dmd_valid"] += 1
+
     emit(reset=True, phase_override=LogicalPhase.STATE_8)
     for register, value in ((DREG.AX0, 0x1234), (DREG.AY0, 3)):
         emit(
@@ -503,7 +789,7 @@ def generate_lines(
     emit(phase_override=LogicalPhase.STATE_8, px=ExactWord(8, 0x5A))
     emit(phase_override=LogicalPhase.STATE_8, instruction_setup=(0x0220, 0))
     emit(phase_override=LogicalPhase.STATE_8)
-    bus_cycle(pmd=0xABCDEF)
+    bus_cycle(pmd=0xC00000)
     emit(
         phase_override=LogicalPhase.STATE_8,
         type5_execute=True,

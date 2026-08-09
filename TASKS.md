@@ -42,7 +42,8 @@ advance beyond research until a page-level primary citation is added.
   lawful configured downloads are idempotent, content-validated, hashed, and
   gitignored; missing and mismatched references are reported independently.
 - **Source references:** ADI-MANUAL-INDEX, ADI-ASM-1994,
-  ADI-2101-CROSS-1990, ATARI-ADSP-SCHEM, MAME-ADSP2100-CORE,
+  ADI-2101-CROSS-1990, ADI-DATABOOK-1989, ATARI-ADSP-SCHEM,
+  MAME-ADSP2100-CORE,
   MAME-HARDDRIV, MAME-HARDDRIV-MACHINE
 - **Relevant tests:** `tests/test_reference_manifest.py`,
   `tests/test_reference_scripts.py`
@@ -50,7 +51,21 @@ advance beyond research until a page-level primary citation is added.
   `reference_cache/`; downloaded binaries are never executed. The acquired
   1989 First Edition ADSP-2101 Cross-Software manual is later-device
   comparative evidence only; its §2.5.3 confirms that contemporary System
-  Builder defaulted to ADSP-2100 unless `.ADSP2101` was present.
+  Builder defaulted to ADSP-2100 unless `.ADSP2101` was present. The acquired,
+  hash-pinned 1989 DSP Products Databook now supplies the joint original
+  ADSP-2100/ADSP-2100A data sheet; its printed p. 2-19 closes documented
+  pin/code and architecture/instruction-set compatibility while leaving mask
+  history and errata open.
+  A secondary TU Eindhoven thesis bibliography supplies a search locator for
+  the missing original manual: Third Edition, 1987, order E972b-5-4/87. No
+  lawful scan was found in the official ADI catalog, searched archival
+  directory, or Internet Archive metadata, so this locator does not support
+  any architectural claim and acquisition remains open. The 1989 databook
+  additionally identifies Appendix B of the original ADSP-2100 Emulator Manual
+  as its complete emulator/non-emulator timing comparison. The live Bitsavers
+  directory, exact-title and broad web searches, and exact-title/broad Internet
+  Archive metadata searches found no lawful copy on 2026-08-01, so this more
+  precise OQ-023/OQ-024 acquisition target likewise supplies no behavior yet.
 - **Unresolved questions:** locate the exact original ADSP-2100 Cross-Software
   manual, an ADI-hosted original ADSP-2100/2100A data sheet, and the earliest
   user-manual revision with stable URLs.
@@ -67,14 +82,19 @@ advance beyond research until a page-level primary citation is added.
   interfaces, revision naming, and documented 2100-versus-2100A differences are
   cited to original-device pages; Hard Drivin' fitted part evidence is cited.
 - **Source references:** ADI-DATABOOK-1987 printed pp. 2-15 onward,
-  ADI-UM-1989, ATARI-ADSP-SCHEM
+  ADI-DATABOOK-1989 printed p. 2-19 onward, ADI-UM-1989,
+  ATARI-ADSP-SCHEM
 - **Relevant tests:**
   `tests/test_repository.py::RepositoryTests::test_required_documentation`;
   semantic device-scope claim validation is not yet implemented
 - **Implementation notes:** do not treat assembler convention that “ADSP-2100”
-  includes 2100A as proof of electrical identity.
-- **Unresolved questions:** exact mask/revision differences and authentic
-  power-up state.
+  includes 2100A as proof of electrical identity. The original joint data
+  sheet is stronger: it explicitly establishes pin/code compatibility and
+  identical documented architectures/instruction sets, while distinguishing
+  speed grades and electrical/timing specifications. This is not evidence
+  about undocumented mask fixes.
+- **Unresolved questions:** exact mask/revision/errata differences, per-grade
+  electrical limits, package history, and authentic power-up state.
 - **Confidence:** PROVISIONAL
 
 ## M4 — ADSP-2100 versus ADSP-21xx feature matrix
@@ -466,13 +486,14 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_compute_pm.py`, `tests/test_compute_pm_cache.py`,
   `tests/test_compute_pm_native.py`,
   `sim/unit/tb_adsp2100_shift_move_slice.sv`,
+  `sim/unit/tb_adsp2100_compute_dual_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`,
   `sim/unit/tb_adsp2100_shifter_pm_slice.sv`,
   `sim/unit/tb_adsp2100_compute_move_slice.sv`,
   `sim/unit/tb_adsp2100_compute_dm_slice.sv`, `formal/shift_move.sby`,
   `formal/shifter_dm.sby`, `formal/shifter_pm.sby`,
   `formal/compute_move.sby`, `formal/compute_dm_decode.sby`,
-  `formal/compute_dual_decode.sby`,
+  `formal/compute_dual_decode.sby`, `formal/compute_dual.sby`,
   `formal/compute_pm_decode.sby`, `formal/compute_pm.sby`,
   `formal/compute_pm_cache.sby`, `formal/compute_pm_native.sby`,
   `formal/compute_dm.sby`
@@ -521,8 +542,20 @@ advance beyond research until a page-level primary citation is added.
   destinations, implicit AR/MR compute results, AMF-zero dual fetch, and
   cycle-start/cycle-end ordering. Independent exhaustive Python and RTL,
   primary-derived fixtures, assembler/disassembler, formal assertions, and a
-  constrained Cyclone V decoder project verify selection. Type 1 state/cache/
-  native execution, shared-owner arbitration, and whole-core events remain.
+  constrained Cyclone V decoder project verify selection. A bounded logical
+  state model and RTL slice capture the selected-bank computation plus both
+  old-I/read/postmodify descriptors, hold the complete packet behind one
+  implementation/test completion input, and atomically commit AR/MR and
+  status, both DREG loads, PX, and both selected-I updates. Twelve directed/
+  model checks and 51,069 model/RTL clocks cover all 1,024 `(AMF, YOP, XOP)`
+  tuples, AMF-zero dual reads, both banks, independent DAG1 bit reversal,
+  circular modification, 27,309 held clocks, unknown validity, reset, and
+  conflicts. Its formal harness passes strict elaboration and its fully
+  constrained 25 ns Cyclone V fit uses 1,927 ALMs, 1,253 registers, and one
+  DSP with +2.205 ns worst setup, +0.150 ns worst hold, 43.87 MHz worst slow-
+  corner Fmax, and zero unconstrained clocks, ports, or paths. The completion
+  input is not a DMACK/native-PM timing claim. Type 1 cache/native execution,
+  shared-owner arbitration, and whole-core events remain under OQ-023.
   Type 3 now has a source-closed direct-DM action graph for all general-register
   directions and absolute addresses. Independent model/database decode,
   hand-derived fixtures, exhaustive RTL, formal assertions, algebraic/raw
@@ -1223,7 +1256,7 @@ advance beyond research until a page-level primary citation is added.
   remains explicitly provisional under OQ-016. The fetched combined owner now
   reads live SSTAT values `0x55`, `0x45`, `0x65`, and `0x75` across status-stack
   empty, nonempty, overflow, and empty-with-sticky-overflow transitions in its
-  40-test, 51,428-clock comparison. This establishes the architectural low
+  45-test, 51,587-clock comparison. This establishes the architectural low
   byte without upgrading the provisional upper-byte extension.
   The exact Type 7 slice connects immediate ASTAT/MSTAT/IMASK/ICNTL/CNTR loads
   to the same live state, rejects read-only SSTAT, and passes exact-width and
@@ -1370,7 +1403,9 @@ advance beyond research until a page-level primary citation is added.
   slow-corner Fmax, and zero unconstrained paths.
   A new bounded composition now places the real retained ordinary-fetch,
   Type 5, and Type 13 clients behind exactly one instruction cache, native PM
-  controller, and normal BR/BG controller. Ordinary fetch and both recovery
+  controller, and normal BR/BG controller. The same retained architectural
+  owner now supplies fetched Type 2/3/4/12 descriptors to one attached native
+  DM controller. Ordinary fetch and both recovery
   classes fill that cache, either PM-data client consumes the same pre-cycle
   lookup state, rejected Type 5/Type 13 descriptors retry, and only routed
   completion advances a client. Type 5 and Type 13 now use state-external
@@ -1388,9 +1423,9 @@ advance beyond research until a page-level primary citation is added.
   commits once, overrides an issue-time cache hit, performs exactly one forced
   external recovery, and stops after recovery. Release is HALT-high/DMACK-high
   qualified. BR/HALT overlaps fail closed and report a conflict without an
-  architectural priority claim. Forty directed checks and 51,428
-  independent-model/RTL clocks cover 88/126/85 ordinary/Type 5/Type 13
-  accepts, 170 fills, 54 Type 5 and 39 Type 13 data completions, ordinary-fill cross-client
+  architectural priority claim. Forty-five directed checks and 51,587
+  independent-model/RTL clocks cover 97/129/83 ordinary/Type 5/Type 13
+  accepts, 179 fills, 53 Type 5 and 38 Type 13 data completions, ordinary-fill cross-client
   hits, miss recovery, both directions of `{DREG,PX}` visibility, fetched-
   Type-6-to-Type-13 and Type-5-to-fetched-Type-17 visibility, three automatic
   Type 5 issues, two automatic Type 13 issues, one hit/four recovery retirements,
@@ -1400,7 +1435,12 @@ advance beyond research until a page-level primary citation is added.
   three HALT recognitions/stops/resumes, one forced fetch for each PM client,
   one blocked release, four held clocks, one fail-closed BR/HALT overlap, zero
   HALT attachment conflicts, five fail-closed client conflicts, 2,217 grant-
-  masked clocks, and 63 BR/BG resumes.
+  masked clocks, 63 BR/BG resumes, one accept/completion for each fetched DM
+  class, and one complete-cycle DMACK extension with paired PM/DM retirement.
+  During that extension architectural/PM progress is held while physical DM
+  and interrupt/BR/HALT sampling continue; grant/stop service waits for the
+  paired completion, and grant masks both native buses. A fetched-DM request
+  colliding with a real Type 5/Type 13 request is rejected before DM accepts.
   Its formal harness passes assertion syntax; Yosys/SymbiYosys are unavailable.
   Implementation-only issue registers now capture Type 8/Type 9 and Type 5
   compute actions at the existing state-8 boundary, dedicated selected-bank
@@ -1408,8 +1448,8 @@ advance beyond research until a page-level primary citation is added.
   assertion permits removal of a redundant interrupt/ordinary-action conflict
   cone while preserving the generic fail-closed default. No architectural
   issue, completion, old-value, or cycle-count rule changes. The shared
-  validity tracker now reuses the canonical Type 8/Type 9/Type 14/Type 15/
-  Type 16/Type 17/Type 21/Type 23/Type 24/Type 25 decoders and exact operand/condition
+  validity tracker now reuses the canonical Type 3/Type 4/Type 8/Type 9/Type
+  12/Type 14/Type 15/Type 16/Type 17/Type 21/Type 23/Type 24/Type 25 decoders and exact operand/condition
   dependencies at that issue
   boundary, then updates ALU/MAC/DREG/shifter/status validity at retirement.
   Directed dependencies prove known results reach following PM stores;
@@ -1417,6 +1457,10 @@ advance beyond research until a page-level primary citation is added.
   DIVQ/DIVS/MV dependencies invalidate
   possible writes, while Type 16 EXP LO exactly preserves a destination when
   known old SE precludes its write and MV-false preserves known MR state.
+  Type 3 reads propagate returned DMD validity to the selected general-
+  register destination. Type 4 compute and Type 12 shifter dependencies are
+  captured independently from the parallel DMD-read destination, allowing a
+  known compute/shifter result with unknown memory data or the converse.
   Type 17 source validity now propagates through DREG, DAG, ASTAT, MSTAT,
   IMASK, ICNTL, CNTR, SB, and PX destinations. Directed dependent moves prove
   unknown status/control/SB remains unknown through a following PM store;
@@ -1429,10 +1473,14 @@ advance beyond research until a page-level primary citation is added.
   POP STS restores the captured invalid classifications. This is
   implementation-only known-state accounting, not an architectural extension
   to the documented 16-bit stack entry.
-  A fully constrained 20 ns Cyclone V fit now closes with 8,156 ALMs, 3,036
-  registers, three DSPs, no RAM, zero unconstrained paths, +1.340 ns worst
-  multicorner setup, +0.165 ns worst hold, +9.045 ns worst minimum-pulse-width
-  slack, and 53.59 MHz worst slow-corner Fmax. Type 5/Type 13 completion outputs
+  The architectural-state owner's existing second DAG read port now serves
+  PM-data clients independently of the fetched Type 2/4/12/21 address path,
+  removing a structurally impossible PM-client-to-fetched-DAG timing cone
+  without changing cycle-start values or adding a state boundary. A fresh,
+  fully constrained 20 ns Cyclone V fit including native DM closes with 9,903
+  ALMs, 3,313 registers, four DSPs, no RAM, zero unconstrained paths,
+  +0.639 ns worst multicorner setup, +0.165 ns worst hold, +9.045 ns worst
+  minimum-pulse-width slack, and 51.65 MHz worst slow-corner Fmax. Type 5/Type 13 completion outputs
   select only their captured pending descriptors, removing an impossible live
   issue/decode-to-completion synthesis path without changing the architectural
   issue or retirement boundary. The verification-only aggregate
@@ -1442,7 +1490,8 @@ advance beyond research until a page-level primary citation is added.
   closes with 3,735 ALMs, 1,895 registers, two DSPs, no RAM, +5.337 ns setup,
   +0.160 ns hold, 50.86 MHz worst slow-corner Fmax, and zero unconstrained
   paths. OQ-016 narrow-source extension, TRAP/interrupt/HALT/BR cross-event
-  priority, active-loop/DM concurrency, and whole-core ownership remain open.
+  priority, active-loop PM-client issue, additional DM requesters, Type 1
+  concurrency under OQ-023, and whole-core ownership remain open.
   The ordinary linear-fetch owner is now extracted into a retained
   architectural client and attached to the shared selector/BR-BG composition
   without changing the legacy private-PM wrapper's behavior. A rejected PC+1
@@ -1542,15 +1591,21 @@ advance beyond research until a page-level primary citation is added.
   `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
   `tests/test_data_bus.py`, `sim/unit/tb_adsp2100_data_bus.sv`,
-  `formal/dm_bus.sby`, `tests/test_dm_write_immediate_native.py`,
+  `formal/dm_bus.sby`, `tests/test_data_owner_bus.py`,
+  `sim/unit/tb_adsp2100_data_owner_bus.sv`,
+  `formal/data_owner_bus.sby`, `make dm-owner-bus-tests`,
+  `tests/test_dm_write_immediate_native.py`,
   `sim/unit/tb_adsp2100_dm_write_immediate_native_slice.sv`,
   `formal/dm_write_immediate_native.sby`, `tests/test_shifter_dm_native.py`,
   `sim/unit/tb_adsp2100_shifter_dm_native_slice.sv`,
   `formal/shifter_dm_native.sby`, `tests/test_compute_dm_native.py`,
   `sim/unit/tb_adsp2100_compute_dm_native_slice.sv`,
-  `formal/compute_dm_native.sby`, `make dm-bus-tests`,
+  `formal/compute_dm_native.sby`, `tests/test_linear_dm_wait_control.py`,
+  `sim/unit/tb_adsp2100_linear_dm_wait_control_slice.sv`,
+  `formal/linear_dm_wait_control.sby`, `make dm-bus-tests`,
   `make dm-write-native-tests`, `make dm-shifter-native-tests`,
-  `make dm-compute-native-tests`, `make compute-tests`
+  `make dm-compute-native-tests`, `make linear-dm-wait-tests`,
+  `make compute-tests`
 - **Implementation notes:** the Type 2 immediate-write, Type 4 ALU/MAC, and Type 12
   multifunction boundaries expose a distinct logical
   14-bit DM address, select, read/write direction, 16-bit write data, DMACK,
@@ -1569,6 +1624,54 @@ advance beyond research until a page-level primary citation is added.
   7-to-8 after a qualified DMACK. Five directed tests and 50,027 connected
   model/RTL clocks cover issue/commit ordering, complete-cycle waits, late-ACK
   rejection, stable old values, off-boundary rejection, and relinquishment.
+  A separate shared-DM owner now accepts exactly one of two descriptor sources
+  on a native-ready state-8 boundary, rejects simultaneous requests without a
+  priority claim, retains the owner through every complete-cycle DMACK
+  extension, and routes DMACK/completion/read events one-hot. Nine tests and
+  50,010 model/RTL clocks cover 1,642 fetched-owner accepts, 1,660 companion-
+  owner accepts, 494 collisions, 814 wait extensions, 3,302 completions,
+  owner changes, relinquishment, reset, and unknown descriptor fields. Its
+  fully constrained 20 ns Cyclone V fit uses 131 ALMs, 60 registers, no RAM,
+  and no DSPs; worst slow-100C setup/hold/minimum-pulse slack is
+  +11.923/+0.451/+9.191 ns, worst slow-corner Fmax is 123.81 MHz, and all
+  clocks, ports, and paths are constrained. The bounded fetched Type 2/3/4/12
+  owner now attaches through this selector with an atomic state-8 preflight.
+  A simultaneous generated and raw descriptor inhibits the paired PM fetch,
+  is rejected by the DM selector, reports the conflict, and leaves the
+  fetched instruction retained for a later retry. This fail-closed rule is an
+  implementation invariant, not an architectural requester priority.
+  A further bounded ordinary-fetch/native-DM composition enables real fetched
+  Type 2, every legal Type 3 transfer, every source-closed Type 4 action, and
+  every source-closed Type 12 action.
+  It derives their descriptors from the retained opcode and live architectural
+  state at state 8, holds them with the overlapped PM fetch through complete
+  DMACK extensions, and retires the applicable register, compute/shifter/status,
+  DAG, PC, and returned-instruction effects at aligned state-7 completion.
+  Twenty-two tests and 50,000 clocks cover 73 Type 2 accepts, 149 Type 3, 2,057 Type 4,
+  and 119 Type 12 transactions; all Type 2 G/I/M selectors; all legal
+  Type 3 register selectors; all 2,048 Type 4 `(Z, AMF, YOP, XOP)` tuples; all
+  112 sourced Type 12 `(SF, XOP)` pairs; all Type 4/Type 12 DAG/I/M and DREG
+  selectors; both directions; old-value overlap; memory-only operation;
+  alternate-bank MAC; bit reversal; circular wrap; complete waits; rejected
+  Type 4/Type 12 read collisions; and retained IRQ deferral. Normal BR/BG is
+  now attached at this same boundary: 13 recognitions include one first
+  sampled during a DM wait, three aligned PM/DM completions precede pending
+  grant service, 12 grants mask both PM and DM drivers, and 10 release/
+  reacquire/resume handshakes complete. Original ordinary-fetch HALT is now
+  attached at the same physical boundary. One request is recognized during a
+  real fetched Type 2 wait, stop service remains deferred while DMACK is low,
+  paired PM/DM completion and architectural retirement occur once before the
+  owner stops in driven state 8, low DMACK blocks release, and a later valid
+  release resumes at state 8-to-1. A simultaneous BR/HALT request fails closed
+  and reports a conflict rather than assigning an unsourced priority.
+  Aggregate coverage is 2,612 accepted DM descriptors, 2,611 completions, 111
+  waits/samples, 1,169 reads, 1,443 writes, and 889 held architectural clocks.
+  One explicit generated/raw
+  collision proves atomic rejection before either PM or DM acceptance and a
+  successful later retry. The raw descriptor remains structural scaffolding.
+  Fetched Type 3/4/12
+  sources are initialized and DMD loads are valid; standalone slices retain
+  the reset-unknown/invalid-data evidence.
   A second bounded wrapper attaches Type 12 reads and writes: it samples DMD
   at native completion and atomically commits the shifter, optional DREG load,
   and selected-I postmodify. Six directed tests and 50,064 connected clocks
@@ -1580,15 +1683,38 @@ advance beyond research until a page-level primary citation is added.
   +2.590 ns worst setup and +0.159 ns worst hold slack, and has no
   unconstrained paths. The attached Type 12 fit uses 1,739 ALMs and 1,139
   registers, meets 50 MHz with +1.262 ns worst setup and +0.167 ns worst hold
-  slack, and has no unconstrained paths. A third bounded wrapper attaches
+  slack, and has no unconstrained paths. The fetched Type 2/Type 3/Type 4/Type 12
+  composition also passes fully constrained 25 ns Quartus builds: the
+  parameter-disabled base owner uses 3,788 ALMs, 1,905 registers, and two DSPs
+  with +5.259 ns worst setup/+0.142 ns worst hold, while the current attached
+  shared-DM/BR-BG/HALT composition uses 4,585 ALMs, 2,158 registers, three
+  DSPs, and no RAM with +4.793/+0.401/+11.671 ns slow-100C
+  setup/hold/minimum-pulse slack and 49.49 MHz slow-100C Fmax. Both builds report zero
+  unconstrained clocks, ports, or paths. A third bounded wrapper attaches
   Type 4 memory-only and ALU/MAC reads/writes. Six directed tests and 50,082
   clocks cover state-8 issue, native phases, complete-cycle waits, state-7
   atomic compute/status/read/I commit, reset, late ACK, off-boundary rejection,
   and relinquishment. Its fully constrained 25 ns Cyclone V fit uses 1,693
   ALMs, 1,226 registers, one DSP, no RAM, and has positive multicorner
-  setup/hold slack. Whole-core arbitration does not yet exist.
-- **Unresolved questions:** shared data-bus turnaround, Type 1 dual-memory
-  concurrency, event latching during waits, and BR/BG recognition.
+  setup/hold slack. Whole-core arbitration does not yet exist. A fresh OQ-023
+  source audit confirms that the original manual and data sheet provide
+  separate PM waveforms and DMACK-extended DM waveforms but no simultaneous
+  Type 1 PM-pin trace. The 1995 family manual's PM-before-DM sequence applies
+  to later on-chip-memory devices with multiplexed external buses and is
+  excluded under SC-015. The missing original emulator manual is tracked as
+  ADI-2100-EMULATOR-TARGET; no native Type 1 timing was inferred.
+  The larger real-client owner now reuses the same fetched descriptors and
+  native DM protocol beside its sole shared architectural state, cache,
+  ordinary-fetch, Type 5, and Type 13 clients. The combined-owner directed
+  checks and expanded 51,587-clock differential admit all four fetched DM
+  classes, align nine PM/DM completions, repeat one Type 2 cycle on DMACK-low, preserve both
+  PM clients' view of the completion-only DAG result, defer BR/HALT service,
+  and mask both buses under grant. This closes the combined-owner seam for
+  these four classes only; Type 1 remains blocked by OQ-023 and additional DM
+  requesters and sourced event priority remain open.
+- **Unresolved questions:** additional architectural shared-DM requesters and
+  shared-data-bus turnaround, Type 1 dual-memory concurrency, HALT during BG,
+  and simultaneous BR/interrupt/TRAP/HALT priority.
 - **Confidence:** CORROBORATED
 
 ## M20 — Program-memory data transfers
@@ -1647,7 +1773,7 @@ advance beyond research until a page-level primary citation is added.
   the corresponding eight ASTAT, four MSTAT, and one IMASK known-state bits in
   an implementation-only sidecar; independent sidecar patterns now traverse
   the same LIFO, saturation, and reset behavior as the documented 16-bit word.
-  A 51,428-clock combined-owner run additionally proves that invalid status
+  A 51,587-clock combined-owner run additionally proves that invalid status
   context survives a push, intervening known writes, and a valid POP STS. A
   real IRQ2 entry and fetched RTI further preserve invalid ASTAT/MSTAT context
   across the documented nesting-mask interval; IMASK is necessarily known for
@@ -1711,12 +1837,18 @@ advance beyond research until a page-level primary citation is added.
   48-test, 444,003-clock comparison pass. Effective MODE CONTROL and
   MSTAT/ICNTL/IMASK write adjacency retains the request and fails closed under
   OQ-015. The first post-reset edge comparison uses an observable provisional
-  baseline under OQ-025. A separate bounded ordinary-fetch/raw-DM composition
-  now samples and retains an edge IRQ during a native DMACK full-cycle
-  extension, prohibits service while the architectural owner is held in state
-  7, and services it only on the later aligned PM/DM completion. Four tests and
-  50,000 model/RTL clocks pass. The raw descriptor is explicitly not fetched
-  DM-instruction ownership. The real Type 5 and Type 13 native/cache owners now
+  baseline under OQ-025. A separate bounded ordinary-fetch/native-DM
+  composition now derives real fetched Type 2/3/4/12 descriptors, samples and
+  retains an edge IRQ during a native DMACK full-cycle extension, prohibits
+  service while the architectural owner is held in state 7, and services it
+  only on the later aligned PM/DM completion. It also recognizes BR at physical
+  state 3 during waits and defers grant follow-up until completion; BR overlap
+  with IRQ/TRAP service is conflict-reported. It also recognizes ordinary HALT
+  during a real Type 2 wait and defers stop until aligned completion; a
+  same-boundary and active-owner BR/HALT requests fail closed while preserving
+  the current owner. Twenty-two tests and 50,000
+  model/RTL clocks pass. The raw descriptor remains separate scaffolding. The
+  real Type 5 and Type 13 native/cache owners now
   sample IRQ at every enabled physical state-7 boundary but permit service only
   at instruction completion. Directed edge-sensitive IRQ2 cases latch without
   recognition at an uncached PM-data completion and recognize only at the
@@ -1727,13 +1859,13 @@ advance beyond research until a page-level primary citation is added.
   fetch. A second directed sequence recognizes IRQ2 after reset-unknown AX1
   has invalidated ASTAT/MSTAT, accepts the vector request, executes a fetched
   RTI, and proves that the captured invalid classifications return before
-  dependent PM work. Forty directed checks and 51,428 combined-owner
+  dependent PM work. Forty-five directed checks and 51,587 combined-owner
   clocks pass. IMASK remains known because recognition itself requires a known
   mask; no simultaneous-event priority is inferred.
 - **Unresolved questions:** physical first post-reset edge-comparison state;
   service/latching composition with TRAP; PC/status entry handoff from PM-data
   owners; simultaneous control-write/event ordering; synchronizer/analog
-  timing; fetched DM semantic ownership; and unified cache/event priority.
+  timing; and unified cache/event priority.
 - **Confidence:** CORROBORATED
 
 ## M23 — Reset, halt, and bus arbitration
@@ -1754,12 +1886,14 @@ advance beyond research until a page-level primary citation is added.
   `tests/test_linear_bus_control.py`, `make halt-tests`,
   `make program-owner-bus-control-tests`,
   `tests/test_program_owner_bus_control.py`,
+  `tests/test_linear_dm_wait_control.py`,
   `tests/test_halt_control.py`,
   `tests/test_shifter_pm_halt.py`,
   `tests/test_conditional_trap.py`, `formal/reset_phase.sby`,
   `formal/bus_control.sby`, `formal/halt_control.sby`,
   `formal/linear_bus_control.sby`,
   `formal/program_owner_bus_control.sby`,
+  `formal/linear_dm_wait_control.sby`,
   `formal/linear_halt_control.sby`,
   `formal/shifter_pm_halt.sby`,
   `formal/conditional_trap.sby`,
@@ -1771,14 +1905,20 @@ advance beyond research until a page-level primary citation is added.
   fail-closed short-pulse handling. Six directed tests and 50,034
   differential clocks pass; its formal recipe passes syntax lint, while proof
   execution awaits Yosys/SymbiYosys. PMA `0x0004` is source-backed but the
-  reset-specific PM strobe onset is withheld under OQ-024. The Type 22
+  reset-specific PM strobe onset is withheld under OQ-024. A second
+  original-device data-sheet revision in the 1989 databook repeats the same
+  RESET/CLKIN-only Figure 9 without PMS/PMRD. That databook identifies Appendix
+  B of the unavailable original emulator manual as the complete timing-
+  comparison source; exact-title and broad archival searches on 2026-08-01
+  found no lawful copy. The Type 22
   boundary implements the source-backed TRAP half of
   system control, including state-8 hold and an input explicitly representing
   HALT after recognition. A structurally independent model and portable
   phase-aware controller now implement normal active-low BR/BG: state-3
   recognition, one-full-cycle grant/release delays, current-instruction
   completion via new-issue inhibit, tristate-mask output, and state-8-to-1
-  restart. Seven directed tests and 50,084 model/RTL clocks pass. A separate
+  restart. Eight directed tests and 50,092 model/RTL clocks pass, including
+  recognition with follow-up service inhibited through incomplete DM. A separate
   native wrapper confines the documented asynchronous RESET-time BR-to-BG
   path outside architectural state. Invalid early withdrawal/reassertion
   fails closed and is explicitly an implementation contract. The raw
@@ -1795,6 +1935,20 @@ advance beyond research until a page-level primary citation is added.
   Cyclone V fit; PM-data/cache, DM, transfer, loop, HALT, reset-first-fetch,
   IRQ capture without a state-7 sample, and simultaneous-event ownership remain
   unimplemented.
+  The real fetched Type 2/3/4/12 ordinary-fetch/native-DM composition now
+  attaches that normal controller. BR remains recognizable at physical state
+  3 during a complete DMACK extension, while grant service waits for paired
+  PM/DM completion; native grant masks all PM and DM output enables. Twenty-two
+  tests and 50,000 clocks cover 13 recognitions, one first sampled during a
+  wait, three completions before pending service, 12 grants, 18,638 dual-bus-
+  masked clocks, and 10 release/reacquire/resume handshakes. The shared-DM
+  attachment also rejects one generated/raw collision atomically and retries
+  the retained instruction. Ordinary HALT recognition remains live during a
+  DM wait, defers stop until aligned completion/retirement, holds driven state
+  8, and resumes only after release with DMACK high. A simultaneous BR/HALT
+  same-boundary and cross-owner requests fail closed while retaining the active
+  owner. Additional architectural DM requesters, HALT during
+  BG, and sourced cross-event priority remain open.
   A second bounded BR/BG composition now covers the one physical PM selector
   shared by ordinary fetch and Type 5/Type 13 descriptor classes. Six directed
   tests and 50,002 model/RTL clocks cover 111 full handshakes, 80 active-owner
@@ -1923,10 +2077,14 @@ advance beyond research until a page-level primary citation is added.
   `formal/dm_write_immediate_slice.sby`, `tests/test_shifter_dm.py`,
   `sim/unit/tb_adsp2100_shifter_dm_slice.sv`, `formal/shifter_dm.sby`,
   `tests/test_data_bus.py`, `formal/dm_bus.sby`,
+  `tests/test_data_owner_bus.py`, `formal/data_owner_bus.sby`,
+  `make dm-owner-bus-tests`,
   `tests/test_dm_write_immediate_native.py`,
   `formal/dm_write_immediate_native.sby`,
   `tests/test_shifter_dm_native.py`, `formal/shifter_dm_native.sby`,
-  `tests/test_compute_dm_native.py`, `formal/compute_dm_native.sby`
+  `tests/test_compute_dm_native.py`, `formal/compute_dm_native.sby`,
+  `tests/test_linear_dm_wait_control.py`,
+  `formal/linear_dm_wait_control.sby`, `make linear-dm-wait-tests`
 - **Implementation notes:** Type 2, Type 3, Type 4, and Type 12 implement the
   sourced logical DMACK rule:
   each low sample extends the transaction by a processor clock, bus outputs
@@ -1939,19 +2097,48 @@ advance beyond research until a page-level primary citation is added.
   proving read/write phase alignment and atomic parallel completion. The
   Type 4 attachment adds 50,082 clocks proving the same phase contract for
   memory-only and ALU/MAC actions without any wait-time architectural write.
+  The standalone shared-DM owner adds nine directed/model checks and 50,010
+  clocks. It retains one accepted owner across 814 complete-cycle extensions,
+  routes all state-6 and state-7 events only to that owner, and rejects 494
+  simultaneous requests without inventing priority. Its fetched-client
+  attachment now uses a conservative atomic preflight: one directed and
+  50,000-clock differential case rejects a generated/raw collision before
+  either bus accepts and then retries the retained instruction successfully.
   The Type 3 attachment adds 50,077 clocks proving absolute-address transfers,
   old general-register write data, and completion-only read destinations. PM
-  concurrency,
-  interrupt/BR/HALT latching, and electrical constraints remain.
-- **Unresolved questions:** original ADSP-2100 wait pins versus programmed wait
-  behavior.
+  concurrency remains bounded further by a real fetched Type 2/Type 3/Type 4/
+  Type 12 composition: twenty-two tests and 50,000 clocks derive 73 Type 2 accepts, 149
+  Type 3, 2,057 Type 4, and 119 Type 12 descriptors from retained opcodes,
+  traverse every Type 2 G/I/M selector, every legal Type 3 register selector,
+  every Type 4 compute/DAG/DREG/direction selection, and every sourced Type 12
+  shifter/DAG/DREG/direction selection plus old-value/bank/bit-reverse/circular
+  cases, hold PM/DM/architectural state through full waits, and defer one
+  sampled IRQ until aligned action/PC/next-word retirement. Normal BR/BG now
+  recognizes state 3 during the wait but defers grant until that retirement,
+  masks both native buses while granted, and resumes at state 8-to-1. Its raw
+  descriptor port remains structural scaffolding; the shared owner now rejects
+  a simultaneous generated/raw pair atomically before PM issue. Fetched Type
+  3/4/12 validity is bounded to
+  initialized store/compute sources and valid DMD; standalone tests cover
+  unknown propagation. HALT recognition during a wait now defers stop service
+  until the aligned completion, holds driven state 8, blocks low-DMACK
+  release, and resumes at state 8-to-1; simultaneous BR/HALT fails closed.
+  The real retained-fetch/Type 5/Type 13 owner now attaches these four fetched
+  DM classes to the same wait protocol across 51,587 model/RTL clocks. It
+  proves nine paired PM/DM completions and one full Type 2 wait without
+  replaying an architectural or PM-client action. Interrupt/BR/HALT
+  simultaneous priority, HALT during BG, additional architectural DM
+  requesters, Type 1 under OQ-023, and electrical constraints remain.
+- **Unresolved questions:** FPGA DMACK synchronization, attachment and
+  priority of additional architectural shared-DM requesters, HALT during BG,
+  sourced simultaneous-event priority, and board-level PAL connectivity.
 - **Confidence:** CORROBORATED
 
 ## M26 — Differential testing
 
 ### VERIF-DIFF-001 — Model/RTL/MAME differential framework
 
-- **Status:** NOT STARTED
+- **Status:** IMPLEMENTING
 - **Priority:** P1
 - **Dependencies:** MODEL-001, ISA-001; MAME path depends on REF-001
 - **Acceptance criteria:** deterministic trace schema compares all requested
@@ -1959,7 +2146,8 @@ advance beyond research until a page-level primary citation is added.
   commit-pinned MAME adapter runs where practical; reducer preserves failures.
 - **Source references:** MAME-ADSP2100-CORE, MAME-ADSP2100-OPS,
   MAME-ADSP2100-DASM, and per-instruction primary sources
-- **Relevant tests:** `make differential`, `make fuzz`
+- **Relevant tests:** `make differential`, `make fuzz`,
+  `tests/test_differential_trace.py`, `tests/test_legal_programs.py`
 - **Implementation notes:** deterministic independent-model/RTL vector
   comparison exists for the implemented compute, DAG, sequencer, register,
   status, and bounded instruction slices. Type 12 adds the first memory-bus
@@ -1971,10 +2159,31 @@ advance beyond research until a page-level primary citation is added.
   Its independent native composition adds 50,082 clocks spanning state-8
   acceptance, native strobes, full-cycle waits, state-7 atomic completion,
   reset, and relinquishment.
-  These are
-  bounded state/action traces, not legal-program execution; the MAME adapter,
-  unified architectural trace schema, and reducer remain absent. MAME is an
-  implementation under test and cannot override primary evidence by itself.
+  These remain bounded state/action traces, not legal-program execution. A
+  versioned implementation-neutral NDJSON schema now records producer
+  provenance, retirement/PC/opcode/cycle fields, bitwise-known requested
+  architectural state, ordered PM/DM transactions, and named events. The
+  independent-model adapter flattens both computational banks, every DAG
+  register, PX/status/control/CNTR, and all represented stack entries. Exact
+  comparison ignores producer provenance, compares all state by default or an
+  explicit projection, and reports stable mismatch paths. A deterministic
+  one-minimal reducer preserves a caller-defined failure signature without
+  reordering or mutating program items. A canonical replay corpus and seeded
+  bounded generator now emit NOP, Types 6/7/9/15/16/18/21/23/24/25, DREG-only
+  Type 17 moves, and the Type 26 no-effect alias from deterministic known
+  state. The Type 17 restriction avoids OQ-016 narrow-source extension.
+  Thirty-two 128-word seeds
+  retire 4,096 instructions through the independent model and emit common
+  traces. A direct-execution CLI generates or strictly replays the canonical
+  corpus and writes byte-stable common NDJSON while rejecting ambiguous or
+  aliased paths. Twenty-three focused trace/generator/CLI tests, `make fuzz`,
+  all available `make differential` comparisons, the complete 839-check
+  `make test`, and strict `make lint` pass. The system MAME binary is unpinned
+  and was not used; an isolated
+  commit-pinned MAME adapter, a unified RTL program-trace adapter, and the
+  complete multi-class/control/bus legal-program generator remain absent. MAME
+  is an implementation under test and cannot override primary evidence by
+  itself.
 - **Unresolved questions:** minimal licensed MAME build and cycle limitations.
 - **Confidence:** UNKNOWN
 
@@ -1992,7 +2201,7 @@ advance beyond research until a page-level primary citation is added.
 - **Relevant tests:** `make formal`
 - **Implementation notes:** depth-one condition, ALU, MAC, shifter, DAG, and
   sequencer-flow combinational harnesses now exist; never call a bounded
-  result a complete proof. Seventy-three harnesses now pass strict assertion
+  result a complete proof. Seventy-seven harnesses now pass strict assertion
   syntax lint, including Type 2 action decode and waited logical execution,
   exact Type 6 and Type 7 immediate loads, bounded Type 15 immediate-shift,
   bounded Type 16 conditional-shift, bounded Type 14 shifter-plus-DREG move,
@@ -2077,6 +2286,12 @@ advance beyond research until a page-level primary citation is added.
   1,693 ALMs and 1,226 registers with one DSP and no RAM at 25 ns; worst setup
   is +1.121 ns, worst hold is +0.167 ns, worst slow-corner Fmax is 41.88 MHz,
   and no clock, port, or path is unconstrained. Whole-core timing remains open.
+  The bounded Type 1 logical state slice fits in 1,927 ALMs and 1,253 fitted
+  registers with one DSP and no RAM against a 25 ns standalone constraint.
+  Worst multicorner setup is +2.205 ns, worst hold is +0.150 ns, worst slow-
+  corner Fmax is 43.87 MHz, and no clocks, ports, or paths are unconstrained.
+  This qualifies only the implementation/test completion boundary; OQ-023
+  still withholds native dual-bus phases and whole-core timing closure.
   The combinational Type 5 action decoder fits in 51 ALMs with no registers,
   RAM, or DSP blocks at 20 ns. Worst multicorner setup is +12.323 ns, worst
   hold is +4.281 ns, worst slow-corner Fmax is 130.26 MHz, and no path is
@@ -2306,10 +2521,13 @@ Original IRQ0–IRQ3 recognition, next-fetch discard, vectoring NOP, context
 entry, nesting mask, and fetched RTI refetch are attached to the private
 ordinary-fetch owner. A state-7-sampled request is now retained through the
 existing ordinary-HALT and normal-BR/BG no-service intervals and enters on the
-qualified resume edge in the private and retained-fetch compositions. The next
-bounded composition now samples and retains an edge request during a native
-DMACK wait until aligned PM/DM completion using an explicitly structural raw-
-DM companion. The separate real Type 5 and Type 13 native/cache owners now
+qualified resume edge in the private and retained-fetch compositions. The
+native-DM composition now derives real fetched Type 2, legal Type 3, source-
+closed Type 4, and source-closed Type 12 descriptors, samples and retains an
+edge request during a DMACK wait, recognizes BR at physical state 3, and holds
+interrupt/grant service until aligned PM/DM completion. Its raw descriptor
+port remains structural scaffolding. The separate real Type 5 and Type 13
+native/cache owners now
 close the two-cycle uncached PM-data no-service interval at recognition
 handoff. Ordinary fetch and both PM-data clients now share one bounded cache,
 native PM controller, and BR/BG owner, with retained retries and routed
@@ -2330,9 +2548,13 @@ CALL now supply real PC-stack context to Type 20 RTS and Type 26 POP PC;
 fetched RTI also consumes valid status context, and fetched Type 11 supplies
 valid loop context to Type 26. Type 9
 fetched conditional compute, Type 7 immediate non-data-register execution,
-and Type 3 state/native-DM execution are bounded and verified. The Type 1
-dual-memory action graph is complete,
-but its state/native attachment remains withheld under OQ-023 until the PM
+  and Type 3 state/native-DM execution are bounded and verified. Fetched Type 2,
+  legal Type 3, source-closed Type 4, and source-closed Type 12 now own the separate ordinary-fetch/
+  native-DM wait composition, including completion-only register/compute/
+  status/DAG effects and retained-IRQ deferral through full waits; shared-DM/
+  event arbitration remains open. The Type 1 dual-memory action graph and
+bounded logical state/atomic completion are complete across 51,069 model/RTL
+clocks, but native phase attachment remains withheld under OQ-023 until the PM
 pin behavior during a DMACK extension can be sourced rather than invented.
 `REF-001` retains acquisition of the exact original Cross-Software/opcode
 reference. Fetched Type 8/9/14/15/16/21/23/24/25 compute/division/address/multifunction

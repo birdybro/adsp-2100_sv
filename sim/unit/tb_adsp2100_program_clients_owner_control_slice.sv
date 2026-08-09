@@ -3,8 +3,8 @@
 
 module tb_adsp2100_program_clients_owner_control_slice;
     logic clk;
-    logic [273:0] stimulus;
-    logic [159:0] expected_events, actual_events;
+    logic [290:0] stimulus;
+    logic [196:0] expected_events, actual_events;
     logic [127:0] expected_post, actual_post;
 
     logic reset, advance, br_n, halt_n, dmack;
@@ -24,6 +24,8 @@ module tb_adsp2100_program_clients_owner_control_slice;
     logic type13_next_valid;
     logic [23:0] pmd;
     logic pmd_valid;
+    logic [15:0] dmd;
+    logic dmd_valid;
     logic astat_setup;
     logic [7:0] astat_setup_data;
     logic mstat_setup;
@@ -52,6 +54,7 @@ module tb_adsp2100_program_clients_owner_control_slice;
     logic [1:0] halt_mode;
     logic halt_recognized, halt_stop, halt_force_fetch, halt_resume;
     logic halt_release_blocked, halt_phase_hold, effective_advance, halted;
+    logic architectural_advance, interrupt_wait_sample;
     logic halt_br_conflict, halt_attachment_conflict;
     logic linear_fetch_presented, linear_issue, linear_retire;
     logic linear_instruction_valid;
@@ -89,6 +92,14 @@ module tb_adsp2100_program_clients_owner_control_slice;
     logic pma_valid, pmda, pmda_valid, pms_n, pmrd_n, pmwr_n;
     logic [23:0] pmd_write_data;
     logic pmd_write_data_valid;
+    logic dm_request_accepted, dmack_sample, dmack_accepted;
+    logic dm_wait_extension, dm_completion, dm_read_sample;
+    logic dm_transaction_active, dm_waiting;
+    logic dm_address_oe, dm_control_oe, dm_data_oe;
+    logic [13:0] dma;
+    logic dma_valid, dms_n, dmrd_n, dmwr_n;
+    logic [15:0] dmd_write_data;
+    logic dmd_write_data_valid;
     logic unused_observation;
     integer vector_file, scan_count, vector_count;
 
@@ -106,11 +117,11 @@ module tb_adsp2100_program_clients_owner_control_slice;
         sb_setup, sb_setup_data,
         dag_setup, dag_setup_kind, dag_setup_address, dag_setup_data,
         px_setup, px_setup_data,
-        linear_probe_code, pm_probe_dreg_code, pm_probe_dag_address
-    } = stimulus[273:0];
+        linear_probe_code, pm_probe_dreg_code, pm_probe_dag_address,
+        dmd, dmd_valid
+    } = stimulus[290:0];
 
     assign actual_events = {
-        11'h000,
         issue_boundary, client_execute_conflict, integration_conflict,
         automatic_pm_issue, automatic_pm_retire, automatic_pm_blocked,
         halt_mode, halt_recognized, halt_stop, halt_force_fetch,
@@ -136,10 +147,27 @@ module tb_adsp2100_program_clients_owner_control_slice;
         pma_valid, pma_valid ? pma : 14'h0000,
         pmda, pmda_valid, pms_n, pmrd_n, pmwr_n,
         pmd_write_data_valid,
-        pmd_write_data_valid ? pmd_write_data : 24'h000000
+        pmd_write_data_valid ? pmd_write_data : 24'h000000,
+        architectural_advance, interrupt_wait_sample,
+        dm_request_accepted, dmack_sample, dmack_accepted,
+        dm_wait_extension, dm_completion, dm_read_sample,
+        dm_transaction_active, dm_waiting,
+        dm_address_oe, dm_control_oe, dm_data_oe,
+        dma_valid, dma_valid ? dma : 14'h0000,
+        dms_n, dmrd_n, dmwr_n,
+        dmd_write_data_valid,
+        dmd_write_data_valid ? dmd_write_data : 16'h0000
     };
 
-    assign unused_observation = ^linear_probe_data;
+    assign unused_observation = ^{
+        linear_probe_data, architectural_advance, interrupt_wait_sample,
+        dm_request_accepted, dmack_sample, dmack_accepted,
+        dm_wait_extension, dm_completion, dm_read_sample,
+        dm_transaction_active, dm_waiting,
+        dm_address_oe, dm_control_oe, dm_data_oe,
+        dma, dma_valid, dms_n, dmrd_n, dmwr_n,
+        dmd_write_data, dmd_write_data_valid
+    };
 
     always_comb begin
         assert (unused_observation == unused_observation);
@@ -174,6 +202,7 @@ module tb_adsp2100_program_clients_owner_control_slice;
         .type13_next_fetch_address_i(type13_next),
         .type13_next_fetch_address_valid_i(type13_next_valid),
         .pmd_read_data_i(pmd), .pmd_read_data_valid_i(pmd_valid),
+        .dmd_read_data_i(dmd), .dmd_read_data_valid_i(dmd_valid),
         .astat_setup_write_i(astat_setup),
         .astat_setup_data_i(astat_setup_data),
         .mstat_setup_write_i(mstat_setup),
@@ -205,6 +234,8 @@ module tb_adsp2100_program_clients_owner_control_slice;
         .halt_release_blocked_o(halt_release_blocked),
         .halt_phase_hold_o(halt_phase_hold),
         .effective_phase_advance_o(effective_advance),
+        .architectural_phase_advance_o(architectural_advance),
+        .interrupt_wait_sample_o(interrupt_wait_sample),
         .halted_o(halted), .halt_br_conflict_o(halt_br_conflict),
         .halt_attachment_conflict_o(halt_attachment_conflict),
         .linear_fetch_request_presented_o(linear_fetch_presented),
@@ -253,7 +284,22 @@ module tb_adsp2100_program_clients_owner_control_slice;
         .pmda_o(pmda), .pmda_valid_o(pmda_valid),
         .pms_n_o(pms_n), .pmrd_n_o(pmrd_n), .pmwr_n_o(pmwr_n),
         .pmd_write_data_o(pmd_write_data),
-        .pmd_write_data_valid_o(pmd_write_data_valid)
+        .pmd_write_data_valid_o(pmd_write_data_valid),
+        .dm_request_accepted_o(dm_request_accepted),
+        .dmack_sample_event_o(dmack_sample),
+        .dmack_accepted_o(dmack_accepted),
+        .dm_wait_extension_event_o(dm_wait_extension),
+        .dm_completion_event_o(dm_completion),
+        .dm_read_sample_event_o(dm_read_sample),
+        .dm_transaction_active_o(dm_transaction_active),
+        .dm_waiting_o(dm_waiting),
+        .dm_address_output_enable_o(dm_address_oe),
+        .dm_control_output_enable_o(dm_control_oe),
+        .dm_data_output_enable_o(dm_data_oe),
+        .dma_o(dma), .dma_valid_o(dma_valid),
+        .dms_n_o(dms_n), .dmrd_n_o(dmrd_n), .dmwr_n_o(dmwr_n),
+        .dmd_write_data_o(dmd_write_data),
+        .dmd_write_data_valid_o(dmd_write_data_valid)
     );
 
     initial begin
@@ -275,7 +321,7 @@ module tb_adsp2100_program_clients_owner_control_slice;
             if (scan_count == 3) begin
                 #2;
                 if (actual_events !== expected_events)
-                    $fatal(1, "three-client pre mismatch vector=%0d expected=%040x actual=%040x stimulus=%069x",
+                    $fatal(1, "three-client pre mismatch vector=%0d expected=%050x actual=%050x stimulus=%073x",
                            vector_count, expected_events, actual_events,
                            stimulus);
                 #2 clk = 1'b1;

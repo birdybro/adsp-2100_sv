@@ -30,14 +30,70 @@ and return completion only at the qualified state 7-to-8 edge
 [ADI-UM-1989, printed pp. 5-9–5-12;
 ADI-DATABOOK-1987, printed pp. 2-40–2-43].
 
-An additional bounded structural composition couples one such raw native-DM
-descriptor to an accepted ordinary PM fetch. It holds the architectural
-fetch/execute phase through full-cycle DMACK extensions while allowing the
-interrupt recognizer to observe each physical state-7 boundary; a pending IRQ
-cannot vector or push context until aligned PM/DM completion. Four tests and
-50,000 model/RTL clocks pass. Because the DM request is a verification input
-rather than the output of fetched Type 2/3/4/12 semantics, this is cycle-
-control evidence rather than whole-core dual-bus ownership.
+The standalone `adsp2100_data_owner_bus` puts a fetched descriptor and a
+structural companion descriptor in front of exactly one native DM controller.
+It accepts only one asserted requester at the enabled state-8 boundary,
+rejects a collision without assigning an architectural priority, retains the
+owner through every complete-cycle DMACK extension, and routes DMACK sample,
+accepted-ACK, wait, completion, and read-sample events only to that owner.
+Nine directed/model checks and 50,010 model/RTL clocks cover both owners, 494
+collisions, 814 low-DMACK extensions, 3,302 completions, back-to-back owner
+changes, relinquishment, reset, and unknown descriptors. The bounded fetched
+Type 2/3/4/12 composition now uses this owner behind a conservative state-8
+preflight. When its generated descriptor and the structural companion collide,
+the wrapper inhibits the paired PM fetch, presents both DM candidates to the
+fail-closed selector, accepts neither bus, reports the conflict, and retains
+the fetched instruction for a later eligible retry. This is an implementation
+invariant necessitated by the absence of a sourced requester priority; it is
+not an architectural priority or rollback claim [ADI-UM-1989, printed pp. 1-5–1-7,
+5-9–5-12; ADI-DATABOOK-1987, printed pp. 2-36–2-43].
+
+An additional bounded composition attaches fetched Type 2, every legal Type 3
+transfer, and every source-closed Type 4 and Type 12 action to the ordinary PM fetch and
+native-DM controller. A Type 2 word captures the old selected-I address (bit
+reversed for DAG1 when enabled), raw immediate, and postmodify result at the
+state-8 issue boundary. A Type 3 word instead captures its absolute address,
+direction, and cycle-start shared-register store source. Type 4 captures its
+selected-bank compute operands, old memory DREG, same-DAG old-I address, and
+postmodify result at that boundary. Type 12 similarly captures selected-bank
+shifter/feedback, old memory DREG, ASTAT, and same-DAG address/postmodify state.
+The PM fetch and DM transfer remain paired
+through every full-cycle DMACK extension. Qualified state-7 completion commits
+the Type 2 selected I, Type 3 read destination, Type 4 compute/status/read/I,
+or Type 12 shifter/status/read/I effects together with PC and the fetched word;
+a load samples DMD only at that
+boundary. The interrupt recognizer still observes every physical state-7
+boundary, but a pending IRQ cannot vector or push context until aligned
+completion.
+
+Twenty-two tests and 50,000 model/RTL clocks cover 2,612 DM accepts, 2,611
+completions, 111 wait extensions/state-7 IRQ samples, 1,169 reads, 1,443 writes,
+and 889 architectural holds. Generated ownership contributes 73 fetched Type 2
+accepts/72 completions, 149 Type 3, 2,057 Type 4, and 119 Type 12 transactions;
+all Type 2 G/I/M selections; all
+48 legal Type 3 store sources and 47 legal Type 3 load destinations; all 2,048
+Type 4 `(Z, AMF, YOP, XOP)` tuples; all 112 sourced Type 12 `(SF, XOP)` pairs;
+all Type 4/Type 12 DAG/I/M selections; all 16 DREGs; both directions; old-value
+store overlap; memory-only AMF zero;
+alternate-bank MAC; bit reversal; circular wrap; and complete waits. Twelve BR
+recognitions include one first sampled during a DM wait; three paired
+completions precede pending grant service, 12 grants mask every PM/DM output
+enable for 18,638 clocks, and 10 release/reacquire/resume handshakes complete.
+A separate raw descriptor remains structural verification scaffolding; a
+collision with a generated class rejects both DM candidates and the paired PM
+fetch, then retains the fetched instruction for a later eligible retry.
+Ordinary HALT recognition remains live during a real Type 2 wait, but stop is
+deferred until one paired completion/retirement. The stopped interface holds
+the driven PM/DM state-8 outputs, blocks release while DMACK is low, and
+resumes at state 8-to-1. Same-boundary and cross-owner BR/HALT requests fail
+closed while preserving an already active owner.
+The fetched vectors initialize exercised Type 3/4/12 store and compute/shift operands
+and supply valid DMD for loads; reset-unknown source and invalid-DMD propagation
+remain qualified by the standalone slices. Additional architectural DM
+requesters, HALT during BG, and sourced whole-core dual-bus/event ownership remain outside this
+composition
+[ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-1–3-5, 4-9–4-10, 4-22,
+5-9–5-16, 6-1, 6-3–6-7, 6-12–6-13, A-1, A-5–A-7, and A-9].
 
 The bounded Type 13 path exposes distinct logical active-high PM data and
 recovery-fetch cycles. Its connected 16-word cache supplies the actual next
@@ -145,9 +201,10 @@ generation remain outside this attachment [ADI-UM-1989, printed pp. 1-5–1-7,
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
 `adsp2100_program_clients_owner_control_slice` is the first bounded
-composition containing the real retained ordinary-fetch client and both real
-PM-data clients together. It owns exactly one 16-word instruction cache, one
-native PM controller, and one normal BR/BG controller. Ordinary external
+composition containing the real retained ordinary-fetch client, both real
+PM-data clients, and the fetched Type 2/3/4/12 DM clients together. It owns
+exactly one 16-word instruction cache, one native PM controller, one native DM
+controller, and one normal BR/BG controller. Ordinary external
 fetches and both recovery-fetch classes populate the shared cache; Type 5 and
 Type 13 consume pre-cycle lookups from it. Client request collisions remain
 fail-closed because the sources do not establish an architectural priority.
@@ -157,10 +214,15 @@ Sequential automatic mode selects legal Type 5/Type 13 words from the retained
 opcode and requests PC+1. A cache hit retires with the lookup word; a miss
 commits its data action once and retires only when the pure recovery fetch
 returns. The common linear client then installs that word and advances the
-14-bit PC. Forty directed checks and 51,428 independent-model/RTL clocks
+14-bit PC. Forty-five directed checks and 51,587 independent-model/RTL clocks
 cover this flow, exact PC wrap, following fetched execution, routed retry,
 cross-client state/cache visibility, and 2,217 clocks with every PM output
-enable masked during grant. A pending IRQ is also held across recovery and
+enable masked during grant. The same run admits each fetched DM class with its
+ordinary next-word fetch, aligns PM/DM completion, repeats one full Type 2
+cycle after a low state-6 DMACK sample, and masks both native buses during
+grant. Returned-DMD validity reaches the Type 3 destination, while the Type 4
+compute and Type 12 shift validity classifications remain independent of the
+parallel DM-read destination classification. A pending IRQ is also held across recovery and
 then enters the shared PC/status/vector path at whole-instruction retirement.
 HALT now shares this owner: ordinary fetch completes before stopping, while a
 Type 5/Type 13 PM-data request forces one external recovery before stop and
@@ -170,12 +232,13 @@ Type 17/Type 21/Type 23/Type 24/Type 25 validity propagates into following PM cl
 including conditional-write preservation for Type 16 EXP LO and Type 25
 MV-false. Type 17 unknown sources propagate through DREG, DAG, status/control,
 SB, and PX, while unknown MSTAT rejects bank-dependent issue. OQ-016,
-TRAP/interrupt/HALT/BR cross-event priority, DM concurrency, and a unified CPU
+TRAP/interrupt/HALT/BR cross-event priority, Type 1 simultaneous PM/DM timing
+under OQ-023, additional DM requesters, and a unified CPU
 remain unproved. The same owner now preserves ASTAT/MSTAT/IMASK validity with
 each accepted status entry and restores it on a valid pop after intervening
 known writes
-[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-8, Figures 5.3 and 5.5;
-ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-14, Figures 5.3, 5.5,
+5.6, and 5.7; ADI-DATABOOK-1987, printed pp. 2-33–2-43].
 
 A separate active-low HALT controller is now composed with the same bounded
 ordinary-fetch owner. It samples HALT at the enabled end of state 3, lets the

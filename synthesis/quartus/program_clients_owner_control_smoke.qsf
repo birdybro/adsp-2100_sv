@@ -19,6 +19,9 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_interrupt
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_condition_logic.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_move_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_move_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_dm_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_dm_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_dm_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_compute_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_quotient_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_quotient_action.sv
@@ -47,6 +50,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter.s
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_immediate_shift_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_shift_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shift_move_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dm_write_immediate_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_direct_dm_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_fetch_client.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_pm_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_dm_decode.sv
@@ -59,6 +64,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_p
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_instruction_cache.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_owner_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_data_bus.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_data_owner_bus.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_bus_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_halt_control.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/wrappers/adsp2100_reset_bus_grant.sv
@@ -90,6 +97,8 @@ set_instance_assignment -name VIRTUAL_PIN ON -to type13_next_fetch_address_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to type13_next_fetch_address_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to pmd_read_data_valid_i
+set_instance_assignment -name VIRTUAL_PIN ON -to dmd_read_data_i[*]
+set_instance_assignment -name VIRTUAL_PIN ON -to dmd_read_data_valid_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_write_i
 set_instance_assignment -name VIRTUAL_PIN ON -to astat_setup_data_i[*]
 set_instance_assignment -name VIRTUAL_PIN ON -to mstat_setup_write_i

@@ -3,13 +3,14 @@
 
 module tb_adsp2100_bus_control;
     logic clk;
-    logic [5:0] stimulus;
+    logic [6:0] stimulus;
     logic [16:0] expected_pre;
     logic [2:0] expected_post_mode;
     logic reset;
     logic [2:0] phase;
     logic phase_advance;
     logic br_n;
+    logic service_inhibit;
     logic [2:0] mode;
     logic state_three_boundary;
     logic request_recognized;
@@ -29,7 +30,9 @@ module tb_adsp2100_bus_control;
     integer scan_count;
     integer vector_count;
 
-    assign {reset, phase, phase_advance, br_n} = stimulus;
+    assign {
+        reset, phase, phase_advance, br_n, service_inhibit
+    } = stimulus;
 
     adsp2100_bus_control dut (
         .clk_i(clk),
@@ -37,6 +40,7 @@ module tb_adsp2100_bus_control;
         .phase_i(phase),
         .phase_advance_i(phase_advance),
         .br_n_i(br_n),
+        .service_inhibit_i(service_inhibit),
         .mode_o(mode),
         .state_three_boundary_o(state_three_boundary),
         .request_recognized_o(request_recognized),
@@ -63,7 +67,7 @@ module tb_adsp2100_bus_control;
 
     initial begin
         clk = 1'b0;
-        stimulus = 6'h23;
+        stimulus = 7'h46;
         expected_pre = '0;
         expected_post_mode = '0;
 

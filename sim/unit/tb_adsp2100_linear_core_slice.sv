@@ -189,6 +189,7 @@ module tb_adsp2100_linear_core_slice;
         exp_post_interrupt_vectoring, exp_post_interrupt_pending
     } = expected_post;
 
+    /* verilator lint_off PINCONNECTEMPTY */
     adsp2100_linear_core_slice dut (
         .clk_i(clk),
         .reset_i(reset),
@@ -202,6 +203,8 @@ module tb_adsp2100_linear_core_slice;
         .instruction_setup_opcode_i(setup_opcode),
         .pmd_read_data_i(pmd_read_data),
         .pmd_read_data_valid_i(pmd_read_data_valid),
+        .dmd_read_data_i(16'h0000),
+        .dmd_read_data_valid_i(1'b0),
         .irq_n_i(irq_n),
         .probe_code_i(probe_code),
         .issue_boundary_o(issue_boundary),
@@ -236,6 +239,13 @@ module tb_adsp2100_linear_core_slice;
         .provisional_source_extension_o(provisional_source_extension),
         .pc_o(pc),
         .opcode_o(opcode),
+        .fetched_dm_request_candidate_o(),
+        .fetched_dm_request_presented_o(),
+        .fetched_dm_request_address_o(),
+        .fetched_dm_request_address_valid_o(),
+        .fetched_dm_request_write_o(),
+        .fetched_dm_request_write_data_o(),
+        .fetched_dm_request_write_data_valid_o(),
         .probe_data_o(probe_data),
         .astat_o(astat),
         .mstat_o(mstat),
@@ -265,6 +275,7 @@ module tb_adsp2100_linear_core_slice;
         .pmd_write_data_o(pmd_write_data),
         .pmd_write_data_valid_o(pmd_write_data_valid)
     );
+    /* verilator lint_on PINCONNECTEMPTY */
 
     initial begin
         clk = 1'b0;

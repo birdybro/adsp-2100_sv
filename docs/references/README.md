@@ -56,6 +56,21 @@ toolchain discovery, but its ADSP-2101 instruction chapter and opcode appendix
 do not establish original-device legality. The exact original ADSP-2100
 Cross-Software manual remains an open acquisition target.
 
+The exact-device `ADI-2100-EMULATOR-TARGET` is also unavailable. Contemporary
+ADI literature identifies the manual, but neither the official legacy index
+nor the searched archival directory exposes a lawful copy. Its possible pin
+trace or external-instrumentation material is an evidence target for OQ-023
+and OQ-024, not evidence by title alone.
+
+## Original 2100/2100A boundary
+
+`ADI-DATABOOK-1989` is a hash-pinned, gitignored scan of an original ADI
+databook containing the joint ADSP-2100/ADSP-2100A data sheet. Printed p. 2-19
+explicitly establishes pin/code compatibility and identical documented
+architectures and instruction sets, while distinguishing speed grades and
+electrical/timing specifications. It does not close undocumented mask fixes,
+errata, or power-up signatures.
+
 ## Citing sources
 
 Architecture documents cite a reference ID plus publication/revision and the

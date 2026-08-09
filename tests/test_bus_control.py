@@ -24,6 +24,10 @@ class BusControlTests(unittest.TestCase):
         self.assertEqual(contract["pin_polarity"]["BG"], "ACTIVE_LOW")
         self.assertIn("STATE_3", contract["normal_request_recognition"])
         self.assertEqual(
+            contract["incomplete_dm_service"],
+            "RECOGNIZE_REQUEST_BUT_DEFER_FOLLOWUP_PROTOCOL_TRANSITIONS_UNTIL_DM_COMPLETION",
+        )
+        self.assertEqual(
             contract["reset_time_path"],
             "SEPARATE_ASYNCHRONOUS_NATIVE_PIN_WRAPPER",
         )
@@ -166,6 +170,33 @@ class BusControlTests(unittest.TestCase):
         )
         self.assertTrue(cancelled.release_cancelled)
         self.assertEqual(cancelled.state.mode, BusControlMode.GRANTED)
+
+    def test_service_inhibit_latches_request_but_defers_followup(self) -> None:
+        recognized = apply_bus_control_cycle(
+            BusControlState(),
+            phase=LogicalPhase.STATE_3,
+            br_n=False,
+            service_inhibit=True,
+        )
+        self.assertTrue(recognized.request_recognized)
+        self.assertEqual(
+            recognized.state.mode, BusControlMode.REQUEST_DELAY
+        )
+        held = apply_bus_control_cycle(
+            recognized.state,
+            phase=LogicalPhase.STATE_3,
+            br_n=False,
+            service_inhibit=True,
+        )
+        self.assertFalse(held.grant_assert_event)
+        self.assertEqual(held.state, recognized.state)
+        granted = apply_bus_control_cycle(
+            held.state,
+            phase=LogicalPhase.STATE_3,
+            br_n=False,
+        )
+        self.assertTrue(granted.grant_assert_event)
+        self.assertEqual(granted.state.mode, BusControlMode.GRANTED)
 
     def test_reset_clears_normal_state_and_flags_async_path_request(self) -> None:
         result = apply_bus_control_cycle(

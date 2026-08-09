@@ -58,9 +58,15 @@ and both I postmodifications are cycle-end effects. The three destination sets
 are disjoint, so every one of the class's 4,194,304 words has a source-closed
 parallel action. An independent exhaustive model decoder, two primary-derived
 fixtures, algebraic/raw assembler-disassembler paths, exhaustive RTL, formal
-assertions, and a constrained Cyclone V project verify action selection.
-Architectural execution, cache recovery, and the native PM relationship while
-DMACK extends state seven remain unimplemented under OQ-023
+assertions, and a constrained Cyclone V decoder project verify action
+selection. A bounded logical state model and RTL slice capture computation
+and both DAG descriptors at issue, hold them over an implementation/test
+completion boundary, and atomically commit compute/status, both DREG loads,
+PX, and both I postmodifications. Twelve directed/model checks and 51,069
+model/RTL clocks cover all 1,024 compute-field tuples, both banks, bit
+reversal, circular modification, waits, reset, conflicts, and unknown
+validity. Cache recovery, fetch/event ownership, and the native PM
+relationship while DMACK extends state seven remain unimplemented under OQ-023
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-18, 3-1–3-7, 6-3–6-5,
 A-1, A-5–A-11].
 
@@ -301,9 +307,10 @@ condition, valid RTI, Type 10/Type 19 CALL-to-RTS context, fail-closed missing
 context, taken explicit-return precedence at a loop terminal, and a private-
 owner interrupt entry whose fetched RTI restores status and refetches the
 discarded word. Separately composed state-7-sampled requests are retained
-through ordinary HALT and normal BG; a raw-DM structural composition also
-samples and retains an IRQ through native DMACK extensions. Fetched-DM
-ownership, cache ownership, reset-first-fetch, recognition during PM-data, and
+through ordinary HALT and normal BG; the fetched Type 2/3/4/12 native-DM
+composition also samples and retains an IRQ through DMACK extensions, recognizes
+BR at physical state 3, and defers grant service until paired completion.
+Shared-DM/cache ownership, reset-first-fetch, recognition during PM-data, and
 simultaneous-event priority remain outside this attachment.
 
 Type 22 encodes `00001000000000000000 COND[3:0]`. All sixteen condition

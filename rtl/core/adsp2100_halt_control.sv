@@ -16,6 +16,9 @@ module adsp2100_halt_control (
     input  logic       halt_n_i,
     input  logic       dmack_i,
     input  logic       pm_data_cycle_i,
+    // A composed owner may defer the state-7 stop until its current
+    // instruction has satisfied an independently sourced completion rule.
+    input  logic       service_inhibit_i,
 
     output logic [1:0] mode_o,
     output logic       state_three_boundary_o,
@@ -53,6 +56,7 @@ module adsp2100_halt_control (
     assign halt_stop_event_o = (
         !reset_i && mode_q == HALT_STOP_PENDING
         && phase_advance_i && phase_i == PHASE_STATE_7
+        && !service_inhibit_i
     );
     assign force_fetch_issue_o = (
         !reset_i && mode_q == HALT_FORCE_FETCH
@@ -130,6 +134,16 @@ module adsp2100_halt_control (
         if (force_fetch_issue_o) begin
             assert (phase_i == PHASE_STATE_8 && phase_advance_i);
             assert (!instruction_issue_inhibit_o);
+        end
+        if (halt_stop_event_o) begin
+            assert (!service_inhibit_i);
+        end
+        if (
+            mode_q == HALT_STOP_PENDING
+            && phase_advance_i && phase_i == PHASE_STATE_7
+            && service_inhibit_i
+        ) begin
+            assert (!halt_stop_event_o);
         end
         if (release_blocked_o) begin
             assert (halt_n_i && !dmack_i);

@@ -32,15 +32,22 @@ sampled at state 7 while ordinary HALT or normal BR/BG is pending is now held
 without entry through the stopped/granted interval and enters at the qualified
 state-8-to-state-1 resume boundary. The ordinary-HALT, private-BR/BG, and
 retained-fetch/shared-PM BR/BG comparisons pass 50,048, 50,054, and 50,054
-clocks respectively. A separate raw-DM structural composition passes 50,000
-clocks: physical state 7 continues to sample IRQ during each full-cycle DMACK
-extension, while the architectural phase, fetch retirement, and interrupt
-service remain held until paired PM/DM completion. The real Type 5 and Type 13
+clocks respectively. A separate fetched Type 2/3/4/12 native-DM composition
+passes 21 checks and 50,000 clocks: physical state 7 continues to sample IRQ
+during each full-cycle DMACK extension, while the architectural phase, fetch
+retirement, and interrupt service remain held until paired PM/DM completion.
+It also recognizes BR at physical state 3 during the wait, defers grant service
+through completion, and conflict-reports unsourced BR/IRQ/TRAP service overlap.
+Ordinary HALT is also recognized during one real Type 2 wait and defers its
+stop until the same paired completion/retirement; simultaneous BR/HALT fails
+closed rather than assigning priority.
+The real Type 5 and Type 13
 native/cache owners add 50,100 and 50,098 clocks: an edge sampled at uncached
 PM-data completion is retained without recognition, and the immediately
 following recovery-fetch completion releases recognition. This closes the
 documented two-cycle no-service interval at those bounded owners, but not
-PC/status entry handoff or simultaneous-event priority. Fetched DM semantic
-ownership remains uncomposed. Input
+PC/status entry handoff or simultaneous-event priority. Additional
+architectural DM ownership, HALT during BG, and sourced cross-event priority
+remain open. Input
 synchronization, metastability, pulses with no state-7 sample, and analog
 setup/hold are outside the logical model.

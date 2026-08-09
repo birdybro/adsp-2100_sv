@@ -28,6 +28,7 @@ module adsp2100_program_clients_owner_control_formal (
     logic [1:0] halt_mode;
     logic halt_recognized, halt_stop, halt_force_fetch, halt_resume;
     logic halt_release_blocked, halt_phase_hold, effective_advance, halted;
+    logic architectural_advance, interrupt_wait_sample;
     logic halt_br_conflict, halt_attachment_conflict;
     logic linear_presented, linear_issue, linear_retire;
     logic linear_instruction_valid;
@@ -45,6 +46,14 @@ module adsp2100_program_clients_owner_control_formal (
     logic [13:0] pma;
     logic pma_valid, pmda, pmda_valid, pms_n, pmrd_n, pmwr_n;
     logic pmd_write_data_valid;
+    logic dm_request_accepted, dmack_sample, dmack_accepted;
+    logic dm_wait_extension, dm_completion, dm_read_sample;
+    logic dm_transaction_active, dm_waiting;
+    logic dm_address_oe, dm_control_oe, dm_data_oe;
+    logic [13:0] dma;
+    logic dma_valid, dms_n, dmrd_n, dmwr_n;
+    logic [15:0] dmd_write_data;
+    logic dmd_write_data_valid;
     logic [15:0] type5_probe_data, type13_probe_data;
     logic type5_probe_valid, type13_probe_valid;
     logic [7:0] type5_px, type13_px;
@@ -62,7 +71,13 @@ module adsp2100_program_clients_owner_control_formal (
         type5_instruction_complete, type13_retry, type13_data_complete,
         type13_instruction_complete, bus_mode, bg_n, request_blocked,
         request_out_of_phase, owner, pm_bus_active, pma, pma_valid,
-        pmda_valid, pmd_write_data_valid
+        pmda_valid, pmd_write_data_valid,
+        architectural_advance, interrupt_wait_sample,
+        dm_request_accepted, dmack_sample, dmack_accepted,
+        dm_wait_extension, dm_completion, dm_read_sample,
+        dm_transaction_active, dm_waiting,
+        dm_address_oe, dm_control_oe, dm_data_oe, dma, dma_valid,
+        dms_n, dmrd_n, dmwr_n, dmd_write_data, dmd_write_data_valid
     };
 
     /* verilator lint_off PINCONNECTEMPTY */
@@ -83,6 +98,8 @@ module adsp2100_program_clients_owner_control_formal (
         .type13_next_fetch_address_valid_i(type13_next_valid),
         .pmd_read_data_i(pmd_read_data),
         .pmd_read_data_valid_i(pmd_read_data_valid),
+        .dmd_read_data_i(pmd_read_data[15:0]),
+        .dmd_read_data_valid_i(pmd_read_data_valid),
         .astat_setup_write_i(1'b0), .astat_setup_data_i(8'h00),
         .mstat_setup_write_i(1'b0), .mstat_setup_data_i(4'h0),
         .dreg_setup_write_i(1'b0), .dreg_setup_code_i(4'h0),
@@ -109,6 +126,8 @@ module adsp2100_program_clients_owner_control_formal (
         .halt_release_blocked_o(halt_release_blocked),
         .halt_phase_hold_o(halt_phase_hold),
         .effective_phase_advance_o(effective_advance),
+        .architectural_phase_advance_o(architectural_advance),
+        .interrupt_wait_sample_o(interrupt_wait_sample),
         .halted_o(halted), .halt_br_conflict_o(halt_br_conflict),
         .halt_attachment_conflict_o(halt_attachment_conflict),
         .linear_fetch_request_presented_o(linear_presented),
@@ -153,7 +172,22 @@ module adsp2100_program_clients_owner_control_formal (
         .pmda_valid_o(pmda_valid), .pms_n_o(pms_n),
         .pmrd_n_o(pmrd_n), .pmwr_n_o(pmwr_n),
         .pmd_write_data_o(),
-        .pmd_write_data_valid_o(pmd_write_data_valid)
+        .pmd_write_data_valid_o(pmd_write_data_valid),
+        .dm_request_accepted_o(dm_request_accepted),
+        .dmack_sample_event_o(dmack_sample),
+        .dmack_accepted_o(dmack_accepted),
+        .dm_wait_extension_event_o(dm_wait_extension),
+        .dm_completion_event_o(dm_completion),
+        .dm_read_sample_event_o(dm_read_sample),
+        .dm_transaction_active_o(dm_transaction_active),
+        .dm_waiting_o(dm_waiting),
+        .dm_address_output_enable_o(dm_address_oe),
+        .dm_control_output_enable_o(dm_control_oe),
+        .dm_data_output_enable_o(dm_data_oe),
+        .dma_o(dma), .dma_valid_o(dma_valid),
+        .dms_n_o(dms_n), .dmrd_n_o(dmrd_n), .dmwr_n_o(dmwr_n),
+        .dmd_write_data_o(dmd_write_data),
+        .dmd_write_data_valid_o(dmd_write_data_valid)
     );
     /* verilator lint_on PINCONNECTEMPTY */
 
@@ -184,6 +218,11 @@ module adsp2100_program_clients_owner_control_formal (
         assert (!halt_br_conflict || integration_conflict);
         assert (!halt_attachment_conflict || integration_conflict);
         assert (!(~pmrd_n && ~pmwr_n));
+        assert (!(~dmrd_n && ~dmwr_n));
+        assert (!dm_request_accepted || request_accepted[0]);
+        assert (!dm_completion || completion[0]);
+        assert (!dm_waiting || !architectural_advance);
+        assert (!interrupt_wait_sample || dm_waiting);
         if (request_conflict) assert (request_accepted == 3'b000);
         if (cache_fill) begin
             assert ($onehot(completion));
@@ -200,6 +239,8 @@ module adsp2100_program_clients_owner_control_formal (
         if (bus_relinquished) begin
             assert (!address_oe && !control_oe && !data_oe);
             assert (pms_n && pmrd_n && pmwr_n);
+            assert (!dm_address_oe && !dm_control_oe && !dm_data_oe);
+            assert (dms_n && dmrd_n && dmwr_n);
         end
     end
 
@@ -210,6 +251,9 @@ module adsp2100_program_clients_owner_control_formal (
         cover (completion[0] && cache_fill);
         cover (completion[1] && cache_fill);
         cover (completion[2] && cache_fill);
+        cover (dm_request_accepted);
+        cover (dm_wait_extension);
+        cover (dm_completion && completion[0]);
     end
 endmodule
 

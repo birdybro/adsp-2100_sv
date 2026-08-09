@@ -36,6 +36,7 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
         reset: bool = False,
         advance: bool = True,
         br_n: bool = True,
+        service_inhibit: bool = False,
         phase_override: LogicalPhase | None = None,
     ) -> None:
         nonlocal state, phase
@@ -46,6 +47,7 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             phase=active_phase,
             phase_advance=advance,
             br_n=br_n,
+            service_inhibit=service_inhibit,
         )
         native_bg_n = br_n if reset else result.bg_n
         native_relinquished = (not br_n) if reset else result.bus_relinquished
@@ -55,6 +57,7 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
             (int(active_phase), 3),
             (advance, 1),
             (br_n, 1),
+            (service_inhibit, 1),
         ):
             stimulus = _append(stimulus, value, width)
         expected_pre = 0
@@ -92,6 +95,16 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
     # Complete request, grant, release, reacquire, and state-one resume.
     while phase is not LogicalPhase.STATE_3:
         emit(br_n=True)
+    emit(br_n=False)
+
+    # Request recognition remains live during a service-inhibited state 3,
+    # while the follow-up grant/withdrawal transition is deferred.
+    emit(reset=True, br_n=True)
+    while phase is not LogicalPhase.STATE_3:
+        emit(br_n=True)
+    emit(br_n=False, service_inhibit=True)
+    for _ in range(8):
+        emit(br_n=False, service_inhibit=True)
     emit(br_n=False)
     for _ in range(7):
         emit(br_n=False)
@@ -155,7 +168,16 @@ def generate_lines(random_count: int, seed: int) -> list[str]:
                 br_n = True
         else:
             br_n = True
-        emit(reset=reset, advance=advance, br_n=br_n)
+        service_inhibit = bool(
+            state.mode is BusControlMode.REQUEST_DELAY
+            and rng.randrange(32) == 0
+        )
+        emit(
+            reset=reset,
+            advance=advance,
+            br_n=br_n,
+            service_inhibit=service_inhibit,
+        )
     return lines
 
 

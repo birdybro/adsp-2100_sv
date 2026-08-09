@@ -54,8 +54,12 @@ four Y-input registers, DD maps to the four X-input registers, PM I/M map to
 DAG2, and DM I/M map to DAG1. A nonzero AMF is forced to AR or MR; AMF zero
 retains the two reads. These disjoint destinations make all 4,194,304 class
 words source-closed at the action boundary. Exhaustive independent Python and
-RTL traversal closes field/action selection, not state/cache/native dual-bus
-execution [ADI-UM-1989, printed pp. 6-3–6-5, A-1, A-5–A-11].
+RTL traversal closes field/action selection. A bounded logical state slice
+additionally captures both DAG/read descriptors and optional computation,
+holds them together, and atomically commits both loads, PX, both I updates,
+and compute/status across 51,069 model/RTL clocks. Cache/fetch/events and
+native dual-bus phases remain OQ-023 [ADI-UM-1989, printed pp. 6-3–6-5, A-1,
+A-5–A-11].
 
 Type 4 has mask/value `0xe00000`/`0x600000`. Its G, D, Z, AMF, YOP,
 XOP, DREG, I, and M fields occupy bits 20 through 0 without gaps. The sourced

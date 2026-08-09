@@ -3,6 +3,8 @@
 // Original ADSP-2100 normal-operation BR/BG sequencing.
 //
 // br_n_i is sampled only at enabled end-of-state-three boundaries. The
+// service-inhibit input preserves initial request recognition but defers
+// follow-up grant/release transitions while a current DM cycle is incomplete.
 // asynchronous RESET-time BR/BG path is intentionally isolated in the native
 // pin wrapper; reset_br_request_o makes that handoff explicit.
 module adsp2100_bus_control (
@@ -11,6 +13,7 @@ module adsp2100_bus_control (
     input  logic [2:0] phase_i,
     input  logic       phase_advance_i,
     input  logic       br_n_i,
+    input  logic       service_inhibit_i,
 
     output logic [2:0] mode_o,
     output logic       state_three_boundary_o,
@@ -39,6 +42,7 @@ module adsp2100_bus_control (
     bus_mode_t mode_q;
     bus_mode_t mode_d;
     logic normal_granted;
+    logic service_boundary;
 
     assign state_three_boundary_o = (
         !reset_i && phase_advance_i && phase_i == PHASE_STATE_3
@@ -46,24 +50,27 @@ module adsp2100_bus_control (
     assign request_recognized_o = (
         mode_q == BUS_IDLE && state_three_boundary_o && !br_n_i
     );
+    assign service_boundary = (
+        state_three_boundary_o && !service_inhibit_i
+    );
     assign grant_assert_event_o = (
         mode_q == BUS_REQUEST_DELAY
-        && state_three_boundary_o && !br_n_i
+        && service_boundary && !br_n_i
     );
     assign request_withdrawn_o = (
         mode_q == BUS_REQUEST_DELAY
-        && state_three_boundary_o && br_n_i
+        && service_boundary && br_n_i
     );
     assign release_recognized_o = (
-        mode_q == BUS_GRANTED && state_three_boundary_o && br_n_i
+        mode_q == BUS_GRANTED && service_boundary && br_n_i
     );
     assign grant_release_event_o = (
         mode_q == BUS_RELEASE_DELAY
-        && state_three_boundary_o && br_n_i
+        && service_boundary && br_n_i
     );
     assign release_cancelled_o = (
         mode_q == BUS_RELEASE_DELAY
-        && state_three_boundary_o && !br_n_i
+        && service_boundary && !br_n_i
     );
     assign resume_event_o = (
         !reset_i && mode_q == BUS_REACQUIRE
@@ -127,6 +134,13 @@ module adsp2100_bus_control (
             assert (!release_recognized_o);
             assert (!grant_release_event_o);
             assert (!resume_event_o);
+        end
+        if (service_inhibit_i) begin
+            assert (!grant_assert_event_o);
+            assert (!request_withdrawn_o);
+            assert (!release_recognized_o);
+            assert (!grant_release_event_o);
+            assert (!release_cancelled_o);
         end
         if (reset_i) begin
             assert (bg_n_o);

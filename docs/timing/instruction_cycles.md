@@ -21,6 +21,7 @@ Known cases:
 | ordinary instruction | one eight-state processor cycle; the retained bounded fetch client retries PC+1 after shared-owner collision or BR/BG issue inhibition and retires only on the routed state-7 completion |
 | Type 1 ALU/MAC plus DM and PM reads | one processor cycle with full-speed DMACK; computation consumes old operands and both reads complete at cycle end; DMACK-low extends state 7 by whole processor cycles, but the native PM strobe/data behavior during that extension remains OQ-023 |
 | Type 2 immediate DM write | one processor cycle when DMACK is sampled asserted; every DMACK-low sample extends state 7 by one processor cycle while captured address/immediate and the selected I remain stable |
+| Type 3 direct DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low state-6 sample repeats a complete eight-substate state-seven extension while preserving the absolute address, direction, and cycle-start store source or pending read destination; a load samples DMD and commits its destination at qualified state 7-to-8 |
 | Type 4 ALU/MAC plus DM read/write | one processor cycle when DMACK is sampled asserted; every DMACK-low state-6 sample repeats a complete eight-substate state-seven extension while preserving the captured bus/compute/DAG descriptor, and the qualified state-7-to-state-8 edge atomically commits compute/status, optional read, and selected-I postmodify |
 | Type 5 ALU/MAC plus PM read/write, cache hit | one processor cycle; compute/status, optional DREG/PX read, and DAG2 postmodify commit together at state 7-to-8 while the issue-time cached next instruction is selected |
 | Type 5 ALU/MAC plus PM read/write, cache miss or forced fetch | PM data actions commit in the first processor cycle; exactly one back-to-back external instruction-fetch cycle follows without repeating compute, read/PX, or DAG actions |
@@ -58,6 +59,20 @@ Sources: [ADI-UM-1989, printed pp. 4-9–4-10, 4-26–4-28, 5-9,
 5-13–5-16, 6-14–6-15, 6-21, A-4, A-8–A-10]. The Type 26
 combination wording is corroborated, but not extended, by
 [ADI-2101-CROSS-1990, printed pp. 9-26–9-27 and 9-61].
+
+The bounded Type 1 model/RTL slice verifies 51,069 logical clocks. Issue
+captures the cycle-start selected-bank computation and both fixed-DAG read/
+postmodify descriptors. A single implementation/test completion input holds
+both bus descriptors and every architectural destination together; completion
+atomically writes the optional AR/MR and ASTAT result, both DREG loads, PX,
+and both selected I registers. The run includes 27,309 held clocks and all
+1,024 `(AMF, YOP, XOP)` tuples. This verifies the full-speed one-cycle
+architectural ordering and a conservative logical hold boundary. It does not
+map that boundary to DMACK, PM strobes, or cache/fetch phases; OQ-023 still
+withholds the native behavior during a DMACK extension. SC-015 separately
+prevents importing the later-family serialized, multiplexed external-bus
+sequence into the original device
+[ADI-UM-1989, printed pp. 2-6–2-7, 3-1–3-7, 5-5–5-12, 6-3–6-5, A-1].
 
 The bounded Type 25 model/RTL slice verifies that cycle-start MV, selected
 bank, and MR determine a single cycle-end MR write, while false MV preserves
@@ -112,6 +127,46 @@ This establishes logical DMACK extension and completion-only post-modification,
 not physical state-6/state-7 pin timing, fetch concurrency, or event
 arbitration [ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1,
 and A-6].
+
+A separate fetched composition now enables Type 2, legal Type 3, source-closed
+Type 4, and source-closed Type 12 words in the ordinary-fetch owner and derives their native-DM
+descriptors from the retained opcode and live shared state. State-8 issue
+captures the Type 2 old-I/immediate descriptor, Type 3 direct descriptor, Type
+4 cycle-start compute/store/DAG descriptor, or Type 12 cycle-start shifter/
+store/DAG descriptor. Every DMACK-low extension
+holds that descriptor plus the PM fetch and architectural phase. Qualified
+state-7 completion retires all applicable register, compute/shifter/status, selected-I,
+PC, and returned-word effects together; DMD is sampled only there.
+
+Twenty-two directed checks and 50,000 model/RTL clocks cover 2,612 DM accepts,
+2,611 completions, 111 wait extensions/state-7 IRQ samples, 1,169 reads, 1,443
+writes, and 889 architectural holds. Generated ownership contributes 73 Type
+2 accepts/72 completions, 149 Type 3, 2,057 Type 4, and 119 Type 12
+transactions; every Type 2 G/I/M; every legal Type 3
+source/destination; all 2,048 Type 4 compute tuples; all 112 sourced Type 12
+shifter tuples; all applicable DAG/I/M and DREG selectors; both directions;
+old-value overlap; alternate-bank operation; bit
+reversal; circular wrap; complete waits; and IRQ deferral until aligned PM/DM
+retirement. BR is recognized at physical state 3 during a wait, protocol
+service is deferred until paired completion, and native grant masks all PM/DM
+output enables. Thirteen recognitions, 12 grants, 18,638 masked clocks, and 10
+complete release/reacquire/resume handshakes pass. The raw-DM input remains a
+lower-level companion for structural testing. One explicit generated/raw
+collision rejects both PM and DM acceptance and leaves the instruction for a
+successful later retry. HALT is likewise recognized at physical state 3
+during a real Type 2 wait; stop waits for paired completion/retirement, holds
+driven state 8, blocks low-DMACK release, and resumes the retained next word
+at state 8-to-1. Same-boundary and cross-owner BR/HALT requests fail closed
+while preserving an already active owner. Fetched Type
+3/4/12 stores and compute/shift operands are initialized
+and loads use valid DMD; standalone slices retain unknown-validity evidence for
+this owner. The larger 45-test/51,587-clock combined owner additionally covers
+an invalid Type 3 returned-DMD destination and independent Type 4 compute/read
+and Type 12 shift/read validity at the same completion boundary.
+Additional architectural DM requesters, HALT during BG, and simultaneous
+event priority are not attached to this owner [ADI-UM-1989, printed pp. 2-6–2-7, 2-18,
+3-1–3-5, 4-9–4-10,
+4-22, 5-9–5-16, 6-1, 6-3–6-7, 6-12–6-13, A-1, A-5–A-7, and A-9].
 
 The standalone native DM controller closes the physical-substate mapping for
 these clients. Its 50,039-clock model/RTL comparison checks DMACK only
@@ -205,7 +260,7 @@ separation, loaded next-word visibility, fixed one-cycle timing, atomic MSTAT
 changes, selected-bank and narrow-register effects, DAG/status writes, CNTR
 stack saturation/SSTAT, fail-closed reserved Type 7 destinations, legal Type
 17 execution, and unknown-source/reserved-selector rejection. A separate
-phase-level composition and bounded RTL owner add a superseding forty-two-
+phase-level composition and bounded RTL owner add a superseding forty-eight-
 test, 444,003-clock comparison: every Type 8 compute-field tuple and every
 move source/destination pair in both banks, every Type 9 AMF/condition combination, every
 canonical Type 14 packet, every supported Type 15 and Type 16 word, and all
@@ -363,12 +418,14 @@ entry/vector/RTI refetch sequence. Recognition retires the executing
 instruction at state 7 while invalidating the concurrent next-word fetch; the
 following state-8 issue pushes PC/status and fetches the vector, whose state-7
 completion loads but does not retire the vector instruction. This still does
-not establish fetched-DM ownership, recognition during PM data, cache
-ownership, reset-first-fetch, or simultaneous cross-event priority; separate
+not establish recognition during PM data, cache ownership, reset-first-fetch,
+or simultaneous cross-event priority; separate
 compositions now establish deferral for a state-7-sampled request through
 ordinary HALT and normal BG. A structural raw-DM companion additionally
 establishes physical state-7 sampling and architectural hold through native
-DMACK extensions, without claiming fetched DM semantics [ADI-UM-1989, printed
+DMACK extensions, while the bounded fetched Type 2/Type 3/Type 4/Type 12 attachment
+drives the same companion from real instruction semantics and retires only at aligned
+completion [ADI-UM-1989, printed
 pp. 4-3–4-4, 4-7, 4-9–4-10,
 6-14 Table 6.8, A-4, A-6].
 

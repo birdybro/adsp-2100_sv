@@ -7,7 +7,8 @@ module adsp2100_halt_control_formal (
     input logic       phase_advance,
     input logic       halt_n,
     input logic       dmack,
-    input logic       pm_data_cycle
+    input logic       pm_data_cycle,
+    input logic       service_inhibit
 );
     import adsp2100_pkg::*;
 
@@ -33,6 +34,7 @@ module adsp2100_halt_control_formal (
         .halt_n_i(halt_n),
         .dmack_i(dmack),
         .pm_data_cycle_i(pm_data_cycle),
+        .service_inhibit_i(service_inhibit),
         .mode_o(mode),
         .state_three_boundary_o(state_three_boundary),
         .halt_recognized_o(halt_recognized),
@@ -71,6 +73,13 @@ module adsp2100_halt_control_formal (
         if (halt_stop_event) begin
             assert (mode == 2'd1);
             assert (phase == PHASE_STATE_7 && phase_advance);
+            assert (!service_inhibit);
+        end
+        if (
+            mode == 2'd1 && phase == PHASE_STATE_7
+            && phase_advance && service_inhibit
+        ) begin
+            assert (!halt_stop_event);
         end
         if (force_fetch_issue) begin
             assert (mode == 2'd3);
@@ -101,6 +110,10 @@ module adsp2100_halt_control_formal (
         cover (halt_recognized && pm_data_cycle);
         cover (force_fetch_issue);
         cover (halt_stop_event);
+        cover (
+            mode == 2'd1 && phase == PHASE_STATE_7
+            && phase_advance && service_inhibit && !halt_stop_event
+        );
         cover (release_blocked);
         cover (resume_event);
     end

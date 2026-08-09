@@ -76,6 +76,14 @@ class HaltControlTests(unittest.TestCase):
             "RETAINED_STATE_7_IRQ_SERVICE_DEFERRAL_AND_VECTOR_ENTRY_ON_ORDINARY_HALT_RESUME",
             contract["implemented_attachments"],
         )
+        self.assertIn(
+            "FETCHED_TYPE2_TYPE3_TYPE4_TYPE12_NATIVE_DM_WAIT_OWNER",
+            contract["implemented_attachments"],
+        )
+        self.assertNotIn(
+            "HALT_DURING_DMACK_WAIT",
+            contract["excluded_claims"],
+        )
         self.assertNotIn(
             "TRAP_TO_HALT_HANDOFF",
             contract["excluded_claims"],
@@ -145,6 +153,25 @@ class HaltControlTests(unittest.TestCase):
             recognized.state.mode,
             HaltControlMode.STOP_PENDING,
         )
+
+    def test_stop_waits_for_composed_service_completion(self) -> None:
+        pending = HaltControlState(HaltControlMode.STOP_PENDING)
+        deferred = apply_halt_control_cycle(
+            pending,
+            phase=LogicalPhase.STATE_7,
+            service_inhibit=True,
+        )
+        self.assertFalse(deferred.halt_stop_event)
+        self.assertTrue(deferred.effective_phase_advance)
+        self.assertEqual(deferred.state, pending)
+
+        completed = apply_halt_control_cycle(
+            deferred.state,
+            phase=LogicalPhase.STATE_7,
+            service_inhibit=False,
+        )
+        self.assertTrue(completed.halt_stop_event)
+        self.assertEqual(completed.state.mode, HaltControlMode.HALTED)
 
     def test_current_fetch_retires_before_state_eight_stop(self) -> None:
         state = _setup()

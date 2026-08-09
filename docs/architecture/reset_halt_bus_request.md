@@ -2,7 +2,8 @@
 
 **Status: reset phase, HALT sequence control, ordinary-fetch plus bounded
 Type 5/Type 13 PM-data HALT attachments both separately and in the combined
-PM owner, normal BR/BG, and Type 22 handshake bounded in RTL**
+PM owner, ordinary HALT and normal BR/BG through fetched-DM waits, and Type 22 handshake
+bounded in RTL**
 
 RESET is recognized on a CLKIN rising edge, must remain asserted for at least
 four CLKIN cycles, holds state 4 and CLKOUT low, and releases into state 5 on
@@ -64,9 +65,17 @@ shows RESET and CLKIN only and says the processor starts from state 4 after
 release; its separate PM-read figures define ordinary state-edge timing but
 do not show PMS or PMRD during RESET or the partial state-4-to-state-5 release
 sequence [ADI-DATABOOK-1987, printed pp. 2-32 and 2-36–2-39, Figures 9 and
-14]. Treating either ordinary-PM hypothesis as authentic would therefore be
-an unsupported inference. An original combined waveform, simulator pin trace,
-or physical capture remains required by OQ-024.
+14]. The joint original-device sheet published in the 1989 databook repeats
+that RESET/CLKIN-only Figure 9 and state-4 note without adding PMS, PMRD, or an
+initial-fetch trace [ADI-DATABOOK-1989, printed p. 2-37]. Its development-tool
+sheet identifies Appendix B of the separate original emulator manual as the
+complete emulator/non-emulator timing comparison and specifically lists
+RESET, PMWR, and PMRD among the signals whose emulator timing differs, but the
+manual remains unavailable [ADI-DATABOOK-1989, printed p. 2-15]. Exact-title
+and broad archival searches on 2026-08-01 did not locate a lawful copy.
+Treating either ordinary-PM hypothesis as authentic would therefore be an
+unsupported inference. An original combined waveform, simulator pin trace, or
+physical capture remains required by OQ-024.
 
 HALT is recognized at state 3 and stops at state 8. If the current cycle is PM
 data, a forced instruction fetch completes first; this makes the stopped PMA
@@ -108,6 +117,47 @@ retirements, and 586 Type 16 retirements.
 The
 machine-readable boundary is `docs/generated/adsp2100_halt_control.yaml`.
 
+## Ordinary HALT through a fetched native-DM wait
+
+`rtl/core/adsp2100_linear_dm_wait_control_slice.sv` attaches the same
+ordinary-fetch schedule to the real fetched Type 2, Type 3, Type 4, and Type
+12 native-DM owner. A DMACK-low sample extends architectural state 7 by one
+complete physical eight-substate cycle. HALT recognition therefore remains
+enabled at each repeated physical state-3 boundary, but an implementation
+service inhibit prevents the pending stop from taking effect while the paired
+DM transaction remains incomplete. This composes two original-device rules:
+the current instruction finishes before HALT stops the processor, and DMACK
+must be high before release [ADI-UM-1989, printed pp. 5-9–5-14, Figures 5.7
+and 5.9]. The inhibit is a portable composition mechanism, not a claim about
+an undocumented internal latch.
+
+On the first qualified state-7-to-state-8 completion, the PM fetch, DM action,
+applicable compute/shifter/status/DREG/DAG effects, PC advance, and returned
+instruction retire exactly once; the HALT stop event occurs on that same
+boundary. The owner then holds physical and architectural state 8, inhibits
+new issue and retirement, and preserves the driven PM and DM address/control/
+write-data outputs. It does not apply BR/BG tristate masking. HALT release
+with DMACK low retains the stopped state; release with DMACK high resumes the
+retained next word at the state-8-to-state-1 issue boundary.
+
+Twenty-two directed/contract tests and 50,000 independent-model/RTL clocks
+cover one HALT recognition during a real fetched Type 2 wait, a second low
+DMACK sample with stop deferred, one paired completion and retirement before
+stop, three held state-8 observations, one blocked release, and two qualified
+resumes. Three BR/HALT conflicts cover same-boundary rejection plus active
+HALT-owner and active bus-owner preservation. The aggregate four-class run
+covers 2,612 DM accepts, 2,611 completions, 111 wait/state-7 IRQ samples, 1,169 reads, 1,443 writes, and 889
+architectural holds. The formal harness asserts that a waiting owner cannot
+stop, that stop requires paired completion/retirement, and that the stopped
+owner cannot issue or retire.
+
+BR/BG and HALT share no sourced simultaneous-event priority. The composition
+therefore preserves an already active controller but rejects and
+conflict-reports a same-boundary or cross-owned new BR/HALT request. This is a
+fail-closed implementation invariant, not original-device behavior. HALT
+during an active BG grant, BR/HALT release overlap, reset/TRAP/IRQ
+overlap, and asynchronous input conditioning remain open.
+
 ## PM-data forced-fetch sequencing boundary
 
 The same standalone controller now represents the distinct PM-data rule. A
@@ -119,7 +169,7 @@ that fetch reaches its state-7-to-state-8 completion. Instruction issue is
 inhibited before and after that single request, so a cache hit cannot suppress
 the required external observation [ADI-UM-1989, printed pp. 5-13–5-14].
 
-Eight directed contract/model tests and a standalone 50,033-clock independent-
+Nine directed contract/model tests and a standalone 50,033-clock independent-
 model/RTL comparison cover both ordinary and PM-data recognition, 335 PM-data
 recognitions and forced fetch issues, 667 total stops, 665 releases, 291
 DMACK-low blocked releases, and 2,269 held clocks. Formal invariants cover the
@@ -153,8 +203,8 @@ state 8. A recognition during either PM-data client records the captured
 owner, suppresses an issue-time cache hit, commits the architectural PM-data
 action exactly once, accepts one pure external recovery for that same client,
 fills the shared cache, and stops at its state-7 completion. HALT-high and
-DMACK-high qualify release. Three directed combined-owner tests within a 38-
-test, 51,428-clock independent-model/RTL comparison cover the ordinary stop,
+DMACK-high qualify release. Three directed combined-owner tests within a 45-
+test, 51,587-clock independent-model/RTL comparison cover the ordinary stop,
 Type 5 and Type 13 forced recoveries, one blocked release, four held clocks,
 and three resumes with zero attachment conflicts. Because no original-device
 source establishes BR/HALT priority, simultaneous or cross-owned requests are
@@ -162,8 +212,8 @@ rejected and conflict-reported as an implementation invariant rather than
 assigned an architectural order [ADI-UM-1989, printed pp. 4-26–4-30 and
 5-3–5-14; ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
-General HALT support still excludes HALT recognition while BG is active or a
-DMACK wait is incomplete, simultaneous ordinary-HALT/Type-22 priority, BR
+General HALT support still excludes HALT recognition while BG is active,
+simultaneous ordinary-HALT/Type-22 priority, BR
 recognition while already halted, reset interaction, and electrical
 synchronization/metastability. A request sampled at state 7 while an ordinary
 HALT stop is pending is now retained without entry during the stopped state
@@ -246,6 +296,27 @@ linear fetch owner; PM-data,
 DM, transfer, loop, HALT, reset-first-fetch, capture without a state-7 sample,
 and simultaneous-event ownership remain unconnected.
 
+The separate `adsp2100_linear_dm_wait_control_slice` composes the same normal
+controller with the real fetched Type 2, Type 3, Type 4, and Type 12 native-DM
+owner. BR is still sampled at each physical state-3 boundary during a complete
+DMACK extension, while an explicit service inhibit prevents grant, withdrawal,
+or release follow-up until the current PM and DM transactions complete
+together. Recognition blocks the next issue; an asserted native grant masks
+every PM and DM output enable; and release resumes at state 8-to-1 after the
+sourced full-cycle delay. Twenty-two directed checks and 50,000 independent-
+model/RTL clocks cover 13 recognitions, including one first sampled during a
+wait, three completions before pending grant service, 12 grants, 18,638 dual-
+bus-masked clocks, and 10 complete release/reacquire/resume handshakes. One
+generated/raw DM collision also fails closed before the paired PM fetch and
+retries the retained instruction later. Ordinary HALT recognition now remains
+live during a DM wait and defers stop until aligned completion as specified in
+the preceding attachment. BR overlap with HALT, interrupt, or TRAP service is
+conflict-reported because the original evidence does not establish a
+priority. Additional architectural DM requesters, HALT during active BG, and
+sourced cross-event priority remain open
+[ADI-UM-1989, printed pp. 5-3–5-11, Figures 5.3 and 5.7;
+ADI-DATABOOK-1987, printed pp. 2-17, 2-33–2-35, and 2-40–2-43].
+
 `rtl/core/adsp2100_program_owner_bus_control.sv` independently attaches the
 same controller to the single fail-closed PM selector shared by ordinary
 fetch, Type 5 PM data, and Type 13 PM data descriptors. Recognition does not
@@ -262,10 +333,11 @@ clients each retain and retry their own rejected descriptor without replaying
 completed architectural work. The ordinary-fetch attachment adds seven
 directed tests and 50,054 model/RTL clocks covering 90 BR handshakes, 743
 retained fetch retries, 4,387 routed fetch completions, and one IRQ2 retained
-through BG into vector entry. No one composition yet
-contains all three architectural clients. DM-driver masking and priority
-against HALT, TRAP, loops, reset release, new recognition without state-7
-sampling, or simultaneous raw PM data remain outside these bounded results
+through BG into vector entry. The later combined program-client owner contains
+all three architectural clients behind one PM boundary; this selector remains
+its lower-level protocol basis. Priority against HALT, TRAP, loops, reset
+release, new recognition without state-7 sampling, or simultaneous raw PM data
+remains outside these specific bounded results
 [ADI-UM-1989, printed pp. 5-3–5-8, Figures 5.3 and 5.5;
 ADI-DATABOOK-1987, printed pp. 2-33–2-39].
 
@@ -277,9 +349,10 @@ driver masked. A unified composition with both PM-data clients, the retained
 ordinary-fetch client, and HALT/TRAP/loop/interrupt priority remains open.
 
 The machine-readable contract is
-`docs/generated/adsp2100_bus_control.yaml`. Seven directed tests and 50,084
+`docs/generated/adsp2100_bus_control.yaml`. Eight directed tests and 50,092
 deterministic model/RTL clocks cover request/grant and release/restart latency,
-phase holds, reset, the output-enable mask, and invalid early withdrawal or
+phase holds, reset, the output-enable mask, recognition while follow-up service
+is inhibited by an incomplete DM cycle, and invalid early withdrawal or
 reassertion. Invalid handshake changes fail closed with explicit protocol
 events; that protective behavior is an implementation contract, not a claim
 about unspecified real-device input sequences.

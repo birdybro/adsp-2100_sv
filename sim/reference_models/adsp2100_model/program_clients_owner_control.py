@@ -1,9 +1,11 @@
-"""Three PM clients on one cache/native owner and one architectural state.
+"""Three PM clients plus fetched DM on one shared architectural owner.
 
 The retained fetch sequencer remains the PC/opcode owner, while Type 5 and
 Type 13 consume and update the same computational, status, DAG, and PX image.
 An optional sequential-only mode issues either PM class from the retained
-opcode and installs its cache-hit or miss-recovery PC+1 successor.
+opcode and installs its cache-hit or miss-recovery PC+1 successor. Fetched
+Type 2/3/4/12 instructions pair that PM fetch with one native-DM transaction;
+DMACK waits hold architectural and PM progress until both buses complete.
 """
 
 from __future__ import annotations
@@ -11,6 +13,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 
 from .bus_control import BusControlMode
+from .data_owner_bus import (
+    DataOwnerBusCycleResult,
+    DataOwnerBusState,
+    apply_data_owner_bus_cycle,
+)
 from .compute_pm import (
     ComputePMCycleResult,
     ComputePMState,
@@ -68,6 +75,7 @@ class ProgramClientsOwnerControlState:
     interface: ProgramOwnerBusControlState = field(
         default_factory=ProgramOwnerBusControlState.reset
     )
+    dm: DataOwnerBusState = field(default_factory=DataOwnerBusState.reset)
     halt: HaltControlState = field(default_factory=HaltControlState)
     type5_cache_instruction: ExactWord | _UnknownValue = UNKNOWN
     type5_cache_instruction_valid: bool = False
@@ -211,8 +219,11 @@ class ProgramClientsOwnerControlCycleResult:
     type13: ShifterPMCycleResult
     cache: InstructionCacheCycleResult
     interface: ProgramOwnerBusControlCycleResult
+    dm: DataOwnerBusCycleResult
     halt: HaltControlCycleResult
     issue_boundary: bool = False
+    architectural_phase_advance: bool = False
+    interrupt_wait_sample: bool = False
     client_execute_conflict: bool = False
     automatic_pm_instruction_issue: bool = False
     automatic_pm_instruction_retire: bool = False
@@ -270,6 +281,7 @@ def apply_program_clients_owner_control_cycle(
     type13_opcode: int = 0,
     type13_next_fetch_address: ExactWord | _UnknownValue = UNKNOWN,
     pmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
+    dmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
     setup_astat: ExactWord | None = None,
     setup_mstat: ExactWord | None = None,
     setup_dreg: DREGWrite | None = None,
@@ -282,6 +294,14 @@ def apply_program_clients_owner_control_cycle(
     """Apply one physical phase clock to the bounded three-client/HALT owner."""
 
     phase = LogicalPhase(phase)
+    dm_waiting = bool(
+        state.dm.bus.active
+        and not state.dm.bus.response_valid
+        and state.dm.bus.waiting
+    )
+    dm_in_progress = bool(
+        state.dm.bus.active and not state.dm.bus.response_valid
+    )
     halt_br_conflict = bool(
         not reset
         and (
@@ -322,6 +342,15 @@ def apply_program_clients_owner_control_cycle(
         halt_n=effective_halt_n,
         dmack=dmack,
         pm_data_cycle=halt_pm_data_cycle,
+        service_inhibit=dm_waiting,
+    )
+    architectural_phase_advance = bool(
+        halt.effective_phase_advance and not dm_waiting
+    )
+    interrupt_wait_sample = bool(
+        halt.effective_phase_advance
+        and dm_waiting
+        and phase is LogicalPhase.STATE_7
     )
     halt_late_force_request = bool(
         not reset
@@ -339,7 +368,9 @@ def apply_program_clients_owner_control_cycle(
         reset=reset,
         phase=phase,
         phase_advance=halt.effective_phase_advance,
+        pm_phase_advance=architectural_phase_advance,
         br_n=effective_br_n,
+        service_inhibit=dm_in_progress,
         pmd_read_data=pmd_read_data,
     )
     issue_boundary = bool(
@@ -347,7 +378,7 @@ def apply_program_clients_owner_control_cycle(
         and not preview.control.instruction_issue_inhibit
         and not preview.native_bus_relinquished
         and phase == LogicalPhase.STATE_8
-        and halt.effective_phase_advance
+        and architectural_phase_advance
     )
     execute_conflict = bool(
         not reset
@@ -528,7 +559,8 @@ def apply_program_clients_owner_control_cycle(
         state.linear,
         reset=reset,
         phase=phase,
-        phase_advance=halt.effective_phase_advance,
+        phase_advance=architectural_phase_advance,
+        interrupt_sample_advance=interrupt_wait_sample,
         instruction_issue_inhibit=(
             preview.control.instruction_issue_inhibit
             or halt.instruction_issue_inhibit
@@ -537,6 +569,7 @@ def apply_program_clients_owner_control_cycle(
         instruction_setup=instruction_setup,
         pm_completion_event=preview.owner_bus.fetch_completion,
         pmd_read_data=pmd_read_data,
+        dmd_read_data=dmd_read_data,
         irq_n=irq_n,
         pm_instruction_active=automatic_pm_instruction_active,
         pm_instruction_complete=automatic_pm_completion,
@@ -544,6 +577,10 @@ def apply_program_clients_owner_control_cycle(
             automatic_pm_next
             if (type5_next_valid or type13_next_valid) else UNKNOWN
         ),
+        fetched_type2_enabled=True,
+        fetched_type3_enabled=True,
+        fetched_type4_enabled=True,
+        fetched_type12_enabled=True,
     )
     fetch_request = (
         ProgramBusRequest.fetch(linear_preview.fetch_address.value)
@@ -561,17 +598,34 @@ def apply_program_clients_owner_control_cycle(
         reset=reset,
         phase=phase,
         phase_advance=halt.effective_phase_advance,
+        pm_phase_advance=architectural_phase_advance,
         br_n=effective_br_n,
+        service_inhibit=dm_in_progress,
         fetch_request=fetch_request,
         type5_request=type5_request,
         type13_request=type13_request,
         pmd_read_data=pmd_read_data,
     )
+    dm = apply_data_owner_bus_cycle(
+        state.dm,
+        reset=reset,
+        phase=phase,
+        phase_advance=halt.effective_phase_advance,
+        fetched_request=(
+            linear_preview.fetched_dm_request
+            if type5_request is None and type13_request is None
+            else None
+        ),
+        dm_ack=dmack,
+        dmd_read_data=dmd_read_data,
+        bus_relinquished=preview.native_bus_relinquished,
+    )
     linear = apply_linear_fetch_client_cycle(
         state.linear,
         reset=reset,
         phase=phase,
-        phase_advance=halt.effective_phase_advance,
+        phase_advance=architectural_phase_advance,
+        interrupt_sample_advance=interrupt_wait_sample,
         instruction_issue_inhibit=(
             preview.control.instruction_issue_inhibit
             or halt.instruction_issue_inhibit
@@ -581,6 +635,7 @@ def apply_program_clients_owner_control_cycle(
         pm_request_accepted=interface.owner_bus.fetch_accepted,
         pm_completion_event=preview.owner_bus.fetch_completion,
         pmd_read_data=pmd_read_data,
+        dmd_read_data=dmd_read_data,
         irq_n=irq_n,
         pm_instruction_active=automatic_pm_instruction_active,
         pm_instruction_complete=automatic_pm_completion,
@@ -588,6 +643,10 @@ def apply_program_clients_owner_control_cycle(
             automatic_pm_next
             if (type5_next_valid or type13_next_valid) else UNKNOWN
         ),
+        fetched_type2_enabled=True,
+        fetched_type3_enabled=True,
+        fetched_type4_enabled=True,
+        fetched_type12_enabled=True,
     )
 
     type5_cache_word = state.type5_cache_instruction
@@ -682,6 +741,7 @@ def apply_program_clients_owner_control_cycle(
         type13=shared_type13,
         cache=cache_result.state,
         interface=interface.state,
+        dm=dm.state,
         halt=halt.state,
         type5_cache_instruction=type5_cache_word,
         type5_cache_instruction_valid=type5_cache_valid,
@@ -710,6 +770,16 @@ def apply_program_clients_owner_control_cycle(
         or halt_br_conflict
         or halt_owner_conflict
         or halt_attachment_conflict
+        or dm.request_conflict
+        or dm.request_out_of_phase
+        or (
+            linear_preview.fetched_dm_request is not None
+            and dm.fetched_accepted != interface.owner_bus.fetch_accepted
+        )
+        or (
+            dm_in_progress
+            and dm.fetched_completion != preview.owner_bus.fetch_completion
+        )
     )
     return ProgramClientsOwnerControlCycleResult(
         state=next_state,
@@ -718,8 +788,11 @@ def apply_program_clients_owner_control_cycle(
         type13=type13,
         cache=cache_result,
         interface=interface,
+        dm=dm,
         halt=halt,
         issue_boundary=issue_boundary,
+        architectural_phase_advance=architectural_phase_advance,
+        interrupt_wait_sample=interrupt_wait_sample,
         client_execute_conflict=execute_conflict,
         automatic_pm_instruction_issue=bool(
             automatic_pm_flow

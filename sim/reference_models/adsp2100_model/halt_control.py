@@ -52,6 +52,7 @@ def apply_halt_control_cycle(
     halt_n: bool = True,
     dmack: bool = True,
     pm_data_cycle: bool = False,
+    service_inhibit: bool = False,
 ) -> HaltControlCycleResult:
     """Apply one logical-phase boundary to the bounded HALT controller."""
 
@@ -71,6 +72,7 @@ def apply_halt_control_cycle(
         and state.mode is HaltControlMode.STOP_PENDING
         and phase_advance
         and phase == LogicalPhase.STATE_7
+        and not service_inhibit
     )
     force_fetch_issue = bool(
         not reset

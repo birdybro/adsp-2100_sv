@@ -5,7 +5,8 @@ module adsp2100_bus_control_formal (
     input logic       reset,
     input logic [2:0] phase,
     input logic       phase_advance,
-    input logic       br_n
+    input logic       br_n,
+    input logic       service_inhibit
 );
     import adsp2100_pkg::*;
 
@@ -32,6 +33,7 @@ module adsp2100_bus_control_formal (
         .phase_i(phase),
         .phase_advance_i(phase_advance),
         .br_n_i(br_n),
+        .service_inhibit_i(service_inhibit),
         .mode_o(mode),
         .state_three_boundary_o(state_three_boundary),
         .request_recognized_o(request_recognized),
@@ -82,6 +84,13 @@ module adsp2100_bus_control_formal (
             assert (!release_recognized);
             assert (!grant_release_event);
             assert (!resume_event);
+        end
+        if (service_inhibit) begin
+            assert (!grant_assert_event);
+            assert (!request_withdrawn);
+            assert (!release_recognized);
+            assert (!grant_release_event);
+            assert (!release_cancelled);
         end
     end
 

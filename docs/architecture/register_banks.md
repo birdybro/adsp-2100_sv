@@ -77,9 +77,9 @@ around that single state owner. Source and bank selection come from
 cycle-start MSTAT; a MOVE to MSTAT changes the selected bank only after its
 source has been read. The 59,430-cycle comparison initializes both banks
 independently and checks the complete register cross-product. This extraction
-does not yet expose ALU/MAC/shifter or memory-completion write intents, so the
-standalone compute and PM-data slices still own private state and must not be
-composed as if they formed one processor.
+now exposes the bounded ALU/MAC/shifter and memory-completion write intents
+used by the fetched/PM-client owner. Standalone compute and PM-data slices
+retain private state and must not be composed as if they formed one processor.
 
 The combined owner is the bounded composition in which those fetched and PM
 write intents do converge. It uses explicit validity sidecars so a fetched
@@ -87,12 +87,21 @@ Type 17 move from reset-unknown state invalidates its DREG, DAG, status/control,
 SB, or PX destination and a following dependent action observes that state.
 MSTAT bit 0 must be known before any banked Type 17 access; PM clients and
 other bank/mode-dependent fetched actions similarly fail closed when required
-MSTAT bits are unknown. Four directed dependency tests within 51,428 model/RTL clocks
+MSTAT bits are unknown. Four directed dependency tests within 51,587 model/RTL clocks
 cover these dependencies without assigning undocumented reset values
 [ADI-UM-1989, printed pp. 2-6–2-7, 2-15, 2-18, 2-21, 4-20–4-24, 6-12,
 A-3, A-9]. A fifth test proves status-stack ASTAT/MSTAT/IMASK validity is
 captured and later restored across intervening known writes. OQ-016
 narrow-source extension remains open.
+
+Three additional combined-owner tests close the fetched-DM result sidecars at
+the same native state-7 retirement boundary. Type 3 copies returned DMD
+validity to the selected DREG or supported status/control destination. Type 4
+and Type 12 independently classify their compute or shifter writeback and
+their parallel DM-read DREG destination, so invalid DMD cannot contaminate a
+known compute/shift result and an invalid operand cannot contaminate a known
+DM read. These cases are part of the 45-test, 51,587-clock comparison
+[ADI-UM-1989, printed pp. 2-6–2-7, 3-6–3-7, 4-20–4-30, A-1–A-3].
 
 `adsp2100_direct_dm_slice` reuses the same general-register state for every
 legal Type 3 absolute DM transfer. It captures selected-bank write sources at
@@ -174,6 +183,16 @@ ordinary-fetch owner separately traverses every compute-field tuple and every
 move source/destination pair in both banks within 444,003 phase clocks, with
 atomic compute/status/move/PC/next-word retirement.
 
+Fetched Type 4 uses the same cycle-start selected-bank contract for ALU/MAC
+operands and the DM store DREG. Its separate native-DM owner captures those
+values at state 8, holds them over full DMACK extensions, and commits compute/
+status plus an optional DMD load at aligned state 7. The 50,000-clock Type
+2/3/4 comparison covers all 2,048 compute tuples, every DREG, both banks via an
+alternate-bank MAC/readback sequence, and the documented old-value store
+overlap. Fetched operands are initialized; standalone Type 4 evidence retains
+reset-unknown propagation [ADI-UM-1989, printed pp. 2-6–2-7, 2-15–2-18,
+6-3–6-7, A-1, and A-5–A-11].
+
 `adsp2100_conditional_compute_slice` uses the identical cycle-start bank and
 operand mapping for Type 9, but gates all result/status writes with the
 cycle-start condition. True actions update only the selected AR/AF or MR/MF;
@@ -190,8 +209,10 @@ ports already implemented by the independently tested register, DAG, and
 status primitives. In addition to the complete general-register move
 selector, clients can make a third cycle-start DREG read; request two more
 parallel DREG writes; commit ALU, MAC, or one shifter result; commit a DAG I
-update; update ALU/divide/MAC/shifter flags; and apply all four mode-control
-actions. The owner gates every direct state-changing action during RESET and
+update; independently read two DAG address tuples for fetched and PM-data
+clients; update ALU/divide/MAC/shifter flags; and apply all four mode-control
+actions. The two DAG ports expose the same cycle-start storage and add no
+architectural state or ordering rule. The owner gates every direct state-changing action during RESET and
 exports AF, MF, MR, SE, SB, SR, and the MSTAT bank/BR/OL/AS consumers. This is
 an integration boundary, not a new claim about legal instruction
 combinations: the decoders remain responsible for presenting only sourced
@@ -211,7 +232,8 @@ action bundles [ADI-UM-1989, printed pp. 2-6–2-20, 4-20–4-25, 5-13,
   seeded-random legal writes, clocks collision cases, and verifies that the
   next cycle sees unchanged state.
 - `sim/unit/tb_adsp2100_architectural_state.sv` directly checks the shared
-  owner's three cycle-start reads, three noncolliding DREG writes, primary and
+  owner's DREG reads, two simultaneous independent DAG reads, three
+  noncolliding DREG writes, primary and
   alternate AF isolation, MR/SR/SE/SB destinations, automatic ASTAT updates,
   mode outputs, DAG-I completion, local conflict preservation, and RESET
   suppression. The exhaustive primitive comparisons remain the independent
@@ -249,6 +271,11 @@ action bundles [ADI-UM-1989, printed pp. 2-6–2-20, 4-20–4-25, 5-13,
 - `make compute-tests` adds ten directed Type 8 tests and 983,386 stateful
   model-versus-RTL cycles, executing all 476,672 supported words in both banks
   plus invalid, collision, reset-unknown, and setup-conflict boundaries.
+- `make compute-tests` adds twelve directed/model Type 1 tests and 51,069
+  logical state clocks. All 1,024 `(AMF, YOP, XOP)` tuples execute across both
+  banks while the two loads, PX, both DAG-I writes, and optional AR/MR/status
+  result remain held until one atomic completion boundary. Native PM/DM phases
+  remain OQ-023.
 - `make compute-tests` adds ten directed Type 9 tests and 283,996 stateful
   model-versus-RTL cycles, executing all 32,768 words in both banks and both
   outcomes for every nonconstant condition.

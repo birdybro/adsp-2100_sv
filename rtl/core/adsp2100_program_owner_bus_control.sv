@@ -3,14 +3,19 @@
 // Bounded composition of the shared PM owner with original normal BR/BG.
 //
 // A recognized request inhibits only future state-8 descriptor capture. The
-// active PM transaction continues through state 7. The native RESET-time
-// asynchronous BR/BG relationship remains isolated in the pin-only wrapper.
+// active PM transaction continues through state 7. phase_advance_i keeps the
+// physical BR recognizer live while pm_phase_advance_i may hold PM progress;
+// service_inhibit_i defers a recognized grant until the paired service is
+// eligible. The native RESET-time asynchronous BR/BG relationship remains
+// isolated in the pin-only wrapper.
 module adsp2100_program_owner_bus_control (
     input  logic        clk_i,
     input  logic        reset_i,
     input  logic [2:0]  phase_i,
     input  logic        phase_advance_i,
+    input  logic        pm_phase_advance_i,
     input  logic        br_n_i,
+    input  logic        service_inhibit_i,
 
     input  logic        fetch_valid_i,
     input  logic [13:0] fetch_address_i,
@@ -94,6 +99,7 @@ module adsp2100_program_owner_bus_control (
         .phase_i(phase_i),
         .phase_advance_i(phase_advance_i),
         .br_n_i(br_n_i),
+        .service_inhibit_i(service_inhibit_i),
         .mode_o(bus_mode_o),
         .state_three_boundary_o(state_three_boundary_o),
         .request_recognized_o(bus_request_recognized_o),
@@ -122,7 +128,7 @@ module adsp2100_program_owner_bus_control (
         .clk_i(clk_i),
         .reset_i(reset_i),
         .phase_i(phase_i),
-        .phase_advance_i(phase_advance_i),
+        .phase_advance_i(pm_phase_advance_i),
         .fetch_valid_i(gated_request_valid[0]),
         .fetch_address_i(fetch_address_i),
         .fetch_address_valid_i(fetch_address_valid_i),

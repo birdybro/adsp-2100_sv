@@ -1,6 +1,6 @@
 # Multifunction execution semantics
 
-**Status: key ordering rule and Type 1 action selection verified; bounded Type 4 ALU/MAC-plus-DM,
+**Status: key ordering rule and bounded Type 1 logical execution verified; bounded Type 4 ALU/MAC-plus-DM,
 Type 5 ALU/MAC-plus-PM/cache, Type 8 ALU/MAC-plus-DREG,
 Type 12 shifter-plus-DM, Type 13
 shifter-plus-PM/cache, and Type 14 shifter-plus-DREG forms integrated**
@@ -26,7 +26,7 @@ The original explicitly supports:
 
 [ADI-UM-1989, printed pp. 6-3–6-7 and Appendix A types 1, 4, 5, 8, 12–14.]
 
-## Type 1 dual-read action boundary
+## Bounded Type 1 dual-read execution
 
 Original Type 1 is the widest multifunction format: fixed prefix `11`, PM
 destination PD, DM destination DD, AMF/YOP/XOP, independent DAG2 PM I/M, and
@@ -46,12 +46,30 @@ and both read destinations. Exhaustive Python and RTL traversals classify all
 4,194,304 Type 1 words as source-closed. Two hand-derived manual examples,
 1,024 representative dual-read-only round trips, every 685 uniquely
 spellable result-register computation form, raw aliases, a formal harness,
-and a constrained Cyclone V decoder project verify this boundary. This does
-not yet execute state. The manual says DMACK extends processor state seven by
-one complete processor cycle but does not explicitly state whether the
-simultaneous PM read strobe is retained, repeated, or internally completed
-during that extension; OQ-023 prevents the native dual-bus attachment from
-inventing that behavior.
+and a constrained Cyclone V decoder project verify action selection.
+
+The bounded logical state model and portable RTL slice capture the selected
+bank, computation result, both old-I addresses and I/M/L postmodify
+descriptors, and both read destinations when the action issues. A single
+implementation/test completion input can hold the complete packet without an
+architectural write. Its completion atomically commits AR or MR and the
+corresponding ASTAT effects when AMF is nonzero, the DM and PM DREG loads,
+PX, and both selected I registers. Twelve directed/model checks and 51,069
+deterministic model/RTL clocks cover all 1,024 `(AMF, YOP, XOP)` tuples,
+AMF-zero dual-read-only actions, both banks, independent DAG1 bit reversal,
+circular modification, 27,309 held clocks, unknown read/compute validity,
+reset, and conflicts. The state formal harness passes strict elaboration, and
+a fully constrained Cyclone V fit uses 1,927 ALMs, 1,253 registers, and one
+DSP block with positive multicorner setup/hold slack.
+
+This logical completion input is not mapped to DMACK or native PM phases. The
+manual says DMACK extends processor state seven by one complete processor
+cycle but does not explicitly state whether the simultaneous PM read strobe
+is retained, repeated, or internally completed during that extension;
+OQ-023 therefore still prevents a native dual-bus attachment from inventing
+that behavior. The later-family multiplexed external-bus sequence is not an
+original-device substitute under SC-015. Cache recovery, ordinary fetch, and
+system-event ownership are also outside this bounded state slice.
 
 ## Bounded Type 4 execution and logical DM transaction
 
@@ -89,7 +107,25 @@ sequence for every DMACK-low sample, and returns only qualified state-7-to-8
 completion to the logical client. Six directed tests and 50,082 additional
 model/RTL clocks cover reads, old-value writes, memory-only actions, waits,
 reset cancellation, off-boundary controls, late ACK, and relinquishment.
-Instruction fetch, multiple DM owners, and event arbitration remain open.
+A further ordinary-fetch/native-DM composition decodes the retained Type 4
+word, samples the same cycle-start operands at state 8, holds all effects over
+complete DMACK extensions, and retires compute/status/read/I with PC and the
+returned word at aligned state 7. Three directed checks plus the 50,000-clock
+Type 2/3/4/12 comparison cover 2,057 Type 4 transactions, all 2,048
+`(Z, AMF, YOP, XOP)` tuples, all DAG/I/M and DREG selectors, both directions,
+old-value overlap, memory-only operation, alternate-bank MAC, bit reversal,
+circular wrap, a wait, and a rejected read collision. Fetched operands are
+initialized and DMD is valid; reset-unknown/invalid-data propagation remains
+standalone evidence in this ordinary-fetch-only composition. The superseding
+three-PM-client/shared-state composition adds two directed Type 4 cases: a
+known compute with invalid returned DMD preserves the compute result while
+invalidating the read DREG, and an invalid compute operand with valid DMD does
+the converse. The superseding composition recognizes BR during a wait,
+completes the paired PM/DM instruction before grant, and masks both buses
+during native grant. Ordinary HALT is now recognized during a real fetched
+Type 2 wait and defers stop until aligned completion; the same controller
+applies to fetched Type 4. Multiple architectural DM owners, HALT during BG,
+and sourced event arbitration remain open.
 
 ## Bounded Type 5 execution
 
@@ -226,9 +262,33 @@ write data. The first acknowledged boundary samples read data and atomically
 commits the memory read, shifter result/status, and DAG post-modify. Directed
 tests and 50,069 deterministic model/RTL clocks cover zero and multiple waits,
 both banks/DAGs, bit reversal, reset abort, exact and unknown operands, and
-randomized legal transactions [ADI-UM-1989, printed pp. 5-9–5-12]. This is
-logical bus-cycle evidence; physical eight-state pin waveforms, fetch overlap,
-interrupt/BR/HALT latching, and whole-core composition remain open.
+randomized legal transactions [ADI-UM-1989, printed pp. 5-9–5-12]. A separate
+native attachment adds six directed tests and 50,064 clocks of state-8 issue,
+full-cycle wait extension, state-7 read sampling/atomic completion, reset,
+conflict, and relinquishment coverage.
+
+The ordinary-fetch/native-DM owner now derives the descriptor from the retained
+fetched Type 12 opcode and shared architectural state. Three directed checks
+plus its 50,000-clock Type 2/3/4/12 comparison cover 119 Type 12 transactions,
+52 reads, 67 writes, all 112 sourced `(SF, XOP)` pairs, all 32 DAG/I/M
+selections, all 16 DREGs, both directions, old-value store overlap/readback,
+alternate-bank execution, DAG1 bit reversal, circular wrap, a complete wait,
+and fail-closed collision/unavailable-XOP words. Qualified state-7 completion
+commits shifter/status, optional DMD load, selected I, PC, and the returned word
+together. These fetched vectors initialize all exercised operands and supply
+valid DMD; the standalone slices remain the reset-unknown/invalid-data evidence
+for that owner. The larger three-PM-client/shared-state owner adds the two
+complementary Type 12 validity cases: a known shift remains known when returned
+DMD is invalid, while an invalid shift operand leaves a valid parallel DM read
+known. Both destinations still retire atomically at the sourced state-7
+boundary.
+The same owner now recognizes BR during a wait, defers grant until paired
+completion, and masks both buses during native grant. It also recognizes
+ordinary HALT during a real fetched Type 2 wait, defers stop until aligned
+completion, holds driven state 8, and resumes only after a DMACK-qualified
+release; this controller applies to fetched Type 12. Additional shared-DM
+ownership, HALT during BG, simultaneous-event priority, and whole-core
+composition remain open.
 
 ## Bounded Type 13 execution and PM/cache transaction
 
@@ -294,10 +354,8 @@ under OQ-008.
 
 ## Tests still required for the remaining multifunction classes
 
-- source/destination overlap execution for Type 1;
 - old store value versus new computation result execution outside Types 12 and 13;
-- dual PM/DM loads and independent DAG post-modifies;
-- status from the computation visible only to the next cycle;
+- native Type 1 PM/DM phase behavior during DMACK extension;
 - condition-false preservation and cycle/bus activity;
 - PM cache branch, loop-end, interrupt, BR, tag-fill, and replacement boundaries;
 - illegal destination collisions and reserved field combinations beyond the

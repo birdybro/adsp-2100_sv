@@ -40,6 +40,7 @@ module tb_adsp2100_halt_control;
         .halt_n_i(halt_n),
         .dmack_i(dmack),
         .pm_data_cycle_i(pm_data_cycle),
+        .service_inhibit_i(1'b0),
         .mode_o(mode),
         .state_three_boundary_o(state_three_boundary),
         .halt_recognized_o(halt_recognized),

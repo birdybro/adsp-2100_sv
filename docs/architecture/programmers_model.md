@@ -211,7 +211,7 @@ to count-stack storage and IF/DO flow for sourced cases, but instruction
 decode and a stateful PC remain absent.
 
 Direction-specific restrictions outside the now-bounded Type 17 path,
-fetched-DM interrupt ownership, PM-data interrupt-entry handoff,
+PM-data interrupt-entry handoff,
 simultaneous-event priority, empty-pop architectural effects, narrow
 status-register DMD extension, full
 multifunction legality, and every

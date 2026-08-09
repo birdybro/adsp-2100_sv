@@ -76,6 +76,18 @@ module adsp2100_architectural_state #(
     output logic [13:0] dag_l_read_data_o,
     output logic        dag_l_read_valid_o,
 
+    // Independent cycle-start DAG read port for a concurrent memory client.
+    // Keeping this address path separate prevents a non-selected client from
+    // feeding the fetched-instruction DAG address/result cone.
+    input  logic [2:0]  dag_i_l_read_address_2_i,
+    input  logic [2:0]  dag_m_read_address_2_i,
+    output logic [13:0] dag_i_read_data_2_o,
+    output logic        dag_i_read_valid_2_o,
+    output logic [13:0] dag_m_read_data_2_o,
+    output logic        dag_m_read_valid_2_o,
+    output logic [13:0] dag_l_read_data_2_o,
+    output logic        dag_l_read_valid_2_o,
+
     input  logic [1:0]  mode_sr_i,
     input  logic [1:0]  mode_br_i,
     input  logic [1:0]  mode_ol_i,
@@ -163,6 +175,12 @@ module adsp2100_architectural_state #(
     logic        unused_read_m_valid;
     logic [13:0] read_l_data;
     logic        unused_read_l_valid;
+    logic [13:0] read_i_data_2;
+    logic        read_i_valid_2;
+    logic [13:0] read_m_data_2;
+    logic        read_m_valid_2;
+    logic [13:0] read_l_data_2;
+    logic        read_l_valid_2;
     logic [2:0]  probe_dag_address;
     logic [13:0] probe_i_data;
     logic        unused_probe_i_valid;
@@ -277,6 +295,12 @@ module adsp2100_architectural_state #(
     assign dag_m_read_valid_o = unused_read_m_valid;
     assign dag_l_read_data_o = read_l_data;
     assign dag_l_read_valid_o = unused_read_l_valid;
+    assign dag_i_read_data_2_o = read_i_data_2;
+    assign dag_i_read_valid_2_o = read_i_valid_2;
+    assign dag_m_read_data_2_o = read_m_data_2;
+    assign dag_m_read_valid_2_o = read_m_valid_2;
+    assign dag_l_read_data_2_o = read_l_data_2;
+    assign dag_l_read_valid_2_o = read_l_valid_2;
     assign probe_dag_address = {
         probe_code_i[5:4] == 2'b10,
         probe_code_i[1:0]
@@ -453,6 +477,14 @@ module adsp2100_architectural_state #(
         .m_read_valid_o(unused_read_m_valid),
         .l_read_data_o(read_l_data),
         .l_read_valid_o(unused_read_l_valid),
+        .i_l_read_address_2_i(dag_i_l_read_address_2_i),
+        .m_read_address_2_i(dag_m_read_address_2_i),
+        .i_read_data_2_o(read_i_data_2),
+        .i_read_valid_2_o(read_i_valid_2),
+        .m_read_data_2_o(read_m_data_2),
+        .m_read_valid_2_o(read_m_valid_2),
+        .l_read_data_2_o(read_l_data_2),
+        .l_read_valid_2_o(read_l_valid_2),
         .probe_address_i(probe_dag_address),
         .probe_i_data_o(probe_i_data),
         .probe_i_valid_o(unused_probe_i_valid),
@@ -471,6 +503,10 @@ module adsp2100_architectural_state #(
         .i_write_address_i(dag_i_write_address_i),
         .i_write_data_i(dag_i_write_data_i),
         .i_write_result_valid_i(dag_i_write_result_valid_i),
+        .i_write_enable_2_i(1'b0),
+        .i_write_address_2_i(3'b000),
+        .i_write_data_2_i(14'h0000),
+        .i_write_result_valid_2_i(1'b0),
         .invalid_setup_kind_o(unused_dag_invalid_setup),
         .write_conflict_o(dag_conflict)
     );

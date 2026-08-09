@@ -150,7 +150,9 @@ SSTAT bits 4/5, while the exact PC/count/loop stack-storage block supplies bits
 0–3 and 6–7 with the same documented pointer-saturation and sticky-overflow
 rules [ADI-DATABOOK-1987, printed pp. 2-21–2-22; ADI-UM-1989, printed
 pp. 4-3–4-7, 4-22]. These fragments are composed by the bounded Type 3, Type
-17, and Type 26 execution slices, but not by an integrated fetch/execute core. A
+17, and Type 26 execution slices. Legal Type 3 and source-closed Type 4 words
+additionally use the same shared register owner in the bounded ordinary-fetch/
+native-DM composition, but this is not a unified fetch/execute core. A
 separate CNTR model/RTL boundary implements
 its 14-bit value, reset-invalid state, pre-decrement CE predicate,
 post-decrement, valid-load push request, and true-CE count restore
@@ -177,10 +179,14 @@ computational banks, both DAGs, exact-width status/control, PX,
 CNTR/count-stack, and SSTAT with cycle-start read/cycle-end write ordering;
 the bounded Type 17 cross-store slice now supplies only decode and action
 selection. The Type 3 direct-DM slice reuses that same complete destination
-behavior and explicit validity state through its compatibility wrapper, including
-CNTR load/push and unknown-data invalidation, and adds 50,151 logical plus
-50,077 native clocks. Both slices remain outside whole-core
-fetch/interrupt/bus sequencing
+behavior and explicit validity state through its compatibility wrapper,
+including CNTR load/push and unknown-data invalidation, and adds 50,151 logical
+plus 50,077 native clocks. A further 50,000-clock fetched/native-DM composition
+exercises all 48 legal store sources, all 47 legal load destinations, 47
+readbacks, and two full-cycle waits with retirement-aligned PC/next-word state.
+Those fetched vectors initialize each store source and supply valid DMD;
+reset-unknown store sources and invalid DMD remain standalone evidence.
+Whole-core shared-DM, fetch/event, and cross-owner bus sequencing remain open
 [ADI-UM-1989, printed pp. 4-22, 6-12, A-3, A-9].
 
 The combined retained-fetch/PM-client owner now preserves the same explicit
@@ -205,7 +211,7 @@ that the restored classifications govern following PM work. The combined run
 also reads composed SSTAT through fetched Type 17 at `0x55`, `0x45`, `0x65`,
 and `0x75` across status-stack empty/nonempty/overflow transitions. These are
 claims about the documented low eight bits; the provisional zero-filled upper
-byte remains OQ-016. The run now contains 40 tests and 51,428 model/RTL clocks.
+byte remains OQ-016. The run now contains 45 tests and 51,587 model/RTL clocks.
 
 The Type 7 immediate-load boundary reuses the same complete destination
 storage instead of defining a second register map. It accepts all 31 writable

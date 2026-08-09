@@ -13,6 +13,15 @@ module adsp2100_dag_register_file (
     output logic [13:0] l_read_data_o,
     output logic        l_read_valid_o,
 
+    input  logic [2:0]  i_l_read_address_2_i,
+    input  logic [2:0]  m_read_address_2_i,
+    output logic [13:0] i_read_data_2_o,
+    output logic        i_read_valid_2_o,
+    output logic [13:0] m_read_data_2_o,
+    output logic        m_read_valid_2_o,
+    output logic [13:0] l_read_data_2_o,
+    output logic        l_read_valid_2_o,
+
     input  logic [2:0]  probe_address_i,
     output logic [13:0] probe_i_data_o,
     output logic        probe_i_valid_o,
@@ -31,6 +40,11 @@ module adsp2100_dag_register_file (
     input  logic [2:0]  i_write_address_i,
     input  logic [13:0] i_write_data_i,
     input  logic        i_write_result_valid_i,
+
+    input  logic        i_write_enable_2_i,
+    input  logic [2:0]  i_write_address_2_i,
+    input  logic [13:0] i_write_data_2_i,
+    input  logic        i_write_result_valid_2_i,
 
     output logic        invalid_setup_kind_o,
     output logic        write_conflict_o
@@ -54,6 +68,13 @@ module adsp2100_dag_register_file (
         l_read_data_o = l_q[i_l_read_address_i];
         l_read_valid_o = l_valid_q[i_l_read_address_i];
 
+        i_read_data_2_o = i_q[i_l_read_address_2_i];
+        i_read_valid_2_o = i_valid_q[i_l_read_address_2_i];
+        m_read_data_2_o = m_q[m_read_address_2_i];
+        m_read_valid_2_o = m_valid_q[m_read_address_2_i];
+        l_read_data_2_o = l_q[i_l_read_address_2_i];
+        l_read_valid_2_o = l_valid_q[i_l_read_address_2_i];
+
         probe_i_data_o = i_q[probe_address_i];
         probe_i_valid_o = i_valid_q[probe_address_i];
         probe_m_data_o = m_q[probe_address_i];
@@ -68,10 +89,26 @@ module adsp2100_dag_register_file (
         );
         write_conflict_o = (
             !reset_i
-            && setup_write_i
-            && (setup_kind_i == KIND_I)
-            && i_write_enable_i
-            && (setup_address_i == i_write_address_i)
+            && (
+                (
+                    setup_write_i
+                    && (setup_kind_i == KIND_I)
+                    && (
+                        (
+                            i_write_enable_i
+                            && (setup_address_i == i_write_address_i)
+                        )
+                        || (
+                            i_write_enable_2_i
+                            && (setup_address_i == i_write_address_2_i)
+                        )
+                    )
+                )
+                || (
+                    i_write_enable_i && i_write_enable_2_i
+                    && (i_write_address_i == i_write_address_2_i)
+                )
+            )
         );
     end
 
@@ -117,6 +154,13 @@ module adsp2100_dag_register_file (
                 end
                 i_valid_q[i_write_address_i]
                     <= i_write_result_valid_i;
+            end
+            if (i_write_enable_2_i) begin
+                if (i_write_result_valid_2_i) begin
+                    i_q[i_write_address_2_i] <= i_write_data_2_i;
+                end
+                i_valid_q[i_write_address_2_i]
+                    <= i_write_result_valid_2_i;
             end
         end
     end

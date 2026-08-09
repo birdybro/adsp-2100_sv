@@ -91,6 +91,7 @@ module adsp2100_linear_bus_control_slice (
         .phase_i(phase_i),
         .phase_advance_i(phase_advance_i),
         .br_n_i(br_n_i),
+        .service_inhibit_i(1'b0),
         .mode_o(bus_mode_o),
         .state_three_boundary_o(state_three_boundary_o),
         .request_recognized_o(request_recognized_o),
@@ -115,6 +116,7 @@ module adsp2100_linear_bus_control_slice (
         .bus_relinquished_o(bus_relinquished_o)
     );
 
+    /* verilator lint_off PINCONNECTEMPTY */
     adsp2100_linear_core_slice core (
         .clk_i(clk_i),
         .reset_i(reset_i),
@@ -128,6 +130,8 @@ module adsp2100_linear_bus_control_slice (
         .instruction_setup_opcode_i(instruction_setup_opcode_i),
         .pmd_read_data_i(pmd_read_data_i),
         .pmd_read_data_valid_i(pmd_read_data_valid_i),
+        .dmd_read_data_i(16'h0000),
+        .dmd_read_data_valid_i(1'b0),
         .irq_n_i(irq_n_i),
         .probe_code_i(probe_code_i),
         .issue_boundary_o(issue_boundary_o),
@@ -156,6 +160,13 @@ module adsp2100_linear_bus_control_slice (
         .provisional_source_extension_o(provisional_source_extension_o),
         .pc_o(pc_o),
         .opcode_o(opcode_o),
+        .fetched_dm_request_candidate_o(),
+        .fetched_dm_request_presented_o(),
+        .fetched_dm_request_address_o(),
+        .fetched_dm_request_address_valid_o(),
+        .fetched_dm_request_write_o(),
+        .fetched_dm_request_write_data_o(),
+        .fetched_dm_request_write_data_valid_o(),
         .probe_data_o(probe_data_o),
         .astat_o(astat_o),
         .mstat_o(mstat_o),
@@ -185,6 +196,7 @@ module adsp2100_linear_bus_control_slice (
         .pmd_write_data_o(pmd_write_data_o),
         .pmd_write_data_valid_o(pmd_write_data_valid_o)
     );
+    /* verilator lint_on PINCONNECTEMPTY */
 
 `ifndef SYNTHESIS
     always_comb begin

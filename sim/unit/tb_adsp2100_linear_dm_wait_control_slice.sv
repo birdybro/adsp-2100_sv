@@ -3,13 +3,15 @@
 
 module tb_adsp2100_linear_dm_wait_control_slice;
     logic clk;
-    logic [130:0] stimulus;
-    logic [171:0] expected_pre;
-    logic [85:0] expected_post;
+    logic [132:0] stimulus;
+    logic [205:0] expected_pre;
+    logic [90:0] expected_post;
 
     logic reset;
     logic [2:0] phase;
     logic phase_advance;
+    logic br_n;
+    logic halt_n;
     logic [3:0] irq_n;
     logic instruction_setup;
     logic [13:0] setup_pc;
@@ -28,11 +30,38 @@ module tb_adsp2100_linear_dm_wait_control_slice;
     logic [5:0] probe_code;
 
     logic architectural_phase_advance;
+    logic effective_phase_advance;
     logic interrupt_wait_sample;
     logic dm_companion_accepted;
     logic phase_conflict;
     logic attachment_conflict;
     logic integration_conflict;
+    logic [1:0] halt_mode;
+    logic halt_state_three_boundary;
+    logic halt_recognized;
+    logic halt_stop_event;
+    logic halt_resume_event;
+    logic halt_release_blocked;
+    logic halt_instruction_issue_inhibit;
+    logic halt_phase_hold;
+    logic halted;
+    logic halt_br_conflict;
+    logic halt_phase_conflict;
+    logic [2:0] bus_mode;
+    logic state_three_boundary;
+    logic request_recognized;
+    logic grant_assert_event;
+    logic release_recognized;
+    logic grant_release_event;
+    logic resume_event;
+    logic request_withdrawn;
+    logic release_cancelled;
+    logic instruction_issue_inhibit;
+    logic normal_bus_relinquished;
+    logic normal_bg_n;
+    logic reset_br_request;
+    logic bg_n;
+    logic bus_relinquished;
     logic issue_boundary;
     logic setup_accepted;
     logic instruction_issue;
@@ -52,6 +81,10 @@ module tb_adsp2100_linear_dm_wait_control_slice;
     logic core_phase_conflict;
     logic core_integration_conflict;
     logic internal_conflict;
+    logic unsupported_instruction;
+    logic reserved_subencoding;
+    logic provisional_source_extension;
+    logic interrupt_adjacent_control_conflict;
     logic [13:0] pc;
     logic [23:0] opcode;
     logic [4:0] icntl;
@@ -101,7 +134,7 @@ module tb_adsp2100_linear_dm_wait_control_slice;
     integer vector_count;
 
     assign {
-        reset, phase, phase_advance, irq_n,
+        reset, phase, phase_advance, br_n, halt_n, irq_n,
         instruction_setup, setup_pc, setup_opcode,
         dm_request_valid, dm_request_address,
         dm_request_address_valid, dm_request_write,
@@ -115,6 +148,8 @@ module tb_adsp2100_linear_dm_wait_control_slice;
         .reset_i(reset),
         .phase_i(phase),
         .phase_advance_i(phase_advance),
+        .br_n_i(br_n),
+        .halt_n_i(halt_n),
         .irq_n_i(irq_n),
         .instruction_setup_i(instruction_setup),
         .instruction_setup_pc_i(setup_pc),
@@ -132,11 +167,40 @@ module tb_adsp2100_linear_dm_wait_control_slice;
         .pmd_read_data_valid_i(pmd_read_data_valid),
         .probe_code_i(probe_code),
         .architectural_phase_advance_o(architectural_phase_advance),
+        .effective_phase_advance_o(effective_phase_advance),
         .interrupt_wait_sample_o(interrupt_wait_sample),
         .dm_companion_accepted_o(dm_companion_accepted),
         .phase_conflict_o(phase_conflict),
         .attachment_conflict_o(attachment_conflict),
         .integration_conflict_o(integration_conflict),
+        .halt_mode_o(halt_mode),
+        .halt_state_three_boundary_o(halt_state_three_boundary),
+        .halt_recognized_o(halt_recognized),
+        .halt_stop_event_o(halt_stop_event),
+        .halt_resume_event_o(halt_resume_event),
+        .halt_release_blocked_o(halt_release_blocked),
+        .halt_instruction_issue_inhibit_o(
+            halt_instruction_issue_inhibit
+        ),
+        .halt_phase_hold_o(halt_phase_hold),
+        .halted_o(halted),
+        .halt_br_conflict_o(halt_br_conflict),
+        .halt_phase_conflict_o(halt_phase_conflict),
+        .bus_mode_o(bus_mode),
+        .state_three_boundary_o(state_three_boundary),
+        .request_recognized_o(request_recognized),
+        .grant_assert_event_o(grant_assert_event),
+        .release_recognized_o(release_recognized),
+        .grant_release_event_o(grant_release_event),
+        .resume_event_o(resume_event),
+        .request_withdrawn_o(request_withdrawn),
+        .release_cancelled_o(release_cancelled),
+        .instruction_issue_inhibit_o(instruction_issue_inhibit),
+        .normal_bus_relinquished_o(normal_bus_relinquished),
+        .normal_bg_n_o(normal_bg_n),
+        .reset_br_request_o(reset_br_request),
+        .bg_n_o(bg_n),
+        .bus_relinquished_o(bus_relinquished),
         .issue_boundary_o(issue_boundary),
         .instruction_setup_accepted_o(setup_accepted),
         .instruction_issue_o(instruction_issue),
@@ -156,15 +220,17 @@ module tb_adsp2100_linear_dm_wait_control_slice;
         .interrupt_reset_baseline_provisional_o(
             interrupt_reset_baseline_provisional
         ),
-        .interrupt_adjacent_control_conflict_o(),
+        .interrupt_adjacent_control_conflict_o(
+            interrupt_adjacent_control_conflict
+        ),
         .instruction_valid_o(instruction_valid),
         .transaction_pending_o(transaction_pending),
-        .unsupported_instruction_o(),
-        .reserved_subencoding_o(),
+        .unsupported_instruction_o(unsupported_instruction),
+        .reserved_subencoding_o(reserved_subencoding),
         .core_phase_conflict_o(core_phase_conflict),
         .core_integration_conflict_o(core_integration_conflict),
         .internal_conflict_o(internal_conflict),
-        .provisional_source_extension_o(),
+        .provisional_source_extension_o(provisional_source_extension),
         .pc_o(pc),
         .opcode_o(opcode),
         .probe_data_o(),
@@ -243,11 +309,38 @@ module tb_adsp2100_linear_dm_wait_control_slice;
                 #1;
                 if ({
                     architectural_phase_advance,
+                    effective_phase_advance,
                     interrupt_wait_sample,
                     dm_companion_accepted,
                     phase_conflict,
                     attachment_conflict,
                     integration_conflict,
+                    halt_mode,
+                    halt_state_three_boundary,
+                    halt_recognized,
+                    halt_stop_event,
+                    halt_resume_event,
+                    halt_release_blocked,
+                    halt_instruction_issue_inhibit,
+                    halt_phase_hold,
+                    halted,
+                    halt_br_conflict,
+                    halt_phase_conflict,
+                    bus_mode,
+                    state_three_boundary,
+                    request_recognized,
+                    grant_assert_event,
+                    release_recognized,
+                    grant_release_event,
+                    resume_event,
+                    request_withdrawn,
+                    release_cancelled,
+                    instruction_issue_inhibit,
+                    normal_bus_relinquished,
+                    normal_bg_n,
+                    reset_br_request,
+                    bg_n,
+                    bus_relinquished,
                     issue_boundary,
                     setup_accepted,
                     instruction_issue,
@@ -267,6 +360,10 @@ module tb_adsp2100_linear_dm_wait_control_slice;
                     core_phase_conflict,
                     core_integration_conflict,
                     internal_conflict,
+                    unsupported_instruction,
+                    reserved_subencoding,
+                    provisional_source_extension,
+                    interrupt_adjacent_control_conflict,
                     pc,
                     opcode,
                     pm_request_accepted,
@@ -306,13 +403,40 @@ module tb_adsp2100_linear_dm_wait_control_slice;
                     dmd_write_data_valid,
                     dmd_write_data
                 } !== expected_pre) begin
-                    $display("actual   %043h", {
+                    $display("actual   %052h", {
                         architectural_phase_advance,
+                        effective_phase_advance,
                         interrupt_wait_sample,
                         dm_companion_accepted,
                         phase_conflict,
                         attachment_conflict,
                         integration_conflict,
+                        halt_mode,
+                        halt_state_three_boundary,
+                        halt_recognized,
+                        halt_stop_event,
+                        halt_resume_event,
+                        halt_release_blocked,
+                        halt_instruction_issue_inhibit,
+                        halt_phase_hold,
+                        halted,
+                        halt_br_conflict,
+                        halt_phase_conflict,
+                        bus_mode,
+                        state_three_boundary,
+                        request_recognized,
+                        grant_assert_event,
+                        release_recognized,
+                        grant_release_event,
+                        resume_event,
+                        request_withdrawn,
+                        release_cancelled,
+                        instruction_issue_inhibit,
+                        normal_bus_relinquished,
+                        normal_bg_n,
+                        reset_br_request,
+                        bg_n,
+                        bus_relinquished,
                         issue_boundary,
                         setup_accepted,
                         instruction_issue,
@@ -332,6 +456,10 @@ module tb_adsp2100_linear_dm_wait_control_slice;
                         core_phase_conflict,
                         core_integration_conflict,
                         internal_conflict,
+                        unsupported_instruction,
+                        reserved_subencoding,
+                        provisional_source_extension,
+                        interrupt_adjacent_control_conflict,
                         pc,
                         opcode,
                         pm_request_accepted,
@@ -371,7 +499,7 @@ module tb_adsp2100_linear_dm_wait_control_slice;
                         dmd_write_data_valid,
                         dmd_write_data
                     });
-                    $display("expected %043h", expected_pre);
+                    $display("expected %049h", expected_pre);
                     $fatal(1, "pre-edge mismatch at vector %0d", vector_count);
                 end
                 #4 clk = 1'b1;
@@ -393,8 +521,32 @@ module tb_adsp2100_linear_dm_wait_control_slice;
                     dm_response_read_data,
                     icntl,
                     imask,
-                    sstat
+                    sstat,
+                    bus_mode,
+                    halt_mode
                 } !== expected_post) begin
+                    $display("actual   %023h", {
+                        instruction_valid,
+                        transaction_pending,
+                        pc,
+                        opcode,
+                        interrupt_pending,
+                        interrupt_vectoring,
+                        interrupt_level,
+                        pm_bus_active,
+                        dm_transaction_active,
+                        dm_waiting,
+                        dm_response_valid,
+                        dm_response_write,
+                        dm_response_read_data_valid,
+                        dm_response_read_data,
+                        icntl,
+                        imask,
+                        sstat,
+                        bus_mode,
+                        halt_mode
+                    });
+                    $display("expected %023h", expected_post);
                     $fatal(1, "post-edge mismatch at vector %0d", vector_count);
                 end
                 #4 clk = 1'b0;

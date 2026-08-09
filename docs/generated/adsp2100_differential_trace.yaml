@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/adsp-2100/differential-trace-v1.schema.json",
+  "title": "Original ADSP-2100 differential retirement trace",
+  "description": "Implementation-neutral post-retirement state and external transaction record. Producer identity is provenance and is excluded from architectural comparison.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "device",
+    "producer",
+    "retirement_index",
+    "pc_before",
+    "pc_after",
+    "opcode",
+    "instruction_cycles",
+    "state",
+    "transactions",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "device": {"const": "original ADSP-2100"},
+    "producer": {"type": "string", "minLength": 1},
+    "retirement_index": {"type": "integer", "minimum": 0},
+    "pc_before": {"$ref": "#/$defs/word"},
+    "pc_after": {"$ref": "#/$defs/word"},
+    "opcode": {"$ref": "#/$defs/word"},
+    "instruction_cycles": {"type": "integer", "minimum": 1},
+    "state": {
+      "type": "object",
+      "propertyNames": {"pattern": "^[^.].*[^.]$|^[^.]$"},
+      "additionalProperties": {"$ref": "#/$defs/word"}
+    },
+    "transactions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/transaction"}
+    },
+    "events": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "word": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "value", "known_mask"],
+      "properties": {
+        "width": {"type": "integer", "minimum": 1},
+        "value": {"type": "string", "pattern": "^0x[0-9a-f]+$"},
+        "known_mask": {"type": "string", "pattern": "^0x[0-9a-f]+$"}
+      }
+    },
+    "transaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "space",
+        "kind",
+        "address",
+        "width",
+        "data",
+        "wait_instruction_cycles"
+      ],
+      "properties": {
+        "space": {"enum": ["PM", "DM"]},
+        "kind": {"enum": ["INSTRUCTION_FETCH", "DATA_READ", "DATA_WRITE"]},
+        "address": {"$ref": "#/$defs/word"},
+        "width": {"enum": [16, 24]},
+        "data": {
+          "oneOf": [
+            {"type": "null"},
+            {"$ref": "#/$defs/word"}
+          ]
+        },
+        "wait_instruction_cycles": {"type": "integer", "minimum": 0}
+      }
+    }
+  },
+  "comparison_contract": {
+    "producer": "PROVENANCE_ONLY_NOT_COMPARED",
+    "state": "STRICT_KEY_AND_BITWISE_KNOWN_MASK_COMPARISON_UNLESS_AN_EXPLICIT_PROJECTION_IS_REQUESTED",
+    "transactions": "ORDERED_EXACT_COMPARISON",
+    "unknown_bits": "CANONICAL_ZERO_VALUE_WITH_EXPLICIT_KNOWN_MASK"
+  },
+  "reduction_contract": {
+    "algorithm": "DETERMINISTIC_ONE_MINIMAL_SUBSEQUENCE",
+    "failure_identity": "CALLER_SUPPLIED_PREDICATE_MUST_PRESERVE_THE_REQUESTED_MISMATCH_SIGNATURE",
+    "ordering": "NEVER_REORDER_OR_MUTATE_ITEMS"
+  },
+  "claim_taxonomy": "IMPLEMENTATION_CONVENIENCE",
+  "confidence": "CORROBORATED",
+  "excluded_claims": [
+    "MAME_ADAPTER_COMPLETE",
+    "LEGAL_PROGRAM_GENERATOR_COMPLETE",
+    "WHOLE_CORE_DIFFERENTIAL_COMPLETE",
+    "MAME_BEHAVIOR_IS_ARCHITECTURAL_AUTHORITY"
+  ]
+}

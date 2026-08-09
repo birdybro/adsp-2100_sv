@@ -51,8 +51,14 @@ def apply_bus_control_cycle(
     phase: LogicalPhase | int = LogicalPhase.STATE_1,
     phase_advance: bool = True,
     br_n: bool = True,
+    service_inhibit: bool = False,
 ) -> BusControlCycleResult:
-    """Apply one logical-phase boundary to the normal BR/BG controller."""
+    """Apply one logical-phase boundary to the normal BR/BG controller.
+
+    ``service_inhibit`` preserves request recognition at state 3 but defers
+    every later state-3 protocol transition.  A native-DM composition uses
+    this while the current instruction still owns an incomplete DM cycle.
+    """
 
     phase = LogicalPhase(phase)
     state_three_boundary = bool(
@@ -65,29 +71,32 @@ def apply_bus_control_cycle(
         and state_three_boundary
         and not br_n
     )
+    service_boundary = bool(
+        state_three_boundary and not service_inhibit
+    )
     grant_assert_event = bool(
         state.mode is BusControlMode.REQUEST_DELAY
-        and state_three_boundary
+        and service_boundary
         and not br_n
     )
     request_withdrawn = bool(
         state.mode is BusControlMode.REQUEST_DELAY
-        and state_three_boundary
+        and service_boundary
         and br_n
     )
     release_recognized = bool(
         state.mode is BusControlMode.GRANTED
-        and state_three_boundary
+        and service_boundary
         and br_n
     )
     grant_release_event = bool(
         state.mode is BusControlMode.RELEASE_DELAY
-        and state_three_boundary
+        and service_boundary
         and br_n
     )
     release_cancelled = bool(
         state.mode is BusControlMode.RELEASE_DELAY
-        and state_three_boundary
+        and service_boundary
         and not br_n
     )
     resume_event = bool(

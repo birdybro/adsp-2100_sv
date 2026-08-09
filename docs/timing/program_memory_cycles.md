@@ -118,9 +118,10 @@ cache. Six directed tests and 50,063 model/RTL clocks cover 2,742 accepts, 713
 retries, 1,371 one-time data completions, 290 ordinary-fetch fills, 322 raw
 Type 13 completions, and 78 BR handshakes.
 
-`adsp2100_program_clients_owner_control_slice` now places all three real
+`adsp2100_program_clients_owner_control_slice` now places all three real PM
 clients behind one instance of the 16-word cache and one native PM/BR-BG
-owner. Ordinary external fetch completion and either client's pure recovery
+owner, while fetched Type 2/3/4/12 descriptors share one attached native DM
+controller. Ordinary external fetch completion and either client's pure recovery
 completion fill that same cache; an issue-time Type 5 or Type 13 lookup uses
 the same cache state. Captured Type 5 and Type 13 descriptors survive a
 rejected exactly-one selection and retry, while only the routed owner receives
@@ -133,12 +134,15 @@ data action once and delays instruction retirement until the pure external
 recovery completes. HALT recognition during ordinary fetch completes that
 fetch before state-8 stop. Recognition during Type 5/Type 13 PM data overrides
 an issue-time hit, commits the data action once, forces exactly one external
-recovery for that client, and stops at recovery completion. Forty directed
-checks and 51,428 independent-model/RTL clocks cover hit/miss installation,
+recovery for that client, and stops at recovery completion. Forty-five directed
+checks and 51,587 independent-model/RTL clocks cover hit/miss installation,
 `0x3fff` PC wrap, following fetched execution, retained retries, both explicit
-collision classes, 170 fills, 54
-Type 5 and 39 Type 13 data completions, cross-client state visibility, and
-2,217 grant-masked clocks. Three HALT cases cover ordinary stop, one Type 5 and
+collision classes, 179 fills, 53
+Type 5 and 38 Type 13 data completions, nine paired fetched-PM/native-DM
+completions, one full-cycle DMACK extension, cross-client state visibility,
+and 2,217 grant-masked clocks. The DM wait holds PM and architectural progress
+but retains physical state-3/state-7 event sampling; BR/HALT service waits for
+paired completion and grant masks both buses. Three HALT cases cover ordinary stop, one Type 5 and
 one Type 13 forced recovery, DMACK-qualified release, and fail-closed BR/HALT
 overlap. One IRQ2 case remains pending from PM-data
 completion through recovery, then discards that sequential word and enters the
@@ -154,31 +158,35 @@ I and invalidates a following PM address when those dependencies are unknown;
 Type 25 preserves MR validity when MV is known false and invalidates all MR
 segments when MV is unknown. Type 17 propagates unknown source validity through
 DREG, DAG, status/control, SB, and PX, and unknown MSTAT rejects bank-dependent
-fetched and PM-client issue. Accepted status pushes now retain the associated
+fetched and PM-client issue. Type 3 returned-DMD validity and the independently
+classified Type 4 compute/read and Type 12 shift/read destinations are each
+covered at paired native-PM/native-DM retirement. Accepted status pushes now retain the associated
 ASTAT/MSTAT/IMASK validity beside the documented 16-bit word, and a directed
 intervening-known-write sequence proves the later pop restores that captured
 classification. Fetched Type 17 also observes live SSTAT status-stack
 empty/nonempty/overflow transitions; only its documented low byte is claimed.
-OQ-016 narrow-source extension, TRAP/interrupt/HALT/BR cross-event priority,
-active-loop/DM composition, and
-legal simultaneous-event priority remain open
-[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-8, Figures 5.3 and 5.5;
-ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+OQ-016 narrow-source extension, active-loop issue, additional DM requesters,
+Type 1 behavior under OQ-023, and legal TRAP/interrupt/HALT/BR cross-event
+priority remain open
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-14, Figures 5.3, 5.5,
+5.6, and 5.7; ADI-DATABOOK-1987, printed pp. 2-33–2-43].
 
-The bounded combined owner, including the register and status-stack validity
-extensions, is
+The bounded combined owner, including the fetched native-DM attachment plus
+the register and status-stack validity extensions, is
 implementation-qualified against a 20 ns virtual-pin constraint on Cyclone V
 `5CSEBA6U23I7`. Quartus 17.0.2 reported
-8,156 ALMs, 3,036 fitted registers, three DSP blocks, no block memory, +1.340
+9,903 ALMs, 3,313 fitted registers, four DSP blocks, no block memory, +0.639
 ns worst multicorner setup, +0.165 ns worst hold, +9.045 ns worst minimum-
-pulse-width slack, 53.59 MHz worst slow-corner Fmax, and zero unconstrained
+pulse-width slack, 51.65 MHz worst slow-corner Fmax, and zero unconstrained
 clocks, ports, or paths. The verification-only aggregate conflict observation
 has an explicit second-edge sampling exception; all architectural and owner-
 event outputs retain the 20 ns one-cycle constraint. Issue-time action capture
-and dedicated PM-data DREG
-reads and direct selection of captured pending descriptors at completion
+and dedicated PM-data DREG/DAG reads plus direct selection of captured pending
+descriptors at completion
 close implementation paths inside the already documented state-8 issue to
-state-7 completion interval; they do not change any logical PM phase or
+state-7 completion interval. The independent second DAG read port removes a
+structurally impossible PM-client-to-fetched-address cone; it does not change
+any logical PM phase or
 architectural cycle count. This remains bounded FPGA synthesis evidence, not an
 original-device hidden-latch claim or whole-core physical timing closure.
 
@@ -295,7 +303,7 @@ overrides the issue-time hit, data commits once, one following external fetch
 owns the sourced pin phases, and stop occurs at its state-7 completion. Type 5
 has an equivalent bounded HALT attachment. A superseding combined owner now
 attaches ordinary fetch and both PM-data clients behind one cache/native-PM/
-BR-BG/HALT boundary; its three directed HALT paths pass within 51,428 clocks.
+BR-BG/HALT boundary; its three directed HALT paths pass within 51,587 clocks.
 HALT during BG or DMACK waits, simultaneous ordinary-HALT/TRAP
 recognition, interrupt priority, BR while
 stopped, and reset interaction also remain outside this attachment

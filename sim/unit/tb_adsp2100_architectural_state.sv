@@ -49,6 +49,14 @@ module tb_adsp2100_architectural_state;
     logic dag_m_read_valid;
     logic [13:0] dag_l_read_data;
     logic dag_l_read_valid;
+    logic [2:0] dag_i_l_read_address_2;
+    logic [2:0] dag_m_read_address_2;
+    logic [13:0] dag_i_read_data_2;
+    logic dag_i_read_valid_2;
+    logic [13:0] dag_m_read_data_2;
+    logic dag_m_read_valid_2;
+    logic [13:0] dag_l_read_data_2;
+    logic dag_l_read_valid_2;
     logic [1:0] mode_sr;
     logic [1:0] mode_br;
     logic [1:0] mode_ol;
@@ -145,6 +153,8 @@ module tb_adsp2100_architectural_state;
             dag_execution_read = 1'b0;
             dag_i_l_read_address = 3'b000;
             dag_m_read_address = 3'b000;
+            dag_i_l_read_address_2 = 3'b000;
+            dag_m_read_address_2 = 3'b000;
             mode_sr = 2'b00;
             mode_br = 2'b00;
             mode_ol = 2'b00;
@@ -271,6 +281,14 @@ module tb_adsp2100_architectural_state;
         .dag_m_read_valid_o(dag_m_read_valid),
         .dag_l_read_data_o(dag_l_read_data),
         .dag_l_read_valid_o(dag_l_read_valid),
+        .dag_i_l_read_address_2_i(dag_i_l_read_address_2),
+        .dag_m_read_address_2_i(dag_m_read_address_2),
+        .dag_i_read_data_2_o(dag_i_read_data_2),
+        .dag_i_read_valid_2_o(dag_i_read_valid_2),
+        .dag_m_read_data_2_o(dag_m_read_data_2),
+        .dag_m_read_valid_2_o(dag_m_read_valid_2),
+        .dag_l_read_data_2_o(dag_l_read_data_2),
+        .dag_l_read_valid_2_o(dag_l_read_valid_2),
         .mode_sr_i(mode_sr),
         .mode_br_i(mode_br),
         .mode_ol_i(mode_ol),
@@ -489,12 +507,17 @@ module tb_adsp2100_architectural_state;
         move_register(6'h10, 16'h0123);
         move_register(6'h15, 16'h3ffd);
         move_register(6'h18, 16'h0005);
+        move_register(6'h20, 16'h0321);
+        move_register(6'h25, 16'h0007);
+        move_register(6'h28, 16'h0009);
         read_code = 6'h10;
         #1;
         expect16(read_data, 16'h0123, "DAG I0 setup");
         dag_execution_read = 1'b1;
         dag_i_l_read_address = 3'd0;
         dag_m_read_address = 3'd1;
+        dag_i_l_read_address_2 = 3'd4;
+        dag_m_read_address_2 = 3'd5;
         #1;
         if (
             !dag_i_read_valid || !dag_m_read_valid || !dag_l_read_valid
@@ -503,6 +526,15 @@ module tb_adsp2100_architectural_state;
             || dag_l_read_data !== 14'h0005
         ) begin
             $fatal(1, "dedicated DAG execution read mismatch");
+        end
+        if (
+            !dag_i_read_valid_2 || !dag_m_read_valid_2
+            || !dag_l_read_valid_2
+            || dag_i_read_data_2 !== 14'h0321
+            || dag_m_read_data_2 !== 14'h0007
+            || dag_l_read_data_2 !== 14'h0009
+        ) begin
+            $fatal(1, "independent second DAG read mismatch");
         end
         clear_actions();
         dag_i_write_enable = 1'b1;

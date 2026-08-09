@@ -308,7 +308,9 @@ module adsp2100_compute_pm_owner_control_slice (
 
     adsp2100_program_owner_bus_control owner_control (
         .clk_i(clk_i), .reset_i(reset_i), .phase_i(phase_i),
-        .phase_advance_i(phase_advance_i), .br_n_i(br_n_i),
+        .phase_advance_i(phase_advance_i),
+        .pm_phase_advance_i(phase_advance_i), .br_n_i(br_n_i),
+        .service_inhibit_i(1'b0),
         .fetch_valid_i(fetch_valid_i),
         .fetch_address_i(fetch_address_i),
         .fetch_address_valid_i(fetch_address_valid_i),

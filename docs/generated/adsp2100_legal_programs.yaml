@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "device": "original ADSP-2100",
+  "format": {
+    "seed": "CANONICAL_64_BIT_HEX",
+    "origin": "CANONICAL_14_BIT_HEX",
+    "opcode": "CANONICAL_24_BIT_HEX",
+    "class": "INDEPENDENT_GENERATOR_LABEL"
+  },
+  "initial_state": "DETERMINISTIC_FULLY_KNOWN_EMPTY_SEQUENCER_CONTEXT",
+  "control_flow": "STRICTLY_SEQUENTIAL",
+  "emitted_classes": [
+    "NOP",
+    "TYPE_06",
+    "TYPE_07",
+    "TYPE_09",
+    "TYPE_15",
+    "TYPE_16",
+    "TYPE_17_DREG",
+    "TYPE_18",
+    "TYPE_21",
+    "TYPE_23",
+    "TYPE_24",
+    "TYPE_25",
+    "TYPE_26_NO_EFFECT"
+  ],
+  "execution_targets": ["INDEPENDENT_MODEL"],
+  "replay_cli": "tools/trace/run_legal_program.py",
+  "claim_taxonomy": "IMPLEMENTATION_CONVENIENCE",
+  "confidence": "CORROBORATED",
+  "excluded_claims": [
+    "ALL_LEGAL_OPCODE_CLASSES",
+    "RTL_PROGRAM_EXECUTION",
+    "MAME_PROGRAM_EXECUTION",
+    "CONTROL_EVENT_GENERATION",
+    "PM_OR_DM_DATA_CYCLE_GENERATION",
+    "WHOLE_CORE_DIFFERENTIAL_COMPLETE"
+  ]
+}

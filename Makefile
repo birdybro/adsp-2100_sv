@@ -1,6 +1,12 @@
 PYTHON ?= python3
 VERILATOR ?= verilator
 LINEAR_EXECUTION_RTL = rtl/core/adsp2100_interrupt_control.sv \
+	rtl/core/adsp2100_dm_write_immediate_decode.sv \
+	rtl/core/adsp2100_direct_dm_decode.sv \
+	rtl/core/adsp2100_compute_dm_decode.sv \
+	rtl/core/adsp2100_compute_dm_action.sv \
+	rtl/core/adsp2100_shifter_dm_decode.sv \
+	rtl/core/adsp2100_shifter_dm_action.sv \
 	rtl/core/adsp2100_condition_logic.sv \
 	rtl/core/adsp2100_compute_move_decode.sv \
 	rtl/core/adsp2100_compute_move_action.sv \
@@ -48,7 +54,6 @@ PROGRAM_CLIENTS_RTL = rtl/packages/adsp2100_pkg.sv \
 	$(LINEAR_EXECUTION_RTL) \
 	rtl/core/adsp2100_linear_fetch_client.sv \
 	rtl/core/adsp2100_compute_pm_decode.sv \
-	rtl/core/adsp2100_compute_dm_decode.sv \
 	rtl/core/adsp2100_compute_dm_slice.sv \
 	rtl/core/adsp2100_compute_pm_slice.sv \
 	rtl/core/adsp2100_compute_pm_shared_state_client.sv \
@@ -58,6 +63,8 @@ PROGRAM_CLIENTS_RTL = rtl/packages/adsp2100_pkg.sv \
 	rtl/core/adsp2100_instruction_cache.sv \
 	rtl/core/adsp2100_program_bus.sv \
 	rtl/core/adsp2100_program_owner_bus.sv \
+	rtl/core/adsp2100_data_bus.sv \
+	rtl/core/adsp2100_data_owner_bus.sv \
 	rtl/core/adsp2100_bus_control.sv \
 	rtl/core/adsp2100_halt_control.sv \
 	rtl/wrappers/adsp2100_reset_bus_grant.sv \
@@ -66,7 +73,7 @@ PROGRAM_CLIENTS_RTL = rtl/packages/adsp2100_pkg.sv \
 
 .DEFAULT_GOAL := test
 
-.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests linear-dm-wait-tests shifter-pm-owner-tests compute-pm-owner-tests program-clients-owner-control-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
+.PHONY: test lint model-tests cache-tests reset-tests bus-control-tests linear-bus-control-tests halt-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests linear-dm-wait-tests shifter-pm-owner-tests compute-pm-owner-tests program-clients-owner-control-tests dm-bus-tests dm-owner-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests assembler-tests decode-tests compute-tests \
 	dag-tests sequencer-tests register-tests status-tests mode-tests instruction-tests bus-tests interrupt-tests \
 	differential fuzz formal synth-yosys synth-quartus harddriv-tests docs clean \
 	reference-check repository-check
@@ -186,6 +193,11 @@ lint:
 			--top-module adsp2100_data_bus \
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_data_bus.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_data_owner_bus \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_data_owner_bus.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_dm_write_immediate_native_slice \
 			rtl/packages/adsp2100_pkg.sv \
@@ -340,6 +352,10 @@ lint:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_data_owner_bus.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
 			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
@@ -466,6 +482,19 @@ lint:
 			rtl/core/adsp2100_compute_pm_decode.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			rtl/core/adsp2100_compute_dual_decode.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_dual_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_dual_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dual_action.sv \
+			rtl/core/adsp2100_compute_dual_slice.sv; \
 		"$(VERILATOR)" --lint-only -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_dm_slice \
 			rtl/packages/adsp2100_register_pkg.sv \
@@ -723,7 +752,8 @@ repository-check:
 	$(PYTHON) -m unittest -v tests.test_repository
 
 model-tests:
-	$(PYTHON) -m unittest -v tests.test_model_foundation
+	$(PYTHON) -m unittest -v tests.test_model_foundation \
+		tests.test_differential_trace tests.test_legal_programs
 
 cache-tests:
 	$(PYTHON) -m unittest -v tests.test_instruction_cache \
@@ -1001,6 +1031,25 @@ dm-bus-tests:
 		echo "SKIP DM-bus RTL test: Verilator is not installed"; \
 	fi
 
+dm-owner-bus-tests:
+	$(PYTHON) -m unittest -v tests.test_data_owner_bus
+	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
+		set -e; \
+		$(PYTHON) tools/generators/generate_data_owner_bus_vectors.py \
+			--output build/data_owner_bus_vectors.txt; \
+		"$(VERILATOR)" --binary --timing --assert -Wall \
+			-Wno-DECLFILENAME -Wno-TIMESCALEMOD \
+			--Mdir build/obj_data_owner_bus \
+			--top-module tb_adsp2100_data_owner_bus \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_data_owner_bus.sv \
+			sim/unit/tb_adsp2100_data_owner_bus.sv; \
+		build/obj_data_owner_bus/Vtb_adsp2100_data_owner_bus; \
+	else \
+		echo "SKIP shared-DM-owner RTL test: Verilator is not installed"; \
+	fi
+
 dm-write-native-tests:
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_native
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
@@ -1203,6 +1252,10 @@ linear-dm-wait-tests:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_data_owner_bus.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
 			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
@@ -1761,6 +1814,25 @@ compute-tests:
 			rtl/core/adsp2100_compute_move_slice.sv \
 			sim/unit/tb_adsp2100_compute_move_slice.sv; \
 		build/obj_compute_move_slice/Vtb_adsp2100_compute_move_slice; \
+		$(PYTHON) tools/generators/generate_compute_dual_vectors.py \
+			--output build/compute_dual_vectors.txt; \
+		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
+			-Wno-TIMESCALEMOD \
+			--Mdir build/obj_compute_dual_slice \
+			--top-module tb_adsp2100_compute_dual_slice \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_dual_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dual_action.sv \
+			rtl/core/adsp2100_compute_dual_slice.sv \
+			sim/unit/tb_adsp2100_compute_dual_slice.sv; \
+		build/obj_compute_dual_slice/Vtb_adsp2100_compute_dual_slice; \
 		$(PYTHON) tools/generators/generate_compute_dm_vectors.py \
 			--output build/compute_dm_vectors.txt; \
 		"$(VERILATOR)" --binary --timing -Wall -Wno-DECLFILENAME \
@@ -2185,7 +2257,7 @@ mode-tests:
 instruction-tests: decode-tests assembler-tests compute-tests sequencer-tests mode-tests bus-tests
 	@echo "PASS bounded semantic instruction-slice regression"
 
-bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests linear-dm-wait-tests shifter-pm-owner-tests compute-pm-owner-tests program-clients-owner-control-tests dm-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
+bus-tests: cache-tests pm-bus-tests pm-owner-bus-tests program-owner-bus-control-tests linear-owner-control-tests linear-dm-wait-tests shifter-pm-owner-tests compute-pm-owner-tests program-clients-owner-control-tests dm-bus-tests dm-owner-bus-tests dm-write-native-tests dm-direct-native-tests dm-shifter-native-tests dm-compute-native-tests pm-native-tests linear-core-tests compute-tests
 	$(PYTHON) -m unittest -v tests.test_dm_write_immediate_slice
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
 		set -e; \
@@ -2224,10 +2296,16 @@ interrupt-tests:
 	fi
 
 differential: bus-tests dag-tests sequencer-tests register-tests status-tests mode-tests interrupt-tests
+	$(PYTHON) -m unittest -v tests.test_differential_trace tests.test_legal_programs
 	@echo "PASS available bounded model/RTL differential regressions"
 
 fuzz:
-	@echo "SKIP fuzz tests: complete legal-instruction generator does not exist"
+	$(PYTHON) -m unittest -v \
+		tests.test_differential_trace.DifferentialTraceTests.test_reducer_is_deterministic_and_one_minimal \
+		tests.test_differential_trace.DifferentialTraceTests.test_reducer_requires_the_original_failure_signature \
+		tests.test_legal_programs
+	@echo "PASS deterministic reducer and bounded model-side legal-program fuzz execution"
+	@echo "SKIP RTL/MAME program fuzz execution: adapters do not exist"
 
 formal:
 	@if command -v "$(VERILATOR)" >/dev/null 2>&1; then \
@@ -2391,6 +2469,10 @@ formal:
 			rtl/core/adsp2100_internal_move_slice.sv \
 			rtl/core/adsp2100_program_bus.sv \
 			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_data_owner_bus.sv \
+			rtl/core/adsp2100_bus_control.sv \
+			rtl/core/adsp2100_halt_control.sv \
+			rtl/wrappers/adsp2100_reset_bus_grant.sv \
 			$(LINEAR_EXECUTION_RTL) \
 			rtl/core/adsp2100_linear_fetch_client.sv \
 			rtl/core/adsp2100_linear_core_slice.sv \
@@ -2450,6 +2532,12 @@ formal:
 			rtl/packages/adsp2100_pkg.sv \
 			rtl/core/adsp2100_data_bus.sv \
 			formal/harnesses/adsp2100_data_bus_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_data_owner_bus_formal \
+			rtl/packages/adsp2100_pkg.sv \
+			rtl/core/adsp2100_data_bus.sv \
+			rtl/core/adsp2100_data_owner_bus.sv \
+			formal/harnesses/adsp2100_data_owner_bus_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_dm_write_immediate_native_formal \
 			rtl/packages/adsp2100_pkg.sv \
@@ -2638,6 +2726,20 @@ formal:
 			--top-module adsp2100_compute_dual_decode_formal \
 			rtl/core/adsp2100_compute_dual_decode.sv \
 			formal/harnesses/adsp2100_compute_dual_decode_formal.sv; \
+		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
+			--top-module adsp2100_compute_dual_formal \
+			rtl/packages/adsp2100_register_pkg.sv \
+			rtl/core/adsp2100_compute_dual_decode.sv \
+			rtl/core/adsp2100_mr_saturate.sv \
+			rtl/core/adsp2100_alu.sv \
+			rtl/core/adsp2100_mac.sv \
+			rtl/core/adsp2100_dag.sv \
+			rtl/core/adsp2100_dag_register_file.sv \
+			rtl/core/adsp2100_register_file.sv \
+			rtl/core/adsp2100_status_registers.sv \
+			rtl/core/adsp2100_compute_dual_action.sv \
+			rtl/core/adsp2100_compute_dual_slice.sv \
+			formal/harnesses/adsp2100_compute_dual_formal.sv; \
 		"$(VERILATOR)" --lint-only --assert -Wall -Wno-DECLFILENAME \
 			--top-module adsp2100_compute_dm_decode_formal \
 			rtl/core/adsp2100_compute_dm_decode.sv \
@@ -3019,6 +3121,7 @@ formal:
 		sby -f -d build/formal_linear_halt_control \
 			formal/linear_halt_control.sby; \
 		sby -f -d build/formal_dm_bus formal/dm_bus.sby; \
+		sby -f -d build/formal_data_owner_bus formal/data_owner_bus.sby; \
 		sby -f -d build/formal_dm_write_immediate_native \
 			formal/dm_write_immediate_native.sby; \
 		sby -f -d build/formal_shifter_dm_native \
@@ -3030,6 +3133,7 @@ formal:
 		sby -f -d build/formal_compute_move formal/compute_move.sby; \
 		sby -f -d build/formal_compute_dual_decode \
 			formal/compute_dual_decode.sby; \
+		sby -f -d build/formal_compute_dual formal/compute_dual.sby; \
 		sby -f -d build/formal_compute_dm_decode \
 			formal/compute_dm_decode.sby; \
 		sby -f -d build/formal_compute_pm_decode \
@@ -3117,6 +3221,10 @@ synth-yosys:
 			synthesis/yosys/linear_core.ys; \
 		yosys -q -l build/yosys_linear_dm_wait_control.log \
 			synthesis/yosys/linear_dm_wait_control.ys; \
+		yosys -q -l build/yosys_data_owner_bus.log \
+			synthesis/yosys/data_owner_bus.ys; \
+		yosys -q -l build/yosys_compute_dual.log \
+			synthesis/yosys/compute_dual.ys; \
 		yosys -q -l build/yosys_linear_bus_control.log \
 			synthesis/yosys/linear_bus_control.ys; \
 		yosys -q -l build/yosys_linear_halt_control.log \
@@ -3137,7 +3245,7 @@ synth-yosys:
 			synthesis/yosys/compute_pm_owner_control.ys; \
 		yosys -q -l build/yosys_program_clients_owner_control.log \
 			synthesis/yosys/program_clients_owner_control.ys; \
-		echo "PASS bounded reset/phase, BR/BG, HALT, linear, PM-data/HALT, shared-PM-owner, and attached client Yosys synthesis"; \
+		echo "PASS bounded reset/phase, BR/BG, HALT, linear, Type 1 logical, PM-data/HALT, shared-PM-owner, and attached client Yosys synthesis"; \
 	else \
 		echo "SKIP Yosys synthesis: Yosys is not installed"; \
 	fi
@@ -3187,6 +3295,7 @@ synth-quartus:
 		quartus_sh --flow compile \
 			synthesis/quartus/shifter_pm_owner_control_smoke; \
 		quartus_sh --flow compile synthesis/quartus/data_bus_smoke; \
+		quartus_sh --flow compile synthesis/quartus/data_owner_bus_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/dm_write_immediate_native_smoke; \
 		quartus_sh --flow compile \
@@ -3199,6 +3308,8 @@ synth-quartus:
 			synthesis/quartus/compute_move_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_dual_decode_smoke; \
+		quartus_sh --flow compile \
+			synthesis/quartus/compute_dual_smoke; \
 		quartus_sh --flow compile \
 			synthesis/quartus/compute_dm_decode_smoke; \
 		quartus_sh --flow compile \
@@ -3301,6 +3412,9 @@ clean:
 	@find build -maxdepth 1 -type f -name yosys_program_clients_owner_control.log -delete
 	@find build -maxdepth 1 -type f -name yosys_program_clients_owner_control.json -delete
 	@find build -maxdepth 1 -type f -name data_bus_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name data_owner_bus_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name yosys_data_owner_bus.log -delete
+	@find build -maxdepth 1 -type f -name yosys_data_owner_bus.json -delete
 	@find build -maxdepth 1 -type f -name dm_write_immediate_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_dm_native_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_dm_native_vectors.txt -delete
@@ -3352,6 +3466,7 @@ clean:
 	@find build -maxdepth 1 -type f -name shifter_dm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name shifter_pm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_move_vectors.txt -delete
+	@find build -maxdepth 1 -type f -name compute_dual_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_dm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_pm_vectors.txt -delete
 	@find build -maxdepth 1 -type f -name compute_pm_native_vectors.txt -delete
@@ -3467,6 +3582,9 @@ clean:
 	@if [ -d build/obj_data_bus ]; then \
 		find build/obj_data_bus -depth -delete; \
 	fi
+	@if [ -d build/obj_data_owner_bus ]; then \
+		find build/obj_data_owner_bus -depth -delete; \
+	fi
 	@if [ -d build/obj_dm_write_immediate_native_slice ]; then \
 		find build/obj_dm_write_immediate_native_slice -depth -delete; \
 	fi
@@ -3526,6 +3644,9 @@ clean:
 	fi
 	@if [ -d build/obj_compute_dual_decode ]; then \
 		find build/obj_compute_dual_decode -depth -delete; \
+	fi
+	@if [ -d build/obj_compute_dual_slice ]; then \
+		find build/obj_compute_dual_slice -depth -delete; \
 	fi
 	@if [ -d build/obj_compute_dm_decode ]; then \
 		find build/obj_compute_dm_decode -depth -delete; \
@@ -3706,6 +3827,9 @@ clean:
 	@if [ -d build/quartus_data_bus ]; then \
 		find build/quartus_data_bus -depth -delete; \
 	fi
+	@if [ -d build/quartus_data_owner_bus ]; then \
+		find build/quartus_data_owner_bus -depth -delete; \
+	fi
 	@if [ -d build/quartus_dm_write_immediate_native ]; then \
 		find build/quartus_dm_write_immediate_native -depth -delete; \
 	fi
@@ -3723,6 +3847,9 @@ clean:
 	fi
 	@if [ -d build/quartus_compute_dual_decode ]; then \
 		find build/quartus_compute_dual_decode -depth -delete; \
+	fi
+	@if [ -d build/quartus_compute_dual ]; then \
+		find build/quartus_compute_dual -depth -delete; \
 	fi
 	@if [ -d build/quartus_compute_dm_decode ]; then \
 		find build/quartus_compute_dm_decode -depth -delete; \
@@ -3800,6 +3927,7 @@ clean:
 		find build/quartus_mode_slice -depth -delete; \
 	fi
 	@for directory in build/formal_decode build/formal_program_owner_bus \
+		build/formal_data_owner_bus \
 		build/formal_program_owner_bus_control \
 		build/formal_linear_owner_control \
 		build/formal_shifter_pm_owner_control \
@@ -3839,6 +3967,7 @@ clean:
 		build/formal_shifter_pm_halt \
 		build/formal_compute_move \
 		build/formal_compute_dual_decode \
+		build/formal_compute_dual \
 		build/formal_compute_dm_decode \
 		build/formal_compute_pm_decode \
 		build/formal_compute_dm \

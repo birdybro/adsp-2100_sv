@@ -161,6 +161,66 @@ def _type26(payload: int) -> int:
     return 0x040000 | (payload & 0x1F)
 
 
+def _type2(*, immediate: int, dag: int, i_local: int, m_local: int) -> int:
+    return (
+        0xA00000
+        | ((dag & 1) << 20)
+        | ((immediate & 0xFFFF) << 4)
+        | ((i_local & 3) << 2)
+        | (m_local & 3)
+    )
+
+
+def _type3(*, write: bool, address: int, register_code: int) -> int:
+    return (
+        0x800000
+        | (int(write) << 20)
+        | ((register_code >> 4) << 18)
+        | ((address & 0x3FFF) << 4)
+        | (register_code & 0xF)
+    )
+
+
+def _type4(
+    *,
+    write: bool,
+    dag: int = 1,
+    destination_feedback: bool = False,
+    amf: int = 0,
+    yop: int = 0,
+    xop: int = 0,
+    dreg: DREG = DREG.AX0,
+) -> int:
+    return (
+        0x600000
+        | ((dag & 1) << 20)
+        | (int(write) << 19)
+        | (int(destination_feedback) << 18)
+        | ((amf & 0x1F) << 13)
+        | ((yop & 0x3) << 11)
+        | ((xop & 0x7) << 8)
+        | (int(dreg) << 4)
+    )
+
+
+def _type12(
+    *,
+    write: bool,
+    dag: int = 1,
+    sf: int = 0,
+    xop: int = 2,
+    dreg: DREG = DREG.AX0,
+) -> int:
+    return (
+        0x120000
+        | ((dag & 1) << 16)
+        | (int(write) << 15)
+        | ((sf & 0xF) << 11)
+        | ((xop & 0x7) << 8)
+        | (int(dreg) << 4)
+    )
+
+
 def _cycle(
     state: ProgramClientsOwnerControlState,
     phase: LogicalPhase,
@@ -271,6 +331,297 @@ def _execute_fetched_sequence(
 
 
 class ProgramClientsOwnerControlTests(unittest.TestCase):
+    def test_fetched_dm_classes_share_the_program_and_data_owners(self) -> None:
+        opcodes = (
+            _type2(immediate=0xBEEF, dag=1, i_local=0, m_local=0),
+            _type3(write=True, address=0x0123, register_code=0x00),
+            _type4(write=True),
+            _type12(write=True),
+        )
+        for index, opcode in enumerate(opcodes):
+            with self.subTest(opcode=f"{opcode:06x}"):
+                state = _cycle(
+                    _setup_pm_state(),
+                    LogicalPhase.STATE_8,
+                    instruction_setup=(
+                        ExactWord(14, 0x1200 + index),
+                        ExactWord(24, opcode),
+                    ),
+                )
+                issued = apply_program_clients_owner_control_cycle(
+                    state, phase=LogicalPhase.STATE_8
+                )
+                self.assertTrue(issued.linear.instruction_issue)
+                self.assertTrue(issued.interface.owner_bus.fetch_accepted)
+                self.assertTrue(issued.dm.fetched_accepted)
+                self.assertTrue(issued.dm.bus.request_accepted)
+                qualified = apply_program_clients_owner_control_cycle(
+                    issued.state,
+                    phase=LogicalPhase.STATE_6,
+                    dmack=True,
+                )
+                completed = apply_program_clients_owner_control_cycle(
+                    qualified.state,
+                    phase=LogicalPhase.STATE_7,
+                    pmd_read_data=ExactWord(24, 0),
+                    dmd_read_data=ExactWord(16, 0xCAFE),
+                )
+                self.assertTrue(completed.dm.fetched_completion)
+                self.assertTrue(completed.interface.owner_bus.fetch_completion)
+                self.assertTrue(completed.linear.retire_event)
+                self.assertFalse(completed.integration_conflict)
+
+    def test_fetched_type3_unknown_dmd_invalidates_following_pm_store(
+        self,
+    ) -> None:
+        opcode = _type3(
+            write=False, address=0x0123, register_code=int(DREG.AX1)
+        )
+        state = _cycle(
+            _setup_pm_state(),
+            LogicalPhase.STATE_8,
+            instruction_setup=(
+                ExactWord(14, 0x1210), ExactWord(24, opcode)
+            ),
+        )
+        issued = apply_program_clients_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        )
+        completed = apply_program_clients_owner_control_cycle(
+            _advance_to_seven(issued.state),
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=UNKNOWN,
+            dmd_read_data=UNKNOWN,
+        )
+        self.assertTrue(completed.linear.retire_event)
+        self.assertIs(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AX1),
+            UNKNOWN,
+        )
+        following = apply_program_clients_owner_control_cycle(
+            completed.state,
+            phase=LogicalPhase.STATE_8,
+            type5_execute=True,
+            type5_opcode=_type5(write=True, dreg=DREG.AX1),
+            type5_next_fetch_address=ExactWord(14, 0x1211),
+        )
+        self.assertTrue(following.type5.pm_write)
+        self.assertFalse(following.type5.pm_write_data_known)
+        self.assertFalse(completed.integration_conflict)
+
+    def test_fetched_type4_compute_and_dmd_validity_are_independent(
+        self,
+    ) -> None:
+        known_compute = _type4(
+            write=False, amf=0x13, dreg=DREG.AX1
+        )
+        state = _cycle(
+            _setup_pm_state(),
+            LogicalPhase.STATE_8,
+            instruction_setup=(
+                ExactWord(14, 0x1220), ExactWord(24, known_compute)
+            ),
+        )
+        issued = apply_program_clients_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        )
+        completed = apply_program_clients_owner_control_cycle(
+            _advance_to_seven(issued.state),
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=UNKNOWN,
+            dmd_read_data=UNKNOWN,
+        )
+        self.assertEqual(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AR),
+            ExactWord(16, 0x1237),
+        )
+        self.assertIs(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AX1),
+            UNKNOWN,
+        )
+        known_store = apply_program_clients_owner_control_cycle(
+            completed.state,
+            phase=LogicalPhase.STATE_8,
+            type5_execute=True,
+            type5_opcode=_type5(write=True, dreg=DREG.AR),
+            type5_next_fetch_address=ExactWord(14, 0x1221),
+        )
+        unknown_store = apply_program_clients_owner_control_cycle(
+            completed.state,
+            phase=LogicalPhase.STATE_8,
+            type5_execute=True,
+            type5_opcode=_type5(write=True, dreg=DREG.AX1),
+            type5_next_fetch_address=ExactWord(14, 0x1221),
+        )
+        self.assertTrue(known_store.type5.pm_write_data_known)
+        self.assertFalse(unknown_store.type5.pm_write_data_known)
+        self.assertFalse(completed.integration_conflict)
+
+        unknown_compute = _type4(
+            write=False, amf=0x13, xop=2, dreg=DREG.AX1
+        )
+        state = _cycle(
+            _setup_pm_state(),
+            LogicalPhase.STATE_8,
+            instruction_setup=(
+                ExactWord(14, 0x1222), ExactWord(24, unknown_compute)
+            ),
+        )
+        issued = apply_program_clients_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        )
+        completed = apply_program_clients_owner_control_cycle(
+            _advance_to_seven(issued.state),
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=UNKNOWN,
+            dmd_read_data=ExactWord(16, 0xBEEF),
+        )
+        self.assertIs(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AR),
+            UNKNOWN,
+        )
+        self.assertEqual(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AX1),
+            ExactWord(16, 0xBEEF),
+        )
+
+    def test_fetched_type12_shift_and_dmd_validity_are_independent(
+        self,
+    ) -> None:
+        state = _setup_pm_state()
+        for register, value in ((DREG.AR, 0x1234), (DREG.SE, 0)):
+            state = _cycle(
+                state,
+                LogicalPhase.STATE_8,
+                setup_dreg=DREGWrite(register, ExactWord(16, value)),
+            )
+        opcode = _type12(write=False, dreg=DREG.AX1)
+        state = _cycle(
+            state,
+            LogicalPhase.STATE_8,
+            instruction_setup=(
+                ExactWord(14, 0x1230), ExactWord(24, opcode)
+            ),
+        )
+        issued = apply_program_clients_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        )
+        completed = apply_program_clients_owner_control_cycle(
+            _advance_to_seven(issued.state),
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=UNKNOWN,
+            dmd_read_data=UNKNOWN,
+        )
+        self.assertEqual(
+            read_dreg(completed.state.linear.architecture.primary, DREG.SR1),
+            ExactWord(16, 0x1234),
+        )
+        self.assertIs(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AX1),
+            UNKNOWN,
+        )
+        known_store = apply_program_clients_owner_control_cycle(
+            completed.state,
+            phase=LogicalPhase.STATE_8,
+            type5_execute=True,
+            type5_opcode=_type5(write=True, dreg=DREG.SR1),
+            type5_next_fetch_address=ExactWord(14, 0x1231),
+        )
+        unknown_store = apply_program_clients_owner_control_cycle(
+            completed.state,
+            phase=LogicalPhase.STATE_8,
+            type5_execute=True,
+            type5_opcode=_type5(write=True, dreg=DREG.AX1),
+            type5_next_fetch_address=ExactWord(14, 0x1231),
+        )
+        self.assertTrue(known_store.type5.pm_write_data_known)
+        self.assertFalse(unknown_store.type5.pm_write_data_known)
+        self.assertFalse(completed.integration_conflict)
+
+        state = _cycle(
+            _setup_pm_state(),
+            LogicalPhase.STATE_8,
+            instruction_setup=(
+                ExactWord(14, 0x1232), ExactWord(24, opcode)
+            ),
+        )
+        issued = apply_program_clients_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        )
+        completed = apply_program_clients_owner_control_cycle(
+            _advance_to_seven(issued.state),
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=UNKNOWN,
+            dmd_read_data=ExactWord(16, 0xCAFE),
+        )
+        self.assertIs(
+            read_dreg(completed.state.linear.architecture.primary, DREG.SR1),
+            UNKNOWN,
+        )
+        self.assertEqual(
+            read_dreg(completed.state.linear.architecture.primary, DREG.AX1),
+            ExactWord(16, 0xCAFE),
+        )
+
+    def test_fetched_type2_wait_holds_shared_owner_until_paired_completion(
+        self,
+    ) -> None:
+        opcode = _type2(
+            immediate=0xBEEF, dag=1, i_local=0, m_local=0
+        )
+        state = _cycle(
+            _setup_pm_state(),
+            LogicalPhase.STATE_8,
+            instruction_setup=(
+                ExactWord(14, 0x1300), ExactWord(24, opcode)
+            ),
+        )
+        issued = apply_program_clients_owner_control_cycle(
+            state, phase=LogicalPhase.STATE_8
+        )
+        self.assertTrue(issued.dm.fetched_accepted)
+        low_ack = apply_program_clients_owner_control_cycle(
+            issued.state,
+            phase=LogicalPhase.STATE_6,
+            dmack=False,
+        )
+        self.assertTrue(low_ack.dm.bus.wait_extension_event)
+        self.assertEqual(low_ack.state.type5.dag.i[4], 0x0100)
+
+        state = low_ack.state
+        for phase in (
+            LogicalPhase.STATE_7,
+            LogicalPhase.STATE_8,
+            LogicalPhase.STATE_1,
+            LogicalPhase.STATE_2,
+            LogicalPhase.STATE_3,
+            LogicalPhase.STATE_4,
+            LogicalPhase.STATE_5,
+        ):
+            held = apply_program_clients_owner_control_cycle(
+                state, phase=phase
+            )
+            self.assertFalse(held.architectural_phase_advance)
+            self.assertFalse(held.linear.retire_event)
+            self.assertEqual(held.state.type5.dag.i[4], 0x0100)
+            state = held.state
+
+        qualified = apply_program_clients_owner_control_cycle(
+            state,
+            phase=LogicalPhase.STATE_6,
+            dmack=True,
+        )
+        completed = apply_program_clients_owner_control_cycle(
+            qualified.state,
+            phase=LogicalPhase.STATE_7,
+            pmd_read_data=ExactWord(24, 0),
+        )
+        self.assertTrue(completed.dm.fetched_completion)
+        self.assertTrue(completed.linear.retire_event)
+        self.assertEqual(completed.state.type5.dag.i[4], 0x0101)
+        self.assertEqual(completed.state.type13.dag.i[4], 0x0101)
+        self.assertFalse(completed.integration_conflict)
+
     def test_machine_readable_contract_has_one_cache_and_three_clients(self) -> None:
         contract = json.loads(
             (ROOT / "docs/generated/adsp2100_program_clients_owner_control.yaml")
@@ -284,8 +635,16 @@ class ProgramClientsOwnerControlTests(unittest.TestCase):
         )
         self.assertEqual(
             contract["architectural_state_owners"]
-                ["RETAINED_FETCH_TYPE_5_AND_TYPE_13"],
+                ["RETAINED_FETCH_TYPE_5_TYPE_13_AND_FETCHED_DM"],
             "ONE_SHARED_ARCHITECTURAL_STATE_OWNER",
+        )
+        self.assertEqual(
+            contract["fetched_dm_clients"],
+            ["TYPE_2", "TYPE_3", "TYPE_4", "TYPE_12"],
+        )
+        self.assertEqual(
+            contract["native_dm_attachment"]["COMPLETION"],
+            "PAIRED_PM_FETCH_AND_DM_STATE_7_COMPLETION",
         )
         self.assertEqual(
             contract["automatic_fetched_pm_flow"]["TYPE_5"],
@@ -304,6 +663,21 @@ class ProgramClientsOwnerControlTests(unittest.TestCase):
             "SELECTED_I_REQUIRES_VALID_I_M_L_AND_CONFIGURATION",
         )
         self.assertEqual(
+            contract["fetched_validity_sidecars"]["TYPE_3"],
+            "DM_READ_VALIDITY_PROPAGATES_TO_EVERY_SELECTED_GENERAL_REGISTER_"
+            "DESTINATION",
+        )
+        self.assertEqual(
+            contract["fetched_validity_sidecars"]["TYPE_4"],
+            "COMPUTE_RESULT_AND_PARALLEL_DM_READ_DESTINATION_TRACK_VALIDITY_"
+            "INDEPENDENTLY",
+        )
+        self.assertEqual(
+            contract["fetched_validity_sidecars"]["TYPE_12"],
+            "SHIFTER_RESULT_AND_PARALLEL_DM_READ_DESTINATION_TRACK_VALIDITY_"
+            "INDEPENDENTLY",
+        )
+        self.assertEqual(
             contract["fetched_validity_sidecars"]["TYPE_17"],
             "SOURCE_VALIDITY_PROPAGATES_TO_DREG_DAG_STATUS_CONTROL_SB_AND_PX; "
             "UNKNOWN_MSTAT_BLOCKS_PM_BANK_SELECTION",
@@ -317,9 +691,13 @@ class ProgramClientsOwnerControlTests(unittest.TestCase):
             contract["fetched_sstat_read"],
             "LIVE_COMPOSED_LOW_8_BITS; UPPER_EXTENSION_PROVISIONAL_OQ_016",
         )
+        self.assertNotIn(
+            "COMPLETE_FETCH_PM_VALIDITY_SIDECARS_FOR_EVERY_IMPLEMENTED_CLASS",
+            contract["excluded_claims"],
+        )
 
     def test_ordinary_fetch_fill_supplies_type5_cache_hit(self) -> None:
-        cached_word = 0xABCDEF
+        cached_word = 0xC00000
         state = _fill_from_linear_fetch(
             _setup_pm_state(), pc=0x0220, instruction=cached_word
         )
@@ -353,7 +731,7 @@ class ProgramClientsOwnerControlTests(unittest.TestCase):
         )
 
     def test_ordinary_fetch_fill_supplies_type13_cache_hit(self) -> None:
-        cached_word = 0xBA9876
+        cached_word = 0xC00001
         state = _fill_from_linear_fetch(
             _setup_pm_state(), pc=0x0320, instruction=cached_word
         )
@@ -457,7 +835,7 @@ class ProgramClientsOwnerControlTests(unittest.TestCase):
 
     def test_type5_pm_read_is_visible_to_following_type13_store(self) -> None:
         state = _fill_from_linear_fetch(
-            _setup_pm_state(), pc=0x0600, instruction=0xABCDEF
+            _setup_pm_state(), pc=0x0600, instruction=0xC00000
         )
         issued = apply_program_clients_owner_control_cycle(
             state,
@@ -484,7 +862,7 @@ class ProgramClientsOwnerControlTests(unittest.TestCase):
 
     def test_type13_pm_read_is_visible_to_following_type5_store(self) -> None:
         state = _fill_from_linear_fetch(
-            _setup_pm_state(), pc=0x0700, instruction=0xABCDEF
+            _setup_pm_state(), pc=0x0700, instruction=0xC00000
         )
         issued = apply_program_clients_owner_control_cycle(
             state,

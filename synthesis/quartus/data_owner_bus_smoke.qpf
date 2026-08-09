@@ -1,0 +1,3 @@
+QUARTUS_VERSION = "17.0"
+DATE = "00:00:00  AUGUST 01, 2026"
+PROJECT_REVISION = "data_owner_bus_smoke"

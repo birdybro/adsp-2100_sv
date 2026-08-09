@@ -237,6 +237,16 @@ module adsp2100_dm_write_immediate_slice (
         .m_read_valid_o(selected_m_valid),
         .l_read_data_o(selected_l),
         .l_read_valid_o(selected_l_valid),
+        .i_l_read_address_2_i(3'b000),
+        .m_read_address_2_i(3'b000),
+        /* verilator lint_off PINCONNECTEMPTY */
+        .i_read_data_2_o(),
+        .i_read_valid_2_o(),
+        .m_read_data_2_o(),
+        .m_read_valid_2_o(),
+        .l_read_data_2_o(),
+        .l_read_valid_2_o(),
+        /* verilator lint_on PINCONNECTEMPTY */
         .probe_address_i(probe_dag_address_i),
         .probe_i_data_o(probe_i_data_o),
         .probe_i_valid_o(probe_i_valid_o),
@@ -253,6 +263,10 @@ module adsp2100_dm_write_immediate_slice (
         .i_write_address_i(active_i_address),
         .i_write_data_i(active_next_i),
         .i_write_result_valid_i(active_next_i_valid),
+        .i_write_enable_2_i(1'b0),
+        .i_write_address_2_i(3'b000),
+        .i_write_data_2_i(14'h0000),
+        .i_write_result_valid_2_i(1'b0),
         .invalid_setup_kind_o(dag_invalid_setup_kind),
         .write_conflict_o(dag_write_conflict)
     );

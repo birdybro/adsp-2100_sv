@@ -15,6 +15,10 @@ read_verilog -sv rtl/core/adsp2100_internal_move_slice.sv
 read_verilog -sv rtl/core/adsp2100_condition_logic.sv
 read_verilog -sv rtl/core/adsp2100_compute_move_decode.sv
 read_verilog -sv rtl/core/adsp2100_compute_move_action.sv
+read_verilog -sv rtl/core/adsp2100_compute_dm_decode.sv
+read_verilog -sv rtl/core/adsp2100_compute_dm_action.sv
+read_verilog -sv rtl/core/adsp2100_shifter_dm_decode.sv
+read_verilog -sv rtl/core/adsp2100_shifter_dm_action.sv
 read_verilog -sv rtl/core/adsp2100_conditional_compute_decode.sv
 read_verilog -sv rtl/core/adsp2100_divide_quotient_decode.sv
 read_verilog -sv rtl/core/adsp2100_divide_quotient_action.sv
@@ -45,6 +49,8 @@ read_verilog -sv rtl/core/adsp2100_conditional_shift_action.sv
 read_verilog -sv rtl/core/adsp2100_shift_move_action.sv
 read_verilog -sv rtl/core/adsp2100_program_bus.sv
 read_verilog -sv rtl/core/adsp2100_interrupt_control.sv
+read_verilog -sv rtl/core/adsp2100_dm_write_immediate_decode.sv
+read_verilog -sv rtl/core/adsp2100_direct_dm_decode.sv
 read_verilog -sv rtl/core/adsp2100_linear_fetch_client.sv
 read_verilog -sv rtl/core/adsp2100_linear_core_slice.sv
 

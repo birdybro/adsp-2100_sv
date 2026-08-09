@@ -36,6 +36,7 @@
         "Printed pp. 1-2, 2-6–2-7, 2-15, 2-18, 6-1–6-2, 6-12–6-13, A-2, and A-9: original Type 6 immediate DREG load, field placement, banked cycle-boundary write, narrow DREG storage, and MR1 sign-fill side effect",
         "Printed pp. 2-23–2-30, 6-11 Table 6.5, A-3, and A-7: original Type 15 immediate LSHIFT/ASHIFT functions, signed exponent, shifter X operands, field placement, SR feedback/writeback, and SE preservation",
         "Printed pp. 5-5–5-8 and Figure 5.5: original PM interface roles, active-low controls, read/write ordering, bus relinquishment, and eight-state waveforms",
+        "Printed pp. 5-9–5-12 and Figure 5.7: DMACK extends state seven by complete cycles while the DM transaction remains active; the figure does not show simultaneous PM pins",
         "Additional architecture sections are cited at point of use and remain to be consolidated here"
       ],
       "may_commit": false,
@@ -122,7 +123,8 @@
         "peripherals"
       ],
       "cited_pages_or_sections": [
-        "Chapter 1 applicability statements and device table require extraction."
+        "Printed pp. 1-1–1-3, Table 1.1: covered device table begins with ADSP-2101 and excludes the original external-memory ADSP-2100.",
+        "Printed pp. 10-1–10-4 and 15-18: later-family multiplexed external PM/DM bus and PM-before-DM serialization; comparative exclusion under SC-015."
       ],
       "may_commit": false,
       "acquisition_status": "acquired",
@@ -164,6 +166,7 @@
       "cited_pages_or_sections": [
         "ADSP-2100 data sheet, printed pp. 2-15 onward (scan PDF pp. 25 onward).",
         "ADSP-2100 data sheet, printed pp. 2-36–2-39, timing parameters 23–60 and Figures 14–15: PM read/write state-edge and electrical timing.",
+        "ADSP-2100 data sheet, printed pp. 2-24–2-25 and 2-40–2-41, Figure 16: separate external PM/DM interfaces and extended DMACK read timing without simultaneous PM pins.",
         "ADSP-2100 development-system literature, printed pp. 2-3–2-14."
       ],
       "may_commit": false,
@@ -206,7 +209,9 @@
         "electrical_timing"
       ],
       "cited_pages_or_sections": [
-        "ADSP-2100/ADSP-2100A data sheet, printed p. 2-19 (scan PDF p. 27): pin/code compatibility; identical documented architectures and instruction sets; timing/electrical distinction; speed grades."
+        "ADSP-2100/ADSP-2100A data sheet, printed p. 2-19 (scan PDF p. 27): pin/code compatibility; identical documented architectures and instruction sets; timing/electrical distinction; speed grades.",
+        "ADSP-2100/ADSP-2100A data sheet, printed p. 2-37, Figure 9: joint-sheet RESET/CLKIN-only waveform and state-4 restart note; no PMS, PMRD, or initial-fetch trace.",
+        "ADSP-2100A hardware-development-tools sheet, printed p. 2-15: RESET, PMWR, and PMRD are among the emulator-degraded signals and Appendix B of the separate ADSP-2100 Emulator Manual is identified as the source for complete comparison timing."
       ],
       "may_commit": false,
       "acquisition_status": "acquired",
@@ -763,11 +768,11 @@
       "id": "ADI-2100-CROSS-SOFTWARE-TARGET",
       "title": "ADSP-2100 Cross-Software Manual",
       "author_or_organization": "Analog Devices, Inc.",
-      "publication_number": null,
-      "publication_date": "circa 1987-1989",
-      "revision": "unknown",
+      "publication_number": "E972b-5-4/87",
+      "publication_date": "1987",
+      "revision": "Third Edition (secondary bibliographic locator; manual not inspected)",
       "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/",
-      "retrieval_date": "2026-07-30",
+      "retrieval_date": "2026-08-01",
       "local_filename": null,
       "sha256": null,
       "document_type": "target_manual",
@@ -787,7 +792,8 @@
         "file_formats"
       ],
       "cited_pages_or_sections": [
-        "Identified in the 1987 data book and 1989 user's manual."
+        "Identified in the 1987 data book and 1989 user's manual.",
+        "Secondary locator only: TU Eindhoven thesis bibliography, PDF p. 147, gives Third Edition, order E972b-5-4/87, 1987."
       ],
       "may_commit": false,
       "acquisition_status": "unavailable",
@@ -799,7 +805,49 @@
         ],
         "max_bytes": 50000000
       },
-      "notes": "A lawful accessible scan has not yet been located; the listed URL is the searched archival directory, not the manual."
+      "notes": "A lawful accessible scan has not yet been located; the listed URL is the searched archival directory, not the manual. The edition/order/date metadata comes only from a secondary TU Eindhoven thesis bibliography at https://research.tue.nl/files/3505749/357357.pdf and is a search locator, not architectural evidence."
+    },
+    {
+      "id": "ADI-2100-EMULATOR-TARGET",
+      "title": "ADSP-2100 Emulator Manual",
+      "author_or_organization": "Analog Devices, Inc.",
+      "publication_number": null,
+      "publication_date": "circa 1987–1990",
+      "revision": "unknown; manual not inspected",
+      "source_url": "https://www.bitsavers.org/components/analogDevices/dsp/",
+      "retrieval_date": "2026-08-01",
+      "local_filename": null,
+      "sha256": null,
+      "document_type": "target_manual",
+      "exact_device_applicability": "Original ADSP-2100 in-circuit emulator and target-hardware interface.",
+      "family_member_applicability": [
+        "ADSP-2100"
+      ],
+      "redistribution_status": "unclear",
+      "license": "Copyright Analog Devices; no copy located.",
+      "authority_level": "primary_original_device",
+      "relevance": [
+        "system_interface",
+        "emulator",
+        "external_instrumentation",
+        "physical_validation",
+        "pin_trace"
+      ],
+      "cited_pages_or_sections": [
+        "Identified in ADI-DATABOOK-1987 development-system literature and ADI-UM-1989 printed pp. 1-8–1-9.",
+        "ADI-DATABOOK-1989 printed p. 2-15 identifies Appendix B as the complete emulator/non-emulator timing comparison and lists RESET, PMWR, and PMRD among the timing-degraded emulator signals."
+      ],
+      "may_commit": false,
+      "acquisition_status": "unavailable",
+      "confidence": "VERIFIED_PRIMARY",
+      "download": {
+        "enabled": false,
+        "expected_content_types": [
+          "application/pdf"
+        ],
+        "max_bytes": 50000000
+      },
+      "notes": "The official ADI legacy index, live Bitsavers directory, exact-title and broad web searches, and exact-title/broad Internet Archive metadata queries did not expose a lawful accessible copy on 2026-08-01. Appendix B is now the precise timing-section acquisition target. An original emulator trace may help resolve OQ-023 and OQ-024; the catalog identification alone supports no architectural behavior."
     },
     {
       "id": "ADI-2100-EVAL-TARGET",

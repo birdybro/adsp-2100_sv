@@ -65,20 +65,26 @@ old store data; and commits MR/MF plus ASTAT.MV atomically with the
 acknowledged DM action. Immediate and waited completion pass the 50,072-clock
 logical comparison; the 50,082-clock native attachment comparison additionally
 checks state-8 issue, complete-cycle waits, and state-7-only MAC/status commit.
+The fetched Type 4 composition adds 2,057 aligned transactions, including all
+2,048 compute tuples and an alternate-bank MAC/readback sequence, within its
+50,000-clock Type 2/3/4/12 comparison. Fetched operands are initialized; the
+standalone slice remains the evidence for reset-unknown propagation.
 Type 5 execution covers every MAC AMF/X/Y/Z selection and rejects
 MR0/MR1/MR2 PM-read double destinations. It captures cycle-start operands,
 MR feedback, old `{DREG,PX}`, and DAG2 state, then commits MR/MF, ASTAT.MV,
 optional DREG/PX read, and I postmodify on the fixed PM completion. Its
-cache/native attachment passes 50,100 phase clocks; Type 1 action selection
-and whole-core PM/event arbitration remain unimplemented
+cache/native attachment passes 50,100 phase clocks; Type 1 native phases and
+whole-core PM/event arbitration remain unimplemented
 [ADI-UM-1989, printed pp. 4-26–4-30, 5-5–5-8, 6-3–6-7, A-1, A-5–A-7].
 
-The Type 1 action decoder covers every MAC AMF/X/Y selection with an implicit
+The Type 1 action/state boundary covers every MAC AMF/X/Y selection with an implicit
 full-MR destination plus simultaneous DD-selected DAG1 DM and PD-selected
 DAG2 PM reads. Both new operands arrive after the old values participate in
-the product/accumulate. Action selection is exhaustive; MAC/status execution,
-cache recovery, and native dual-bus wait behavior remain unconnected under
-OQ-023
+the product/accumulate. The 51,069-clock logical comparison captures the old
+MAC operands and feedback at issue and atomically commits MR, MV, both loads,
+PX, and both selected-I updates at completion, including held packets and
+unknown inputs. Cache recovery and native dual-bus wait behavior remain
+unconnected under OQ-023
 [ADI-UM-1989, printed pp. 2-15–2-18, 6-3–6-5, A-1, A-5–A-7].
 
 The implementation rounds the complete 40-bit result, including the current
@@ -97,8 +103,8 @@ move. Z=0 packets whose move also targets MR0/MR1/MR2 fail closed. All
 983,386-cycle standalone comparison. The bounded fetched owner additionally
 traverses every compute-field tuple and every move source/destination pair in
 both banks within 444,003 clocks, with atomic MAC/MV/move/PC/next-word
-retirement. AMF zero remains unassigned under OQ-022; Type 1 state execution
-and whole-core PM/cache/event ownership remain open
+retirement. AMF zero remains unassigned under OQ-022; Type 1 native phase
+attachment and whole-core PM/cache/event ownership remain open
 [ADI-UM-1989, printed pp. 2-13–2-20, 6-4–6-10, A-2, A-5–A-7, A-11].
 
 The Type 9 model and RTL select the same original MAC X/Y/Z and MR-feedback

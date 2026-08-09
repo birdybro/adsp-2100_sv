@@ -48,7 +48,9 @@ def apply_program_owner_bus_control_cycle(
     reset: bool = False,
     phase: LogicalPhase | int = LogicalPhase.STATE_1,
     phase_advance: bool = True,
+    pm_phase_advance: bool | None = None,
     br_n: bool = True,
+    service_inhibit: bool = False,
     fetch_request: ProgramBusRequest | None = None,
     type5_request: ProgramBusRequest | None = None,
     type13_request: ProgramBusRequest | None = None,
@@ -57,12 +59,16 @@ def apply_program_owner_bus_control_cycle(
     """Apply one shared phase boundary to the two independent controllers."""
 
     phase = LogicalPhase(phase)
+    owner_phase_advance = (
+        phase_advance if pm_phase_advance is None else pm_phase_advance
+    )
     control = apply_bus_control_cycle(
         state.control,
         reset=reset,
         phase=phase,
         phase_advance=phase_advance,
         br_n=br_n,
+        service_inhibit=service_inhibit,
     )
     native_bg_n = br_n if reset else control.bg_n
     native_bus_relinquished = (
@@ -77,7 +83,7 @@ def apply_program_owner_bus_control_cycle(
         state.owner_bus,
         reset=reset,
         phase=phase,
-        phase_advance=phase_advance,
+        phase_advance=owner_phase_advance,
         fetch_request=fetch_request if issue_enabled else None,
         type5_request=type5_request if issue_enabled else None,
         type13_request=type13_request if issue_enabled else None,

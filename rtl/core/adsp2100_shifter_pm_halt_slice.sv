@@ -196,6 +196,7 @@ module adsp2100_shifter_pm_halt_slice (
         .halt_n_i(halt_n_i),
         .dmack_i(dmack_i),
         .pm_data_cycle_i(pm_data_cycle_o),
+        .service_inhibit_i(1'b0),
         .mode_o(halt_mode_o),
         .state_three_boundary_o(state_three_boundary_unused),
         .halt_recognized_o(halt_recognized_o),

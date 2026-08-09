@@ -7,7 +7,16 @@
 // the request, then retires only when that owner routes the corresponding
 // completion back.
 // Native PM pin phases and multi-owner arbitration are deliberately external.
-module adsp2100_linear_fetch_client (
+module adsp2100_linear_fetch_client #(
+    parameter bit FETCHED_TYPE2_ENABLED = 1'b0,
+    parameter bit FETCHED_TYPE3_ENABLED = 1'b0,
+    parameter bit FETCHED_TYPE4_ENABLED = 1'b0,
+    parameter bit FETCHED_TYPE12_ENABLED = 1'b0,
+    // A larger composed owner may retain exact unknown-state metadata beside
+    // this two-state storage. Standalone owners keep the conservative
+    // invalid-DMD conflict unless that external sidecar is explicitly present.
+    parameter bit EXTERNAL_FETCHED_DM_VALIDITY_SIDECARS = 1'b0
+) (
     input  logic        clk_i,
     input  logic        reset_i,
     input  logic [2:0]  phase_i,
@@ -24,12 +33,14 @@ module adsp2100_linear_fetch_client (
     input  logic        pm_completion_event_i,
     input  logic [23:0] pmd_read_data_i,
     input  logic        pmd_read_data_valid_i,
+    input  logic [15:0] dmd_read_data_i,
+    input  logic        dmd_read_data_valid_i,
     input  logic [3:0]  irq_n_i,
     input  logic [5:0]  probe_code_i,
 
     // A composed owner supplies the cycle-start validity of the selected
-    // Type 17 source. Standalone bounded owners initialize every exercised
-    // source and tie this input high.
+    // Type 17 or fetched-DM store source. Standalone bounded owners initialize
+    // every exercised source and tie this input high.
     input  logic        type17_source_data_valid_i,
     input  logic [7:0]  state_astat_valid_mask_i,
     input  logic [3:0]  state_mstat_valid_mask_i,
@@ -123,6 +134,14 @@ module adsp2100_linear_fetch_client (
     output logic [13:0] pc_o,
     output logic [23:0] opcode_o,
 
+    output logic        fetched_dm_request_candidate_o,
+    output logic        fetched_dm_request_presented_o,
+    output logic [13:0] fetched_dm_request_address_o,
+    output logic        fetched_dm_request_address_valid_o,
+    output logic        fetched_dm_request_write_o,
+    output logic [15:0] fetched_dm_request_write_data_o,
+    output logic        fetched_dm_request_write_data_valid_o,
+
     output logic [15:0] probe_data_o,
     output logic [7:0]  astat_o,
     output logic [3:0]  mstat_o,
@@ -173,6 +192,78 @@ module adsp2100_linear_fetch_client (
     logic [1:0] interrupt_level_q;
 
     logic nop_valid;
+    logic type2_action_valid;
+    logic [15:0] type2_immediate;
+    logic type2_dag2;
+    logic [1:0] type2_i_local_unused;
+    logic [1:0] type2_m_local_unused;
+    logic [2:0] type2_i_address;
+    logic [2:0] type2_m_address;
+    logic [2:0] type2_l_address_unused;
+    logic [13:0] type2_address;
+    logic type2_address_valid;
+    logic [13:0] type2_next_i;
+    logic type2_next_i_valid;
+    logic [13:0] type2_base_unused;
+    logic type2_circular_unused;
+    logic type2_configuration_valid;
+    logic type3_class_valid;
+    logic type3_action_valid;
+    logic type3_invalid_subencoding;
+    logic type3_write;
+    logic [13:0] type3_address;
+    logic [1:0] type3_register_group_unused;
+    logic [3:0] type3_register_index;
+    logic [5:0] type3_register_code;
+    logic type3_register_present_unused;
+    logic type3_register_writable_unused;
+    logic type3_reserved_source_unused;
+    logic type3_reserved_destination_unused;
+    logic type3_read_only_destination_unused;
+    logic type4_class_valid;
+    logic type4_action_valid;
+    logic type4_unsupported_subencoding;
+    logic type4_destination_collision_unused;
+    logic type4_computation_enable;
+    logic type4_is_mac_unused;
+    logic type4_live_destination_feedback_unused;
+    logic type4_dag2;
+    logic type4_write;
+    logic [4:0] type4_amf_unused;
+    logic [1:0] type4_yop_unused;
+    logic [2:0] type4_xop_unused;
+    logic [3:0] type4_x_source_dreg;
+    logic [3:0] type4_y_source_dreg;
+    logic [3:0] type4_memory_dreg;
+    logic [2:0] type4_i_address;
+    logic [2:0] type4_m_address;
+    logic [13:0] type4_address;
+    logic type4_address_valid;
+    logic [13:0] type4_next_i;
+    logic type4_next_i_valid;
+    logic [13:0] type4_base_unused;
+    logic type4_circular_unused;
+    logic type4_configuration_valid;
+    logic type12_class_valid;
+    logic type12_action_valid;
+    logic type12_unsupported_subencoding;
+    logic type12_unavailable_xop_unused;
+    logic type12_destination_collision_unused;
+    logic type12_dag2;
+    logic type12_write;
+    logic [3:0] type12_sf_unused;
+    logic [2:0] type12_xop_unused;
+    logic [3:0] type12_shifter_source_dreg;
+    logic [3:0] type12_memory_dreg;
+    logic [2:0] type12_i_address;
+    logic [2:0] type12_m_address;
+    logic [13:0] type12_address;
+    logic type12_address_valid;
+    logic [13:0] type12_next_i;
+    logic type12_next_i_valid;
+    logic [13:0] type12_base_unused;
+    logic type12_circular_unused;
+    logic type12_configuration_valid;
     logic type6_valid;
     logic [3:0] type6_destination;
     logic [15:0] type6_data;
@@ -346,7 +437,7 @@ module adsp2100_linear_fetch_client (
     logic [39:0] type9_mac_result;
     logic type9_mac_mv;
 
-    // Type 8/9 computations read cycle-start state at the state-8 issue
+    // Type 4/8/9 computations read cycle-start state at the state-8 issue
     // edge, evaluate from those captured operands during state 1, and retain
     // the result until state-7 retirement.  This is an internal FPGA
     // pipeline across sourced logical substates; it adds no architectural
@@ -362,6 +453,9 @@ module adsp2100_linear_fetch_client (
     logic [15:0] compute_stage1_mf_q;
     logic [39:0] compute_stage1_mr_q;
     logic [7:0] compute_stage1_astat_q;
+    logic [31:0] compute_stage1_sr_q;
+    logic [7:0] compute_stage1_se_q;
+    logic [4:0] compute_stage1_sb_q;
     logic compute_stage1_overflow_latch_q;
     logic compute_stage1_saturate_ar_q;
     logic compute_stage1_capture;
@@ -413,6 +507,76 @@ module adsp2100_linear_fetch_client (
     logic type9_pipeline_mac_write;
     logic [39:0] type9_pipeline_mac_result;
     logic type9_pipeline_mac_mv;
+    logic type4_pipeline_class_unused;
+    logic type4_pipeline_action_unused;
+    logic type4_pipeline_unsupported_unused;
+    logic type4_pipeline_collision_unused;
+    logic type4_pipeline_computation_enable_unused;
+    logic type4_pipeline_is_mac_unused;
+    logic type4_pipeline_destination_feedback;
+    logic type4_pipeline_dag2_unused;
+    logic type4_pipeline_write;
+    logic [3:0] type4_pipeline_x_unused;
+    logic [3:0] type4_pipeline_y_unused;
+    logic [3:0] type4_pipeline_memory_dreg;
+    logic [2:0] type4_pipeline_i_unused;
+    logic [2:0] type4_pipeline_m_unused;
+    logic [15:0] type4_pipeline_memory_data_unused;
+    logic type4_pipeline_alu_write;
+    logic [15:0] type4_pipeline_alu_result;
+    logic type4_pipeline_alu_az;
+    logic type4_pipeline_alu_an;
+    logic type4_pipeline_alu_av;
+    logic type4_pipeline_alu_ac;
+    logic type4_pipeline_alu_as_write;
+    logic type4_pipeline_alu_as;
+    logic type4_pipeline_mac_write;
+    logic [39:0] type4_pipeline_mac_result;
+    logic type4_pipeline_mac_mv;
+    logic type4_destination_feedback;
+    logic type4_retired_write;
+    logic [3:0] type4_retired_memory_dreg;
+    logic type4_alu_write;
+    logic [15:0] type4_alu_result;
+    logic type4_alu_az;
+    logic type4_alu_an;
+    logic type4_alu_av;
+    logic type4_alu_ac;
+    logic type4_alu_as_write;
+    logic type4_alu_as;
+    logic type4_mac_write;
+    logic [39:0] type4_mac_result;
+    logic type4_mac_mv;
+    logic type12_pipeline_class_unused;
+    logic type12_pipeline_action_unused;
+    logic type12_pipeline_unsupported_unused;
+    logic type12_pipeline_unavailable_xop_unused;
+    logic type12_pipeline_collision_unused;
+    logic type12_pipeline_dag2_unused;
+    logic type12_pipeline_write;
+    logic [3:0] type12_pipeline_source_unused;
+    logic [3:0] type12_pipeline_memory_dreg;
+    logic [2:0] type12_pipeline_i_unused;
+    logic [2:0] type12_pipeline_m_unused;
+    logic [15:0] type12_pipeline_memory_data_unused;
+    logic type12_pipeline_sr_write;
+    logic [31:0] type12_pipeline_sr_result;
+    logic type12_pipeline_se_write;
+    logic [7:0] type12_pipeline_se_result;
+    logic type12_pipeline_sb_write;
+    logic [4:0] type12_pipeline_sb_result;
+    logic type12_pipeline_ss_write;
+    logic type12_pipeline_ss_result;
+    logic type12_retired_write;
+    logic [3:0] type12_retired_memory_dreg;
+    logic type12_sr_write;
+    logic [31:0] type12_sr_result;
+    logic type12_se_write;
+    logic [7:0] type12_se_result;
+    logic type12_sb_write;
+    logic [4:0] type12_sb_result;
+    logic type12_ss_write;
+    logic type12_ss_result;
     logic type23_class_valid;
     logic type23_action_valid;
     logic [2:0] type23_xop_unused;
@@ -517,6 +681,12 @@ module adsp2100_linear_fetch_client (
     logic state_dag_m_read_valid;
     logic [13:0] state_dag_l_read_data;
     logic state_dag_l_read_valid;
+    logic [13:0] state_pm_dag_i_read_data;
+    logic state_pm_dag_i_read_valid;
+    logic [13:0] state_pm_dag_m_read_data;
+    logic state_pm_dag_m_read_valid;
+    logic [13:0] state_pm_dag_l_read_data;
+    logic state_pm_dag_l_read_valid;
     logic [13:0] state_pc_stack_top;
     logic state_pc_stack_top_valid;
     logic [15:0] state_status_stack_top_unused;
@@ -569,7 +739,12 @@ module adsp2100_linear_fetch_client (
 
     assign nop_valid = opcode_q == 24'h000000;
     assign supported_instruction = (
-        nop_valid || type6_valid || type7_action_valid || type8_action_valid
+        nop_valid
+        || (FETCHED_TYPE2_ENABLED && type2_action_valid)
+        || (FETCHED_TYPE3_ENABLED && type3_action_valid)
+        || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+        || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+        || type6_valid || type7_action_valid || type8_action_valid
         || type17_action_valid
         || type18_valid || type9_action_valid || type15_action_valid
         || type16_action_valid || type14_action_valid || type23_action_valid
@@ -582,6 +757,18 @@ module adsp2100_linear_fetch_client (
         issue_boundary_o && instruction_valid_q
         && (
             (type7_class_valid && type7_invalid_subencoding)
+            || (
+                FETCHED_TYPE3_ENABLED && type3_class_valid
+                && type3_invalid_subencoding
+            )
+            || (
+                FETCHED_TYPE4_ENABLED && type4_class_valid
+                && type4_unsupported_subencoding
+            )
+            || (
+                FETCHED_TYPE12_ENABLED && type12_class_valid
+                && type12_unsupported_subencoding
+            )
             || (type8_class_valid && type8_unsupported_subencoding)
             || (type17_class_valid && type17_invalid_subencoding)
             || (type14_class_valid && type14_unsupported_subencoding)
@@ -703,6 +890,10 @@ module adsp2100_linear_fetch_client (
     assign instruction_writes_cntr = (
         (type7_action_valid && (type7_code == 6'h35))
         || (type17_action_valid && (type17_destination_code == 6'h35))
+        || (
+            FETCHED_TYPE3_ENABLED && type3_action_valid && !type3_write
+            && (type3_register_code == 6'h35)
+        )
     );
     assign automatic_manual_conflict = (
         issue_boundary_o && automatic_loop_flow
@@ -735,6 +926,14 @@ module adsp2100_linear_fetch_client (
                 || (type17_destination_code == 6'h34)
             )
         )
+        || (
+            FETCHED_TYPE3_ENABLED && type3_action_valid && !type3_write
+            && (
+                (type3_register_code == 6'h31)
+                || (type3_register_code == 6'h33)
+                || (type3_register_code == 6'h34)
+            )
+        )
     );
     assign interrupt_vector_request = (
         issue_boundary_o && interrupt_vectoring_q && !pending_q
@@ -760,6 +959,99 @@ module adsp2100_linear_fetch_client (
             && !unsupported_nested_same_end
             && !automatic_manual_conflict
         )
+    );
+    // This conservative state-8 preflight is independent of the external
+    // issue inhibit so a composition can inhibit both PM and DM admission
+    // before either controller captures a colliding request. Contextual flow
+    // conflicts remain authoritative in fetch_request_presented_o.
+    assign fetched_dm_request_candidate_o = (
+        !reset_i && !bus_relinquished_i && phase_advance_i
+        && phase_i == PHASE_STATE_8
+        && instruction_valid_q && !pending_q && !interrupt_vectoring_q
+        && !instruction_setup_i && !pm_instruction_active_i
+        && (
+            (FETCHED_TYPE2_ENABLED && type2_action_valid)
+            || (FETCHED_TYPE3_ENABLED && type3_action_valid)
+            || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+            || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+        )
+    );
+    assign fetched_dm_request_presented_o = (
+        (
+            (FETCHED_TYPE2_ENABLED && type2_action_valid)
+            || (FETCHED_TYPE3_ENABLED && type3_action_valid)
+            || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+            || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+        )
+        && fetch_request_presented_o && !interrupt_vector_request
+    );
+    assign fetched_dm_request_address_valid_o = (
+        fetched_dm_request_presented_o
+        && (
+            (FETCHED_TYPE2_ENABLED && type2_action_valid)
+                ? type2_address_valid
+                : (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_address_valid
+                        : (
+                            FETCHED_TYPE12_ENABLED && type12_action_valid
+                                ? type12_address_valid : 1'b1
+                        )
+                )
+        )
+    );
+    assign fetched_dm_request_address_o = fetched_dm_request_address_valid_o
+        ? (
+            FETCHED_TYPE2_ENABLED && type2_action_valid
+                ? type2_address
+                : (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_address
+                        : (
+                            FETCHED_TYPE12_ENABLED && type12_action_valid
+                                ? type12_address : type3_address
+                        )
+                )
+        )
+        : 14'h0000;
+    assign fetched_dm_request_write_o = (
+        fetched_dm_request_presented_o
+        && (
+            (FETCHED_TYPE2_ENABLED && type2_action_valid)
+            || (
+                FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_write
+                    : (
+                        FETCHED_TYPE12_ENABLED && type12_action_valid
+                            ? type12_write : type3_write
+                    )
+            )
+        )
+    );
+    assign fetched_dm_request_write_data_valid_o = (
+        fetched_dm_request_write_o
+        && (
+            (FETCHED_TYPE2_ENABLED && type2_action_valid)
+            || type17_source_data_valid_i
+        )
+    );
+    assign fetched_dm_request_write_data_o = (
+        fetched_dm_request_write_data_valid_o
+            ? (
+                FETCHED_TYPE2_ENABLED && type2_action_valid
+                    ? type2_immediate
+                    : (
+                        FETCHED_TYPE4_ENABLED && type4_action_valid
+                            ? state_dreg_read_data_2
+                            : (
+                                FETCHED_TYPE12_ENABLED
+                                && type12_action_valid
+                                    ? state_dreg_read_data_2
+                                    : state_read_data
+                            )
+                    )
+            )
+            : 16'h0000
     );
     assign instruction_issue_o = pm_request_accepted_i;
     assign pm_instruction_sequential_allowed_o = (
@@ -822,6 +1114,15 @@ module adsp2100_linear_fetch_client (
                 || type14_action_valid || type15_action_valid
                 || type16_action_valid || type23_action_valid
                 || type24_action_valid || type25_action_valid
+                || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+                || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+                || (
+                    FETCHED_TYPE3_ENABLED && type3_action_valid
+                    && (
+                        type3_register_code[5:4] == 2'b00
+                        || type3_register_code == 6'h36
+                    )
+                )
                 || (
                     type17_action_valid
                     && (
@@ -835,26 +1136,52 @@ module adsp2100_linear_fetch_client (
         )
         || (
             state_mstat_valid_mask_i != 4'hf
-            && (type8_action_valid || type9_action_valid)
+            && (
+                type8_action_valid || type9_action_valid
+                || (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                    && type4_computation_enable
+                )
+            )
+        )
+        || (
+            FETCHED_TYPE2_ENABLED && type2_action_valid && !type2_dag2
+            && !state_mstat_valid_mask_i[1]
+        )
+        || (
+            FETCHED_TYPE4_ENABLED && type4_action_valid && !type4_dag2
+            && !state_mstat_valid_mask_i[1]
+        )
+        || (
+            FETCHED_TYPE12_ENABLED && type12_action_valid && !type12_dag2
+            && !state_mstat_valid_mask_i[1]
         )
     );
     assign state_action_retire =
         linear_fetch_retire && !mstat_dependency_invalid;
     assign state_write = state_action_retire && (
         type6_valid || type7_action_valid || type17_action_valid
+        || (
+            FETCHED_TYPE3_ENABLED && type3_action_valid && !type3_write
+        )
     );
     assign state_write_code = type6_valid
         ? {2'b00, type6_destination}
         : (
             type7_action_valid ? type7_code
-            : type17_destination_code
+            : (
+                type17_action_valid
+                    ? type17_destination_code : type3_register_code
+            )
         );
     assign state_write_data = type6_valid
         ? type6_data
         : (
             type7_action_valid
                 ? {2'b00, type7_data}
-                : state_read_data
+                : (
+                    type17_action_valid ? state_read_data : dmd_read_data_i
+                )
         );
     always_comb begin
         state_read_code = {2'b00, type9_x_source_dreg};
@@ -879,6 +1206,17 @@ module adsp2100_linear_fetch_client (
         if (type17_class_valid) begin
             state_read_code = type17_source_code;
         end
+        if (
+            FETCHED_TYPE3_ENABLED && type3_action_valid && type3_write
+        ) begin
+            state_read_code = type3_register_code;
+        end
+        if (FETCHED_TYPE4_ENABLED && type4_action_valid) begin
+            state_read_code = {2'b00, type4_x_source_dreg};
+        end
+        if (FETCHED_TYPE12_ENABLED && type12_action_valid) begin
+            state_read_code = {2'b00, type12_shifter_source_dreg};
+        end
     end
 
     assign instruction_valid_o = instruction_valid_q;
@@ -896,6 +1234,19 @@ module adsp2100_linear_fetch_client (
         || pm_instruction_flow_blocked_o
         || pm_instruction_completion_conflict
         || pm_state_action_conflict_o
+        || (!EXTERNAL_FETCHED_DM_VALIDITY_SIDECARS
+            && (
+                (
+                    linear_fetch_retire && FETCHED_TYPE4_ENABLED
+                    && type4_action_valid && !type4_retired_write
+                    && !dmd_read_data_valid_i
+                )
+                || (
+                    linear_fetch_retire && FETCHED_TYPE12_ENABLED
+                    && type12_action_valid && !type12_retired_write
+                    && !dmd_read_data_valid_i
+                )
+            ))
     );
 
     assign pm_state_action = (
@@ -923,12 +1274,12 @@ module adsp2100_linear_fetch_client (
     assign pm_state_memory_read_data_o = state_dreg_read_data_3;
     assign pm_state_dreg_read_data_1_o = state_dreg_read_data_4;
     assign pm_state_dreg_read_data_2_o = state_dreg_read_data_5;
-    assign pm_state_dag_i_data_o = state_dag_i_read_data;
-    assign pm_state_dag_i_valid_o = state_dag_i_read_valid;
-    assign pm_state_dag_m_data_o = state_dag_m_read_data;
-    assign pm_state_dag_m_valid_o = state_dag_m_read_valid;
-    assign pm_state_dag_l_data_o = state_dag_l_read_data;
-    assign pm_state_dag_l_valid_o = state_dag_l_read_valid;
+    assign pm_state_dag_i_data_o = state_pm_dag_i_read_data;
+    assign pm_state_dag_i_valid_o = state_pm_dag_i_read_valid;
+    assign pm_state_dag_m_data_o = state_pm_dag_m_read_data;
+    assign pm_state_dag_m_valid_o = state_pm_dag_m_read_valid;
+    assign pm_state_dag_l_data_o = state_pm_dag_l_read_data;
+    assign pm_state_dag_l_valid_o = state_pm_dag_l_read_valid;
     assign pm_state_af_o = state_af;
     assign pm_state_mf_o = state_mf;
     assign pm_state_mr_o = state_mr;
@@ -936,9 +1287,19 @@ module adsp2100_linear_fetch_client (
     assign pm_state_sb_o = state_sb;
     assign pm_state_sr_o = state_sr;
     assign provisional_source_extension_o = (
-        linear_fetch_retire && type17_action_valid
-        && (type17_source_code[5:4] == 2'b11)
-        && (type17_source_code[3:0] <= 4'd4)
+        linear_fetch_retire
+        && (
+            (
+                type17_action_valid
+                && (type17_source_code[5:4] == 2'b11)
+                && (type17_source_code[3:0] <= 4'd4)
+            )
+            || (
+                FETCHED_TYPE3_ENABLED && type3_action_valid && type3_write
+                && (type3_register_code[5:4] == 2'b11)
+                && (type3_register_index <= 4'd4)
+            )
+        )
     );
 
     adsp2100_load_dreg_immediate_decode type6_decode (
@@ -946,6 +1307,144 @@ module adsp2100_linear_fetch_client (
         .valid_o(type6_valid),
         .destination_dreg_o(type6_destination),
         .immediate_data_o(type6_data)
+    );
+
+    adsp2100_dm_write_immediate_decode type2_decode (
+        .opcode_i(opcode_q),
+        .valid_o(type2_action_valid),
+        .immediate_o(type2_immediate),
+        .dag2_o(type2_dag2),
+        .i_local_o(type2_i_local_unused),
+        .m_local_o(type2_m_local_unused),
+        .i_address_o(type2_i_address),
+        .m_address_o(type2_m_address),
+        .l_address_o(type2_l_address_unused)
+    );
+
+    adsp2100_direct_dm_decode type3_decode (
+        .opcode_i(opcode_q),
+        .class_valid_o(type3_class_valid),
+        .action_valid_o(type3_action_valid),
+        .invalid_subencoding_o(type3_invalid_subencoding),
+        .write_o(type3_write),
+        .address_o(type3_address),
+        .register_group_o(type3_register_group_unused),
+        .register_index_o(type3_register_index),
+        .register_code_o(type3_register_code),
+        .register_present_o(type3_register_present_unused),
+        .register_writable_o(type3_register_writable_unused),
+        .reserved_source_o(type3_reserved_source_unused),
+        .reserved_destination_o(type3_reserved_destination_unused),
+        .read_only_destination_o(type3_read_only_destination_unused)
+    );
+
+    adsp2100_compute_dm_decode type4_live_decode (
+        .opcode_i(opcode_q),
+        .class_valid_o(type4_class_valid),
+        .action_valid_o(type4_action_valid),
+        .unsupported_subencoding_o(type4_unsupported_subencoding),
+        .destination_collision_o(type4_destination_collision_unused),
+        .computation_enable_o(type4_computation_enable),
+        .is_mac_o(type4_is_mac_unused),
+        .destination_feedback_o(
+            type4_live_destination_feedback_unused
+        ),
+        .dag_select_o(type4_dag2),
+        .write_o(type4_write),
+        .amf_o(type4_amf_unused),
+        .yop_o(type4_yop_unused),
+        .xop_o(type4_xop_unused),
+        .x_source_dreg_o(type4_x_source_dreg),
+        .y_source_dreg_o(type4_y_source_dreg),
+        .memory_dreg_o(type4_memory_dreg),
+        .i_address_o(type4_i_address),
+        .m_address_o(type4_m_address)
+    );
+
+    adsp2100_shifter_dm_decode type12_live_decode (
+        .opcode_i(opcode_q),
+        .class_valid_o(type12_class_valid),
+        .action_valid_o(type12_action_valid),
+        .unsupported_subencoding_o(type12_unsupported_subencoding),
+        .unavailable_xop_o(type12_unavailable_xop_unused),
+        .destination_collision_o(type12_destination_collision_unused),
+        .dag_select_o(type12_dag2),
+        .write_o(type12_write),
+        .sf_o(type12_sf_unused),
+        .xop_o(type12_xop_unused),
+        .shifter_source_dreg_o(type12_shifter_source_dreg),
+        .memory_dreg_o(type12_memory_dreg),
+        .i_address_o(type12_i_address),
+        .m_address_o(type12_m_address)
+    );
+
+    assign type2_address_valid = (
+        state_dag_i_read_valid
+        && (type2_dag2 || state_mstat_valid_mask_i[1])
+    );
+    assign type2_next_i_valid = (
+        state_dag_i_read_valid && state_dag_m_read_valid
+        && state_dag_l_read_valid && type2_configuration_valid
+    );
+
+    adsp2100_dag #(
+        .BIT_REVERSE_CAPABLE(1'b1)
+    ) type2_dag_arithmetic (
+        .i_i(state_dag_i_read_data),
+        .m_i(state_dag_m_read_data),
+        .l_i(state_dag_l_read_data),
+        .bit_reverse_enable_i(!type2_dag2 && state_bit_reverse_unused),
+        .address_o(type2_address),
+        .next_i_o(type2_next_i),
+        .base_o(type2_base_unused),
+        .circular_o(type2_circular_unused),
+        .configuration_valid_o(type2_configuration_valid)
+    );
+
+    assign type4_address_valid = (
+        state_dag_i_read_valid
+        && (type4_dag2 || state_mstat_valid_mask_i[1])
+    );
+    assign type4_next_i_valid = (
+        state_dag_i_read_valid && state_dag_m_read_valid
+        && state_dag_l_read_valid && type4_configuration_valid
+    );
+
+    adsp2100_dag #(
+        .BIT_REVERSE_CAPABLE(1'b1)
+    ) type4_dag_arithmetic (
+        .i_i(state_dag_i_read_data),
+        .m_i(state_dag_m_read_data),
+        .l_i(state_dag_l_read_data),
+        .bit_reverse_enable_i(!type4_dag2 && state_bit_reverse_unused),
+        .address_o(type4_address),
+        .next_i_o(type4_next_i),
+        .base_o(type4_base_unused),
+        .circular_o(type4_circular_unused),
+        .configuration_valid_o(type4_configuration_valid)
+    );
+
+    assign type12_address_valid = (
+        state_dag_i_read_valid
+        && (type12_dag2 || state_mstat_valid_mask_i[1])
+    );
+    assign type12_next_i_valid = (
+        state_dag_i_read_valid && state_dag_m_read_valid
+        && state_dag_l_read_valid && type12_configuration_valid
+    );
+
+    adsp2100_dag #(
+        .BIT_REVERSE_CAPABLE(1'b1)
+    ) type12_dag_arithmetic (
+        .i_i(state_dag_i_read_data),
+        .m_i(state_dag_m_read_data),
+        .l_i(state_dag_l_read_data),
+        .bit_reverse_enable_i(!type12_dag2 && state_bit_reverse_unused),
+        .address_o(type12_address),
+        .next_i_o(type12_next_i),
+        .base_o(type12_base_unused),
+        .circular_o(type12_circular_unused),
+        .configuration_valid_o(type12_configuration_valid)
     );
 
     adsp2100_load_non_dreg_immediate_decode type7_decode (
@@ -1253,9 +1752,84 @@ module adsp2100_linear_fetch_client (
         .mac_mv_o(type9_pipeline_mac_mv)
     );
 
+    adsp2100_compute_dm_action type4_pipeline_action (
+        .opcode_i(compute_stage1_opcode_q),
+        .x_dreg_data_i(compute_stage1_x_q),
+        .y_dreg_data_i(compute_stage1_y_q),
+        .memory_dreg_data_i(compute_stage1_move_q),
+        .af_i(compute_stage1_af_q),
+        .mf_i(compute_stage1_mf_q),
+        .mr_i(compute_stage1_mr_q),
+        .astat_i(compute_stage1_astat_q),
+        .overflow_latch_i(compute_stage1_overflow_latch_q),
+        .saturate_ar_i(compute_stage1_saturate_ar_q),
+        .class_valid_o(type4_pipeline_class_unused),
+        .action_valid_o(type4_pipeline_action_unused),
+        .unsupported_subencoding_o(type4_pipeline_unsupported_unused),
+        .destination_collision_o(type4_pipeline_collision_unused),
+        .computation_enable_o(
+            type4_pipeline_computation_enable_unused
+        ),
+        .is_mac_o(type4_pipeline_is_mac_unused),
+        .destination_feedback_o(type4_pipeline_destination_feedback),
+        .dag_select_o(type4_pipeline_dag2_unused),
+        .write_o(type4_pipeline_write),
+        .x_source_dreg_o(type4_pipeline_x_unused),
+        .y_source_dreg_o(type4_pipeline_y_unused),
+        .memory_dreg_o(type4_pipeline_memory_dreg),
+        .i_address_o(type4_pipeline_i_unused),
+        .m_address_o(type4_pipeline_m_unused),
+        .memory_source_data_o(type4_pipeline_memory_data_unused),
+        .alu_write_o(type4_pipeline_alu_write),
+        .alu_result_o(type4_pipeline_alu_result),
+        .alu_az_o(type4_pipeline_alu_az),
+        .alu_an_o(type4_pipeline_alu_an),
+        .alu_av_o(type4_pipeline_alu_av),
+        .alu_ac_o(type4_pipeline_alu_ac),
+        .alu_as_write_o(type4_pipeline_alu_as_write),
+        .alu_as_o(type4_pipeline_alu_as),
+        .mac_write_o(type4_pipeline_mac_write),
+        .mac_result_o(type4_pipeline_mac_result),
+        .mac_mv_o(type4_pipeline_mac_mv)
+    );
+
+    adsp2100_shifter_dm_action type12_pipeline_action (
+        .opcode_i(compute_stage1_opcode_q),
+        .shifter_source_data_i(compute_stage1_x_q),
+        .memory_dreg_data_i(compute_stage1_move_q),
+        .sr_i(compute_stage1_sr_q),
+        .se_i(compute_stage1_se_q),
+        .sb_i(compute_stage1_sb_q),
+        .astat_i(compute_stage1_astat_q),
+        .class_valid_o(type12_pipeline_class_unused),
+        .action_valid_o(type12_pipeline_action_unused),
+        .unsupported_subencoding_o(type12_pipeline_unsupported_unused),
+        .unavailable_xop_o(type12_pipeline_unavailable_xop_unused),
+        .destination_collision_o(type12_pipeline_collision_unused),
+        .dag_select_o(type12_pipeline_dag2_unused),
+        .write_o(type12_pipeline_write),
+        .shifter_source_dreg_o(type12_pipeline_source_unused),
+        .memory_dreg_o(type12_pipeline_memory_dreg),
+        .i_address_o(type12_pipeline_i_unused),
+        .m_address_o(type12_pipeline_m_unused),
+        .memory_source_data_o(type12_pipeline_memory_data_unused),
+        .sr_write_o(type12_pipeline_sr_write),
+        .sr_result_o(type12_pipeline_sr_result),
+        .se_write_o(type12_pipeline_se_write),
+        .se_result_o(type12_pipeline_se_result),
+        .sb_write_o(type12_pipeline_sb_write),
+        .sb_result_o(type12_pipeline_sb_result),
+        .ss_write_o(type12_pipeline_ss_write),
+        .ss_result_o(type12_pipeline_ss_result)
+    );
+
     assign compute_stage1_capture = (
         pm_request_accepted_i
-        && (type8_action_valid || type9_action_valid)
+        && (
+            type8_action_valid || type9_action_valid
+            || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+            || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+        )
     );
 
     always_ff @(posedge clk_i) begin
@@ -1270,6 +1844,9 @@ module adsp2100_linear_fetch_client (
             compute_stage1_mf_q <= 16'h0000;
             compute_stage1_mr_q <= 40'h0000000000;
             compute_stage1_astat_q <= 8'h00;
+            compute_stage1_sr_q <= 32'h00000000;
+            compute_stage1_se_q <= 8'h00;
+            compute_stage1_sb_q <= 5'h00;
             compute_stage1_overflow_latch_q <= 1'b0;
             compute_stage1_saturate_ar_q <= 1'b0;
             type8_destination_feedback <= 1'b0;
@@ -1300,6 +1877,30 @@ module adsp2100_linear_fetch_client (
             type9_mac_write <= 1'b0;
             type9_mac_result <= 40'h0000000000;
             type9_mac_mv <= 1'b0;
+            type4_destination_feedback <= 1'b0;
+            type4_retired_write <= 1'b0;
+            type4_retired_memory_dreg <= 4'h0;
+            type4_alu_write <= 1'b0;
+            type4_alu_result <= 16'h0000;
+            type4_alu_az <= 1'b0;
+            type4_alu_an <= 1'b0;
+            type4_alu_av <= 1'b0;
+            type4_alu_ac <= 1'b0;
+            type4_alu_as_write <= 1'b0;
+            type4_alu_as <= 1'b0;
+            type4_mac_write <= 1'b0;
+            type4_mac_result <= 40'h0000000000;
+            type4_mac_mv <= 1'b0;
+            type12_retired_write <= 1'b0;
+            type12_retired_memory_dreg <= 4'h0;
+            type12_sr_write <= 1'b0;
+            type12_sr_result <= 32'h00000000;
+            type12_se_write <= 1'b0;
+            type12_se_result <= 8'h00;
+            type12_sb_write <= 1'b0;
+            type12_sb_result <= 5'h00;
+            type12_ss_write <= 1'b0;
+            type12_ss_result <= 1'b0;
         end else if (retire_event_o || instruction_setup_accepted_o) begin
             compute_stage1_valid_q <= 1'b0;
             type8_move_write <= 1'b0;
@@ -1308,6 +1909,12 @@ module adsp2100_linear_fetch_client (
             type9_condition_true <= 1'b0;
             type9_alu_write <= 1'b0;
             type9_mac_write <= 1'b0;
+            type4_alu_write <= 1'b0;
+            type4_mac_write <= 1'b0;
+            type12_sr_write <= 1'b0;
+            type12_se_write <= 1'b0;
+            type12_sb_write <= 1'b0;
+            type12_ss_write <= 1'b0;
         end else begin
             if (compute_stage1_valid_q) begin
                 compute_stage1_valid_q <= 1'b0;
@@ -1342,6 +1949,33 @@ module adsp2100_linear_fetch_client (
                 type9_mac_write <= type9_pipeline_mac_write;
                 type9_mac_result <= type9_pipeline_mac_result;
                 type9_mac_mv <= type9_pipeline_mac_mv;
+                type4_destination_feedback
+                    <= type4_pipeline_destination_feedback;
+                type4_retired_write <= type4_pipeline_write;
+                type4_retired_memory_dreg
+                    <= type4_pipeline_memory_dreg;
+                type4_alu_write <= type4_pipeline_alu_write;
+                type4_alu_result <= type4_pipeline_alu_result;
+                type4_alu_az <= type4_pipeline_alu_az;
+                type4_alu_an <= type4_pipeline_alu_an;
+                type4_alu_av <= type4_pipeline_alu_av;
+                type4_alu_ac <= type4_pipeline_alu_ac;
+                type4_alu_as_write <= type4_pipeline_alu_as_write;
+                type4_alu_as <= type4_pipeline_alu_as;
+                type4_mac_write <= type4_pipeline_mac_write;
+                type4_mac_result <= type4_pipeline_mac_result;
+                type4_mac_mv <= type4_pipeline_mac_mv;
+                type12_retired_write <= type12_pipeline_write;
+                type12_retired_memory_dreg
+                    <= type12_pipeline_memory_dreg;
+                type12_sr_write <= type12_pipeline_sr_write;
+                type12_sr_result <= type12_pipeline_sr_result;
+                type12_se_write <= type12_pipeline_se_write;
+                type12_se_result <= type12_pipeline_se_result;
+                type12_sb_write <= type12_pipeline_sb_write;
+                type12_sb_result <= type12_pipeline_sb_result;
+                type12_ss_write <= type12_pipeline_ss_write;
+                type12_ss_result <= type12_pipeline_ss_result;
             end
             if (compute_stage1_capture) begin
                 compute_stage1_valid_q <= 1'b1;
@@ -1355,6 +1989,9 @@ module adsp2100_linear_fetch_client (
                 compute_stage1_mf_q <= state_mf;
                 compute_stage1_mr_q <= state_mr;
                 compute_stage1_astat_q <= astat_o;
+                compute_stage1_sr_q <= state_sr;
+                compute_stage1_se_q <= state_se;
+                compute_stage1_sb_q <= state_sb;
                 compute_stage1_overflow_latch_q <= state_overflow_latch;
                 compute_stage1_saturate_ar_q <= state_saturate_ar;
                 type8_move_write <= 1'b0;
@@ -1363,6 +2000,12 @@ module adsp2100_linear_fetch_client (
                 type9_condition_true <= 1'b0;
                 type9_alu_write <= 1'b0;
                 type9_mac_write <= 1'b0;
+                type4_alu_write <= 1'b0;
+                type4_mac_write <= 1'b0;
+                type12_sr_write <= 1'b0;
+                type12_se_write <= 1'b0;
+                type12_sb_write <= 1'b0;
+                type12_ss_write <= 1'b0;
             end
         end
     end
@@ -1524,7 +2167,12 @@ module adsp2100_linear_fetch_client (
             || (pm_state_action_enable && pm_state_move_write_i)
         ),
         .move_data_valid_i(
-            type17_action_valid ? type17_source_data_valid_i : 1'b1
+            FETCHED_TYPE3_ENABLED && type3_action_valid && !type3_write
+                ? dmd_read_data_valid_i
+                : (
+                    type17_action_valid
+                        ? type17_source_data_valid_i : 1'b1
+                )
         ),
         .move_code_i(
             pm_state_action_enable && pm_state_move_write_i
@@ -1543,18 +2191,30 @@ module adsp2100_linear_fetch_client (
             (type23_action_valid || type24_action_valid)
                 ? DREG_AY0
                 : (
-                    type8_action_valid
-                        ? type8_y_source_dreg
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_y_source_dreg
                         : (
-                            type14_action_valid
-                                ? type14_move_source_dreg : type9_y_source_dreg
+                            type8_action_valid
+                                ? type8_y_source_dreg
+                                : (
+                                    type14_action_valid
+                                        ? type14_move_source_dreg
+                                        : type9_y_source_dreg
+                                )
                         )
                 )
         ),
         .dreg_read_data_o(state_dreg_read_data),
         .dreg_read_address_2_i(
-            type8_action_valid
-                ? type8_move_source_dreg : type24_upper_source_dreg
+            FETCHED_TYPE4_ENABLED && type4_action_valid
+                ? type4_memory_dreg
+                : (
+                    FETCHED_TYPE12_ENABLED && type12_action_valid
+                        ? type12_memory_dreg
+                        : (type8_action_valid
+                            ? type8_move_source_dreg
+                            : type24_upper_source_dreg)
+                )
         ),
         .dreg_read_data_2_o(state_dreg_read_data_2),
         // PM-data operands have independent combinational ports so their
@@ -1570,19 +2230,48 @@ module adsp2100_linear_fetch_client (
         .dreg_write_enable_1_i(
             (pm_state_action_enable && pm_state_dreg_write_i)
             || (state_action_retire
-                && (type8_move_write || type14_move_write))
+                && (
+                    type8_move_write || type14_move_write
+                    || (
+                        FETCHED_TYPE4_ENABLED && type4_action_valid
+                        && !type4_retired_write
+                        && dmd_read_data_valid_i
+                    )
+                    || (
+                        FETCHED_TYPE12_ENABLED && type12_action_valid
+                        && !type12_retired_write
+                        && dmd_read_data_valid_i
+                    )
+                ))
         ),
         .dreg_write_address_1_i(
             pm_state_action_enable && pm_state_dreg_write_i
                 ? pm_state_dreg_write_address_i
-                : (type8_move_write
-                ? type8_move_destination_dreg : type14_move_destination_dreg
+                : (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_retired_memory_dreg
+                        : (
+                            FETCHED_TYPE12_ENABLED && type12_action_valid
+                                ? type12_retired_memory_dreg
+                                : (type8_move_write
+                                    ? type8_move_destination_dreg
+                                    : type14_move_destination_dreg)
+                        )
                 )
         ),
         .dreg_write_data_1_i(
             pm_state_action_enable && pm_state_dreg_write_i
                 ? pm_state_dreg_write_data_i
-                : (type8_move_write ? type8_move_data : type14_move_data)
+                : (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? dmd_read_data_i
+                        : (
+                            FETCHED_TYPE12_ENABLED && type12_action_valid
+                                ? dmd_read_data_i
+                                : (type8_move_write
+                                    ? type8_move_data : type14_move_data)
+                        )
+                )
         ),
         .dreg_write_enable_2_i(
             state_action_retire && (type23_ay0_write || type24_ay0_write)
@@ -1598,6 +2287,10 @@ module adsp2100_linear_fetch_client (
                 && (
                     type8_alu_write || type9_alu_write
                     || type23_af_write || type24_af_write
+                    || (
+                        FETCHED_TYPE4_ENABLED && type4_action_valid
+                        && type4_alu_write
+                    )
                 )
             )
         ),
@@ -1607,8 +2300,11 @@ module adsp2100_linear_fetch_client (
                 : ((type23_af_write || type24_af_write)
                 ? 1'b1
                 : (
-                    type8_alu_write
-                        ? type8_destination_feedback : type9_destination_feedback
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_destination_feedback
+                        : (type8_alu_write
+                            ? type8_destination_feedback
+                            : type9_destination_feedback)
                 ))
         ),
         .alu_result_i(
@@ -1619,14 +2315,25 @@ module adsp2100_linear_fetch_client (
                 : (
                     type23_af_write
                         ? type23_af_result
-                        : (type8_alu_write ? type8_alu_result : type9_alu_result)
+                        : (
+                            FETCHED_TYPE4_ENABLED && type4_action_valid
+                                ? type4_alu_result
+                                : (type8_alu_write
+                                    ? type8_alu_result : type9_alu_result)
+                        )
                 ))
         ),
         .mac_write_enable_i(
             (pm_state_action_enable && pm_state_mac_write_i)
             || (
                 state_action_retire
-                && (type8_mac_write || type9_mac_write || type25_mr_write)
+                && (
+                    type8_mac_write || type9_mac_write || type25_mr_write
+                    || (
+                        FETCHED_TYPE4_ENABLED && type4_action_valid
+                        && type4_mac_write
+                    )
+                )
             )
         ),
         .mac_destination_feedback_i(
@@ -1635,8 +2342,11 @@ module adsp2100_linear_fetch_client (
                 : (type25_mr_write
                 ? 1'b0
                 : (
-                    type8_mac_write
-                        ? type8_destination_feedback : type9_destination_feedback
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_destination_feedback
+                        : (type8_mac_write
+                            ? type8_destination_feedback
+                            : type9_destination_feedback)
                 ))
         ),
         .mac_result_i(
@@ -1644,73 +2354,161 @@ module adsp2100_linear_fetch_client (
                 ? pm_state_mac_result_i
                 : (type25_mr_write
                 ? type25_mr_result
-                : (type8_mac_write ? type8_mac_result : type9_mac_result)
+                : (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_mac_result
+                        : (type8_mac_write
+                            ? type8_mac_result : type9_mac_result)
+                )
                 )
         ),
         .shifter_sr_write_enable_i(
             (pm_state_action_enable && pm_state_sr_write_i)
             || (
                 state_action_retire
-                && (type14_sr_write || type15_sr_write || type16_sr_write)
+                && (
+                    type14_sr_write || type15_sr_write || type16_sr_write
+                    || (
+                        FETCHED_TYPE12_ENABLED && type12_action_valid
+                        && type12_sr_write
+                    )
+                )
             )
         ),
         .shifter_sr_result_i(
             pm_state_action_enable && pm_state_sr_write_i
                 ? pm_state_sr_result_i
-                : (type14_sr_write
-                ? type14_sr_result
-                : (type15_sr_write ? type15_sr_result : type16_sr_result)
+                : (
+                    FETCHED_TYPE12_ENABLED && type12_action_valid
+                        ? type12_sr_result
+                        : (type14_sr_write
+                            ? type14_sr_result
+                            : (type15_sr_write
+                                ? type15_sr_result : type16_sr_result)
+                        )
                 )
         ),
         .shifter_se_write_enable_i(
             (pm_state_action_enable && pm_state_se_write_i)
             || (state_action_retire
-                && (type14_se_write || type16_se_write))
+                && (
+                    type14_se_write || type16_se_write
+                    || (
+                        FETCHED_TYPE12_ENABLED && type12_action_valid
+                        && type12_se_write
+                    )
+                ))
         ),
         .shifter_se_result_i(
             pm_state_action_enable && pm_state_se_write_i
                 ? pm_state_se_result_i
-                : (type14_se_write ? type14_se_result : type16_se_result)
+                : (
+                    FETCHED_TYPE12_ENABLED && type12_action_valid
+                        ? type12_se_result
+                        : (type14_se_write
+                            ? type14_se_result : type16_se_result)
+                )
         ),
         .shifter_sb_write_enable_i(
             (pm_state_action_enable && pm_state_sb_write_i)
             || (state_action_retire
-                && (type14_sb_write || type16_sb_write))
+                && (
+                    type14_sb_write || type16_sb_write
+                    || (
+                        FETCHED_TYPE12_ENABLED && type12_action_valid
+                        && type12_sb_write
+                    )
+                ))
         ),
         .shifter_sb_result_i(
             pm_state_action_enable && pm_state_sb_write_i
                 ? pm_state_sb_result_i
-                : (type14_sb_write ? type14_sb_result : type16_sb_result)
+                : (
+                    FETCHED_TYPE12_ENABLED && type12_action_valid
+                        ? type12_sb_result
+                        : (type14_sb_write
+                            ? type14_sb_result : type16_sb_result)
+                )
         ),
         .dag_i_write_enable_i(
             (pm_state_action_enable && pm_state_dag_i_write_i)
-            || (state_action_retire && type21_i_write)
+            || (
+                state_action_retire
+                && (
+                    (FETCHED_TYPE2_ENABLED && type2_action_valid)
+                    || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+                    || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+                    || type21_i_write
+                )
+            )
         ),
         .dag_i_write_address_i(
             pm_state_action_enable && pm_state_dag_i_write_i
-                ? pm_state_dag_i_write_address_i : type21_i_address
+                ? pm_state_dag_i_write_address_i
+                : (
+                    FETCHED_TYPE2_ENABLED && type2_action_valid
+                        ? type2_i_address
+                        : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                            ? type4_i_address
+                            : (FETCHED_TYPE12_ENABLED
+                                && type12_action_valid
+                                ? type12_i_address : type21_i_address))
+                )
         ),
         .dag_i_write_data_i(
             pm_state_action_enable && pm_state_dag_i_write_i
-                ? pm_state_dag_i_write_data_i : type21_i_write_data
+                ? pm_state_dag_i_write_data_i
+                : (
+                    FETCHED_TYPE2_ENABLED && type2_action_valid
+                        ? type2_next_i
+                        : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                            ? type4_next_i
+                            : (FETCHED_TYPE12_ENABLED
+                                && type12_action_valid
+                                ? type12_next_i : type21_i_write_data))
+                )
         ),
         .dag_i_write_result_valid_i(
             pm_state_action_enable && pm_state_dag_i_write_i
                 ? pm_state_dag_i_write_valid_i
-                : type21_i_write_result_valid
+                : (
+                    FETCHED_TYPE2_ENABLED && type2_action_valid
+                        ? type2_next_i_valid
+                        : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                            ? type4_next_i_valid
+                            : (FETCHED_TYPE12_ENABLED
+                                && type12_action_valid
+                                ? type12_next_i_valid
+                                : type21_i_write_result_valid))
+                )
         ),
         .dag_execution_read_i(
-            pm_state_operand_read_i
+            (FETCHED_TYPE2_ENABLED && type2_action_valid)
+            || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+            || (FETCHED_TYPE12_ENABLED && type12_action_valid)
             || type21_action_valid || type19_action_valid
         ),
         .dag_i_l_read_address_i(
-            pm_state_operand_read_i
-                ? pm_state_dag_i_address_i
-                : (type19_action_valid ? type19_i_address : type21_i_address)
+            FETCHED_TYPE2_ENABLED && type2_action_valid
+                ? type2_i_address
+                : (
+                    FETCHED_TYPE4_ENABLED && type4_action_valid
+                        ? type4_i_address
+                        : (
+                            FETCHED_TYPE12_ENABLED && type12_action_valid
+                                ? type12_i_address
+                                : (type19_action_valid
+                                    ? type19_i_address : type21_i_address)
+                        )
+                )
         ),
         .dag_m_read_address_i(
-            pm_state_operand_read_i
-                ? pm_state_dag_m_address_i : type21_m_address
+            FETCHED_TYPE2_ENABLED && type2_action_valid
+                ? type2_m_address
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_m_address
+                    : (FETCHED_TYPE12_ENABLED && type12_action_valid
+                        ? type12_m_address : type21_m_address))
         ),
         .dag_i_read_data_o(state_dag_i_read_data),
         .dag_i_read_valid_o(state_dag_i_read_valid),
@@ -1718,6 +2516,18 @@ module adsp2100_linear_fetch_client (
         .dag_m_read_valid_o(state_dag_m_read_valid),
         .dag_l_read_data_o(state_dag_l_read_data),
         .dag_l_read_valid_o(state_dag_l_read_valid),
+        .dag_i_l_read_address_2_i(
+            pm_state_operand_read_i ? pm_state_dag_i_address_i : 3'b000
+        ),
+        .dag_m_read_address_2_i(
+            pm_state_operand_read_i ? pm_state_dag_m_address_i : 3'b000
+        ),
+        .dag_i_read_data_2_o(state_pm_dag_i_read_data),
+        .dag_i_read_valid_2_o(state_pm_dag_i_read_valid),
+        .dag_m_read_data_2_o(state_pm_dag_m_read_data),
+        .dag_m_read_valid_2_o(state_pm_dag_m_read_valid),
+        .dag_l_read_data_2_o(state_pm_dag_l_read_data),
+        .dag_l_read_valid_2_o(state_pm_dag_l_read_valid),
         .mode_sr_i(
             state_action_retire && type18_valid ? type18_mode_sr : 2'b00
         ),
@@ -1733,37 +2543,56 @@ module adsp2100_linear_fetch_client (
         .alu_status_write_enable_i(
             (pm_state_action_enable && pm_state_alu_status_write_i)
             || (state_action_retire
-                && (type8_alu_write || type9_alu_write))
+                && (
+                    type8_alu_write || type9_alu_write
+                    || (
+                        FETCHED_TYPE4_ENABLED && type4_action_valid
+                        && type4_alu_write
+                    )
+                ))
         ),
         .alu_az_i(
             pm_state_action_enable && pm_state_alu_status_write_i
                 ? pm_state_alu_az_i
-                : (type8_alu_write ? type8_alu_az : type9_alu_az)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_alu_az
+                    : (type8_alu_write ? type8_alu_az : type9_alu_az))
         ),
         .alu_an_i(
             pm_state_action_enable && pm_state_alu_status_write_i
                 ? pm_state_alu_an_i
-                : (type8_alu_write ? type8_alu_an : type9_alu_an)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_alu_an
+                    : (type8_alu_write ? type8_alu_an : type9_alu_an))
         ),
         .alu_av_i(
             pm_state_action_enable && pm_state_alu_status_write_i
                 ? pm_state_alu_av_i
-                : (type8_alu_write ? type8_alu_av : type9_alu_av)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_alu_av
+                    : (type8_alu_write ? type8_alu_av : type9_alu_av))
         ),
         .alu_ac_i(
             pm_state_action_enable && pm_state_alu_status_write_i
                 ? pm_state_alu_ac_i
-                : (type8_alu_write ? type8_alu_ac : type9_alu_ac)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_alu_ac
+                    : (type8_alu_write ? type8_alu_ac : type9_alu_ac))
         ),
         .alu_as_write_enable_i(
             pm_state_action_enable && pm_state_alu_status_write_i
                 ? pm_state_alu_as_write_i
-                : (type8_alu_write ? type8_alu_as_write : type9_alu_as_write)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_alu_as_write
+                    : (type8_alu_write
+                        ? type8_alu_as_write : type9_alu_as_write))
         ),
         .alu_as_i(
             pm_state_action_enable && pm_state_alu_status_write_i
                 ? pm_state_alu_as_i
-                : (type8_alu_write ? type8_alu_as : type9_alu_as)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_alu_as
+                    : (type8_alu_write ? type8_alu_as : type9_alu_as))
         ),
         .divide_status_write_enable_i(
             state_action_retire && (type23_aq_write || type24_aq_write)
@@ -1772,22 +2601,41 @@ module adsp2100_linear_fetch_client (
         .mac_status_write_enable_i(
             (pm_state_action_enable && pm_state_mac_status_write_i)
             || (state_action_retire
-                && (type8_mac_write || type9_mac_write))
+                && (
+                    type8_mac_write || type9_mac_write
+                    || (
+                        FETCHED_TYPE4_ENABLED && type4_action_valid
+                        && type4_mac_write
+                    )
+                ))
         ),
         .mac_mv_i(
             pm_state_action_enable && pm_state_mac_status_write_i
                 ? pm_state_mac_mv_i
-                : (type8_mac_write ? type8_mac_mv : type9_mac_mv)
+                : (FETCHED_TYPE4_ENABLED && type4_action_valid
+                    ? type4_mac_mv
+                    : (type8_mac_write ? type8_mac_mv : type9_mac_mv))
         ),
         .shifter_status_write_enable_i(
             (pm_state_action_enable && pm_state_shifter_status_write_i)
             || (state_action_retire
-                && (type14_ss_write || type16_ss_write))
+                && (
+                    type14_ss_write || type16_ss_write
+                    || (
+                        FETCHED_TYPE12_ENABLED && type12_action_valid
+                        && type12_ss_write
+                    )
+                ))
         ),
         .shifter_ss_i(
             pm_state_action_enable && pm_state_shifter_status_write_i
                 ? pm_state_shifter_ss_i
-                : (type14_ss_write ? type14_ss_result : type16_ss_result)
+                : (
+                    FETCHED_TYPE12_ENABLED && type12_action_valid
+                        ? type12_ss_result
+                        : (type14_ss_write
+                            ? type14_ss_result : type16_ss_result)
+                )
         ),
         .stack_status_operation_i(
             state_action_retire && type20_taken && type20_interrupt_return
@@ -1933,6 +2781,19 @@ module adsp2100_linear_fetch_client (
 
     assign unused_observation = ^{
         type7_group_unused, type7_index_unused, type7_present_unused,
+        type2_i_local_unused, type2_m_local_unused,
+        type2_l_address_unused, type2_base_unused, type2_circular_unused,
+        type3_register_group_unused, type3_register_present_unused,
+        type3_register_writable_unused, type3_reserved_source_unused,
+        type3_reserved_destination_unused,
+        type3_read_only_destination_unused,
+        type4_destination_collision_unused, type4_is_mac_unused,
+        type4_live_destination_feedback_unused, type4_amf_unused,
+        type4_yop_unused, type4_xop_unused, type4_base_unused,
+        type4_circular_unused,
+        type12_unavailable_xop_unused,
+        type12_destination_collision_unused, type12_sf_unused,
+        type12_xop_unused, type12_base_unused, type12_circular_unused,
         type7_writable_unused, type7_dreg_unused, type7_reserved_unused,
         type7_read_only_unused, type18_has_effect_unused,
         type18_has_alias_unused, type17_destination_group_unused,
@@ -1967,6 +2828,19 @@ module adsp2100_linear_fetch_client (
         type9_pipeline_is_alu_unused, type9_pipeline_x_unused,
         type9_pipeline_y_unused, type9_pipeline_x_data_unused,
         type9_pipeline_y_data_unused,
+        type4_pipeline_class_unused, type4_pipeline_action_unused,
+        type4_pipeline_unsupported_unused, type4_pipeline_collision_unused,
+        type4_pipeline_computation_enable_unused,
+        type4_pipeline_is_mac_unused, type4_pipeline_dag2_unused,
+        type4_pipeline_x_unused, type4_pipeline_y_unused,
+        type4_pipeline_i_unused, type4_pipeline_m_unused,
+        type4_pipeline_memory_data_unused,
+        type12_pipeline_class_unused, type12_pipeline_action_unused,
+        type12_pipeline_unsupported_unused,
+        type12_pipeline_unavailable_xop_unused,
+        type12_pipeline_collision_unused, type12_pipeline_dag2_unused,
+        type12_pipeline_source_unused, type12_pipeline_i_unused,
+        type12_pipeline_m_unused, type12_pipeline_memory_data_unused,
         type23_class_valid, type23_xop_unused,
         type23_add_divisor_unused, type23_alu_result_unused,
         type23_new_aq_unused, type23_quotient_bit_unused,
@@ -1993,6 +2867,60 @@ module adsp2100_linear_fetch_client (
         assert (!(instruction_issue_o && !fetch_request_presented_o));
         if (instruction_issue_o) begin
             assert (issue_boundary_o);
+        end
+        if (fetched_dm_request_presented_o) begin
+            assert (fetched_dm_request_candidate_o);
+            assert (
+                (FETCHED_TYPE2_ENABLED && type2_action_valid)
+                || (FETCHED_TYPE3_ENABLED && type3_action_valid)
+                || (FETCHED_TYPE4_ENABLED && type4_action_valid)
+                || (FETCHED_TYPE12_ENABLED && type12_action_valid)
+            );
+            assert (fetch_request_presented_o && !interrupt_vector_request);
+        end
+        if (!fetched_dm_request_presented_o) begin
+            assert (!fetched_dm_request_address_valid_o);
+            assert (fetched_dm_request_address_o == 14'h0000);
+            assert (!fetched_dm_request_write_o);
+            assert (fetched_dm_request_write_data_o == 16'h0000);
+            assert (!fetched_dm_request_write_data_valid_o);
+        end
+        if (
+            fetched_dm_request_presented_o
+            && FETCHED_TYPE3_ENABLED && type3_action_valid
+        ) begin
+            assert (fetched_dm_request_write_o == type3_write);
+            assert (fetched_dm_request_address_o == type3_address);
+        end
+        if (
+            fetched_dm_request_presented_o
+            && FETCHED_TYPE4_ENABLED && type4_action_valid
+        ) begin
+            assert (fetched_dm_request_write_o == type4_write);
+            if (type4_address_valid) begin
+                assert (fetched_dm_request_address_o == type4_address);
+            end
+            if (type4_write && type17_source_data_valid_i) begin
+                assert (
+                    fetched_dm_request_write_data_o
+                    == state_dreg_read_data_2
+                );
+            end
+        end
+        if (
+            fetched_dm_request_presented_o
+            && FETCHED_TYPE12_ENABLED && type12_action_valid
+        ) begin
+            assert (fetched_dm_request_write_o == type12_write);
+            if (type12_address_valid) begin
+                assert (fetched_dm_request_address_o == type12_address);
+            end
+            if (type12_write && type17_source_data_valid_i) begin
+                assert (
+                    fetched_dm_request_write_data_o
+                    == state_dreg_read_data_2
+                );
+            end
         end
         if (interrupt_recognition_event_o) begin
             assert (retire_event_o);

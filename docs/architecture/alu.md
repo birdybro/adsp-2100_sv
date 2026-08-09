@@ -1,7 +1,7 @@
 # Arithmetic/logic unit
 
 **Status: standard function and both division primitives implemented in
-bounded model/RTL; Type 1 action selection and Type 4 native-DM execution
+bounded model/RTL; Type 1 logical execution and Type 4 native-DM execution
 closed; Type 8 and Type 9 integrations plus fetched Type 23/24 execution
 complete within the bounded ordinary owner**
 
@@ -43,8 +43,11 @@ cycle, consistent with cycle-start operand use and cycle-end register writes
 X/Y/Z field, rejects AR read-load collisions, captures cycle-start operands,
 and commits AR/AF plus ASTAT atomically with the acknowledged DM action. Its
 50,072-clock logical and 50,082-clock native comparisons include immediate and
-wait-extended completion. Outside the bounded Type 4, Type 8, and Type 9
-slices, ALU multifunction execution remains excluded. Both Type 23 DIVQ and
+wait-extended completion. The fetched Type 4 composition adds 2,057 aligned
+transactions covering all 2,048 compute tuples and exact state-7 ALU/status/
+memory/DAG/PC retirement within the 50,000-clock Type 2/3/4/12 run. Outside the
+bounded Type 4, Type 8, and Type 9 slices, ALU multifunction execution remains
+excluded. Both Type 23 DIVQ and
 Type 24 DIVS are attached to the bounded ordinary-fetch owner.
 
 The Type 5 path covers every ALU AMF/X/Y/Z selection paired with one PM
@@ -55,12 +58,14 @@ phase clocks with state-8 issue and state-7-only ALU/status/read/I completion;
 whole-core PM ownership and event arbitration remain open
 [ADI-UM-1989, printed pp. 6-3–6-7, A-1, A-5–A-7].
 
-The Type 1 action decoder covers every ALU AMF/X/Y selection with an implicit
+The Type 1 action/state boundary covers every ALU AMF/X/Y selection with an implicit
 AR destination, one DD-selected DAG1 DM read, and one PD-selected DAG2 PM
 read. Both loads occur after the old computation operands are consumed. The
-action graph is exhaustive, but ALU/status execution and dual-bus completion
-are not yet connected because OQ-023 leaves native PM behavior during a
-DMACK extension unresolved
+51,069-clock logical comparison captures the old ALU operands at issue and
+commits AR, ALU ASTAT effects, both loads, PX, and both selected-I updates on
+one completion boundary, including held packets and unknown inputs. OQ-023
+still leaves native PM behavior during a DMACK extension unresolved, so this
+does not claim native dual-bus phases, cache recovery, or fetch/event ownership
 [ADI-UM-1989, printed pp. 2-6–2-7, 6-3–6-5, A-1, A-5–A-7].
 
 Operands and destinations will use the old/new timing in

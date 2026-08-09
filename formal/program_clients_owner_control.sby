@@ -23,6 +23,9 @@ read -formal -sv rtl/core/adsp2100_interrupt_control.sv
 read -formal -sv rtl/core/adsp2100_condition_logic.sv
 read -formal -sv rtl/core/adsp2100_compute_move_decode.sv
 read -formal -sv rtl/core/adsp2100_compute_move_action.sv
+read -formal -sv rtl/core/adsp2100_compute_dm_action.sv
+read -formal -sv rtl/core/adsp2100_shifter_dm_decode.sv
+read -formal -sv rtl/core/adsp2100_shifter_dm_action.sv
 read -formal -sv rtl/core/adsp2100_conditional_compute_decode.sv
 read -formal -sv rtl/core/adsp2100_divide_quotient_decode.sv
 read -formal -sv rtl/core/adsp2100_divide_quotient_action.sv
@@ -51,6 +54,8 @@ read -formal -sv rtl/core/adsp2100_shifter.sv
 read -formal -sv rtl/core/adsp2100_immediate_shift_action.sv
 read -formal -sv rtl/core/adsp2100_conditional_shift_action.sv
 read -formal -sv rtl/core/adsp2100_shift_move_action.sv
+read -formal -sv rtl/core/adsp2100_dm_write_immediate_decode.sv
+read -formal -sv rtl/core/adsp2100_direct_dm_decode.sv
 read -formal -sv rtl/core/adsp2100_linear_fetch_client.sv
 read -formal -sv rtl/core/adsp2100_compute_pm_decode.sv
 read -formal -sv rtl/core/adsp2100_compute_dm_decode.sv
@@ -63,6 +68,8 @@ read -formal -sv rtl/core/adsp2100_shifter_pm_shared_state_client.sv
 read -formal -sv rtl/core/adsp2100_instruction_cache.sv
 read -formal -sv rtl/core/adsp2100_program_bus.sv
 read -formal -sv rtl/core/adsp2100_program_owner_bus.sv
+read -formal -sv rtl/core/adsp2100_data_bus.sv
+read -formal -sv rtl/core/adsp2100_data_owner_bus.sv
 read -formal -sv rtl/core/adsp2100_bus_control.sv
 read -formal -sv rtl/core/adsp2100_halt_control.sv
 read -formal -sv rtl/wrappers/adsp2100_reset_bus_grant.sv
@@ -89,6 +96,9 @@ rtl/core/adsp2100_interrupt_control.sv
 rtl/core/adsp2100_condition_logic.sv
 rtl/core/adsp2100_compute_move_decode.sv
 rtl/core/adsp2100_compute_move_action.sv
+rtl/core/adsp2100_compute_dm_action.sv
+rtl/core/adsp2100_shifter_dm_decode.sv
+rtl/core/adsp2100_shifter_dm_action.sv
 rtl/core/adsp2100_conditional_compute_decode.sv
 rtl/core/adsp2100_divide_quotient_decode.sv
 rtl/core/adsp2100_divide_quotient_action.sv
@@ -117,6 +127,8 @@ rtl/core/adsp2100_shifter.sv
 rtl/core/adsp2100_immediate_shift_action.sv
 rtl/core/adsp2100_conditional_shift_action.sv
 rtl/core/adsp2100_shift_move_action.sv
+rtl/core/adsp2100_dm_write_immediate_decode.sv
+rtl/core/adsp2100_direct_dm_decode.sv
 rtl/core/adsp2100_linear_fetch_client.sv
 rtl/core/adsp2100_compute_pm_decode.sv
 rtl/core/adsp2100_compute_dm_decode.sv
@@ -129,6 +141,8 @@ rtl/core/adsp2100_shifter_pm_shared_state_client.sv
 rtl/core/adsp2100_instruction_cache.sv
 rtl/core/adsp2100_program_bus.sv
 rtl/core/adsp2100_program_owner_bus.sv
+rtl/core/adsp2100_data_bus.sv
+rtl/core/adsp2100_data_owner_bus.sv
 rtl/core/adsp2100_bus_control.sv
 rtl/core/adsp2100_halt_control.sv
 rtl/wrappers/adsp2100_reset_bus_grant.sv

@@ -9,6 +9,17 @@ following instruction is fetched [ADI-UM-1989, printed p. 1-5]. Computation
 inputs are read at cycle start and writes/status latch at cycle end
 [ADI-UM-1989, printed pp. 2-6, 4-21].
 
+Type 1 now has a separate bounded logical execution slice, but it is not a
+member of the ordinary-fetch owner below. That slice captures simultaneous
+DAG1 DM, DAG2 PM, and optional ALU/MAC actions, holds them together, and
+atomically commits both loads, PX, both postmodifications, and computation/
+status at one implementation/test completion boundary across 51,069 clocks.
+It does not select or install the next instruction. OQ-023 still withholds the
+native PM behavior during DMACK extension, so composing Type 1 with this
+pipeline, the cache, and system events would exceed the sourced timing
+evidence [ADI-UM-1989, printed pp. 2-6–2-7, 3-6–3-7, 4-26–4-30,
+5-5–5-12, 6-3–6-5, A-1].
+
 The PC names the instruction currently executing. During ordinary linear
 flow, the PC incrementer drives the following address onto PMA and that value
 is loaded into the PC at cycle end [ADI-UM-1989, printed pp. 4-3, 4-10]. The
@@ -107,16 +118,39 @@ IRQ0–IRQ3 at state 7, retires the executing instruction, discards the fetched
 following word, issues one vectoring-NOP fetch, pushes PC/status context, and
 loads the vector word; fetched RTI refetches the discarded address. Reset
 release/first fetch, other transfer classes, PM-data/cache ownership,
-fetched-DM interrupt ownership, PC/status entry ownership after PM-data
+PC/status entry ownership after PM-data
 recognition,
 simultaneous ordinary-HALT/TRAP/IRQ
 priority, unresolved OQ-018 automatic/manual combinations, and whole-core
 BR/BG arbitration remain outside this bounded result. Separate bounded
 compositions now prove a retained state-7-sampled IRQ through ordinary HALT and
-normal BR/BG. A third structural composition proves that physical state-7 IRQ
-sampling continues through native DMACK extensions while the architectural
-pipeline remains held, and that service waits for aligned PM/DM completion;
-its raw DM descriptor is not fetched instruction semantics. The private BR/BG
+normal BR/BG. A third composition proves that physical state-7 IRQ sampling
+continues through native DMACK extensions while the architectural pipeline
+remains held, and that service waits for aligned PM/DM completion. That
+composition now enables real fetched Type 2, legal Type 3, source-closed Type 4,
+and source-closed Type 12 semantics. State-8 issue captures the Type 2
+old-I/immediate descriptor, Type 3 direct descriptor, Type 4 cycle-start
+compute/store/DAG descriptor, or Type 12 cycle-start shifter/store/DAG descriptor.
+All wait cycles hold it beside the PM fetch, and aligned state-7 completion
+commits the applicable selected-I, load, compute/shifter, and status effects
+with PC and the returned instruction once. Twenty-two checks and 50,000 clocks
+cover 2,612 DM accepts, 2,611 completions, 111 wait/IRQ samples, 1,169 reads,
+1,443 writes, and 889 holds. Generated ownership contributes 73 Type 2
+accepts/72 completions, 149 Type 3, 2,057 Type 4, and 119 Type 12 transfers;
+every Type 2 G/I/M; every legal Type 3 register selector; all 2,048 Type 4
+compute tuples; all 112 sourced Type 12 shifter tuples; all applicable DAG/I/M
+and DREG selectors; both directions; boundary cases; and full waits. BR remains
+recognizable at physical state 3 during a wait, grant service waits for paired
+completion, and native grant masks every PM/DM output enable.
+Ordinary HALT recognition also remains live during a real Type 2 wait, but its
+stop is deferred until the aligned completion/retirement. The owner then holds
+driven state 8, blocks low-DMACK release, and resumes the retained next word at
+state 8-to-1. Same-boundary and cross-owner BR/HALT requests fail closed while
+preserving an already active owner.
+Loads sample DMD only at completion. The raw descriptor port remains separate
+scaffolding for lower-level timing tests. Fetched Type 3/4/12 store and compute/shift
+sources are initialized and load data is valid in this composition; standalone
+slices retain the broader unknown-validity evidence. The private BR/BG
 run covers 50,054 clocks and 87 complete
 handshakes, including current-fetch retirement, next-issue inhibition,
 grant-time PM masking, post-release vector entry, and state-8-to-state-1
@@ -201,6 +235,11 @@ arbitration, context entry, branch/loop flushes, or BR/BG ownership
 
 The bounded three-client owner composes the retained ordinary-fetch pipeline
 and both real PM-data pipelines behind one cache/native-PM/BR-BG boundary.
+Fetched Type 2/3/4/12 additionally use one native DM controller driven by that
+same retained owner. Their ordinary fetch and DM descriptor accept together;
+DMACK-low repeats a physical cycle while architectural and PM progress hold,
+then both transactions and all parallel state retire at the qualified state-7
+boundary.
 The ordinary client retains its selected next-PC descriptor, and each PM-data
 client retains either its data descriptor or subsequent recovery descriptor
 until routed acceptance/completion. State-external Type 5 and Type 13 clients
@@ -212,8 +251,8 @@ the external recovery word returns. That retirement atomically advances PC and
 installs the next opcode. The original HALT schedule is attached at this
 combined boundary: ordinary fetch retires before stop, while PM-data
 recognition suppresses a hit, commits once, forces one recovery for the
-captured client, and stops at recovery completion. Forty directed checks
-and 51,428 independent-model/RTL clocks cover one-time completion, shared
+captured client, and stops at recovery completion. Forty-five directed checks
+and 51,587 independent-model/RTL clocks cover one-time completion, shared
 fills/hits, recovery, PC
 wrap, following fetched execution, fail-closed requests, grant masking, and
 cross-client state visibility. One IRQ case proves recognition is withheld
@@ -228,10 +267,10 @@ address, and Type 25 MV-false preservation. Type 17 unknown source validity
 propagates through DREG, DAG, status/control, SB, and PX; unknown MSTAT blocks
 bank-dependent issue. Accepted status entries also carry ASTAT/MSTAT/IMASK
 validity through intervening writes to the later POP STS retirement boundary.
-Active-loop PM issue, OQ-016, and sourced event priority remain prerequisites
-to broader integration
-[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-8;
-ADI-DATABOOK-1987, printed pp. 2-33–2-39].
+Active-loop PM issue, OQ-016, additional DM requester priority, OQ-023 Type 1
+timing, and sourced event priority remain prerequisites to broader integration
+[ADI-UM-1989, printed pp. 4-26–4-30 and 5-3–5-14;
+ADI-DATABOOK-1987, printed pp. 2-33–2-43].
 
 For FPGA timing, the owner captures decoded Type 8/Type 9 and Type 5 compute
 actions at the already established state-8 issue edge and retires those

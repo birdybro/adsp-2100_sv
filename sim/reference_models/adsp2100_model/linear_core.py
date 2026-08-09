@@ -4,6 +4,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
 
+from .dag import compute_dag, reverse_address
+from .data_bus import DataBusRequest
+from .dm_write_immediate import (
+    DMWriteImmediateAction,
+    decode_dm_write_immediate,
+)
+from .direct_dm import DirectDMAction, decode_direct_dm
+from .compute_dm import (
+    ComputeDMAction,
+    ComputeDMState,
+    apply_compute_dm_cycle,
+    decode_compute_dm,
+    is_compute_dm_class,
+)
 from .load_dreg_immediate import decode_load_dreg_immediate
 from .load_non_dreg_immediate import decode_load_non_dreg_immediate
 from .internal_move import decode_internal_move
@@ -14,6 +28,13 @@ from .conditional_shift import (
 )
 from .immediate_shift import decode_immediate_shift, is_immediate_shift_class
 from .shift_move import decode_shift_move, is_shift_move_class
+from .shifter_dm import (
+    ShifterDMAction,
+    ShifterDMState,
+    apply_shifter_dm_cycle,
+    decode_shifter_dm,
+    is_shifter_dm_class,
+)
 from .compute_move import decode_compute_move, is_compute_move_class
 from .divide_quotient import decode_divide_quotient
 from .divide_sign import decode_divide_sign, is_divide_sign_class
@@ -31,8 +52,12 @@ from .stack_control import decode_stack_control
 from .model import (
     ADSP2100Model,
     ArchitecturalState,
+    DAGRegisters,
     ExactWord,
     UNKNOWN,
+    _apply_automatic_loop_actions,
+    _apply_type17_destination,
+    _read_type17_source,
     _UnknownValue,
 )
 from .phase import LogicalPhase
@@ -41,8 +66,15 @@ from .interrupt import (
     InterruptState,
     apply_interrupt_cycle,
 )
-from .sequencer import ExplicitFlow, select_sequencer_flow
+from .sequencer import (
+    ExplicitFlow,
+    SequencerFlowResult,
+    select_sequencer_flow,
+)
 from .status import ASTATState
+from .status import StatusRegisters
+from .modify_address import DAGRegisterState
+from .registers import read_dreg
 from .program_bus import (
     ProgramBusCycleResult,
     ProgramBusRequest,
@@ -94,6 +126,8 @@ class LinearCoreCycleResult:
     phase_conflict: bool = False
     integration_conflict: bool = False
     internal_conflict: bool = False
+    fetched_dm_request_candidate: DataBusRequest | None = None
+    fetched_dm_request: DataBusRequest | None = None
 
 
 @dataclass(frozen=True)
@@ -124,11 +158,18 @@ class LinearFetchClientCycleResult:
     phase_conflict: bool = False
     integration_conflict: bool = False
     internal_conflict: bool = False
+    fetched_dm_request_candidate: DataBusRequest | None = None
+    fetched_dm_request: DataBusRequest | None = None
 
 
 def _instruction_class(
     instruction: ExactWord | _UnknownValue,
     valid: bool,
+    *,
+    fetched_type2_enabled: bool = False,
+    fetched_type3_enabled: bool = False,
+    fetched_type4_enabled: bool = False,
+    fetched_type12_enabled: bool = False,
 ) -> tuple[bool, bool]:
     """Return (supported, reserved bounded-owner subencoding)."""
 
@@ -136,6 +177,21 @@ def _instruction_class(
         return (False, False)
     if instruction.value == 0:
         return (True, False)
+    if (
+        fetched_type2_enabled
+        and decode_dm_write_immediate(instruction.value) is not None
+    ):
+        return (True, False)
+    if fetched_type3_enabled:
+        type3 = decode_direct_dm(instruction.value)
+        if type3 is not None:
+            return (type3.legal, not type3.legal)
+    if fetched_type4_enabled and is_compute_dm_class(instruction.value):
+        type4 = decode_compute_dm(instruction.value)
+        return (type4 is not None, type4 is None)
+    if fetched_type12_enabled and is_shifter_dm_class(instruction.value):
+        type12 = decode_shifter_dm(instruction.value)
+        return (type12 is not None, type12 is None)
     if decode_load_dreg_immediate(instruction.value) is not None:
         return (True, False)
     if decode_mode_control(instruction.value) is not None:
@@ -196,6 +252,11 @@ def _instruction_class(
 def _mstat_dependency_invalid(
     architecture: ArchitecturalState,
     instruction: ExactWord | _UnknownValue,
+    *,
+    fetched_type2_enabled: bool = False,
+    fetched_type3_enabled: bool = False,
+    fetched_type4_enabled: bool = False,
+    fetched_type12_enabled: bool = False,
 ) -> bool:
     """Reject bank/mode consumers until every required MSTAT bit is known."""
 
@@ -204,6 +265,26 @@ def _mstat_dependency_invalid(
     opcode = instruction.value
     type7 = decode_load_non_dreg_immediate(opcode)
     type17 = decode_internal_move(opcode)
+    type2 = (
+        decode_dm_write_immediate(opcode)
+        if fetched_type2_enabled
+        else None
+    )
+    type3 = (
+        decode_direct_dm(opcode)
+        if fetched_type3_enabled
+        else None
+    )
+    type4 = (
+        decode_compute_dm(opcode)
+        if fetched_type4_enabled
+        else None
+    )
+    type12 = (
+        decode_shifter_dm(opcode)
+        if fetched_type12_enabled
+        else None
+    )
     bank_required = bool(
         decode_load_dreg_immediate(opcode) is not None
         or (type7 is not None and type7.legal and type7.register == "SB")
@@ -228,14 +309,410 @@ def _mstat_dependency_invalid(
                 or type17.destination_register == "SB"
             )
         )
+        or (
+            type3 is not None
+            and type3.legal
+            and type3.register is not None
+            and (
+                type3.register_group == 0
+                or type3.register == "SB"
+            )
+        )
+        or type4 is not None
+        or type12 is not None
     )
     full_mode_required = bool(
         decode_compute_move(opcode) is not None
         or decode_conditional_compute(opcode) is not None
+        or (
+            type4 is not None
+            and type4.computation_enabled
+        )
     )
     return bool(
         (bank_required and not architecture.mstat_valid_mask & 1)
+        or (
+            type2 is not None
+            and type2.dag == 0
+            and not architecture.mstat_valid_mask & 0x2
+        )
+        or (
+            type4 is not None
+            and type4.dag == 0
+            and not architecture.mstat_valid_mask & 0x2
+        )
+        or (
+            type12 is not None
+            and type12.dag == 0
+            and not architecture.mstat_valid_mask & 0x2
+        )
         or (full_mode_required and architecture.mstat_valid_mask != 0xF)
+    )
+
+
+def _type2_dm_request(
+    architecture: ArchitecturalState,
+    action: DMWriteImmediateAction,
+) -> DataBusRequest:
+    """Build the cycle-start Type 2 DM write descriptor."""
+
+    old_i = architecture.dag.i[action.i_address]
+    bit_reverse_known = bool(
+        action.dag == 1 or architecture.mstat_valid_mask & 0x2
+    )
+    address: ExactWord | _UnknownValue = UNKNOWN
+    if isinstance(old_i, ExactWord) and bit_reverse_known:
+        bit_reverse = bool(
+            action.dag == 0 and architecture.mstat.value & 0x2
+        )
+        address = ExactWord(
+            14,
+            reverse_address(old_i.value) if bit_reverse else old_i.value,
+        )
+    return DataBusRequest(
+        address=address,
+        write=True,
+        write_data=ExactWord(16, action.immediate),
+    )
+
+
+def _type3_dm_request(
+    architecture: ArchitecturalState,
+    action: DirectDMAction,
+) -> DataBusRequest:
+    """Build the cycle-start Type 3 direct-DM descriptor."""
+
+    assert action.legal and action.register is not None
+    return DataBusRequest(
+        address=ExactWord(14, action.address),
+        write=action.write,
+        write_data=(
+            _read_type17_source(architecture, action.register)
+            if action.write
+            else UNKNOWN
+        ),
+    )
+
+
+def _type4_dm_request(
+    architecture: ArchitecturalState,
+    action: ComputeDMAction,
+) -> DataBusRequest:
+    """Build the cycle-start Type 4 DM descriptor."""
+
+    old_i = architecture.dag.i[action.i_address]
+    bit_reverse_known = bool(
+        action.dag == 1 or architecture.mstat_valid_mask & 0x2
+    )
+    address: ExactWord | _UnknownValue = UNKNOWN
+    if isinstance(old_i, ExactWord) and bit_reverse_known:
+        bit_reverse = bool(
+            action.dag == 0 and architecture.mstat.value & 0x2
+        )
+        address = ExactWord(
+            14,
+            reverse_address(old_i.value) if bit_reverse else old_i.value,
+        )
+
+    selected_bank = (
+        architecture.alternate
+        if architecture.mstat.value & 0x1
+        else architecture.primary
+    )
+    memory_source = read_dreg(selected_bank, action.memory_dreg)
+    return DataBusRequest(
+        address=address,
+        write=action.write,
+        write_data=memory_source if action.write else UNKNOWN,
+    )
+
+
+def _type12_dm_request(
+    architecture: ArchitecturalState,
+    action: ShifterDMAction,
+) -> DataBusRequest:
+    """Build the cycle-start Type 12 shifter-plus-DM descriptor."""
+
+    old_i = architecture.dag.i[action.i_address]
+    bit_reverse_known = bool(
+        action.dag == 1 or architecture.mstat_valid_mask & 0x2
+    )
+    address: ExactWord | _UnknownValue = UNKNOWN
+    if isinstance(old_i, ExactWord) and bit_reverse_known:
+        bit_reverse = bool(
+            action.dag == 0 and architecture.mstat.value & 0x2
+        )
+        address = ExactWord(
+            14,
+            reverse_address(old_i.value) if bit_reverse else old_i.value,
+        )
+
+    selected_bank = (
+        architecture.alternate
+        if architecture.mstat.value & 0x1
+        else architecture.primary
+    )
+    memory_source = read_dreg(selected_bank, action.memory_dreg)
+    return DataBusRequest(
+        address=address,
+        write=action.write,
+        write_data=memory_source if action.write else UNKNOWN,
+    )
+
+
+def _apply_type2_retirement(
+    architecture: ArchitecturalState,
+    action: DMWriteImmediateAction,
+    *,
+    opcode: int,
+    flow: SequencerFlowResult,
+) -> ArchitecturalState:
+    """Commit Type 2 DAG postmodify at the qualified retirement boundary."""
+
+    old_i = architecture.dag.i[action.i_address]
+    m_value = architecture.dag.m[action.m_address]
+    l_value = architecture.dag.l[action.l_address]
+    next_i: ExactWord | _UnknownValue = UNKNOWN
+    if (
+        isinstance(old_i, ExactWord)
+        and isinstance(m_value, ExactWord)
+        and isinstance(l_value, ExactWord)
+    ):
+        result = compute_dag(
+            old_i.value,
+            m_value.value,
+            l_value.value,
+            dag1=action.dag == 0,
+            bit_reverse_enabled=bool(
+                action.dag == 0 and architecture.mstat.value & 0x2
+            ),
+        )
+        if result.configuration_valid:
+            next_i = ExactWord(14, result.next_i)
+
+    i_values = list(architecture.dag.i)
+    i_values[action.i_address] = next_i
+    next_architecture = replace(
+        architecture,
+        dag=DAGRegisters(
+            i=tuple(i_values),
+            m=architecture.dag.m,
+            l=architecture.dag.l,
+        ),
+    )
+    next_architecture = _apply_automatic_loop_actions(
+        architecture,
+        next_architecture,
+        opcode,
+        flow,
+    )
+    return replace(
+        next_architecture,
+        pc=ExactWord(14, flow.next_pc),
+        total_instruction_cycles=architecture.total_instruction_cycles + 1,
+    )
+
+
+def _apply_type3_retirement(
+    architecture: ArchitecturalState,
+    action: DirectDMAction,
+    *,
+    read_data: ExactWord | _UnknownValue,
+    opcode: int,
+    flow: SequencerFlowResult,
+) -> ArchitecturalState:
+    """Commit a Type 3 read destination at paired PM/DM retirement."""
+
+    assert action.legal and action.register is not None
+    next_architecture = architecture
+    if not action.write:
+        next_architecture = _apply_type17_destination(
+            architecture,
+            action.register,
+            read_data,
+        )
+    next_architecture = _apply_automatic_loop_actions(
+        architecture,
+        next_architecture,
+        opcode,
+        flow,
+    )
+    return replace(
+        next_architecture,
+        pc=ExactWord(14, flow.next_pc),
+        total_instruction_cycles=architecture.total_instruction_cycles + 1,
+    )
+
+
+def _apply_type4_retirement(
+    architecture: ArchitecturalState,
+    action: ComputeDMAction,
+    *,
+    read_data: ExactWord | _UnknownValue,
+    opcode: int,
+    flow: SequencerFlowResult,
+) -> ArchitecturalState:
+    """Commit a Type 4 compute/DM/DAG action at paired retirement."""
+
+    dag = DAGRegisterState(
+        i=tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in architecture.dag.i
+        ),
+        m=tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in architecture.dag.m
+        ),
+        l=tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in architecture.dag.l
+        ),
+    )
+    status = StatusRegisters(
+        astat=(
+            ASTATState()
+            if architecture.astat is UNKNOWN
+            else ASTATState.from_word(architecture.astat)
+        ),
+        mstat=architecture.mstat,
+        icntl=architecture.icntl,
+        imask=architecture.imask,
+    )
+    completed = apply_compute_dm_cycle(
+        ComputeDMState(
+            primary=architecture.primary,
+            alternate=architecture.alternate,
+            status=status,
+            dag=dag,
+        ),
+        execute=True,
+        opcode=opcode,
+        dm_ack=True,
+        dm_read_data=read_data,
+    )
+    assert completed.action == action
+    assert completed.instruction_complete
+    next_astat = (
+        completed.state.status.astat.to_word()
+        if completed.state.status.astat.is_fully_known
+        else UNKNOWN
+    )
+    next_architecture = replace(
+        architecture,
+        primary=completed.state.primary,
+        alternate=completed.state.alternate,
+        astat=next_astat,
+        dag=DAGRegisters(
+            i=tuple(
+                ExactWord(14, value) if value is not None else UNKNOWN
+                for value in completed.state.dag.i
+            ),
+            m=tuple(
+                ExactWord(14, value) if value is not None else UNKNOWN
+                for value in completed.state.dag.m
+            ),
+            l=tuple(
+                ExactWord(14, value) if value is not None else UNKNOWN
+                for value in completed.state.dag.l
+            ),
+        ),
+    )
+    next_architecture = _apply_automatic_loop_actions(
+        architecture,
+        next_architecture,
+        opcode,
+        flow,
+    )
+    return replace(
+        next_architecture,
+        pc=ExactWord(14, flow.next_pc),
+        total_instruction_cycles=architecture.total_instruction_cycles + 1,
+    )
+
+
+def _apply_type12_retirement(
+    architecture: ArchitecturalState,
+    action: ShifterDMAction,
+    *,
+    read_data: ExactWord | _UnknownValue,
+    opcode: int,
+    flow: SequencerFlowResult,
+) -> ArchitecturalState:
+    """Commit a Type 12 shifter/DM/DAG action at paired retirement."""
+
+    dag = DAGRegisterState(
+        i=tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in architecture.dag.i
+        ),
+        m=tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in architecture.dag.m
+        ),
+        l=tuple(
+            value.value if isinstance(value, ExactWord) else None
+            for value in architecture.dag.l
+        ),
+    )
+    status = StatusRegisters(
+        astat=(
+            ASTATState()
+            if architecture.astat is UNKNOWN
+            else ASTATState.from_word(architecture.astat)
+        ),
+        mstat=architecture.mstat,
+        icntl=architecture.icntl,
+        imask=architecture.imask,
+    )
+    completed = apply_shifter_dm_cycle(
+        ShifterDMState(
+            primary=architecture.primary,
+            alternate=architecture.alternate,
+            status=status,
+            dag=dag,
+        ),
+        execute=True,
+        opcode=opcode,
+        dm_ack=True,
+        dm_read_data=read_data,
+    )
+    assert completed.action == action
+    assert completed.instruction_complete
+    next_astat = (
+        completed.state.status.astat.to_word()
+        if completed.state.status.astat.is_fully_known
+        else UNKNOWN
+    )
+    next_architecture = replace(
+        architecture,
+        primary=completed.state.primary,
+        alternate=completed.state.alternate,
+        astat=next_astat,
+        dag=DAGRegisters(
+            i=tuple(
+                ExactWord(14, value) if value is not None else UNKNOWN
+                for value in completed.state.dag.i
+            ),
+            m=tuple(
+                ExactWord(14, value) if value is not None else UNKNOWN
+                for value in completed.state.dag.m
+            ),
+            l=tuple(
+                ExactWord(14, value) if value is not None else UNKNOWN
+                for value in completed.state.dag.l
+            ),
+        ),
+    )
+    next_architecture = _apply_automatic_loop_actions(
+        architecture,
+        next_architecture,
+        opcode,
+        flow,
+    )
+    return replace(
+        next_architecture,
+        pc=ExactWord(14, flow.next_pc),
+        total_instruction_cycles=architecture.total_instruction_cycles + 1,
     )
 
 
@@ -312,6 +789,11 @@ def apply_linear_fetch_client_cycle(
     pm_instruction_active: bool = False,
     pm_instruction_complete: bool = False,
     pm_instruction_next_opcode: ExactWord | _UnknownValue = UNKNOWN,
+    fetched_type2_enabled: bool = False,
+    fetched_type3_enabled: bool = False,
+    fetched_type4_enabled: bool = False,
+    fetched_type12_enabled: bool = False,
+    dmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
 ) -> LinearFetchClientCycleResult:
     """Apply one clock to the architectural client without a PM controller."""
 
@@ -331,6 +813,11 @@ def apply_linear_fetch_client_cycle(
         raise ValueError(
             "PM instruction next opcode must be UNKNOWN or exactly 24 bits"
         )
+    if dmd_read_data is not UNKNOWN and (
+        not isinstance(dmd_read_data, ExactWord)
+        or dmd_read_data.width != 16
+    ):
+        raise ValueError("DM read data must be UNKNOWN or exactly 16 bits")
 
     issue_boundary = bool(
         not reset
@@ -360,6 +847,10 @@ def apply_linear_fetch_client_cycle(
     mstat_dependency_invalid = _mstat_dependency_invalid(
         state.architecture,
         state.instruction,
+        fetched_type2_enabled=fetched_type2_enabled,
+        fetched_type3_enabled=fetched_type3_enabled,
+        fetched_type4_enabled=fetched_type4_enabled,
+        fetched_type12_enabled=fetched_type12_enabled,
     )
     integration_conflict = bool(
         integration_conflict
@@ -368,6 +859,10 @@ def apply_linear_fetch_client_cycle(
     supported, reserved = _instruction_class(
         state.instruction,
         state.instruction_valid,
+        fetched_type2_enabled=fetched_type2_enabled,
+        fetched_type3_enabled=fetched_type3_enabled,
+        fetched_type4_enabled=fetched_type4_enabled,
+        fetched_type12_enabled=fetched_type12_enabled,
     )
     supported = bool(supported or pm_instruction_active)
     reserved_event = bool(
@@ -622,12 +1117,42 @@ def apply_linear_fetch_client_cycle(
         if isinstance(state.instruction, ExactWord)
         else None
     )
+    type2 = (
+        decode_dm_write_immediate(state.instruction.value)
+        if fetched_type2_enabled
+        and isinstance(state.instruction, ExactWord)
+        else None
+    )
+    type3 = (
+        decode_direct_dm(state.instruction.value)
+        if fetched_type3_enabled
+        and isinstance(state.instruction, ExactWord)
+        else None
+    )
+    type4 = (
+        decode_compute_dm(state.instruction.value)
+        if fetched_type4_enabled
+        and isinstance(state.instruction, ExactWord)
+        else None
+    )
+    type12 = (
+        decode_shifter_dm(state.instruction.value)
+        if fetched_type12_enabled
+        and isinstance(state.instruction, ExactWord)
+        else None
+    )
     instruction_writes_cntr = bool(
         (type7 is not None and type7.legal and type7.register == "CNTR")
         or (
             type17 is not None
             and type17.legal
             and type17.destination_register == "CNTR"
+        )
+        or (
+            type3 is not None
+            and type3.legal
+            and not type3.write
+            and type3.register == "CNTR"
         )
     )
     mode_control = (
@@ -645,6 +1170,12 @@ def apply_linear_fetch_client_cycle(
             type17 is not None
             and type17.legal
             and type17.destination_register in {"MSTAT", "ICNTL", "IMASK"}
+        )
+        or (
+            type3 is not None
+            and type3.legal
+            and not type3.write
+            and type3.register in {"MSTAT", "ICNTL", "IMASK"}
         )
         or (mode_control is not None and mode_control.has_effect)
     )
@@ -676,6 +1207,41 @@ def apply_linear_fetch_client_cycle(
         and pm_instruction_active
         and not pm_instruction_sequential_allowed
     )
+    fetched_dm_candidate_boundary = bool(
+        not reset
+        and not bus_relinquished
+        and phase_advance
+        and phase == LogicalPhase.STATE_8
+        and state.instruction_valid
+        and not state.pending
+        and not state.interrupt_vectoring
+        and instruction_setup is None
+        and not pm_instruction_active
+    )
+    fetched_dm_request_candidate = (
+        _type2_dm_request(architecture, type2)
+        if fetched_dm_candidate_boundary and type2 is not None
+        else (
+            _type3_dm_request(architecture, type3)
+            if (
+                fetched_dm_candidate_boundary
+                and type3 is not None
+                and type3.legal
+            )
+            else (
+                _type4_dm_request(architecture, type4)
+                if fetched_dm_candidate_boundary and type4 is not None
+                else (
+                    _type12_dm_request(architecture, type12)
+                    if (
+                        fetched_dm_candidate_boundary
+                        and type12 is not None
+                    )
+                    else None
+                )
+            )
+        )
+    )
     ordinary_fetch_request = bool(
         issue_boundary
         and state.instruction_valid
@@ -700,6 +1266,9 @@ def apply_linear_fetch_client_cycle(
         and instruction_setup is None
     )
     fetch_request = ordinary_fetch_request or vector_fetch_request
+    fetched_dm_request = (
+        fetched_dm_request_candidate if ordinary_fetch_request else None
+    )
     fetch_address = ExactWord(
         14,
         (
@@ -784,10 +1353,19 @@ def apply_linear_fetch_client_cycle(
             assert isinstance(state.instruction, ExactWord)
             type17 = decode_internal_move(state.instruction.value)
             provisional_source_extension = bool(
-                type17 is not None
-                and type17.legal
-                and type17.source_group == 3
-                and type17.source_index <= 4
+                (
+                    type17 is not None
+                    and type17.legal
+                    and type17.source_group == 3
+                    and type17.source_index <= 4
+                )
+                or (
+                    type3 is not None
+                    and type3.legal
+                    and type3.write
+                    and type3.register_group == 3
+                    and type3.register_index <= 4
+                )
             )
             if pm_instruction_retire:
                 retired_architecture = replace(
@@ -798,6 +1376,41 @@ def apply_linear_fetch_client_cycle(
                 retired_architecture = replace(
                     state.architecture,
                     pc=ExactWord(14, flow.next_pc),
+                )
+            elif fetched_type2_enabled and type2 is not None:
+                retired_architecture = _apply_type2_retirement(
+                    state.architecture,
+                    type2,
+                    opcode=state.instruction.value,
+                    flow=flow,
+                )
+            elif (
+                fetched_type3_enabled
+                and type3 is not None
+                and type3.legal
+            ):
+                retired_architecture = _apply_type3_retirement(
+                    state.architecture,
+                    type3,
+                    read_data=dmd_read_data,
+                    opcode=state.instruction.value,
+                    flow=flow,
+                )
+            elif fetched_type4_enabled and type4 is not None:
+                retired_architecture = _apply_type4_retirement(
+                    state.architecture,
+                    type4,
+                    read_data=dmd_read_data,
+                    opcode=state.instruction.value,
+                    flow=flow,
+                )
+            elif fetched_type12_enabled and type12 is not None:
+                retired_architecture = _apply_type12_retirement(
+                    state.architecture,
+                    type12,
+                    read_data=dmd_read_data,
+                    opcode=state.instruction.value,
+                    flow=flow,
                 )
             else:
                 executor = ADSP2100Model(state=state.architecture)
@@ -891,6 +1504,8 @@ def apply_linear_fetch_client_cycle(
             or pm_instruction_flow_blocked
             or pm_instruction_completion_conflict
         ),
+        fetched_dm_request_candidate=fetched_dm_request_candidate,
+        fetched_dm_request=fetched_dm_request,
     )
 
 
@@ -906,6 +1521,11 @@ def apply_linear_core_cycle(
     instruction_setup: tuple[ExactWord, ExactWord] | None = None,
     pmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
     irq_n: int = 0xF,
+    fetched_type2_enabled: bool = False,
+    fetched_type3_enabled: bool = False,
+    fetched_type4_enabled: bool = False,
+    fetched_type12_enabled: bool = False,
+    dmd_read_data: ExactWord | _UnknownValue = UNKNOWN,
 ) -> LinearCoreCycleResult:
     """Apply one logical-phase clock to the bounded linear owner.
 
@@ -926,6 +1546,11 @@ def apply_linear_core_cycle(
         instruction_setup=instruction_setup,
         pmd_read_data=pmd_read_data,
         irq_n=irq_n,
+        fetched_type2_enabled=fetched_type2_enabled,
+        fetched_type3_enabled=fetched_type3_enabled,
+        fetched_type4_enabled=fetched_type4_enabled,
+        fetched_type12_enabled=fetched_type12_enabled,
+        dmd_read_data=dmd_read_data,
     )
     request = (
         ProgramBusRequest.fetch(preview.fetch_address.value)
@@ -954,6 +1579,11 @@ def apply_linear_core_cycle(
         pm_completion_event=bus_result.completion_event,
         pmd_read_data=pmd_read_data,
         irq_n=irq_n,
+        fetched_type2_enabled=fetched_type2_enabled,
+        fetched_type3_enabled=fetched_type3_enabled,
+        fetched_type4_enabled=fetched_type4_enabled,
+        fetched_type12_enabled=fetched_type12_enabled,
+        dmd_read_data=dmd_read_data,
     )
     next_state = replace(client.state, bus=bus_result.state)
 
@@ -991,4 +1621,8 @@ def apply_linear_core_cycle(
         phase_conflict=client.phase_conflict,
         integration_conflict=client.integration_conflict,
         internal_conflict=client.internal_conflict,
+        fetched_dm_request_candidate=(
+            client.fetched_dm_request_candidate
+        ),
+        fetched_dm_request=client.fetched_dm_request,
     )

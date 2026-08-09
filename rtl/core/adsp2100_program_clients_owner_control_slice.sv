@@ -1,8 +1,8 @@
 `default_nettype none
 
-// Bounded composition of all three real architectural PM clients behind one
-// original-device instruction-cache monitor, one native PM controller, and
-// normal BR/BG sequencing.
+// Bounded composition of all three real architectural PM clients and fetched
+// Type 2/3/4/12 DM service behind one original-device instruction-cache
+// monitor, one native controller per bus, and normal BR/BG sequencing.
 //
 // Ordinary fetch, Type 5, and Type 13 share one architectural
 // register/DAG/status/PX owner;
@@ -10,18 +10,21 @@
 // commit together at routed PM-data completion. The retained ordinary-fetch
 // client retains the sole PC/opcode sequencer but admits the PM clients'
 // cycle-start reads and completion writebacks at its architectural-state
-// boundary. In the optional automatic mode, a legal retained Type 5 or Type
+// boundary. Fetched Type 2/3/4/12 words additionally route that same owner's
+// native DM descriptor through one wait-capable controller; a DMACK extension
+// holds architectural and PM progress while physical DM and event-sampling
+// phases continue. In the optional automatic mode, a legal retained Type 5 or Type
 // 13 opcode issues its PM-data cycle, holds PC/opcode through a cache-miss
 // recovery fetch, and installs the returned PC+1 opcode at whole-instruction
 // retirement. HALT completes ordinary fetch before stopping; recognition
 // during either PM-data client commits once, forces one external recovery for
 // that client even on a cache hit, and stops after recovery. Unsourced BR/HALT
-// overlap fails closed. Active-loop flow remains fail-closed because the issue-time
-// termination ordering is not yet closed. Simultaneous externally directed
-// Type 5 and Type 13 controls fail closed.
+// overlap fails closed. Active-loop flow remains fail-closed because its
+// issue-time termination ordering is not yet closed. Simultaneous externally
+// directed Type 5 and Type 13 controls fail closed.
 //
-// Source: ADI-UM-1989 printed pp. 4-26--4-30 and 5-3--5-8;
-// ADI-DATABOOK-1987 printed pp. 2-33--2-39.
+// Source: ADI-UM-1989 printed pp. 4-26--4-30 and 5-3--5-14;
+// ADI-DATABOOK-1987 printed pp. 2-33--2-43.
 module adsp2100_program_clients_owner_control_slice (
     input  logic        clk_i,
     input  logic        reset_i,
@@ -53,6 +56,8 @@ module adsp2100_program_clients_owner_control_slice (
 
     input  logic [23:0] pmd_read_data_i,
     input  logic        pmd_read_data_valid_i,
+    input  logic [15:0] dmd_read_data_i,
+    input  logic        dmd_read_data_valid_i,
 
     input  logic        astat_setup_write_i,
     input  logic [7:0]  astat_setup_data_i,
@@ -91,6 +96,8 @@ module adsp2100_program_clients_owner_control_slice (
     output logic        halt_release_blocked_o,
     output logic        halt_phase_hold_o,
     output logic        effective_phase_advance_o,
+    output logic        architectural_phase_advance_o,
+    output logic        interrupt_wait_sample_o,
     output logic        halted_o,
     output logic        halt_br_conflict_o,
     output logic        halt_attachment_conflict_o,
@@ -156,7 +163,26 @@ module adsp2100_program_clients_owner_control_slice (
     output logic        pmrd_n_o,
     output logic        pmwr_n_o,
     output logic [23:0] pmd_write_data_o,
-    output logic        pmd_write_data_valid_o
+    output logic        pmd_write_data_valid_o,
+
+    output logic        dm_request_accepted_o,
+    output logic        dmack_sample_event_o,
+    output logic        dmack_accepted_o,
+    output logic        dm_wait_extension_event_o,
+    output logic        dm_completion_event_o,
+    output logic        dm_read_sample_event_o,
+    output logic        dm_transaction_active_o,
+    output logic        dm_waiting_o,
+    output logic        dm_address_output_enable_o,
+    output logic        dm_control_output_enable_o,
+    output logic        dm_data_output_enable_o,
+    output logic [13:0] dma_o,
+    output logic        dma_valid_o,
+    output logic        dms_n_o,
+    output logic        dmrd_n_o,
+    output logic        dmwr_n_o,
+    output logic [15:0] dmd_write_data_o,
+    output logic        dmd_write_data_valid_o
 );
     import adsp2100_pkg::*;
     import adsp2100_register_pkg::*;
@@ -434,6 +460,51 @@ module adsp2100_program_clients_owner_control_slice (
     logic linear_type17_retire;
     logic linear_type18_retire;
     logic linear_type17_source_valid;
+    logic [5:0] linear_source_code;
+    logic linear_type3_class;
+    logic linear_type4_class;
+    logic linear_type12_class;
+    logic fetched_dm_request_candidate;
+    logic fetched_dm_request_presented;
+    logic [13:0] fetched_dm_request_address;
+    logic fetched_dm_request_address_valid;
+    logic fetched_dm_request_write;
+    logic [15:0] fetched_dm_request_write_data;
+    logic fetched_dm_request_write_data_valid;
+    logic dm_owner_request_ready;
+    logic dm_owner_request_conflict;
+    logic dm_owner_request_out_of_phase;
+    logic [1:0] dm_owner_request_accepted;
+    logic [1:0] dm_owner_dmack_sample;
+    logic [1:0] dm_owner_dmack_accepted;
+    logic [1:0] dm_owner_wait_extension;
+    logic [1:0] dm_owner_completion;
+    logic [1:0] dm_owner_read_sample;
+    logic [1:0] dm_owner;
+    logic dm_response_valid;
+    logic dm_response_write_unused;
+    logic [15:0] dm_response_read_data_unused;
+    logic dm_response_read_data_valid_unused;
+    logic dm_in_progress;
+    logic dm_attachment_conflict;
+
+    logic validity_type3_action_valid;
+    logic validity_type3_write;
+    logic [5:0] validity_type3_register_code;
+    logic validity_type3_context_known;
+
+    logic validity_type4_action_valid;
+    logic validity_type4_computation_enable;
+    logic validity_type4_is_mac;
+    logic validity_type4_destination_feedback;
+    logic validity_type4_dag_select;
+    logic validity_type4_write;
+    logic [4:0] validity_type4_amf;
+    logic [1:0] validity_type4_yop;
+    logic [3:0] validity_type4_x_source;
+    logic [3:0] validity_type4_y_source;
+    logic [3:0] validity_type4_memory_dreg;
+    logic validity_type4_context_known;
 
     logic validity_type8_action_valid;
     logic validity_type8_is_mac;
@@ -470,6 +541,8 @@ module adsp2100_program_clients_owner_control_slice (
     logic validity_mac_needs_mr;
     logic validity_compute_stage_valid_q;
     logic validity_compute_stage_type8_q;
+    logic validity_compute_stage_type4_q;
+    logic validity_compute_stage_memory_read_q;
     logic validity_compute_stage_is_mac_q;
     logic validity_compute_stage_destination_feedback_q;
     logic [4:0] validity_compute_stage_amf_q;
@@ -493,12 +566,21 @@ module adsp2100_program_clients_owner_control_slice (
     logic [3:0] validity_type16_condition;
     logic validity_type16_condition_true;
     logic validity_type16_condition_known;
+    logic validity_type12_action_valid;
+    logic validity_type12_dag_select;
+    logic validity_type12_write;
+    logic [3:0] validity_type12_sf;
+    logic [3:0] validity_type12_source;
+    logic [3:0] validity_type12_memory_dreg;
+    logic validity_type12_context_known;
     logic [3:0] validity_selected_shift_sf;
     logic [3:0] validity_selected_shift_source;
     logic validity_selected_shift_source_known;
     logic validity_selected_shift_result_known;
     logic validity_shift_stage_valid_q;
     logic validity_shift_stage_type14_q;
+    logic validity_shift_stage_type12_q;
+    logic validity_shift_stage_memory_read_q;
     logic [3:0] validity_shift_stage_sf_q;
     logic [3:0] validity_shift_stage_move_destination_q;
     logic validity_shift_stage_move_known_q;
@@ -586,6 +668,27 @@ module adsp2100_program_clients_owner_control_slice (
     assign issue_inhibit_o = (
         bus_issue_inhibit || halt_instruction_issue_inhibit
     );
+    assign architectural_phase_advance_o = (
+        effective_phase_advance_o && !dm_waiting_o
+    );
+    assign interrupt_wait_sample_o = (
+        effective_phase_advance_o && dm_waiting_o
+        && phase_i == PHASE_STATE_7
+    );
+    assign dm_in_progress = dm_transaction_active_o && !dm_response_valid;
+    assign dm_request_accepted_o = dm_owner_request_accepted[0];
+    assign dmack_sample_event_o = dm_owner_dmack_sample[0];
+    assign dmack_accepted_o = dm_owner_dmack_accepted[0];
+    assign dm_wait_extension_event_o = dm_owner_wait_extension[0];
+    assign dm_completion_event_o = dm_owner_completion[0];
+    assign dm_read_sample_event_o = dm_owner_read_sample[0];
+    assign dm_attachment_conflict = (
+        dm_owner_request_conflict || dm_owner_request_out_of_phase
+        || (fetched_dm_request_presented
+            && (dm_request_accepted_o != request_accepted_o[0]))
+        || (!reset_i && dm_in_progress
+            && (dm_completion_event_o != completion_event_o[0]))
+    );
     assign automatic_control_conflict = (
         !reset_i && automatic_pm_flow_i
         && (type5_execute_i || type13_execute_i)
@@ -672,7 +775,7 @@ module adsp2100_program_clients_owner_control_slice (
         );
     assign issue_boundary_o = (
         !reset_i && !issue_inhibit_o && !bus_relinquished_o
-        && effective_phase_advance_o && phase_i == PHASE_STATE_8
+        && architectural_phase_advance_o && phase_i == PHASE_STATE_8
     );
 
     always_comb begin
@@ -743,7 +846,7 @@ module adsp2100_program_clients_owner_control_slice (
         || shared_state_action_conflict
         || linear_state_action_conflict || halt_phase_conflict
         || halt_br_conflict_o || halt_owner_conflict
-        || halt_attachment_conflict_o
+        || halt_attachment_conflict_o || dm_attachment_conflict
     );
 
     always_comb begin
@@ -809,9 +912,13 @@ module adsp2100_program_clients_owner_control_slice (
     assign shared_memory_read_address = type5_execute
         ? type5_memory_dreg : type13_memory_dreg;
     assign shared_dag_i_address = type5_execute
-        ? type5_i_address : type13_i_address;
+        ? type5_i_address : (type13_execute
+            ? type13_i_address
+            : {linear_source_code[5] , linear_source_code[1:0]});
     assign shared_dag_m_address = type5_execute
-        ? type5_m_address : type13_m_address;
+        ? type5_m_address : (type13_execute
+            ? type13_m_address
+            : {linear_source_code[5] , linear_source_code[1:0]});
     assign shared_x_source_valid =
         shared_mstat_valid_mask_q[0]
         && shared_dreg_valid_q[shared_alternate_bank]
@@ -884,8 +991,63 @@ module adsp2100_program_clients_owner_control_slice (
 
     // Reuse the canonical class decoders for the validity sidecar. This does
     // not create a second opcode definition: the sidecar observes the same
-    // Type 8/Type 9 selectors as the executing retained-fetch client.
+    // selectors as the executing retained-fetch client.
     /* verilator lint_off PINCONNECTEMPTY */
+    adsp2100_direct_dm_decode validity_type3_decode (
+        .opcode_i(linear_opcode_o),
+        .class_valid_o(),
+        .action_valid_o(validity_type3_action_valid),
+        .invalid_subencoding_o(),
+        .write_o(validity_type3_write),
+        .address_o(),
+        .register_group_o(),
+        .register_index_o(),
+        .register_code_o(validity_type3_register_code),
+        .register_present_o(),
+        .register_writable_o(),
+        .reserved_source_o(),
+        .reserved_destination_o(),
+        .read_only_destination_o()
+    );
+
+    adsp2100_compute_dm_decode validity_type4_decode (
+        .opcode_i(linear_opcode_o),
+        .class_valid_o(),
+        .action_valid_o(validity_type4_action_valid),
+        .unsupported_subencoding_o(),
+        .destination_collision_o(),
+        .computation_enable_o(validity_type4_computation_enable),
+        .is_mac_o(validity_type4_is_mac),
+        .destination_feedback_o(validity_type4_destination_feedback),
+        .dag_select_o(validity_type4_dag_select),
+        .write_o(validity_type4_write),
+        .amf_o(validity_type4_amf),
+        .yop_o(validity_type4_yop),
+        .xop_o(),
+        .x_source_dreg_o(validity_type4_x_source),
+        .y_source_dreg_o(validity_type4_y_source),
+        .memory_dreg_o(validity_type4_memory_dreg),
+        .i_address_o(),
+        .m_address_o()
+    );
+
+    adsp2100_shifter_dm_decode validity_type12_decode (
+        .opcode_i(linear_opcode_o),
+        .class_valid_o(),
+        .action_valid_o(validity_type12_action_valid),
+        .unsupported_subencoding_o(),
+        .unavailable_xop_o(),
+        .destination_collision_o(),
+        .dag_select_o(validity_type12_dag_select),
+        .write_o(validity_type12_write),
+        .sf_o(validity_type12_sf),
+        .xop_o(),
+        .shifter_source_dreg_o(validity_type12_source),
+        .memory_dreg_o(validity_type12_memory_dreg),
+        .i_address_o(),
+        .m_address_o()
+    );
+
     adsp2100_compute_move_decode validity_type8_decode (
         .opcode_i(linear_opcode_o),
         .class_valid_o(),
@@ -1034,17 +1196,41 @@ module adsp2100_program_clients_owner_control_slice (
         linear_cntr_valid_unused
     );
 
+    assign validity_type3_context_known = (
+        (validity_type3_register_code[5:4] != 2'b00
+            && validity_type3_register_code != 6'h36)
+        || shared_mstat_valid_mask_q[0]
+    );
+    assign validity_type4_context_known =
+        shared_mstat_valid_mask_q[0]
+        && (validity_type4_dag_select || shared_mstat_valid_mask_q[1])
+        && (!validity_type4_computation_enable
+            || shared_mstat_valid_mask_q == 4'hf);
+    assign validity_type12_context_known =
+        shared_mstat_valid_mask_q[0]
+        && (validity_type12_dag_select || shared_mstat_valid_mask_q[1]);
+
     always_comb begin
-        validity_selected_is_mac = validity_type8_action_valid
-            ? validity_type8_is_mac : validity_type9_is_mac;
-        validity_selected_amf = validity_type8_action_valid
-            ? validity_type8_amf : validity_type9_amf;
-        validity_selected_yop = validity_type8_action_valid
-            ? validity_type8_yop : validity_type9_yop;
-        validity_selected_x_source = validity_type8_action_valid
-            ? validity_type8_x_source : validity_type9_x_source;
-        validity_selected_y_source = validity_type8_action_valid
-            ? validity_type8_y_source : validity_type9_y_source;
+        validity_selected_is_mac = validity_type4_action_valid
+            ? validity_type4_is_mac
+            : (validity_type8_action_valid
+                ? validity_type8_is_mac : validity_type9_is_mac);
+        validity_selected_amf = validity_type4_action_valid
+            ? validity_type4_amf
+            : (validity_type8_action_valid
+                ? validity_type8_amf : validity_type9_amf);
+        validity_selected_yop = validity_type4_action_valid
+            ? validity_type4_yop
+            : (validity_type8_action_valid
+                ? validity_type8_yop : validity_type9_yop);
+        validity_selected_x_source = validity_type4_action_valid
+            ? validity_type4_x_source
+            : (validity_type8_action_valid
+                ? validity_type8_x_source : validity_type9_x_source);
+        validity_selected_y_source = validity_type4_action_valid
+            ? validity_type4_y_source
+            : (validity_type8_action_valid
+                ? validity_type8_y_source : validity_type9_y_source);
         validity_selected_x_known = shared_dreg_valid_q[
             shared_alternate_bank
         ][validity_selected_x_source];
@@ -1084,7 +1270,9 @@ module adsp2100_program_clients_owner_control_slice (
             || validity_selected_amf >= 5'h08;
         validity_selected_compute_known = 1'b0;
         if (
-            validity_type8_action_valid
+            (validity_type4_action_valid
+                && validity_type4_computation_enable)
+            || validity_type8_action_valid
             || (validity_type9_action_valid && !validity_type9_nop_action)
         ) begin
             if (validity_selected_is_mac) begin
@@ -1129,14 +1317,18 @@ module adsp2100_program_clients_owner_control_slice (
     end
 
     always_comb begin
-        validity_selected_shift_sf = validity_type14_action_valid
-            ? validity_type14_sf
-            : (validity_type15_action_valid
-                ? validity_type15_sf : validity_type16_sf);
-        validity_selected_shift_source = validity_type14_action_valid
-            ? validity_type14_source
-            : (validity_type15_action_valid
-                ? validity_type15_source : validity_type16_source);
+        validity_selected_shift_sf = validity_type12_action_valid
+            ? validity_type12_sf
+            : (validity_type14_action_valid
+                ? validity_type14_sf
+                : (validity_type15_action_valid
+                    ? validity_type15_sf : validity_type16_sf));
+        validity_selected_shift_source = validity_type12_action_valid
+            ? validity_type12_source
+            : (validity_type14_action_valid
+                ? validity_type14_source
+                : (validity_type15_action_valid
+                    ? validity_type15_source : validity_type16_source));
         validity_selected_shift_source_known = shared_dreg_valid_q[
             shared_alternate_bank
         ][validity_selected_shift_source];
@@ -1149,7 +1341,8 @@ module adsp2100_program_clients_owner_control_slice (
                 validity_selected_shift_source_known
                 && (!validity_selected_shift_sf[0] || shared_sr_valid);
         end else if (
-            validity_type14_action_valid || validity_type16_action_valid
+            validity_type12_action_valid || validity_type14_action_valid
+            || validity_type16_action_valid
         ) begin
             unique case (validity_selected_shift_sf)
                 4'h0, 4'h2, 4'h4, 4'h6, 4'ha, 4'hb:
@@ -1182,7 +1375,7 @@ module adsp2100_program_clients_owner_control_slice (
                             shared_se != 8'hf1
                             || (
                                 validity_selected_shift_source_known
-                                && shared_astat_valid_mask_q[5]
+                                && shared_astat_valid_mask_q[7]
                             )
                         );
                 4'hf:
@@ -1202,6 +1395,8 @@ module adsp2100_program_clients_owner_control_slice (
         if (reset_i) begin
             validity_compute_stage_valid_q <= 1'b0;
             validity_compute_stage_type8_q <= 1'b0;
+            validity_compute_stage_type4_q <= 1'b0;
+            validity_compute_stage_memory_read_q <= 1'b0;
             validity_compute_stage_is_mac_q <= 1'b0;
             validity_compute_stage_destination_feedback_q <= 1'b0;
             validity_compute_stage_amf_q <= 5'h00;
@@ -1212,6 +1407,8 @@ module adsp2100_program_clients_owner_control_slice (
             validity_compute_stage_condition_true_q <= 1'b0;
             validity_shift_stage_valid_q <= 1'b0;
             validity_shift_stage_type14_q <= 1'b0;
+            validity_shift_stage_type12_q <= 1'b0;
+            validity_shift_stage_memory_read_q <= 1'b0;
             validity_shift_stage_sf_q <= 4'h0;
             validity_shift_stage_move_destination_q <= 4'h0;
             validity_shift_stage_move_known_q <= 1'b0;
@@ -1234,22 +1431,37 @@ module adsp2100_program_clients_owner_control_slice (
             end
             if (
                 linear_instruction_issue_o
-                && shared_mstat_valid_mask_q == 4'hf
-                && (validity_type8_action_valid
-                    || validity_type9_action_valid)
+                && (
+                    (validity_type4_action_valid
+                        && validity_type4_context_known)
+                    || (
+                        shared_mstat_valid_mask_q == 4'hf
+                        && (validity_type8_action_valid
+                            || validity_type9_action_valid)
+                    )
+                )
             ) begin
                 validity_compute_stage_valid_q <= 1'b1;
                 validity_compute_stage_type8_q
                     <= validity_type8_action_valid;
+                validity_compute_stage_type4_q
+                    <= validity_type4_action_valid;
+                validity_compute_stage_memory_read_q
+                    <= validity_type4_action_valid
+                        && !validity_type4_write;
                 validity_compute_stage_is_mac_q
                     <= validity_selected_is_mac;
                 validity_compute_stage_destination_feedback_q
-                    <= validity_type8_action_valid
-                        ? validity_type8_destination_feedback
-                        : validity_type9_destination_feedback;
+                    <= validity_type4_action_valid
+                        ? validity_type4_destination_feedback
+                        : (validity_type8_action_valid
+                            ? validity_type8_destination_feedback
+                            : validity_type9_destination_feedback);
                 validity_compute_stage_amf_q <= validity_selected_amf;
                 validity_compute_stage_move_destination_q
-                    <= validity_type8_move_destination;
+                    <= validity_type4_action_valid
+                        ? validity_type4_memory_dreg
+                        : validity_type8_move_destination;
                 validity_compute_stage_move_known_q
                     <= validity_type8_action_valid
                         && shared_dreg_valid_q[shared_alternate_bank]
@@ -1257,25 +1469,40 @@ module adsp2100_program_clients_owner_control_slice (
                 validity_compute_stage_result_known_q
                     <= validity_selected_compute_known;
                 validity_compute_stage_condition_known_q
-                    <= validity_type8_action_valid
+                    <= validity_type4_action_valid
+                        || validity_type8_action_valid
                         || validity_type9_condition_known;
                 validity_compute_stage_condition_true_q
-                    <= validity_type8_action_valid
+                    <= validity_type4_action_valid
+                        || validity_type8_action_valid
                         || validity_type9_condition_true;
             end
             if (
                 linear_instruction_issue_o
-                && shared_mstat_valid_mask_q[0]
-                && (validity_type14_action_valid
-                    || validity_type15_action_valid
-                    || validity_type16_action_valid)
+                && (
+                    (validity_type12_action_valid
+                        && validity_type12_context_known)
+                    || (
+                        shared_mstat_valid_mask_q[0]
+                        && (validity_type14_action_valid
+                            || validity_type15_action_valid
+                            || validity_type16_action_valid)
+                    )
+                )
             ) begin
                 validity_shift_stage_valid_q <= 1'b1;
                 validity_shift_stage_type14_q
                     <= validity_type14_action_valid;
+                validity_shift_stage_type12_q
+                    <= validity_type12_action_valid;
+                validity_shift_stage_memory_read_q
+                    <= validity_type12_action_valid
+                        && !validity_type12_write;
                 validity_shift_stage_sf_q <= validity_selected_shift_sf;
                 validity_shift_stage_move_destination_q
-                    <= validity_type14_move_destination;
+                    <= validity_type12_action_valid
+                        ? validity_type12_memory_dreg
+                        : validity_type14_move_destination;
                 validity_shift_stage_move_known_q
                     <= validity_type14_action_valid
                         && shared_dreg_valid_q[shared_alternate_bank]
@@ -1283,10 +1510,12 @@ module adsp2100_program_clients_owner_control_slice (
                 validity_shift_stage_result_known_q
                     <= validity_selected_shift_result_known;
                 validity_shift_stage_condition_known_q
-                    <= !validity_type16_action_valid
+                    <= validity_type12_action_valid
+                        || !validity_type16_action_valid
                         || validity_type16_condition_known;
                 validity_shift_stage_condition_true_q
-                    <= !validity_type16_action_valid
+                    <= validity_type12_action_valid
+                        || !validity_type16_action_valid
                         || validity_type16_condition_true;
                 validity_shift_stage_exp_lo_preserve_q
                     <= validity_selected_shift_sf == 4'he
@@ -1320,25 +1549,40 @@ module adsp2100_program_clients_owner_control_slice (
         end
     end
 
+    assign linear_type3_class =
+        (linear_opcode_o & 24'he00000) == 24'h800000;
+    assign linear_type4_class =
+        (linear_opcode_o & 24'he00000) == 24'h600000;
+    assign linear_type12_class =
+        (linear_opcode_o & 24'hfe0000) == 24'h120000;
+    assign linear_source_code = linear_type3_class
+        ? {linear_opcode_o[19:18], linear_opcode_o[3:0]}
+        : {linear_opcode_o[9:8], linear_opcode_o[3:0]};
+
     always_comb begin
         linear_type17_source_valid = 1'b0;
-        unique case (linear_opcode_o[9:8])
+        if (linear_type4_class || linear_type12_class) begin
+            linear_type17_source_valid =
+                shared_mstat_valid_mask_q[0]
+                && shared_dreg_valid_q[shared_alternate_bank]
+                    [linear_opcode_o[7:4]];
+        end else unique case (linear_source_code[5:4])
             2'b00: linear_type17_source_valid =
                 shared_mstat_valid_mask_q[0]
                 && shared_dreg_valid_q[shared_alternate_bank]
-                    [linear_opcode_o[3:0]];
+                    [linear_source_code[3:0]];
             2'b01,
             2'b10: begin
-                if (linear_opcode_o[3:0] < 4'd4) begin
+                if (linear_source_code[3:0] < 4'd4) begin
                     linear_type17_source_valid = shared_dag_i_valid;
-                end else if (linear_opcode_o[3:0] < 4'd8) begin
+                end else if (linear_source_code[3:0] < 4'd8) begin
                     linear_type17_source_valid = shared_dag_m_valid;
-                end else if (linear_opcode_o[3:0] < 4'd12) begin
+                end else if (linear_source_code[3:0] < 4'd12) begin
                     linear_type17_source_valid = shared_dag_l_valid;
                 end
             end
             2'b11: begin
-                unique case (linear_opcode_o[3:0])
+                unique case (linear_source_code[3:0])
                     4'd0: linear_type17_source_valid =
                         &shared_astat_valid_mask_q;
                     4'd1: linear_type17_source_valid =
@@ -1448,6 +1692,37 @@ module adsp2100_program_clients_owner_control_slice (
             // The retained fetch owner and both PM-data clients write the same
             // storage. These sidecars preserve authentic reset unknowns across
             // the source-closed fetched classes attached below.
+            if (
+                linear_retire_event_o && validity_type3_action_valid
+                && !validity_type3_write && validity_type3_context_known
+            ) begin
+                if (validity_type3_register_code[5:4] == 2'b00) begin
+                    shared_dreg_valid_q[shared_alternate_bank]
+                        [validity_type3_register_code[3:0]]
+                        <= dmd_read_data_valid_i;
+                    if (validity_type3_register_code[3:0] == DREG_MR1) begin
+                        shared_dreg_valid_q[shared_alternate_bank][DREG_MR2]
+                            <= dmd_read_data_valid_i;
+                    end
+                end else begin
+                    unique case (validity_type3_register_code)
+                        6'h30: shared_astat_valid_mask_q
+                            <= {8{dmd_read_data_valid_i}};
+                        6'h31: shared_mstat_valid_mask_q
+                            <= {4{dmd_read_data_valid_i}};
+                        6'h33: shared_imask_valid_q
+                            <= dmd_read_data_valid_i;
+                        6'h36: shared_sb_valid_q[shared_alternate_bank]
+                            <= dmd_read_data_valid_i;
+                        6'h37: shared_px_valid_q <= dmd_read_data_valid_i;
+                        default: begin
+                            // DAG, ICNTL, and CNTR validity is retained by
+                            // their state owners inside the fetch client.
+                        end
+                    endcase
+                end
+            end
+
             if (linear_type6_retire) begin
                 shared_dreg_valid_q[shared_alternate_bank]
                     [linear_opcode_o[3:0]] <= 1'b1;
@@ -1531,13 +1806,27 @@ module adsp2100_program_clients_owner_control_slice (
                         shared_dreg_valid_q[shared_alternate_bank][DREG_MR2]
                             <= validity_compute_stage_move_known_q;
                     end
+                end else if (
+                    validity_compute_stage_type4_q
+                    && validity_compute_stage_memory_read_q
+                ) begin
+                    shared_dreg_valid_q[shared_alternate_bank]
+                        [validity_compute_stage_move_destination_q]
+                        <= dmd_read_data_valid_i;
+                    if (
+                        validity_compute_stage_move_destination_q == DREG_MR1
+                    ) begin
+                        shared_dreg_valid_q[shared_alternate_bank][DREG_MR2]
+                            <= dmd_read_data_valid_i;
+                    end
                 end
 
                 // A known-false Type 9 preserves state. An unknown predicate
                 // invalidates every possible destination because the model
                 // cannot choose between the old value and the computed one.
                 if (
-                    validity_compute_stage_type8_q
+                    validity_compute_stage_type4_q
+                    || validity_compute_stage_type8_q
                     || validity_compute_stage_condition_true_q
                     || !validity_compute_stage_condition_known_q
                 ) begin
@@ -1604,6 +1893,19 @@ module adsp2100_program_clients_owner_control_slice (
                         shared_dreg_valid_q[shared_alternate_bank][DREG_MR2]
                             <= validity_shift_stage_move_known_q;
                     end
+                end else if (
+                    validity_shift_stage_type12_q
+                    && validity_shift_stage_memory_read_q
+                ) begin
+                    shared_dreg_valid_q[shared_alternate_bank]
+                        [validity_shift_stage_move_destination_q]
+                        <= dmd_read_data_valid_i;
+                    if (
+                        validity_shift_stage_move_destination_q == DREG_MR1
+                    ) begin
+                        shared_dreg_valid_q[shared_alternate_bank][DREG_MR2]
+                            <= dmd_read_data_valid_i;
+                    end
                 end
 
                 // Known-false Type 16 preserves state. Unknown predicates
@@ -1631,7 +1933,7 @@ module adsp2100_program_clients_owner_control_slice (
                                 [DREG_SE]
                                 <= validity_shift_stage_result_known_q
                                     && validity_shift_stage_condition_known_q;
-                            shared_astat_valid_mask_q[5]
+                            shared_astat_valid_mask_q[7]
                                 <= validity_shift_stage_result_known_q
                                     && validity_shift_stage_condition_known_q;
                         end
@@ -1824,10 +2126,16 @@ module adsp2100_program_clients_owner_control_slice (
     );
 
     /* verilator lint_off PINCONNECTEMPTY */
-    adsp2100_linear_fetch_client linear_client (
+    adsp2100_linear_fetch_client #(
+        .FETCHED_TYPE2_ENABLED(1'b1),
+        .FETCHED_TYPE3_ENABLED(1'b1),
+        .FETCHED_TYPE4_ENABLED(1'b1),
+        .FETCHED_TYPE12_ENABLED(1'b1),
+        .EXTERNAL_FETCHED_DM_VALIDITY_SIDECARS(1'b1)
+    ) linear_client (
         .clk_i(clk_i), .reset_i(reset_i), .phase_i(phase_i),
-        .phase_advance_i(effective_phase_advance_o),
-        .interrupt_sample_advance_i(1'b0),
+        .phase_advance_i(architectural_phase_advance_o),
+        .interrupt_sample_advance_i(interrupt_wait_sample_o),
         .instruction_issue_inhibit_i(issue_inhibit_o),
         .bus_relinquished_i(bus_relinquished_o),
         .instruction_setup_i(instruction_setup_i),
@@ -1837,6 +2145,8 @@ module adsp2100_program_clients_owner_control_slice (
         .pm_completion_event_i(completion_event_o[0]),
         .pmd_read_data_i(pmd_read_data_i),
         .pmd_read_data_valid_i(pmd_read_data_valid_i),
+        .dmd_read_data_i(dmd_read_data_i),
+        .dmd_read_data_valid_i(dmd_read_data_valid_i),
         .irq_n_i(irq_n_i),
         .probe_code_i(linear_probe_code_i),
         .type17_source_data_valid_i(linear_type17_source_valid),
@@ -1957,6 +2267,17 @@ module adsp2100_program_clients_owner_control_slice (
         .provisional_source_extension_o(linear_provisional_unused),
         .pc_o(linear_pc_o),
         .opcode_o(linear_opcode_o),
+        .fetched_dm_request_candidate_o(fetched_dm_request_candidate),
+        .fetched_dm_request_presented_o(fetched_dm_request_presented),
+        .fetched_dm_request_address_o(fetched_dm_request_address),
+        .fetched_dm_request_address_valid_o(
+            fetched_dm_request_address_valid
+        ),
+        .fetched_dm_request_write_o(fetched_dm_request_write),
+        .fetched_dm_request_write_data_o(fetched_dm_request_write_data),
+        .fetched_dm_request_write_data_valid_o(
+            fetched_dm_request_write_data_valid
+        ),
         .probe_data_o(linear_probe_data_o),
         .astat_o(shared_astat),
         .mstat_o(shared_mstat),
@@ -2167,6 +2488,7 @@ module adsp2100_program_clients_owner_control_slice (
         .phase_advance_i(phase_advance_i),
         .halt_n_i(halt_control_halt_n), .dmack_i(dmack_i),
         .pm_data_cycle_i(halt_pm_data_cycle),
+        .service_inhibit_i(dm_waiting_o),
         .mode_o(halt_mode_o),
         .state_three_boundary_o(halt_state_three_boundary_unused),
         .halt_recognized_o(halt_recognized_o),
@@ -2192,7 +2514,9 @@ module adsp2100_program_clients_owner_control_slice (
     adsp2100_program_owner_bus_control owner_control (
         .clk_i(clk_i), .reset_i(reset_i), .phase_i(phase_i),
         .phase_advance_i(effective_phase_advance_o),
+        .pm_phase_advance_i(architectural_phase_advance_o),
         .br_n_i(halt_control_br_n),
+        .service_inhibit_i(dm_in_progress),
         .fetch_valid_i(linear_fetch_request_presented_o),
         .fetch_address_i(linear_fetch_address),
         .fetch_address_valid_i(1'b1),
@@ -2248,6 +2572,54 @@ module adsp2100_program_clients_owner_control_slice (
         .pmd_write_data_valid_o(pmd_write_data_valid_o)
     );
 
+    adsp2100_data_owner_bus dm_bus (
+        .clk_i(clk_i), .reset_i(reset_i), .phase_i(phase_i),
+        .phase_advance_i(effective_phase_advance_o),
+        .fetched_valid_i(
+            fetched_dm_request_presented
+            && !type5_request_presented_o
+            && !type13_request_presented_o
+        ),
+        .fetched_address_i(fetched_dm_request_address),
+        .fetched_address_valid_i(fetched_dm_request_address_valid),
+        .fetched_write_i(fetched_dm_request_write),
+        .fetched_write_data_i(fetched_dm_request_write_data),
+        .fetched_write_data_valid_i(fetched_dm_request_write_data_valid),
+        .companion_valid_i(1'b0),
+        .companion_address_i(14'h0000),
+        .companion_address_valid_i(1'b0),
+        .companion_write_i(1'b0),
+        .companion_write_data_i(16'h0000),
+        .companion_write_data_valid_i(1'b0),
+        .dm_ack_i(dmack_i),
+        .dmd_read_data_i(dmd_read_data_i),
+        .dmd_read_data_valid_i(dmd_read_data_valid_i),
+        .bus_relinquished_i(bus_relinquished_o),
+        .request_ready_o(dm_owner_request_ready),
+        .request_conflict_o(dm_owner_request_conflict),
+        .request_out_of_phase_o(dm_owner_request_out_of_phase),
+        .request_accepted_o(dm_owner_request_accepted),
+        .dmack_sample_event_o(dm_owner_dmack_sample),
+        .dmack_accepted_o(dm_owner_dmack_accepted),
+        .wait_extension_event_o(dm_owner_wait_extension),
+        .completion_event_o(dm_owner_completion),
+        .read_sample_event_o(dm_owner_read_sample),
+        .owner_o(dm_owner),
+        .transaction_active_o(dm_transaction_active_o),
+        .waiting_o(dm_waiting_o),
+        .response_valid_o(dm_response_valid),
+        .response_write_o(dm_response_write_unused),
+        .response_read_data_o(dm_response_read_data_unused),
+        .response_read_data_valid_o(dm_response_read_data_valid_unused),
+        .dm_address_output_enable_o(dm_address_output_enable_o),
+        .dm_control_output_enable_o(dm_control_output_enable_o),
+        .dm_data_output_enable_o(dm_data_output_enable_o),
+        .dma_o(dma_o), .dma_valid_o(dma_valid_o),
+        .dms_n_o(dms_n_o), .dmrd_n_o(dmrd_n_o), .dmwr_n_o(dmwr_n_o),
+        .dmd_write_data_o(dmd_write_data_o),
+        .dmd_write_data_valid_o(dmd_write_data_valid_o)
+    );
+
     assign unused_observation = ^{
         cache_region_restarted_unused, cache_oldest_replaced_unused,
         pm_probe_dag_address_i,
@@ -2294,7 +2666,13 @@ module adsp2100_program_clients_owner_control_slice (
         reset_br_request_unused, request_ready_unused,
         read_sample_event_unused, response_valid_unused,
         response_write_unused, response_read_data_unused,
-        response_read_data_valid_unused
+        response_read_data_valid_unused,
+        fetched_dm_request_candidate, dm_owner_request_ready, dm_owner,
+        dm_owner_request_accepted, dm_owner_dmack_sample,
+        dm_owner_dmack_accepted, dm_owner_wait_extension,
+        dm_owner_completion, dm_owner_read_sample,
+        dm_response_write_unused, dm_response_read_data_unused,
+        dm_response_read_data_valid_unused
     };
 
 `ifndef SYNTHESIS
@@ -2343,6 +2721,21 @@ module adsp2100_program_clients_owner_control_slice (
             assert (!pm_address_output_enable_o);
             assert (!pm_control_output_enable_o);
             assert (!pm_data_output_enable_o);
+            assert (!dm_address_output_enable_o);
+            assert (!dm_control_output_enable_o);
+            assert (!dm_data_output_enable_o);
+        end
+        if (dm_waiting_o) begin
+            assert (!architectural_phase_advance_o);
+            assert (!linear_instruction_issue_o && !linear_retire_event_o);
+            assert (completion_event_o == 3'b000);
+        end
+        if (dm_request_accepted_o) begin
+            assert (fetched_dm_request_presented);
+            assert (request_accepted_o[0]);
+        end
+        if (dm_completion_event_o) begin
+            assert (completion_event_o[0]);
         end
     end
 `endif

@@ -6,7 +6,12 @@
 // controller so the same retained fetch state can also be attached to the
 // shared Type 5/Type 13 owner.  This compatibility composition intentionally
 // preserves the original bounded linear-core interface and behavior.
-module adsp2100_linear_core_slice (
+module adsp2100_linear_core_slice #(
+    parameter bit FETCHED_TYPE2_ENABLED = 1'b0,
+    parameter bit FETCHED_TYPE3_ENABLED = 1'b0,
+    parameter bit FETCHED_TYPE4_ENABLED = 1'b0,
+    parameter bit FETCHED_TYPE12_ENABLED = 1'b0
+) (
     input  logic        clk_i,
     input  logic        reset_i,
     input  logic [2:0]  phase_i,
@@ -21,6 +26,8 @@ module adsp2100_linear_core_slice (
 
     input  logic [23:0] pmd_read_data_i,
     input  logic        pmd_read_data_valid_i,
+    input  logic [15:0] dmd_read_data_i,
+    input  logic        dmd_read_data_valid_i,
     input  logic [3:0]  irq_n_i,
     input  logic [5:0]  probe_code_i,
 
@@ -50,6 +57,14 @@ module adsp2100_linear_core_slice (
     output logic        provisional_source_extension_o,
     output logic [13:0] pc_o,
     output logic [23:0] opcode_o,
+
+    output logic        fetched_dm_request_candidate_o,
+    output logic        fetched_dm_request_presented_o,
+    output logic [13:0] fetched_dm_request_address_o,
+    output logic        fetched_dm_request_address_valid_o,
+    output logic        fetched_dm_request_write_o,
+    output logic [15:0] fetched_dm_request_write_data_o,
+    output logic        fetched_dm_request_write_data_valid_o,
 
     output logic [15:0] probe_data_o,
     output logic [7:0]  astat_o,
@@ -97,7 +112,12 @@ module adsp2100_linear_core_slice (
     logic unused_observation;
 
     /* verilator lint_off PINCONNECTEMPTY */
-    adsp2100_linear_fetch_client client (
+    adsp2100_linear_fetch_client #(
+        .FETCHED_TYPE2_ENABLED(FETCHED_TYPE2_ENABLED),
+        .FETCHED_TYPE3_ENABLED(FETCHED_TYPE3_ENABLED),
+        .FETCHED_TYPE4_ENABLED(FETCHED_TYPE4_ENABLED),
+        .FETCHED_TYPE12_ENABLED(FETCHED_TYPE12_ENABLED)
+    ) client (
         .clk_i(clk_i),
         .reset_i(reset_i),
         .phase_i(phase_i),
@@ -112,6 +132,8 @@ module adsp2100_linear_core_slice (
         .pm_completion_event_i(pm_completion_event_o),
         .pmd_read_data_i(pmd_read_data_i),
         .pmd_read_data_valid_i(pmd_read_data_valid_i),
+        .dmd_read_data_i(dmd_read_data_i),
+        .dmd_read_data_valid_i(dmd_read_data_valid_i),
         .irq_n_i(irq_n_i),
         .probe_code_i(probe_code_i),
         .type17_source_data_valid_i(1'b1),
@@ -207,6 +229,23 @@ module adsp2100_linear_core_slice (
         .provisional_source_extension_o(provisional_source_extension_o),
         .pc_o(pc_o),
         .opcode_o(opcode_o),
+        .fetched_dm_request_candidate_o(
+            fetched_dm_request_candidate_o
+        ),
+        .fetched_dm_request_presented_o(
+            fetched_dm_request_presented_o
+        ),
+        .fetched_dm_request_address_o(fetched_dm_request_address_o),
+        .fetched_dm_request_address_valid_o(
+            fetched_dm_request_address_valid_o
+        ),
+        .fetched_dm_request_write_o(fetched_dm_request_write_o),
+        .fetched_dm_request_write_data_o(
+            fetched_dm_request_write_data_o
+        ),
+        .fetched_dm_request_write_data_valid_o(
+            fetched_dm_request_write_data_valid_o
+        ),
         .probe_data_o(probe_data_o),
         .astat_o(astat_o),
         .mstat_o(mstat_o),

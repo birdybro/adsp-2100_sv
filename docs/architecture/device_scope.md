@@ -26,11 +26,22 @@ family functional diagrams.
 
 ## ADSP-2100A boundary
 
-Contemporary literature names an “ADSP-2100A/ADSP-2100 Data Sheet,” but the
-acquired 1989 manual does not enumerate mask-level differences
-[ADI-UM-1989, Literature page before contents]. The current default therefore
-uses only behavior directly attributed to ADSP-2100. `ADSP-2100A` remains an
-alias accepted by some later tools, not an implementation claim
+The acquired joint data sheet explicitly calls the ADSP-2100 and ADSP-2100A
+pin- and code-compatible, says that they have identical documented
+architectures and instruction sets, and applies every unqualified ADSP-2100
+description in that data sheet to both. It separately assigns the original
+ADSP-2100 6.144/8.192 MHz grades and the ADSP-2100A 10.24/12.5 MHz grades and
+states that timing and electrical specifications differ
+[ADI-DATABOOK-1989, ADSP-2100/ADSP-2100A data sheet, printed p. 2-19,
+scan PDF p. 27].
+
+This closes the published architectural/instruction-set boundary, not the
+mask-history boundary. No acquired original errata or mask records establish
+whether undocumented behavior, reset signatures, or silicon fixes differ.
+The current default therefore remains the original ADSP-2100, while an
+ADSP-2100A statement may support architectural behavior only when it falls
+within the joint data sheet's explicit compatibility scope. The later
+assembler's `ADSP-2100A` alias is not independent electrical evidence
 [ADI-ASM-1994, printed p. 1-11].
 
 ## Hard Drivin' identity
@@ -52,7 +63,7 @@ ADSP-2104, for example, is a 1996 low-cost device with 512 words PM RAM,
 
 ## Unresolved
 
-- exact 2100-to-2100A functional and electrical differences;
+- exact 2100-to-2100A mask fixes, errata, and electrical limits by grade;
 - mask revisions and errata;
 - whether later packages used on ADSP II were marked 2100 or 2100A;
 - authentic power-up state of every computational/DAG register;

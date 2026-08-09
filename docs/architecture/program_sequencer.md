@@ -16,11 +16,17 @@ the next state-8 issue pushes that ignored word's PC with the post-instruction
 status context and fetches vector 0–3. Vector completion loads the ISR word,
 and fetched RTI selects the stacked PC and restores status. This is a bounded
 private-PM composition; retained state-7 requests are now composed separately
-with ordinary HALT and normal BR/BG. A separate raw-DM structural composition
-also permits physical state-7 sampling during a native DMACK extension while
-holding all architectural service until paired completion. Fetched DM semantic
-ownership and PM-data/cache integration remain outside it [ADI-UM-1989,
-printed pp. 4-8–4-10, 5-9–5-11, and Figure 5.11, printed p. 5-16].
+with ordinary HALT and normal BR/BG. A separate native-DM composition derives
+real fetched Type 2, legal Type 3, source-closed Type 4, and source-closed Type
+12 descriptors, permits physical state-7 IRQ sampling and state-3 BR
+recognition during a DMACK extension, and holds all architectural service and
+grant follow-up until paired completion. The same owner recognizes ordinary
+HALT during a real Type 2 wait, defers stop until paired completion/retirement,
+holds driven state 8, and resumes only after release with DMACK high.
+BR/interrupt, BR/TRAP, or simultaneous BR/HALT service overlap is
+conflict-reported because priority is unsourced. Additional shared-DM
+ownership, HALT during BG, and PM-data/cache integration remain outside it
+[ADI-UM-1989, printed pp. 4-8–4-10, 5-9–5-14, and Figure 5.11, printed p. 5-16].
 
 CNTR is a 14-bit unsigned down counter. The count stack is four words. Loading a
 valid new count pushes the old count, while a reset-invalid count does not waste

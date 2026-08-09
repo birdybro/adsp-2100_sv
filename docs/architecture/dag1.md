@@ -53,9 +53,19 @@ selections, normal-order post-modification, bit-reversed old-I address output,
 arbitrary DMACK waits, and completion-only selected-I writeback pass directed
 tests and the 50,035-clock logical model/RTL differential. A bounded native-DM
 wrapper adds 50,027 clocks verifying state-8 old-value capture, full-cycle
-waits, and state-7 completion-only postmodify. Whole-core event arbitration
-remains outside that slice
-[ADI-UM-1989, printed pp. 3-1–3-5, 5-9–5-12, 6-1, 6-12, A-1, and A-6].
+waits, and state-7 completion-only postmodify. A separate fetched composition
+derives this descriptor from the retained Type 2 opcode and live DAG1 state;
+its 50,000-clock comparison traverses every G/I/M selector, DAG1 bit reversal,
+circular wrap, immediate boundaries, and a complete wait before atomically
+retiring the selected I with PC and the fetched word. The same composition owns
+legal Type 3 direct transfers without adding a DAG action, all source-closed
+Type 4 actions, and all source-closed Type 12 actions with the same old-I
+address/cycle-end-I rule. Type 4 coverage traverses all 32 DAG/I/M selections
+among 2,057 transactions; Type 12 traverses all 32 selections among 119
+transactions. Both include DAG1 bit reversal, circular wrap, and a complete
+wait. Shared-DM arbitration and whole-core event priority remain outside that
+composition [ADI-UM-1989, printed pp. 2-6–2-7, 3-1–3-5, 5-9–5-12, 6-1,
+6-12–6-13, A-1, and A-6–A-7].
 
 The bounded Type 21 integration slice now supplies the missing stored-register
 selection and writeback path for standalone MODIFY. With `G=0`, it maps the
@@ -66,9 +76,9 @@ the native shifter-plus-DM transfer phases and commits its selected-I update
 only at qualified completion. The bounded Type 4 logical slice selects all
 DAG1 I/M pairs and the matching L-by-I rule, applies bit reversal only to the
 old address, holds pending transactions, and commits selected-I postmodify
-only at acknowledged completion. Its native attachment now preserves that
-rule through state-6 DMACK qualification and state-7 completion. Other direct
-DM transfers and multifunction instructions remain unattached
+only at acknowledged completion. Its native attachment and fetched-DM owner
+preserve that rule through state-6 DMACK qualification and aligned state-7
+completion. Other multifunction instructions remain unattached
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-14–6-15, A-4, A-7–A-8].
 
 The ordinary fetched owner now uses the same stored DAG1 state for all 16
@@ -78,9 +88,13 @@ selected I at native state-7 retirement; the 444,003-clock integrated
 comparison covers positive and negative linear/circular updates without a
 memory or status action.
 
-Original Type 1 action selection now fixes its DM address to DAG1 and exposes
+Original Type 1 execution fixes its DM address to DAG1 and exposes
 all I0–I3/M0–M3 combinations independently of the simultaneous DAG2 PM read.
 The selected old I supplies the address and its corresponding L supplies
-modulo context. State execution and both-I atomic completion remain open until
-the dual-bus DMACK/PM relationship is resolved under OQ-023
+modulo context. The bounded logical slice captures both DAG descriptors at
+issue and atomically commits both selected-I postmodifications with the two
+loads, PX, and optional compute/status result at completion. Its 51,069-clock
+comparison covers independent DAG1 bit reversal, linear/circular updates, and
+held packets. Native pin phases remain withheld until the dual-bus DMACK/PM
+relationship is resolved under OQ-023
 [ADI-UM-1989, printed pp. 3-1–3-5, 6-3–6-5, A-1].

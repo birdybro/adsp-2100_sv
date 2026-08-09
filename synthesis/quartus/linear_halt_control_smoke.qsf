@@ -19,6 +19,10 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_internal_
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_condition_logic.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_move_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_move_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_dm_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_compute_dm_action.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_dm_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shifter_dm_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_conditional_compute_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_quotient_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_divide_quotient_action.sv
@@ -49,6 +53,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_condition
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_shift_move_action.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_program_bus.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_interrupt_control.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_dm_write_immediate_decode.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_direct_dm_decode.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_fetch_client.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_linear_core_slice.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../rtl/core/adsp2100_halt_control.sv

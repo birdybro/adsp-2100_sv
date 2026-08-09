@@ -6,7 +6,7 @@
   shared architectural-state execution boundary,
   original RESET/logical-phase owner,
   normal BR/BG phase controller and RESET-time native-pin wrapper,
-  Type 1 dual-read action decoder,
+  Type 1 dual-read action decoder and bounded logical state slice,
   Type 2 action decoder and waited execution slice, Type 4 action and waited
   logical-DM slices,
   Type 5 action/logical/cache/native-PM execution, Type 6, Type 7, Type 8,
@@ -17,7 +17,8 @@
   recognizer, the standalone ordinary/PM-data HALT sequencer,
   the bounded NOP/Type 6/Type 7/Type 8/Type 9/Type 10/Type 11/Type 14/Type 15/Type 16/Type 17/Type 18/Type 19/Type 20/Type 21/Type 22/Type 23/Type 24/Type 25/Type 26 plus automatic-loop
   linear owner and its bounded normal-BR/BG, ordinary-fetch/HALT/TRAP, and
-  structural ordinary-fetch/native-DM-wait compositions plus the Type 5/Type
+  fetched-Type-2/Type-3/Type-4/Type-12 ordinary-fetch/native-DM-wait/BR-BG
+  composition plus the Type 5/Type
   13 native-PM/HALT attachments,
   the shared-PM-owner selector and its normal-BR/BG composition, the
   attached retained-fetch, Type 5/cache, and Type 13/cache shared-PM/BR-BG
@@ -25,7 +26,7 @@
   state-external Type 5/Type 13 action clients, the
   standalone and Type 13-integrated
   instruction cache, native PM and DM phase controllers and Type 13/Type 2/
-  Type 4/Type 12 attachments,
+  Type 3/Type 4/Type 12 attachments,
   stack-control
   decoder/integration slice, Type 21
   decoder/integration slice, and source-backed
@@ -36,16 +37,17 @@
 - Yosys is not installed in this environment. Original RESET/phase, normal
   BR/BG, standalone interrupt and HALT sequencing, bounded linear-owner,
   linear-owner/BR/BG,
-  linear-owner/HALT, structural ordinary-fetch/native-DM-wait,
+  linear-owner/HALT, fetched-Type-2/Type-3/Type-4/Type-12 ordinary-fetch/
+  native-DM-wait/BR-BG, bounded Type 1 logical state,
   shared-PM-owner, shared-PM-owner/BR-BG, and Type 5/Type 13 native-PM/HALT
   plus separate and combined retained-fetch/Type 5/Type 13 shared-PM/BR-BG
   synthesis scripts are wired into `make synth-yosys` for an equipped host.
 - Quartus 17.0.2 full compilation of the bounded three-real-client/shared-
-  cache/native-PM/BR-BG/HALT composition succeeds for Cyclone V
-  `5CSEBA6U23I7`. It uses 8,156 ALMs, 3,036 fitted registers, three DSP blocks,
+  cache/native-PM/native-DM/BR-BG/HALT composition succeeds for Cyclone V
+  `5CSEBA6U23I7`. It uses 9,903 ALMs, 3,313 fitted registers, four DSP blocks,
   and no block memory. Against its 20 ns virtual-pin smoke constraint,
-  TimeQuest reports +1.340 ns worst multicorner setup, +0.165 ns worst hold,
-  +9.045 ns worst minimum-pulse-width slack, 53.59 MHz worst slow-corner Fmax,
+  TimeQuest reports +0.639 ns worst multicorner setup, +0.165 ns worst hold,
+  +9.045 ns worst minimum-pulse-width slack, 51.65 MHz worst slow-corner Fmax,
   and zero unconstrained clocks, ports, or paths. The verification-only
   aggregate `integration_conflict_o` observation is explicitly constrained for
   second-edge sampling; all architectural and owner-event outputs retain the
@@ -54,12 +56,16 @@
   asynchronous arrays, and the Quartus Lite LogicLock license. Issue-boundary
   Type 8/Type 9 and Type 5 action registers, dedicated selected-bank PM-data
   DREG reads, fetched Type 8/Type 9/Type 14/Type 15/Type 16/Type 21/Type 23/Type 24/
-  Type 25 reset-unknown
-  validity propagation, and removal of a structurally redundant integration-local
+  Type 25 reset-unknown validity propagation plus independent Type 3/Type 4/
+  Type 12 fetched-DM validity sidecars, and removal of a structurally redundant integration-local
   interrupt/action conflict cone close the old setup path without changing
   architectural issue, completion, old-value, or instruction-cycle behavior.
   Type 5/Type 13 completion outputs also select only their captured pending
   descriptors, eliminating an impossible live issue/decode-to-completion path.
+  The architectural-state owner's existing second DAG read port now serves
+  PM-data clients independently of fetched Type 2/4/12/21 address arithmetic;
+  this removes an impossible PM-client-to-fetched-DAG combinational cone that
+  appeared when native DM was attached, without adding state or latency.
   This qualifies common PM/cache structure, routed completion, retained retry,
   and grant-time masking for the three real clients plus their one
   architectural-state owner, sequential automatic Type 5/Type 13 issue, hit/
@@ -67,37 +73,56 @@
   ordinary-fetch HALT, and Type 5/Type 13 forced-recovery HALT scheduling. It
   includes the Type 17 DREG/DAG/status/control/SB/PX validity sidecars and the
   implementation-only status-stack ASTAT/MSTAT/IMASK validity snapshots.
-  OQ-016, TRAP/interrupt/HALT/BR cross-event priority, active-loop/DM
-  composition, physical I/O, and whole-core timing closure remain outside it.
+  OQ-016, OQ-023 Type 1 timing, additional DM requesters, TRAP/interrupt/HALT/
+  BR cross-event priority, active-loop issue, physical I/O, and whole-core
+  timing closure remain outside it.
 - Quartus 17.0.2 full compilation of the bounded fetched Type
   8/9/10/11/14/15/16/19/20/21/22/23/24/25/26 plus automatic-loop and active
   original-IRQ linear owner completes for Cyclone V `5CSEBA6U23I7`. It uses
-  3,735 ALMs, 1,895 fitted registers, two DSP blocks,
+  3,788 ALMs, 1,905 fitted registers, two DSP blocks,
   and no block memory. Against its 25 ns virtual-pin smoke constraint, worst
-  multicorner setup slack is +5.337 ns, worst hold slack is +0.160 ns, worst
-  slow-corner Fmax is 50.86 MHz, and TimeQuest
+  multicorner setup slack is +5.259 ns, worst hold slack is +0.142 ns, worst
+  minimum-pulse-width slack is +11.547 ns, worst slow-corner Fmax is 50.66 MHz,
+  and TimeQuest
   reports zero unconstrained clocks, ports, or paths. The expected warnings
   describe virtual-pin optimization, intentionally uninferred tiny/asynchronous
   register arrays, fixed outputs of the bounded read-only PM interface, and the
   Quartus Lite LogicLock license. This qualifies the NOP/Type 6/Type 7/Type 8/Type 9/
   Type 10/Type 11/Type 14/Type 15/Type 16/Type 17/Type 18/Type 19/Type 20/Type 21/Type 22/Type 23/Type 24/Type 25/Type 26 plus automatic-loop and bounded
-  interrupt ordinary-fetch owner, not reset-first-fetch, fetched-DM or PM-data
-  IRQ priority, simultaneous events, PM data/cache, physical I/O, or whole-core
+  interrupt ordinary-fetch owner and its default-disabled Type 2/Type 3/Type 4/
+  Type 12 descriptor interface, not reset-first-fetch or PM-data IRQ
+  priority, simultaneous events, PM data/cache, physical I/O, or whole-core
   timing closure. This bounded 25 ns constraint closes; it is not whole-core
   timing closure. A raw cycle-start DREG view and dedicated selected-bank PM-
   data read ports remove avoidable generic operand muxing, while issue-boundary
   Type 8/Type 9 action registers add no architectural instruction latency.
-- Quartus 17.0.2 full compilation of the structural ordinary-fetch/native-DM-
-  wait interrupt composition completes and closes at 25 ns on Cyclone V
-  `5CSEBA6U23I7`. It uses 3,937 ALMs, 1,711 fitted registers, two DSP blocks,
-  and no block memory. Worst multicorner setup slack is +1.850 ns, worst hold
-  slack is +0.164 ns, worst slow-corner Fmax is 43.2 MHz, and TimeQuest reports
+- Quartus 17.0.2 full compilation of the fetched-Type-2/Type-3/Type-4/Type-12
+  ordinary-fetch/native-DM-wait/normal-BR-BG/HALT composition, now using the
+  fail-closed shared-DM owner and atomic PM/DM preflight, completes and closes
+  at 25 ns on Cyclone V `5CSEBA6U23I7`. It uses 4,585 ALMs, 2,158 fitted
+  registers, three DSP blocks, and no block memory. Worst multicorner setup
+  slack is +4.417 ns, worst hold slack is +0.166 ns, worst minimum-pulse-width
+  slack is +11.545 ns, worst slow-corner Fmax is 48.58 MHz, and
+  TimeQuest reports
   zero unconstrained clocks, ports, or paths. Expected warnings describe
   virtual-pin optimization, intentionally uninferred small/asynchronous arrays,
   fixed outputs of the bounded interfaces, and the Quartus Lite LogicLock
-  license. This qualifies the raw-DM cycle-control composition, not fetched DM
-  instruction ownership, asynchronous IRQ synchronization, physical I/O, or
-  whole-core timing closure.
+  license. This qualifies generated fetched Type 2, legal Type 3, source-closed
+  Type 4, and source-closed Type 12 issue, full-cycle DMACK hold, register/
+  compute/shifter/status/DAG/PC/
+  next-word aligned retirement, retained-IRQ deferral, state-3 BR recognition
+  during complete DMACK waits, grant deferral until paired completion,
+  grant-time masking of every PM/DM output enable, HALT recognition with stop
+  deferred until paired completion/retirement, driven state-8 hold, and
+  DMACK-qualified resume under the documented
+  initialized-operand/valid-DMD fetched bound. Its raw descriptor remains
+  structural scaffolding, and a simultaneous generated/raw request is rejected
+  before either PM or DM acceptance. Same-boundary and cross-owner BR/HALT
+  requests fail closed while an already active controller remains owner.
+  Additional architectural DM requesters, HALT during BG,
+  sourced cross-event priority, asynchronous IRQ/BR/HALT
+  synchronization, physical I/O, and whole-core timing closure remain outside
+  it.
 - Quartus 17.0.2 full compilation of the retained Type 8/11/19/20/21/22/23/24/26-capable ordinary-
   fetch/shared-PM/BR-BG attachment succeeds for Cyclone V `5CSEBA6U23I7`.
   It uses 3,862 ALMs and 1,953 fitted registers, two DSP blocks, and no block
@@ -245,6 +270,18 @@
   constant-output and virtual-pin warnings are expected for this
   decoder-only project; this is action selection, not state, dual-bus, or
   whole-core timing closure.
+- Quartus 17.0.2 full compilation of the bounded Type 1 logical state slice
+  passes for Cyclone V `5CSEBA6U23I7` at a 25 ns virtual-pin constraint. It
+  uses 1,927 ALMs, 1,253 fitted registers, one DSP block, and no block memory.
+  Across four timing models, worst setup slack is +2.205 ns, worst hold slack
+  is +0.150 ns, minimum-pulse-width slack is +11.704 ns, and worst slow-corner
+  Fmax is 43.87 MHz. TimeQuest reports zero unconstrained clocks, input/output
+  ports, or paths. Expected warnings describe the virtual-pin clock,
+  intentionally logic-mapped small asynchronous arrays, fixed outputs, and
+  the Quartus Lite LogicLock license. This qualifies the bounded
+  implementation/test completion boundary, not native Type 1 PM/DM phases,
+  cache/fetch/event ownership, physical I/O, or whole-core timing closure;
+  OQ-023 remains open.
 - Quartus 17.0.2 full compilation of the combinational Type 4 action decoder
   passes for Cyclone V `5CSEBA6U23I7` at a 20 ns virtual constraint. It uses
   53 ALMs and no registers, RAM, or DSP blocks. Across four timing models,

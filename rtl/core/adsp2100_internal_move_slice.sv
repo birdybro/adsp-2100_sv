@@ -82,6 +82,8 @@ module adsp2100_internal_move_slice (
     logic        dag_m_read_valid_unused;
     logic [13:0] dag_l_read_unused;
     logic        dag_l_read_valid_unused;
+    logic [41:0] dag_read_2_unused;
+    logic [2:0]  dag_read_valid_2_unused;
     logic [13:0] pc_stack_top_unused;
     logic        pc_stack_top_valid_unused;
     logic [15:0] status_stack_top_unused;
@@ -205,6 +207,14 @@ module adsp2100_internal_move_slice (
         .dag_m_read_valid_o(dag_m_read_valid_unused),
         .dag_l_read_data_o(dag_l_read_unused),
         .dag_l_read_valid_o(dag_l_read_valid_unused),
+        .dag_i_l_read_address_2_i(3'b000),
+        .dag_m_read_address_2_i(3'b000),
+        .dag_i_read_data_2_o(dag_read_2_unused[13:0]),
+        .dag_i_read_valid_2_o(dag_read_valid_2_unused[0]),
+        .dag_m_read_data_2_o(dag_read_2_unused[27:14]),
+        .dag_m_read_valid_2_o(dag_read_valid_2_unused[1]),
+        .dag_l_read_data_2_o(dag_read_2_unused[41:28]),
+        .dag_l_read_valid_2_o(dag_read_valid_2_unused[2]),
         .mode_sr_i(2'b00),
         .mode_br_i(2'b00),
         .mode_ol_i(2'b00),
@@ -284,6 +294,7 @@ module adsp2100_internal_move_slice (
         dag_i_read_unused, dag_i_read_valid_unused,
         dag_m_read_unused, dag_m_read_valid_unused,
         dag_l_read_unused, dag_l_read_valid_unused,
+        dag_read_2_unused, dag_read_valid_2_unused,
         pc_stack_top_unused, pc_stack_top_valid_unused,
         status_stack_top_unused, status_stack_top_valid_unused,
         loop_stack_top_unused, loop_stack_top_valid_unused

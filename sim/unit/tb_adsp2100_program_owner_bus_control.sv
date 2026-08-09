@@ -46,7 +46,8 @@ module tb_adsp2100_program_owner_bus_control;
 
     adsp2100_program_owner_bus_control dut (
         .clk_i(clk), .reset_i(reset), .phase_i(phase),
-        .phase_advance_i(advance), .br_n_i(br_n),
+        .phase_advance_i(advance), .pm_phase_advance_i(advance),
+        .br_n_i(br_n), .service_inhibit_i(1'b0),
         .fetch_valid_i(valid[0]), .fetch_address_i(address[0]),
         .fetch_address_valid_i(address_valid[0]),
         .type5_valid_i(valid[1]), .type5_address_i(address[1]),
